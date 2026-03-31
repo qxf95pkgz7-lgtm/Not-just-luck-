@@ -242,6 +242,127 @@ const DrawHistory = ({ draws, onDelete }) => {
   );
 };
 
+// Quarter Predictor Tab
+const QuarterPredictor = ({ prediction, loading, onRefresh }) => {
+  if (loading) return <div className="text-center py-10 text-zinc-400">Loading predictor...</div>;
+  if (!prediction) return <div className="text-center py-10 text-zinc-400">Click refresh to load predictions</div>;
+
+  const pos = prediction.next_draw_position;
+
+  return (
+    <div className="space-y-6" data-testid="quarter-predictor-panel">
+      {/* Header Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-4 text-center">
+          <span className="text-zinc-400 text-sm">Year</span>
+          <p className="text-2xl font-mono font-bold text-white">{prediction.current_year}</p>
+        </div>
+        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-4 text-center">
+          <span className="text-zinc-400 text-sm">Draws This Year</span>
+          <p className="text-2xl font-mono font-bold text-sky-400">{prediction.total_draws_this_year}</p>
+        </div>
+        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-4 text-center">
+          <span className="text-zinc-400 text-sm">Current Quarter</span>
+          <p className="text-2xl font-mono font-bold text-orange-400">Q{prediction.current_quarter}</p>
+        </div>
+        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-4 text-center">
+          <span className="text-zinc-400 text-sm">Next Position</span>
+          <p className="text-2xl font-mono font-bold text-green-400">{pos.from_top}/{pos.from_bottom}</p>
+        </div>
+      </div>
+
+      {/* Position Numbers */}
+      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-yellow-400">
+          <Zap className="w-5 h-5" /> Position Numbers
+          <span className="text-zinc-400 text-sm font-normal ml-2">
+            (Position {pos.from_top} ↓ + {pos.from_bottom} ↑ = {pos.sum})
+          </span>
+        </h3>
+        <div className="flex gap-6">
+          {prediction.position_numbers.map((p, i) => (
+            <div key={i} className="text-center">
+              <NumberBall number={p.number} size="lg" />
+              <span className="text-zinc-400 text-xs mt-2 block">{p.type.replace('_', ' ')}</span>
+              <span className="text-yellow-400 text-xs font-mono">{p.confidence}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Linked Suggestions */}
+      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-green-400">
+          <Link2 className="w-5 h-5" /> Linked Numbers (Digit Patterns)
+        </h3>
+        <div className="flex flex-wrap gap-3">
+          {prediction.linked_suggestions.map((l, i) => (
+            <div key={i} className="bg-[#0F0F10] rounded-lg p-3 text-center">
+              <NumberBall number={l.number} size="sm" />
+              <span className="text-zinc-500 text-xs mt-1 block">↔ {l.linked_to}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Historical at this position */}
+      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-purple-400">
+          <History className="w-5 h-5" /> Historical at Position {pos.from_top}
+        </h3>
+        <div className="space-y-2">
+          {prediction.historical_at_position.map((h, i) => {
+            const hasPos = h.numbers.includes(pos.from_top) || h.numbers.includes(pos.from_bottom);
+            return (
+              <div key={i} className={`bg-[#0F0F10] rounded-lg p-3 flex items-center justify-between ${hasPos ? 'border border-green-500/30' : ''}`}>
+                <div className="flex items-center gap-3">
+                  <span className="text-zinc-400 font-mono text-sm">{h.year} Q{h.quarter}</span>
+                  <div className="flex gap-1">
+                    {h.numbers.map((n, j) => (
+                      <NumberBall key={j} number={n} size="sm" />
+                    ))}
+                  </div>
+                </div>
+                {hasPos && <span className="text-green-400 text-sm">✓ hit</span>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Top Historical Numbers */}
+      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-orange-400">
+          <TrendingUp className="w-5 h-5" /> Hot at This Position
+        </h3>
+        <div className="flex flex-wrap gap-3">
+          {prediction.historical_suggestions.slice(0, 8).map((h, i) => (
+            <div key={i} className="bg-[#0F0F10] rounded-lg p-3 text-center min-w-[70px]">
+              <NumberBall number={h.number} size="sm" />
+              <span className="text-zinc-500 text-xs mt-1 block">{h.count}x</span>
+              <span className="text-orange-400 text-xs font-mono">{h.confidence}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Last Draw */}
+      {prediction.last_draw && (
+        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Clock className="w-5 h-5" /> Last Draw ({prediction.last_draw.date})
+          </h3>
+          <div className="flex gap-3">
+            {prediction.last_draw.numbers.map((n, i) => (
+              <NumberBall key={i} number={n} size="md" />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Advanced Patterns Tab
 const AdvancedPatterns = ({ patterns, loading, onRefresh }) => {
   if (loading) return <div className="text-center py-10 text-zinc-400">Analyzing patterns from 2020...</div>;
@@ -652,6 +773,8 @@ function App() {
   const [predictions, setPredictions] = useState(null);
   const [advancedPatterns, setAdvancedPatterns] = useState(null);
   const [advancedLoading, setAdvancedLoading] = useState(false);
+  const [quarterPrediction, setQuarterPrediction] = useState(null);
+  const [quarterLoading, setQuarterLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -703,6 +826,18 @@ function App() {
     }
   }, []);
 
+  const fetchQuarterPrediction = useCallback(async () => {
+    try {
+      setQuarterLoading(true);
+      const res = await axios.get(`${API}/quarter-predictor`);
+      setQuarterPrediction(res.data);
+    } catch (e) {
+      console.error("Error fetching quarter prediction:", e);
+    } finally {
+      setQuarterLoading(false);
+    }
+  }, []);
+
   const seedData = async () => {
     try {
       setLoading(true);
@@ -744,6 +879,7 @@ function App() {
   useEffect(() => {
     refreshAll();
     fetchAdvancedPatterns();
+    fetchQuarterPrediction();
     // Auto-seed if no data
     const checkAndSeed = async () => {
       const res = await axios.get(`${API}/dashboard`);
@@ -759,7 +895,8 @@ function App() {
     { id: "history", label: "Draw History", icon: History },
     { id: "patterns", label: "Patterns", icon: Link2 },
     { id: "advanced", label: "Advanced", icon: Zap },
-    { id: "predictions", label: "Predictions", icon: Target }
+    { id: "predictor", label: "Predictor", icon: Target },
+    { id: "predictions", label: "Smart Gen", icon: TrendingUp }
   ];
 
   return (
@@ -827,6 +964,7 @@ function App() {
         {activeTab === "history" && <DrawHistory draws={draws} onDelete={handleDeleteDraw} />}
         {activeTab === "patterns" && <Patterns patterns={patterns} />}
         {activeTab === "advanced" && <AdvancedPatterns patterns={advancedPatterns} loading={advancedLoading} onRefresh={fetchAdvancedPatterns} />}
+        {activeTab === "predictor" && <QuarterPredictor prediction={quarterPrediction} loading={quarterLoading} onRefresh={fetchQuarterPrediction} />}
         {activeTab === "predictions" && <Predictions predictions={predictions} onRefresh={fetchPredictions} />}
       </main>
 

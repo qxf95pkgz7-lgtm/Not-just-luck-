@@ -642,6 +642,110 @@ async def get_position_patterns(from_year: int = 2020):
     
     return result
 
+@api_router.get("/quarter-predictor")
+async def get_quarter_prediction():
+    """Predict numbers based on quarterly position system"""
+    draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).to_list(2000)
+    
+    if not draws:
+        return {"error": "No draws available"}
+    
+    # Get current year draws
+    from datetime import datetime
+    current_year = datetime.now().year
+    year_draws = sorted([d for d in draws if d['date'].startswith(str(current_year))], key=lambda x: x['date'])
+    
+    # Calculate quarters (~26-27 draws each, ~104 per year)
+    expected_per_quarter = 26
+    current_draw_num = len(year_draws)
+    current_quarter = min(current_draw_num // expected_per_quarter, 3)  # 0-3
+    position_in_quarter = current_draw_num % expected_per_quarter
+    
+    # Next draw position
+    next_position = position_in_quarter + 1
+    if next_position > expected_per_quarter:
+        next_position = 1
+        current_quarter = min(current_quarter + 1, 3)
+    
+    # Calculate position from bottom (they sum to ~28)
+    quarter_size = expected_per_quarter if current_quarter < 3 else 27
+    position_from_bottom = quarter_size - next_position + 1
+    
+    # Position numbers that might appear
+    position_numbers = []
+    if 1 <= next_position <= 42:
+        position_numbers.append({"number": next_position, "type": "from_top", "confidence": 28})
+    if 1 <= position_from_bottom <= 42 and position_from_bottom != next_position:
+        position_numbers.append({"number": position_from_bottom, "type": "from_bottom", "confidence": 28})
+    
+    # Get linked numbers for position numbers
+    linked_suggestions = []
+    for pn in position_numbers:
+        links = get_digit_links(pn["number"])
+        for link in links:
+            if 1 <= link <= 42:
+                linked_suggestions.append({
+                    "number": link,
+                    "linked_to": pn["number"],
+                    "type": "digit_link",
+                    "confidence": 15
+                })
+    
+    # Historical analysis: what numbers appeared at this position before?
+    historical_at_position = []
+    for year in range(2020, current_year + 1):
+        y_draws = sorted([d for d in draws if d['date'].startswith(str(year))], key=lambda x: x['date'])
+        q_size = len(y_draws) // 4
+        
+        for q in range(4):
+            start = q * q_size
+            end = start + q_size if q < 3 else len(y_draws)
+            quarter_draws = y_draws[start:end]
+            
+            if next_position <= len(quarter_draws):
+                draw = quarter_draws[next_position - 1]
+                historical_at_position.append({
+                    "year": year,
+                    "quarter": q + 1,
+                    "date": draw["date"],
+                    "numbers": draw["numbers"]
+                })
+    
+    # Count frequency of numbers at this position
+    position_frequency = {}
+    for h in historical_at_position:
+        for n in h["numbers"]:
+            position_frequency[n] = position_frequency.get(n, 0) + 1
+    
+    # Top numbers at this position historically
+    top_historical = sorted(position_frequency.items(), key=lambda x: x[1], reverse=True)[:10]
+    historical_suggestions = [
+        {"number": n, "count": c, "type": "historical", "confidence": min(c * 5, 40)}
+        for n, c in top_historical
+    ]
+    
+    # Last draw info
+    last_draw = year_draws[-1] if year_draws else None
+    
+    return {
+        "current_year": current_year,
+        "total_draws_this_year": current_draw_num,
+        "current_quarter": current_quarter + 1,
+        "next_draw_position": {
+            "from_top": next_position,
+            "from_bottom": position_from_bottom,
+            "sum": next_position + position_from_bottom
+        },
+        "position_numbers": position_numbers,
+        "linked_suggestions": linked_suggestions[:10],
+        "historical_suggestions": historical_suggestions,
+        "historical_at_position": historical_at_position[-6:],  # Last 6 years at this position
+        "last_draw": {
+            "date": last_draw["date"],
+            "numbers": last_draw["numbers"]
+        } if last_draw else None
+    }
+
 @api_router.get("/predictions", response_model=PredictionData)
 async def get_predictions():
     draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).to_list(2000)
