@@ -759,16 +759,16 @@ def get_date_patterns(last_draw):
     last_month = int(m)
     day_plus_month = last_day + last_month
     
-    # Day from last draw (18.8% hit rate historically)
+    # Day from last draw (15.1% hit rate from 2020-2026)
     if 1 <= last_day <= 42:
         patterns.append({
             "number": last_day,
             "type": "prev_day",
             "reason": f"Day {last_day} from {last_date}",
-            "confidence": 19
+            "confidence": 15
         })
     
-    # Day + Month from last draw (12.4% hit rate)
+    # Day + Month from last draw (11.8% hit rate)
     if 1 <= day_plus_month <= 42:
         patterns.append({
             "number": day_plus_month,
@@ -777,7 +777,7 @@ def get_date_patterns(last_draw):
             "confidence": 12
         })
     
-    # Day reversed (8.6% hit rate)
+    # Day reversed (4.6% hit rate)
     if last_day >= 10:
         day_rev = int(str(last_day)[::-1])
         if 1 <= day_rev <= 42:
@@ -785,7 +785,7 @@ def get_date_patterns(last_draw):
                 "number": day_rev,
                 "type": "prev_day_reversed",
                 "reason": f"Day rev ({last_day}→{day_rev})",
-                "confidence": 9
+                "confidence": 5
             })
     
     return patterns
