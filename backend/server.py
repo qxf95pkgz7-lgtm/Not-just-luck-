@@ -70,6 +70,12 @@ class PredictionData(BaseModel):
     cross_draw_patterns: List[dict]
     gap_analysis: List[dict]
 
+class AdvancedPatternData(BaseModel):
+    digit_reversals_in_draws: List[dict]  # 34 → 13 type patterns
+    digit_sum_patterns: List[dict]  # 4+5=9, 9/3=3 type
+    cross_draw_connections: List[dict]  # Numbers combining across draws
+    series_completions: List[dict]  # 10-11-12 + 34(13) = full series
+
 # Helper functions
 def get_families(numbers: List[int]) -> List[int]:
     """Return which group each number belongs to: 1 (1-21) or 2 (22-42)"""
@@ -177,6 +183,110 @@ def calculate_gap_analysis(draws: List[dict]) -> List[dict]:
     
     gaps.sort(key=lambda x: x['gap'], reverse=True)
     return gaps[:10]
+
+def reverse_digits(n: int) -> int:
+    """Reverse digits of a number: 34 → 43, 13 → 31"""
+    s = str(n)
+    if len(s) == 1:
+        return n * 10  # 3 → 30? or keep as is
+    return int(s[::-1])
+
+def digit_sum(n: int) -> int:
+    """Sum of digits: 34 → 7, 45 → 9"""
+    return sum(int(d) for d in str(n))
+
+def find_advanced_patterns(draws: List[dict]) -> dict:
+    """Find advanced patterns like digit reversals, sums, and cross-draw connections"""
+    
+    digit_reversals_in_draws = []
+    digit_sum_patterns = []
+    cross_draw_connections = []
+    series_completions = []
+    
+    for i, draw in enumerate(draws):
+        nums = draw['numbers']
+        date = draw['date']
+        
+        # 1. Digit Reversals within draw (34 in draw means 13 is implied)
+        for n in nums:
+            if n >= 10:
+                reversed_n = reverse_digits(n)
+                if reversed_n != n and 1 <= reversed_n <= 42:
+                    digit_reversals_in_draws.append({
+                        "date": date,
+                        "number": n,
+                        "reversed": reversed_n,
+                        "in_draw": reversed_n in nums
+                    })
+        
+        # 2. Find series that could be completed with reversals
+        sorted_nums = sorted(nums)
+        # Check for near-series (e.g., 10,11,12 and 34→13 completes it)
+        for j in range(len(sorted_nums) - 2):
+            if sorted_nums[j+1] == sorted_nums[j] + 1 and sorted_nums[j+2] == sorted_nums[j] + 2:
+                # Found 3 consecutive, check if 4th exists via reversal
+                next_in_series = sorted_nums[j] + 3
+                prev_in_series = sorted_nums[j] - 1
+                
+                for n in nums:
+                    if n >= 10:
+                        rev = reverse_digits(n)
+                        if rev == next_in_series or rev == prev_in_series:
+                            series_completions.append({
+                                "date": date,
+                                "series": [sorted_nums[j], sorted_nums[j+1], sorted_nums[j+2]],
+                                "completed_by": n,
+                                "as_reversed": rev,
+                                "full_series": sorted([sorted_nums[j], sorted_nums[j+1], sorted_nums[j+2], rev])
+                            })
+        
+        # 3. Cross-draw connections (combine with previous draw)
+        if i < len(draws) - 1:
+            prev_draw = draws[i + 1]  # draws are sorted desc, so i+1 is previous
+            prev_nums = prev_draw['numbers']
+            
+            for n1 in nums:
+                for n2 in prev_nums:
+                    combined = n1 * 10 + n2 if n1 < 10 and n2 < 10 else None
+                    combined2 = n2 * 10 + n1 if n1 < 10 and n2 < 10 else None
+                    
+                    # Check digit sum patterns: e.g., 4+5=9, appears as 9 or relates to 3 (9/3)
+                    dsum = n1 + n2
+                    if dsum in nums or dsum in prev_nums:
+                        digit_sum_patterns.append({
+                            "date": date,
+                            "prev_date": prev_draw['date'],
+                            "n1": n1,
+                            "n2": n2,
+                            "sum": dsum,
+                            "sum_in_draw": dsum in nums,
+                            "sum_in_prev": dsum in prev_nums
+                        })
+                    
+                    # Combined number reversals: 4,5 → 45 → 54 → relates to 12 (5-4 or 5,4)
+                    if n1 < 10 and n2 < 10:
+                        combo = n1 * 10 + n2
+                        combo_rev = reverse_digits(combo)
+                        ds = digit_sum(combo)
+                        
+                        # Check if digit sum or its factors appear
+                        if ds <= 42 and (ds in nums or ds in prev_nums):
+                            cross_draw_connections.append({
+                                "date": date,
+                                "prev_date": prev_draw['date'],
+                                "numbers": [n1, n2],
+                                "combined": combo,
+                                "reversed": combo_rev,
+                                "digit_sum": ds,
+                                "found_in": "current" if ds in nums else "previous"
+                            })
+    
+    return {
+        "digit_reversals_in_draws": digit_reversals_in_draws[:50],
+        "digit_sum_patterns": digit_sum_patterns[:50],
+        "cross_draw_connections": cross_draw_connections[:50],
+        "series_completions": series_completions[:30]
+    }
 
 def generate_smart_prediction(draws: List[dict], hot_numbers: List[dict]) -> tuple:
     """Generate smart number predictions with explanations"""
@@ -405,6 +515,20 @@ async def get_patterns():
         digit_reversals=find_digit_reversals(all_numbers),
         series_patterns=find_series_patterns(draws)
     )
+
+@api_router.get("/advanced-patterns")
+async def get_advanced_patterns(from_year: int = 2020):
+    """Get advanced pattern analysis from specified year"""
+    draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).to_list(2000)
+    
+    # Filter from specified year
+    filtered = [d for d in draws if d['date'] >= f"{from_year}-01-01"]
+    
+    patterns = find_advanced_patterns(filtered)
+    patterns["total_draws_analyzed"] = len(filtered)
+    patterns["from_year"] = from_year
+    
+    return patterns
 
 @api_router.get("/predictions", response_model=PredictionData)
 async def get_predictions():

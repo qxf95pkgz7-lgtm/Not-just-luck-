@@ -242,6 +242,130 @@ const DrawHistory = ({ draws, onDelete }) => {
   );
 };
 
+// Advanced Patterns Tab
+const AdvancedPatterns = ({ patterns, loading, onRefresh }) => {
+  if (loading) return <div className="text-center py-10 text-zinc-400">Analyzing patterns from 2020...</div>;
+  if (!patterns) return <div className="text-center py-10 text-zinc-400">Click refresh to load advanced patterns</div>;
+
+  return (
+    <div className="space-y-6" data-testid="advanced-patterns-panel">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold">Advanced Pattern Analysis (from {patterns.from_year})</h2>
+        <span className="text-zinc-400 text-sm">{patterns.total_draws_analyzed} draws analyzed</span>
+      </div>
+
+      {/* Series Completions - Your 10-11-12 + 34→13 pattern */}
+      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-yellow-400">
+          <Zap className="w-5 h-5" /> Series Completions (Digit Reversal)
+          <span className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-1 rounded text-xs ml-2">
+            {patterns.series_completions?.length || 0} found
+          </span>
+        </h3>
+        <div className="space-y-3 max-h-72 overflow-y-auto">
+          {patterns.series_completions?.map((p, i) => (
+            <div key={i} className="bg-[#0F0F10] rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-zinc-400 text-sm font-mono">{p.date}</span>
+                <span className="text-yellow-400 text-xs">Series: {p.full_series?.join('-')}</span>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {p.series?.map((n, j) => <NumberBall key={j} number={n} size="sm" />)}
+                <span className="text-zinc-500">+</span>
+                <NumberBall number={p.completed_by} size="sm" />
+                <span className="text-zinc-500">→</span>
+                <span className="text-yellow-400 font-mono font-bold">{p.as_reversed}</span>
+              </div>
+            </div>
+          ))}
+          {(!patterns.series_completions || patterns.series_completions.length === 0) && (
+            <div className="text-zinc-500 text-center py-4">No series completions found</div>
+          )}
+        </div>
+      </div>
+
+      {/* Cross-Draw Connections - Your 4+5=45→54→12 pattern */}
+      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-green-400">
+          <Link2 className="w-5 h-5" /> Cross-Draw Digit Sums
+          <span className="bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-1 rounded text-xs ml-2">
+            {patterns.cross_draw_connections?.length || 0} found
+          </span>
+        </h3>
+        <div className="space-y-2 max-h-72 overflow-y-auto">
+          {patterns.cross_draw_connections?.slice(0, 20).map((p, i) => (
+            <div key={i} className="bg-[#0F0F10] rounded-lg p-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <NumberBall number={p.numbers[0]} size="sm" />
+                <span className="text-zinc-500">+</span>
+                <NumberBall number={p.numbers[1]} size="sm" />
+                <span className="text-zinc-500">=</span>
+                <span className="font-mono text-white">{p.combined}</span>
+                <span className="text-zinc-500">→</span>
+                <span className="font-mono text-green-400">{p.reversed}</span>
+                <span className="text-zinc-500">Σ</span>
+                <span className="font-mono text-green-400 font-bold">{p.digit_sum}</span>
+              </div>
+              <span className="text-zinc-500 text-xs">{p.date}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Digit Sum Patterns */}
+      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-purple-400">
+          <Hash className="w-5 h-5" /> Digit Sum Appearances
+          <span className="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-1 rounded text-xs ml-2">
+            {patterns.digit_sum_patterns?.length || 0} found
+          </span>
+        </h3>
+        <div className="space-y-2 max-h-60 overflow-y-auto">
+          {patterns.digit_sum_patterns?.slice(0, 15).map((p, i) => (
+            <div key={i} className="bg-[#0F0F10] rounded-lg p-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <NumberBall number={p.n1} size="sm" />
+                <span className="text-zinc-500">+</span>
+                <NumberBall number={p.n2} size="sm" />
+                <span className="text-zinc-500">=</span>
+                <span className="font-mono text-purple-400 font-bold">{p.sum}</span>
+                <span className="text-zinc-500 text-xs ml-2">
+                  (in {p.sum_in_draw ? 'same draw' : 'prev draw'})
+                </span>
+              </div>
+              <span className="text-zinc-500 text-xs">{p.date}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Digit Reversals in Draws */}
+      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-orange-400">
+          <RefreshCw className="w-5 h-5" /> Digit Reversals in Draws
+          <span className="bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-1 rounded text-xs ml-2">
+            {patterns.digit_reversals_in_draws?.length || 0} found
+          </span>
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-60 overflow-y-auto">
+          {patterns.digit_reversals_in_draws?.slice(0, 24).map((p, i) => (
+            <div key={i} className="bg-[#0F0F10] rounded-lg p-2 text-center">
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <NumberBall number={p.number} size="sm" />
+                <span className="text-zinc-500">→</span>
+                <span className={`font-mono font-bold ${p.in_draw ? 'text-green-400' : 'text-orange-400'}`}>
+                  {p.reversed}
+                </span>
+              </div>
+              <span className="text-zinc-500 text-xs">{p.date}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Patterns Tab
 const Patterns = ({ patterns }) => {
   if (!patterns) return <div className="text-center py-10 text-zinc-400">Loading...</div>;
@@ -526,6 +650,8 @@ function App() {
   const [draws, setDraws] = useState([]);
   const [patterns, setPatterns] = useState(null);
   const [predictions, setPredictions] = useState(null);
+  const [advancedPatterns, setAdvancedPatterns] = useState(null);
+  const [advancedLoading, setAdvancedLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -562,6 +688,18 @@ function App() {
       setPredictions(res.data);
     } catch (e) {
       console.error("Error fetching predictions:", e);
+    }
+  }, []);
+
+  const fetchAdvancedPatterns = useCallback(async () => {
+    try {
+      setAdvancedLoading(true);
+      const res = await axios.get(`${API}/advanced-patterns?from_year=2020`);
+      setAdvancedPatterns(res.data);
+    } catch (e) {
+      console.error("Error fetching advanced patterns:", e);
+    } finally {
+      setAdvancedLoading(false);
     }
   }, []);
 
@@ -605,6 +743,7 @@ function App() {
 
   useEffect(() => {
     refreshAll();
+    fetchAdvancedPatterns();
     // Auto-seed if no data
     const checkAndSeed = async () => {
       const res = await axios.get(`${API}/dashboard`);
@@ -619,6 +758,7 @@ function App() {
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "history", label: "Draw History", icon: History },
     { id: "patterns", label: "Patterns", icon: Link2 },
+    { id: "advanced", label: "Advanced", icon: Zap },
     { id: "predictions", label: "Predictions", icon: Target }
   ];
 
@@ -686,6 +826,7 @@ function App() {
         {activeTab === "dashboard" && <Dashboard stats={stats} onRefresh={refreshAll} />}
         {activeTab === "history" && <DrawHistory draws={draws} onDelete={handleDeleteDraw} />}
         {activeTab === "patterns" && <Patterns patterns={patterns} />}
+        {activeTab === "advanced" && <AdvancedPatterns patterns={advancedPatterns} loading={advancedLoading} onRefresh={fetchAdvancedPatterns} />}
         {activeTab === "predictions" && <Predictions predictions={predictions} onRefresh={fetchPredictions} />}
       </main>
 
