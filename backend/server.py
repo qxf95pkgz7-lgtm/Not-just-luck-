@@ -288,6 +288,105 @@ def find_advanced_patterns(draws: List[dict]) -> dict:
         "series_completions": series_completions[:30]
     }
 
+def get_digit_links(n: int) -> set:
+    """Find all numbers linked via digit patterns (user's system)"""
+    linked = set()
+    if n < 10:
+        # Single digits: find 2-digit numbers that produce them via multiplication
+        for x in range(10, 43):
+            d1, d2 = x // 10, x % 10
+            if d1 * d2 == n:
+                linked.add(x)
+        return linked
+    
+    d1, d2 = n // 10, n % 10
+    rev = d2 * 10 + d1
+    
+    # Direct reversal in range (12<->21, 13<->31, etc.)
+    if 10 <= rev <= 42 and rev != n:
+        linked.add(rev)
+    
+    # Digit product (36 -> 3*6=18)
+    prod = d1 * d2
+    if 1 <= prod <= 42:
+        linked.add(prod)
+    
+    # If reversal out of range (27->72, 18->81, etc.)
+    if rev > 42:
+        for x in range(10, 43):
+            # Pattern: x + rev = total, total reversed = x
+            # Example: 19 + 72 = 91, reverse(91) = 19 ✓
+            total = x + rev
+            if 10 <= total <= 99:
+                t_rev = (total % 10) * 10 + (total // 10)
+                if t_rev == x:
+                    linked.add(x)
+            
+            # Pattern: n + x = digit rearrangement of x
+            # Example: 27 + 14 = 41, digits of 41 = digits of 14 ✓
+            total = n + x
+            if 10 <= total <= 99:
+                if sorted([total // 10, total % 10]) == sorted([x // 10, x % 10]):
+                    linked.add(x)
+    
+    # Digit sum
+    dsum = d1 + d2
+    if 1 <= dsum <= 42:
+        linked.add(dsum)
+    
+    linked.discard(n)  # Remove self
+    return linked
+
+def analyze_position_patterns(draws: List[dict]) -> dict:
+    """Analyze position-based patterns across consecutive draws"""
+    # Build link map
+    link_map = {}
+    for n in range(1, 43):
+        links = get_digit_links(n)
+        if links:
+            link_map[n] = sorted(links)
+    
+    # Sort draws chronologically
+    sorted_draws = sorted(draws, key=lambda x: x['date'])
+    
+    hits = []
+    for i in range(len(sorted_draws) - 1):
+        curr = sorted_draws[i]
+        next_d = sorted_draws[i + 1]
+        curr_nums = curr['numbers']
+        next_nums = next_d['numbers']
+        
+        for pos, num in enumerate(curr_nums):
+            if num in link_map:
+                # Check same position and ±1
+                for check_pos in [pos - 1, pos, pos + 1]:
+                    if 0 <= check_pos < 6:
+                        found = next_nums[check_pos]
+                        if found in link_map[num]:
+                            hits.append({
+                                "date1": curr['date'],
+                                "date2": next_d['date'],
+                                "num1": num,
+                                "num2": found,
+                                "pos1": pos + 1,
+                                "pos2": check_pos + 1,
+                                "shift": check_pos - pos,
+                                "link_type": "digit_pattern"
+                            })
+    
+    # Calculate stats
+    total_opps = sum(1 for i in range(len(sorted_draws)-1) 
+                     for n in sorted_draws[i]['numbers'] if n in link_map)
+    
+    return {
+        "link_map": link_map,
+        "position_hits": hits[-100:],  # Last 100 hits
+        "total_hits": len(hits),
+        "total_opportunities": total_opps,
+        "hit_rate": round(len(hits) / total_opps * 100, 1) if total_opps > 0 else 0,
+        "draws_analyzed": len(sorted_draws)
+    }
+
 def generate_smart_prediction(draws: List[dict], hot_numbers: List[dict]) -> tuple:
     """Generate smart number predictions with explanations"""
     if not draws:
@@ -529,6 +628,19 @@ async def get_advanced_patterns(from_year: int = 2020):
     patterns["from_year"] = from_year
     
     return patterns
+
+@api_router.get("/position-patterns")
+async def get_position_patterns(from_year: int = 2020):
+    """Get position-based pattern analysis (user's digit link system)"""
+    draws = await db.draws.find({}, {"_id": 0}).to_list(2000)
+    
+    # Filter from specified year
+    filtered = [d for d in draws if d['date'] >= f"{from_year}-01-01"]
+    
+    result = analyze_position_patterns(filtered)
+    result["from_year"] = from_year
+    
+    return result
 
 @api_router.get("/predictions", response_model=PredictionData)
 async def get_predictions():
