@@ -278,6 +278,31 @@ async def get_draws():
         for d in draws
     ]
 
+@api_router.delete("/draws/clear-all")
+async def clear_all_draws():
+    """Clear all draws from database"""
+    result = await db.draws.delete_many({})
+    return {"message": f"Deleted {result.deleted_count} draws"}
+
+@api_router.post("/draws/import-bulk")
+async def import_bulk_draws(draws: List[DrawCreate]):
+    """Import multiple draws at once"""
+    docs = []
+    for draw in draws:
+        doc = {
+            "id": str(uuid.uuid4()),
+            "date": draw.date,
+            "draw_number": draw.draw_number,
+            "numbers": sorted(draw.numbers),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        docs.append(doc)
+    
+    if docs:
+        await db.draws.insert_many(docs)
+    
+    return {"message": f"Imported {len(docs)} draws"}
+
 @api_router.delete("/draws/{draw_id}")
 async def delete_draw(draw_id: str):
     result = await db.draws.delete_one({"id": draw_id})
