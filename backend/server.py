@@ -790,6 +790,163 @@ def get_date_patterns(last_draw):
     
     return patterns
 
+@api_router.get("/master-predictor")
+async def get_master_prediction():
+    """
+    MASTER PREDICTOR - Combines ALL pattern systems:
+    1. Quarterly position (28% hit rate)
+    2. Digit links (11% hit rate)  
+    3. Date patterns (15%, 12%, 5%)
+    4. Historical at position
+    5. Hot/Cold numbers
+    6. Cross-draw patterns
+    """
+    from datetime import datetime
+    from collections import defaultdict
+    
+    draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).to_list(2000)
+    if not draws:
+        return {"error": "No draws available"}
+    
+    current_year = datetime.now().year
+    year_draws = sorted([d for d in draws if d['date'].startswith(str(current_year))], key=lambda x: x['date'])
+    all_draws_2020 = [d for d in draws if d['date'] >= '2020-01-01']
+    
+    # Score accumulator for each number 1-42
+    scores = defaultdict(lambda: {"score": 0, "reasons": []})
+    
+    # === 1. QUARTERLY POSITION (28% confidence) ===
+    expected_per_quarter = 26
+    current_draw_num = len(year_draws)
+    current_quarter = min(current_draw_num // expected_per_quarter, 3)
+    position_in_quarter = current_draw_num % expected_per_quarter
+    next_position = position_in_quarter + 1
+    if next_position > expected_per_quarter:
+        next_position = 1
+        current_quarter = min(current_quarter + 1, 3)
+    quarter_size = expected_per_quarter if current_quarter < 3 else 27
+    position_from_bottom = quarter_size - next_position + 1
+    
+    if 1 <= next_position <= 42:
+        scores[next_position]["score"] += 28
+        scores[next_position]["reasons"].append(f"Position {next_position} from top (28%)")
+    if 1 <= position_from_bottom <= 42 and position_from_bottom != next_position:
+        scores[position_from_bottom]["score"] += 28
+        scores[position_from_bottom]["reasons"].append(f"Position {position_from_bottom} from bottom (28%)")
+    
+    # === 2. DIGIT LINKS from position numbers (11% confidence) ===
+    for pos_num in [next_position, position_from_bottom]:
+        if 1 <= pos_num <= 42:
+            links = get_digit_links(pos_num)
+            for link in links:
+                if 1 <= link <= 42:
+                    scores[link]["score"] += 11
+                    scores[link]["reasons"].append(f"Digit link from {pos_num} (11%)")
+    
+    # === 3. DATE PATTERNS (15%, 12%, 5%) ===
+    last_draw = year_draws[-1] if year_draws else (draws[0] if draws else None)
+    if last_draw:
+        date_pats = get_date_patterns(last_draw)
+        for dp in date_pats:
+            n = dp["number"]
+            scores[n]["score"] += dp["confidence"]
+            scores[n]["reasons"].append(f"{dp['reason']} ({dp['confidence']}%)")
+    
+    # === 4. DIGIT LINKS from last draw numbers (11% confidence) ===
+    if last_draw:
+        for num in last_draw['numbers']:
+            links = get_digit_links(num)
+            for link in links:
+                if 1 <= link <= 42 and link not in last_draw['numbers']:
+                    scores[link]["score"] += 8  # Slightly lower for indirect
+                    scores[link]["reasons"].append(f"Digit link from {num} (8%)")
+    
+    # === 5. HISTORICAL AT THIS POSITION ===
+    position_freq = defaultdict(int)
+    for year in range(2020, current_year + 1):
+        y_draws = sorted([d for d in draws if d['date'].startswith(str(year))], key=lambda x: x['date'])
+        q_size = len(y_draws) // 4
+        for q in range(4):
+            start = q * q_size
+            end = start + q_size if q < 3 else len(y_draws)
+            quarter_draws = y_draws[start:end]
+            if next_position <= len(quarter_draws):
+                for n in quarter_draws[next_position - 1]['numbers']:
+                    position_freq[n] += 1
+    
+    # Top 5 historical get bonus
+    top_historical = sorted(position_freq.items(), key=lambda x: x[1], reverse=True)[:5]
+    for n, count in top_historical:
+        bonus = min(count * 3, 15)
+        scores[n]["score"] += bonus
+        scores[n]["reasons"].append(f"Historical at pos {next_position}: {count}x ({bonus}%)")
+    
+    # === 6. HOT NUMBERS (global frequency) ===
+    all_nums = []
+    for d in all_draws_2020[-200:]:  # Last 200 draws
+        all_nums.extend(d['numbers'])
+    freq = Counter(all_nums)
+    hot_nums = freq.most_common(10)
+    for n, count in hot_nums:
+        bonus = min(count // 5, 10)
+        if bonus > 0:
+            scores[n]["score"] += bonus
+            scores[n]["reasons"].append(f"Hot number: {count}x ({bonus}%)")
+    
+    # === 7. COLD/DUE NUMBERS ===
+    last_seen = {}
+    sorted_draws = sorted(all_draws_2020, key=lambda x: x['date'], reverse=True)
+    for i, d in enumerate(sorted_draws):
+        for n in d['numbers']:
+            if n not in last_seen:
+                last_seen[n] = i
+    
+    due_numbers = [(n, gap) for n, gap in last_seen.items() if gap > 15]
+    due_numbers.sort(key=lambda x: x[1], reverse=True)
+    for n, gap in due_numbers[:5]:
+        bonus = min(gap // 3, 10)
+        scores[n]["score"] += bonus
+        scores[n]["reasons"].append(f"Due: {gap} draws ago ({bonus}%)")
+    
+    # === COMPILE FINAL PREDICTIONS ===
+    ranked = sorted(scores.items(), key=lambda x: x[1]["score"], reverse=True)
+    
+    # Top 6 as main prediction
+    top_6 = [{"number": n, "score": data["score"], "reasons": data["reasons"][:4]} for n, data in ranked[:6]]
+    
+    # Next 6 as alternates
+    alternates = [{"number": n, "score": data["score"], "reasons": data["reasons"][:2]} for n, data in ranked[6:12]]
+    
+    # Calculate combined confidence (simplified)
+    avg_score = sum(t["score"] for t in top_6) / 6 if top_6 else 0
+    
+    return {
+        "prediction_date": datetime.now().isoformat(),
+        "for_draw": {
+            "year": current_year,
+            "draw_number": current_draw_num + 1,
+            "quarter": current_quarter + 1,
+            "position": next_position
+        },
+        "last_draw": {
+            "date": last_draw["date"],
+            "numbers": last_draw["numbers"]
+        } if last_draw else None,
+        "main_prediction": sorted([t["number"] for t in top_6]),
+        "main_prediction_details": top_6,
+        "alternate_numbers": sorted([a["number"] for a in alternates]),
+        "alternate_details": alternates,
+        "average_confidence": round(avg_score, 1),
+        "patterns_used": [
+            "Quarterly position (28%)",
+            "Digit links (11%)",
+            "Date patterns (15%, 12%, 5%)",
+            "Historical at position",
+            "Hot numbers",
+            "Due numbers"
+        ]
+    }
+
 @api_router.get("/predictions", response_model=PredictionData)
 async def get_predictions():
     draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).to_list(2000)

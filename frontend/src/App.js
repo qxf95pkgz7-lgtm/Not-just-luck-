@@ -242,6 +242,113 @@ const DrawHistory = ({ draws, onDelete }) => {
   );
 };
 
+// Master Predictor Component
+const MasterPredictor = ({ prediction, loading, onRefresh }) => {
+  if (loading) return <div className="text-center py-10 text-zinc-400">Generating master prediction...</div>;
+  if (!prediction) return <div className="text-center py-10 text-zinc-400">Click refresh to generate prediction</div>;
+
+  return (
+    <div className="space-y-6" data-testid="master-predictor-panel">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold flex items-center gap-3">
+            <Zap className="w-8 h-8 text-yellow-400" />
+            Master Prediction
+          </h2>
+          <button onClick={onRefresh} className="p-2 hover:bg-white/10 rounded-lg">
+            <RefreshCw className="w-5 h-5" />
+          </button>
+        </div>
+        <p className="text-zinc-400 text-sm">
+          Draw #{prediction.for_draw.draw_number} | Q{prediction.for_draw.quarter} | Position {prediction.for_draw.position}
+        </p>
+        
+        {/* Main Prediction */}
+        <div className="mt-6">
+          <span className="text-zinc-300 text-sm">Predicted Numbers:</span>
+          <div className="flex gap-4 mt-3">
+            {prediction.main_prediction.map((n, i) => (
+              <div key={i} className="text-center">
+                <NumberBall number={n} size="lg" />
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex items-center gap-2">
+            <span className="text-zinc-400 text-sm">Average Confidence:</span>
+            <span className="text-yellow-400 font-mono font-bold">{prediction.average_confidence}%</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Why These Numbers */}
+      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <Target className="w-5 h-5 text-green-400" /> Why These Numbers
+        </h3>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {prediction.main_prediction_details.map((p, i) => (
+            <div key={i} className="bg-[#0F0F10] rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <NumberBall number={p.number} size="md" />
+                <span className="text-yellow-400 font-mono text-sm">Score: {p.score}</span>
+              </div>
+              <ul className="space-y-1">
+                {p.reasons.map((r, j) => (
+                  <li key={j} className="text-zinc-400 text-xs flex items-start gap-1">
+                    <span className="text-green-400">•</span> {r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Alternates */}
+      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <Layers className="w-5 h-5 text-purple-400" /> Alternate Numbers
+        </h3>
+        <div className="flex flex-wrap gap-3">
+          {prediction.alternate_details.map((a, i) => (
+            <div key={i} className="bg-[#0F0F10] rounded-lg p-3 text-center min-w-[80px]">
+              <NumberBall number={a.number} size="sm" />
+              <span className="text-zinc-500 text-xs mt-1 block">Score: {a.score}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Last Draw */}
+      {prediction.last_draw && (
+        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Clock className="w-5 h-5" /> Last Draw ({prediction.last_draw.date})
+          </h3>
+          <div className="flex gap-3">
+            {prediction.last_draw.numbers.map((n, i) => (
+              <NumberBall key={i} number={n} size="md" />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Patterns Used */}
+      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
+        <h3 className="text-lg font-semibold mb-3 text-zinc-400">Patterns Used</h3>
+        <div className="flex flex-wrap gap-2">
+          {prediction.patterns_used.map((p, i) => (
+            <span key={i} className="bg-[#0F0F10] text-zinc-400 text-xs px-3 py-1 rounded-full border border-[#27272A]">
+              {p}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Quarter Predictor Tab
 const QuarterPredictor = ({ prediction, loading, onRefresh }) => {
   if (loading) return <div className="text-center py-10 text-zinc-400">Loading predictor...</div>;
@@ -793,6 +900,8 @@ function App() {
   const [advancedLoading, setAdvancedLoading] = useState(false);
   const [quarterPrediction, setQuarterPrediction] = useState(null);
   const [quarterLoading, setQuarterLoading] = useState(false);
+  const [masterPrediction, setMasterPrediction] = useState(null);
+  const [masterLoading, setMasterLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -856,6 +965,18 @@ function App() {
     }
   }, []);
 
+  const fetchMasterPrediction = useCallback(async () => {
+    try {
+      setMasterLoading(true);
+      const res = await axios.get(`${API}/master-predictor`);
+      setMasterPrediction(res.data);
+    } catch (e) {
+      console.error("Error fetching master prediction:", e);
+    } finally {
+      setMasterLoading(false);
+    }
+  }, []);
+
   const seedData = async () => {
     try {
       setLoading(true);
@@ -898,6 +1019,7 @@ function App() {
     refreshAll();
     fetchAdvancedPatterns();
     fetchQuarterPrediction();
+    fetchMasterPrediction();
     // Auto-seed if no data
     const checkAndSeed = async () => {
       const res = await axios.get(`${API}/dashboard`);
@@ -910,10 +1032,11 @@ function App() {
 
   const tabs = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "history", label: "Draw History", icon: History },
+    { id: "master", label: "Master AI", icon: Zap },
+    { id: "history", label: "History", icon: History },
     { id: "patterns", label: "Patterns", icon: Link2 },
-    { id: "advanced", label: "Advanced", icon: Zap },
-    { id: "predictor", label: "Predictor", icon: Target },
+    { id: "advanced", label: "Advanced", icon: Layers },
+    { id: "predictor", label: "Position", icon: Target },
     { id: "predictions", label: "Smart Gen", icon: TrendingUp }
   ];
 
@@ -979,6 +1102,7 @@ function App() {
 
         {/* Tab Content */}
         {activeTab === "dashboard" && <Dashboard stats={stats} onRefresh={refreshAll} />}
+        {activeTab === "master" && <MasterPredictor prediction={masterPrediction} loading={masterLoading} onRefresh={fetchMasterPrediction} />}
         {activeTab === "history" && <DrawHistory draws={draws} onDelete={handleDeleteDraw} />}
         {activeTab === "patterns" && <Patterns patterns={patterns} />}
         {activeTab === "advanced" && <AdvancedPatterns patterns={advancedPatterns} loading={advancedLoading} onRefresh={fetchAdvancedPatterns} />}
