@@ -800,6 +800,7 @@ async def get_master_prediction():
     4. Historical at position
     5. Hot/Cold numbers
     6. Cross-draw patterns
+    7. Rare event counts
     """
     from datetime import datetime
     from collections import defaultdict
@@ -810,7 +811,7 @@ async def get_master_prediction():
     
     current_year = datetime.now().year
     year_draws = sorted([d for d in draws if d['date'].startswith(str(current_year))], key=lambda x: x['date'])
-    all_draws_2020 = [d for d in draws if d['date'] >= '2020-01-01']
+    all_draws_2020 = sorted([d for d in draws if d['date'] >= '2020-01-01'], key=lambda x: x['date'])
     
     # Score accumulator for each number 1-42
     scores = defaultdict(lambda: {"score": 0, "reasons": []})
@@ -858,7 +859,7 @@ async def get_master_prediction():
             links = get_digit_links(num)
             for link in links:
                 if 1 <= link <= 42 and link not in last_draw['numbers']:
-                    scores[link]["score"] += 8  # Slightly lower for indirect
+                    scores[link]["score"] += 8
                     scores[link]["reasons"].append(f"Digit link from {num} (8%)")
     
     # === 5. HISTORICAL AT THIS POSITION ===
@@ -874,7 +875,6 @@ async def get_master_prediction():
                 for n in quarter_draws[next_position - 1]['numbers']:
                     position_freq[n] += 1
     
-    # Top 5 historical get bonus
     top_historical = sorted(position_freq.items(), key=lambda x: x[1], reverse=True)[:5]
     for n, count in top_historical:
         bonus = min(count * 3, 15)
@@ -883,7 +883,7 @@ async def get_master_prediction():
     
     # === 6. HOT NUMBERS (global frequency) ===
     all_nums = []
-    for d in all_draws_2020[-200:]:  # Last 200 draws
+    for d in all_draws_2020[-200:]:
         all_nums.extend(d['numbers'])
     freq = Counter(all_nums)
     hot_nums = freq.most_common(10)
@@ -895,8 +895,8 @@ async def get_master_prediction():
     
     # === 7. COLD/DUE NUMBERS ===
     last_seen = {}
-    sorted_draws = sorted(all_draws_2020, key=lambda x: x['date'], reverse=True)
-    for i, d in enumerate(sorted_draws):
+    sorted_draws_desc = sorted(all_draws_2020, key=lambda x: x['date'], reverse=True)
+    for i, d in enumerate(sorted_draws_desc):
         for n in d['numbers']:
             if n not in last_seen:
                 last_seen[n] = i
@@ -908,16 +908,68 @@ async def get_master_prediction():
         scores[n]["score"] += bonus
         scores[n]["reasons"].append(f"Due: {gap} draws ago ({bonus}%)")
     
+    # === 8. RARE EVENT COUNTS (NEW!) ===
+    def get_group(n):
+        if n <= 9: return 1
+        elif n <= 19: return 2
+        elif n <= 29: return 3
+        elif n <= 39: return 4
+        else: return 5
+    
+    def count_groups(numbers):
+        groups = {}
+        for n in numbers:
+            g = get_group(n)
+            groups[g] = groups.get(g, 0) + 1
+        return groups
+    
+    # Find recent rare events
+    rare_events = []
+    for i, draw in enumerate(all_draws_2020):
+        groups = count_groups(draw['numbers'])
+        max_group = max(groups.values())
+        if max_group >= 4:
+            rare_events.append({'index': i, 'date': draw['date'], 'count': max_group})
+    
+    # For last 5 rare events, calculate counts to current draw
+    current_draw_idx = len(all_draws_2020)
+    rare_predictions = []
+    for rare in rare_events[-5:]:
+        count_since = current_draw_idx - rare['index']
+        rarity = "🔥🔥🔥" if rare['count'] == 6 else ("🔥🔥" if rare['count'] == 5 else "🔥")
+        
+        # The count itself
+        if 1 <= count_since <= 42:
+            scores[count_since]["score"] += 15 * (rare['count'] - 3)  # Higher for rarer events
+            scores[count_since]["reasons"].append(f"Rare {rarity} +{count_since} draws (15%)")
+            rare_predictions.append({
+                "rare_date": rare['date'],
+                "rarity": rare['count'],
+                "count_since": count_since,
+                "predicted": count_since
+            })
+        
+        # Digit breakdown for counts > 42
+        if count_since > 42:
+            d1 = count_since // 10
+            d2 = count_since % 10
+            dsum = d1 + d2
+            
+            for digit in [d1, d2]:
+                if 1 <= digit <= 42:
+                    scores[digit]["score"] += 10
+                    scores[digit]["reasons"].append(f"Rare {rarity} +{count_since} digit ({d1},{d2})")
+            
+            if 1 <= dsum <= 42:
+                scores[dsum]["score"] += 10
+                scores[dsum]["reasons"].append(f"Rare {rarity} +{count_since} sum={dsum}")
+    
     # === COMPILE FINAL PREDICTIONS ===
     ranked = sorted(scores.items(), key=lambda x: x[1]["score"], reverse=True)
     
-    # Top 6 as main prediction
     top_6 = [{"number": n, "score": data["score"], "reasons": data["reasons"][:4]} for n, data in ranked[:6]]
-    
-    # Next 6 as alternates
     alternates = [{"number": n, "score": data["score"], "reasons": data["reasons"][:2]} for n, data in ranked[6:12]]
     
-    # Calculate combined confidence (simplified)
     avg_score = sum(t["score"] for t in top_6) / 6 if top_6 else 0
     
     return {
@@ -937,13 +989,15 @@ async def get_master_prediction():
         "alternate_numbers": sorted([a["number"] for a in alternates]),
         "alternate_details": alternates,
         "average_confidence": round(avg_score, 1),
+        "rare_event_predictions": rare_predictions,
         "patterns_used": [
             "Quarterly position (28%)",
             "Digit links (11%)",
             "Date patterns (15%, 12%, 5%)",
             "Historical at position",
             "Hot numbers",
-            "Due numbers"
+            "Due numbers",
+            "Rare event counts (NEW!)"
         ]
     }
 
