@@ -359,6 +359,24 @@ const QuarterPredictor = ({ prediction, loading, onRefresh }) => {
           </div>
         </div>
       )}
+
+      {/* Date Patterns - NEW */}
+      {prediction.date_patterns && prediction.date_patterns.length > 0 && (
+        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-cyan-400">
+            <Clock className="w-5 h-5" /> Date Patterns (from last draw)
+          </h3>
+          <div className="flex flex-wrap gap-4">
+            {prediction.date_patterns.map((dp, i) => (
+              <div key={i} className="bg-[#0F0F10] rounded-lg p-3 text-center min-w-[100px]">
+                <NumberBall number={dp.number} size="md" />
+                <span className="text-zinc-400 text-xs mt-2 block">{dp.reason}</span>
+                <span className="text-cyan-400 text-xs font-mono">{dp.confidence}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
