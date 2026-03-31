@@ -1,0 +1,103 @@
+{
+  "project_name": "Lucky Jack - Switzerland Lotto Pattern Analyzer",
+  "theme": "DARK",
+  "archetype": "Swiss & High-Contrast",
+  "colors": {
+    "background": "#0F0F10",
+    "surface": "#18181A",
+    "surface_hover": "#27272A",
+    "border": "#27272A",
+    "primary": "#3B82F6",
+    "primary_hover": "#2563EB",
+    "accent_orange": "#F97316",
+    "accent_blue": "#0EA5E9",
+    "text_primary": "#FFFFFF",
+    "text_secondary": "#A1A1AA",
+    "text_muted": "#71717A",
+    "success": "#22C55E",
+    "danger": "#EF4444"
+  },
+  "typography": {
+    "headings": "Manrope, sans-serif",
+    "body": "IBM Plex Sans, sans-serif",
+    "numbers": "JetBrains Mono, monospace",
+    "hierarchy": {
+      "h1": "text-4xl sm:text-5xl tracking-tight font-bold",
+      "h2": "text-2xl sm:text-3xl tracking-tight font-semibold",
+      "h3": "text-xl sm:text-2xl tracking-tight font-medium",
+      "h4": "text-lg font-medium",
+      "body": "text-base leading-relaxed",
+      "small": "text-sm",
+      "tiny_label": "text-xs uppercase tracking-[0.2em]"
+    }
+  },
+  "spacing_and_layout": {
+    "philosophy": "Control Room Grid for Data-Heavy Dashboards",
+    "base_padding": "p-6",
+    "grid_gap": "gap-4 md:gap-6",
+    "card_style": "bg-[#18181A] border border-[#27272A] rounded-lg shadow-sm",
+    "container_max_width": "max-w-7xl mx-auto"
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md transition-colors",
+      "secondary": "bg-transparent border border-[#27272A] hover:bg-[#27272A] text-white font-medium px-4 py-2 rounded-md transition-colors"
+    },
+    "inputs": "bg-[#0F0F10] border border-[#27272A] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md px-3 py-2 text-white placeholder-gray-500",
+    "tables": "w-full text-left border-collapse",
+    "table_headers": "text-xs uppercase tracking-[0.1em] text-[#A1A1AA] border-b border-[#27272A] pb-3",
+    "table_cells": "py-4 border-b border-[#27272A]/50 text-sm",
+    "tabs": "flex space-x-1 bg-[#18181A] p-1 rounded-lg border border-[#27272A]",
+    "tab_item": "px-4 py-2 text-sm font-medium rounded-md transition-colors",
+    "tab_item_active": "bg-[#27272A] text-white shadow-sm",
+    "tab_item_inactive": "text-[#A1A1AA] hover:text-white hover:bg-[#27272A]/50",
+    "badges": {
+      "blue": "bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-1 rounded text-xs font-mono",
+      "orange": "bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-1 rounded text-xs font-mono"
+    }
+  },
+  "data_visualization": {
+    "low_group": {
+      "color": "bg-[#0EA5E9]",
+      "text": "text-[#0EA5E9]",
+      "description": "Numbers 1-21"
+    },
+    "high_group": {
+      "color": "bg-[#F97316]",
+      "text": "text-[#F97316]",
+      "description": "Numbers 22-42"
+    },
+    "hot_numbers": "text-orange-400 font-mono",
+    "cold_numbers": "text-blue-400 font-mono",
+    "progress_bars": "h-2 rounded-full bg-[#27272A] overflow-hidden"
+  },
+  "motion_and_interactions": {
+    "hover_states": "transition-colors duration-200 ease-in-out",
+    "focus_states": "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#0F0F10]",
+    "active_states": "active:scale-[0.98] transition-transform",
+    "entrance_animations": "animate-in fade-in slide-in-from-bottom-4 duration-500"
+  },
+  "icons_and_assets": {
+    "library": "lucide-react",
+    "sizing": "w-5 h-5 for general use, w-4 h-4 for dense tables/inline"
+  },
+  "testing_attributes": {
+    "convention": "data-testid='kebab-case-role-based'",
+    "examples": [
+      "data-testid='dashboard-tab'",
+      "data-testid='add-draw-button'",
+      "data-testid='draw-history-table'",
+      "data-testid='number-input-1'"
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Use standard HTML/Tailwind for layouts and basic components. Use Shadcn UI for complex interactives like Dialogs/Modals, Tabs, and Dropdowns if needed.",
+    "Do NOT use 'Inter' for headings. Use 'Manrope' for headings and 'IBM Plex Sans' for body. Use 'JetBrains Mono' for all lottery numbers and statistics.",
+    "Ensure the dashboard feels dense but readable. Use 1px borders (#27272A) to separate regions instead of heavy shadows or distinct background colors.",
+    "For the Draw History table, ensure monospace font is used for the Draw # and Numbers columns.",
+    "Data visualization percentages should use the predefined blue (1-21) and orange (22-42) accent colors.",
+    "Maintain high contrast text: White (#FFFFFF) for primary values, Zinc-400 (#A1A1AA) for labels and secondary text.",
+    "All JS files (not TSX). Ensure React components use .jsx or standard .js syntax suitable for the setup.",
+    "Always apply data-testid to interactive elements as defined in testing attributes."
+  ]
+}
