@@ -74,7 +74,7 @@ const Ball = ({ number, size = "sm", isWinner = false, isSpinning = false, delay
   );
 };
 
-// Lucky Number Wheel - spins like a car wheel viewed from front
+// Lucky Number Wheel - spins like a car wheel viewed from front - COMPACT
 const LuckyWheel = ({ luckyNumber, isSpinning, onComplete }) => {
   const [rotation, setRotation] = useState(0);
   const [settled, setSettled] = useState(false);
@@ -83,15 +83,10 @@ const LuckyWheel = ({ luckyNumber, isSpinning, onComplete }) => {
   useEffect(() => {
     if (isSpinning && luckyNumber) {
       setSettled(false);
-      // Calculate final rotation: spin several times + land on lucky number
-      // Each number is 60 degrees apart (360/6)
-      // Number 1 at top (0°), going clockwise: 2=60°, 3=120°, 4=180°, 5=240°, 6=300°
       const targetAngle = (luckyNumber - 1) * 60;
-      // Spin 6 full rotations + land on target at top
       const finalRotation = 360 * 6 + (360 - targetAngle);
       setRotation(finalRotation);
       
-      // Settle after animation
       setTimeout(() => {
         setSettled(true);
         if (onComplete) onComplete();
@@ -99,7 +94,6 @@ const LuckyWheel = ({ luckyNumber, isSpinning, onComplete }) => {
     }
   }, [isSpinning, luckyNumber, onComplete]);
 
-  // Reset when starting new spin
   useEffect(() => {
     if (!isSpinning && !settled) {
       setRotation(0);
@@ -108,45 +102,45 @@ const LuckyWheel = ({ luckyNumber, isSpinning, onComplete }) => {
 
   return (
     <div className="flex flex-col items-center">
-      <div className="text-sm font-semibold text-amber-400 mb-2">⭐ Lucky Number</div>
+      <div className="text-xs font-semibold text-amber-400 mb-1">⭐ Lucky</div>
       
-      {/* Wheel container */}
-      <div className="relative w-28 h-28">
-        {/* Pointer at top */}
+      {/* Wheel container - SMALLER */}
+      <div className="relative w-20 h-20">
+        {/* Pointer */}
         <div 
-          className="absolute -top-3 left-1/2 -translate-x-1/2 z-20"
+          className="absolute -top-2 left-1/2 -translate-x-1/2 z-20"
           style={{
             width: 0,
             height: 0,
-            borderLeft: '10px solid transparent',
-            borderRight: '10px solid transparent',
-            borderTop: '14px solid #d4af37',
-            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))'
+            borderLeft: '7px solid transparent',
+            borderRight: '7px solid transparent',
+            borderTop: '10px solid #d4af37',
+            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))'
           }}
         />
         
-        {/* Outer metallic ring */}
+        {/* Outer ring */}
         <div 
           className="absolute inset-0 rounded-full"
           style={{
             background: 'linear-gradient(180deg, #4a4a5a 0%, #2a2a35 50%, #3a3a45 100%)',
-            boxShadow: '0 6px 25px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.15), inset 0 -2px 4px rgba(0,0,0,0.3)'
+            boxShadow: '0 4px 15px rgba(0,0,0,0.5), inset 0 1px 3px rgba(255,255,255,0.1)'
           }}
         />
         
-        {/* Spinning wheel face */}
+        {/* Spinning wheel */}
         <div 
-          className="absolute inset-2 rounded-full overflow-hidden"
+          className="absolute inset-[6px] rounded-full overflow-hidden"
           style={{
             background: 'conic-gradient(from 0deg, #1e293b 0deg, #334155 60deg, #1e293b 60deg, #334155 120deg, #1e293b 120deg, #334155 180deg, #1e293b 180deg, #334155 240deg, #1e293b 240deg, #334155 300deg, #1e293b 300deg, #334155 360deg)',
             transform: `rotate(${rotation}deg)`,
             transition: isSpinning ? 'transform 3.5s cubic-bezier(0.12, 0.8, 0.2, 1)' : 'none',
-            boxShadow: 'inset 0 0 30px rgba(0,0,0,0.6)'
+            boxShadow: 'inset 0 0 20px rgba(0,0,0,0.5)'
           }}
         >
-          {/* Numbers arranged in circle - counter-rotate to stay upright */}
+          {/* Numbers */}
           {numbers.map((num, i) => {
-            const angle = i * 60; // 360/6 = 60 degrees apart
+            const angle = i * 60;
             const isWinner = settled && num === luckyNumber;
             return (
               <div
@@ -155,12 +149,12 @@ const LuckyWheel = ({ luckyNumber, isSpinning, onComplete }) => {
                 style={{
                   left: '50%',
                   top: '50%',
-                  transform: `translate(-50%, -50%) rotate(${angle}deg) translateY(-32px)`,
+                  transform: `translate(-50%, -50%) rotate(${angle}deg) translateY(-24px)`,
                 }}
               >
                 <div 
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-base transition-all duration-500 ${
-                    isWinner ? 'scale-125' : ''
+                  className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-500 ${
+                    isWinner ? 'scale-110' : ''
                   }`}
                   style={{
                     background: isWinner 
@@ -168,9 +162,9 @@ const LuckyWheel = ({ luckyNumber, isSpinning, onComplete }) => {
                       : 'linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%)',
                     color: isWinner ? '#1a1a24' : '#1e293b',
                     boxShadow: isWinner 
-                      ? '0 0 20px rgba(251,191,36,0.9), 0 4px 12px rgba(0,0,0,0.4)'
-                      : '0 2px 8px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.8)',
-                    transform: `rotate(-${angle + rotation}deg)`, // Counter-rotate to keep upright
+                      ? '0 0 12px rgba(251,191,36,0.9)'
+                      : '0 1px 4px rgba(0,0,0,0.3)',
+                    transform: `rotate(-${angle + rotation}deg)`,
                     transition: isSpinning ? 'transform 3.5s cubic-bezier(0.12, 0.8, 0.2, 1)' : 'none'
                   }}
                 >
@@ -183,10 +177,10 @@ const LuckyWheel = ({ luckyNumber, isSpinning, onComplete }) => {
         
         {/* Center hub */}
         <div 
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full z-10"
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full z-10"
           style={{
             background: 'linear-gradient(145deg, #d4af37 0%, #b8860b 100%)',
-            boxShadow: '0 3px 10px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.3)'
+            boxShadow: '0 2px 6px rgba(0,0,0,0.4)'
           }}
         >
           <div 
@@ -197,20 +191,20 @@ const LuckyWheel = ({ luckyNumber, isSpinning, onComplete }) => {
           />
         </div>
         
-        {/* Winner glow */}
+        {/* Glow */}
         {settled && (
           <div 
             className="absolute inset-0 rounded-full pointer-events-none animate-pulse"
             style={{
-              boxShadow: '0 0 40px rgba(251,191,36,0.6), inset 0 0 20px rgba(251,191,36,0.2)'
+              boxShadow: '0 0 25px rgba(251,191,36,0.5)'
             }}
           />
         )}
       </div>
       
-      {/* Result display */}
-      <div className={`mt-3 text-center transition-all duration-500 ${settled ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}>
-        <span className="text-2xl font-black text-amber-400" style={{ textShadow: '0 0 10px rgba(251,191,36,0.5)' }}>
+      {/* Result */}
+      <div className={`mt-1 text-center transition-all duration-500 ${settled ? 'opacity-100' : 'opacity-0'}`}>
+        <span className="text-xl font-black text-amber-400" style={{ textShadow: '0 0 8px rgba(251,191,36,0.5)' }}>
           {luckyNumber}
         </span>
       </div>
@@ -377,129 +371,111 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
 
   return (
     <div className="flex flex-col items-center">
-      {/* Machine Container */}
-      <div className="relative mb-6">
+      {/* Machine Container - COMPACT */}
+      <div className="relative mb-4">
         {/* Machine Frame */}
         <div 
-          className="relative w-[360px] h-[340px] rounded-[40px] p-2"
+          className="relative w-[280px] h-[260px] rounded-[32px] p-2"
           style={{
             background: 'linear-gradient(180deg, #2d2d3a 0%, #1a1a24 100%)',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.5), inset 0 2px 1px rgba(255,255,255,0.1)'
+            boxShadow: '0 15px 40px rgba(0,0,0,0.5), inset 0 2px 1px rgba(255,255,255,0.1)'
           }}
         >
           {/* Inner Glass Container */}
           <div 
-            className="relative w-full h-full rounded-[32px] overflow-hidden"
+            className="relative w-full h-full rounded-[26px] overflow-hidden"
             style={{
               background: 'linear-gradient(180deg, rgba(20,25,40,0.95) 0%, rgba(10,15,25,0.98) 100%)',
-              boxShadow: 'inset 0 0 60px rgba(0,0,0,0.5), inset 0 -20px 40px rgba(0,0,0,0.3)'
+              boxShadow: 'inset 0 0 50px rgba(0,0,0,0.5), inset 0 -15px 30px rgba(0,0,0,0.3)'
             }}
           >
             {/* Glass reflection */}
             <div 
-              className="absolute inset-0 pointer-events-none rounded-[32px]"
+              className="absolute inset-0 pointer-events-none rounded-[26px]"
               style={{
                 background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 40%)'
               }}
             />
             
-            {/* === BIG DRAMATIC TUBE on the right === */}
-            <div className="absolute right-0 top-[15%] w-20 h-[70%] z-30">
-              {/* Funnel opening - catches the ball */}
+            {/* === TUBE - Smaller === */}
+            <div className="absolute right-0 top-[15%] w-14 h-[65%] z-30">
+              {/* Funnel */}
               <div 
-                className="absolute right-1 top-0 w-14 h-8"
+                className="absolute right-1 top-0 w-10 h-6"
                 style={{
                   background: 'linear-gradient(180deg, #4a4a5a 0%, #3d3d4a 100%)',
                   clipPath: 'polygon(0% 0%, 100% 0%, 85% 100%, 15% 100%)',
-                  boxShadow: 'inset 0 -3px 8px rgba(0,0,0,0.4)'
+                  boxShadow: 'inset 0 -2px 6px rgba(0,0,0,0.4)'
                 }}
               />
               
-              {/* Tube body - transparent so you see ball rolling */}
+              {/* Tube body */}
               <div 
-                className="absolute right-3 top-7 w-10 h-[85%] rounded-b-xl overflow-hidden"
+                className="absolute right-2 top-5 w-8 h-[82%] rounded-b-lg overflow-hidden"
                 style={{
                   background: 'linear-gradient(90deg, rgba(60,65,80,0.9) 0%, rgba(80,85,100,0.8) 50%, rgba(60,65,80,0.9) 100%)',
-                  boxShadow: 'inset 3px 0 10px rgba(0,0,0,0.5), inset -3px 0 10px rgba(0,0,0,0.5), 0 0 20px rgba(0,0,0,0.3)',
-                  border: '2px solid rgba(100,105,120,0.5)'
+                  boxShadow: 'inset 2px 0 8px rgba(0,0,0,0.5), inset -2px 0 8px rgba(0,0,0,0.5)',
+                  border: '2px solid rgba(100,105,120,0.4)'
                 }}
-              >
-                {/* Inner tube glass effect */}
-                <div 
-                  className="absolute inset-1 rounded-b-lg"
-                  style={{
-                    background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%)'
-                  }}
-                />
-              </div>
+              />
               
-              {/* Stopper mechanism - GLOWS when catching */}
+              {/* Stopper */}
               <div 
-                className={`absolute right-4 top-6 w-8 h-3 rounded-full transition-all duration-200 ${
-                  catchPhase === 'catching' ? 'bg-amber-400 scale-110' : 'bg-slate-600'
+                className={`absolute right-3 top-4 w-6 h-2 rounded-full transition-all duration-200 ${
+                  catchPhase === 'catching' ? 'bg-amber-400' : 'bg-slate-600'
                 }`}
                 style={{
                   boxShadow: catchPhase === 'catching' 
-                    ? '0 0 20px rgba(251,191,36,0.8), 0 0 40px rgba(251,191,36,0.4)' 
-                    : '0 2px 4px rgba(0,0,0,0.3)'
+                    ? '0 0 12px rgba(251,191,36,0.8)' 
+                    : '0 1px 3px rgba(0,0,0,0.3)'
                 }}
               />
               
-              {/* Ball rolling through tube - BIG and visible! */}
+              {/* Ball in tube */}
               {currentCatch && (
                 <div 
-                  className={`absolute right-4 transition-all ease-in-out ${
-                    catchPhase === 'catching' ? 'top-8 scale-125 duration-300' : 
-                    catchPhase === 'rolling' ? 'top-[70%] scale-110 duration-700' : 
-                    'top-[90%] scale-100 opacity-0 duration-300'
+                  className={`absolute right-3 transition-all ease-in-out ${
+                    catchPhase === 'catching' ? 'top-5 scale-100 duration-300' : 
+                    catchPhase === 'rolling' ? 'top-[65%] scale-95 duration-600' : 
+                    'top-[80%] scale-90 opacity-0 duration-300'
                   }`}
                   style={{
-                    filter: catchPhase === 'catching' ? 'drop-shadow(0 0 15px rgba(255,200,0,0.8))' : 'none'
+                    filter: catchPhase === 'catching' ? 'drop-shadow(0 0 10px rgba(255,200,0,0.7))' : 'none'
                   }}
                 >
-                  <Ball number={currentCatch} size="md" isWinner={true} />
+                  <Ball number={currentCatch} size="sm" isWinner={true} />
                 </div>
               )}
-              
-              {/* Exit chute at bottom */}
-              <div 
-                className="absolute right-2 bottom-0 w-12 h-4 rounded-b-lg"
-                style={{
-                  background: 'linear-gradient(180deg, #3d3d4a 0%, #2a2a35 100%)',
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.4)'
-                }}
-              />
             </div>
             
-            {/* Air jets at bottom - always on! */}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-4">
-              {[...Array(6)].map((_, i) => (
+            {/* Air jets - fewer */}
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-3">
+              {[...Array(5)].map((_, i) => (
                 <div key={i} className="relative">
                   <div 
-                    className="w-3 h-3 rounded-full transition-all"
+                    className="w-2 h-2 rounded-full transition-all"
                     style={{
                       background: 'radial-gradient(circle, #60a5fa 0%, #3b82f6 70%)',
                       boxShadow: (phase === 'spinning' || phase === 'selecting') 
-                        ? '0 0 15px #3b82f6, 0 0 25px #60a5fa' 
-                        : '0 0 8px #3b82f680'
+                        ? '0 0 10px #3b82f6' 
+                        : '0 0 5px #3b82f680'
                     }}
                   />
-                  {/* Air stream - always visible, stronger during spin */}
                   <div 
-                    className="absolute bottom-full left-1/2 -translate-x-1/2 w-2"
+                    className="absolute bottom-full left-1/2 -translate-x-1/2 w-1.5"
                     style={{
-                      height: (phase === 'spinning' || phase === 'selecting') ? '50px' : '25px',
-                      background: 'linear-gradient(to top, rgba(96,165,250,0.7), transparent)',
-                      filter: 'blur(3px)',
+                      height: (phase === 'spinning' || phase === 'selecting') ? '35px' : '18px',
+                      background: 'linear-gradient(to top, rgba(96,165,250,0.6), transparent)',
+                      filter: 'blur(2px)',
                       animation: 'airJet 0.3s ease-in-out infinite alternate',
-                      opacity: (phase === 'spinning' || phase === 'selecting') ? 1 : 0.5
+                      opacity: (phase === 'spinning' || phase === 'selecting') ? 1 : 0.4
                     }}
                   />
                 </div>
               ))}
             </div>
             
-            {/* Floating Balls */}
+            {/* Floating Balls - Smaller */}
             {balls.map((ball) => (
               <div
                 key={ball.number}
@@ -507,7 +483,7 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
                 style={{
                   left: `${ball.x}%`,
                   top: `${ball.y}%`,
-                  transform: 'translate(-50%, -50%)',
+                  transform: 'translate(-50%, -50%) scale(0.8)',
                   zIndex: Math.floor(ball.y)
                 }}
               >
@@ -522,33 +498,33 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
           
           {/* Gold rim */}
           <div 
-            className="absolute inset-0 rounded-[40px] pointer-events-none"
+            className="absolute inset-0 rounded-[32px] pointer-events-none"
             style={{
-              border: '3px solid rgba(212,175,55,0.4)'
+              border: '2px solid rgba(212,175,55,0.4)'
             }}
           />
         </div>
         
         {/* Brand plate */}
         <div 
-          className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full"
+          className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full"
           style={{
             background: 'linear-gradient(135deg, #d4af37 0%, #b8860b 100%)',
-            boxShadow: '0 2px 10px rgba(212,175,55,0.4)'
+            boxShadow: '0 2px 6px rgba(212,175,55,0.4)'
           }}
         >
-          <span className="text-xs font-bold text-gray-900 tracking-wider">LUCKY JACK</span>
+          <span className="text-[8px] font-bold text-gray-900 tracking-wider">LUCKY JACK</span>
         </div>
       </div>
 
-      {/* Results Display - Shows numbers one by one as they're caught */}
+      {/* Results Display - Compact */}
       <div 
-        className="px-6 py-5 rounded-2xl"
+        className="px-4 py-3 rounded-xl"
         style={{
           background: 'linear-gradient(180deg, rgba(30,35,50,0.95) 0%, rgba(20,25,35,0.98) 100%)',
-          boxShadow: '0 8px 30px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
+          boxShadow: '0 6px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
           border: '2px solid rgba(212,175,55,0.3)',
-          minWidth: '420px'
+          minWidth: '300px'
         }}
       >
         {/* Current catching indicator */}
@@ -566,8 +542,8 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
           </div>
         )}
         
-        {/* Number slots */}
-        <div className="flex gap-3 justify-center">
+        {/* Number slots - smaller */}
+        <div className="flex gap-2 justify-center">
           {[0, 1, 2, 3, 4, 5].map((i) => {
             const ballNumber = selectedBalls[i];
             const isBeingRevealed = catchPhase === 'revealed' && i === selectedBalls.length - 1;
@@ -576,11 +552,11 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
               <div key={i} className="relative">
                 {ballNumber ? (
                   <div className={isBeingRevealed ? 'ball-jump-in' : ''}>
-                    <Ball number={ballNumber} size="md" isWinner={true} />
+                    <Ball number={ballNumber} size="sm" isWinner={true} />
                   </div>
                 ) : (
                   <div 
-                    className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${
+                    className={`w-9 h-9 rounded-full border-2 flex items-center justify-center ${
                       phase === 'selecting' && i === selectedBalls.length 
                         ? 'border-amber-500 animate-pulse' 
                         : 'border-dashed border-slate-600'
@@ -591,7 +567,7 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
                         : 'rgba(30,40,60,0.5)' 
                     }}
                   >
-                    <span className="text-slate-500 text-lg">{i + 1}</span>
+                    <span className="text-slate-500 text-sm">{i + 1}</span>
                   </div>
                 )}
               </div>
@@ -735,16 +711,16 @@ function App() {
             Your Lucky Numbers
           </h2>
           
-          {/* Ball Machine + Lucky Wheel */}
-          <div className="flex items-start justify-center gap-6">
+          {/* Ball Machine + Lucky Wheel - Connected */}
+          <div className="flex items-start justify-center">
             {/* Ball Machine */}
             <BallMachine 
               isProcessing={loading}
               winningNumbers={prediction?.main_prediction || []}
             />
             
-            {/* Lucky Number Wheel */}
-            <div className="mt-8">
+            {/* Lucky Wheel - Angled perspective, connected tight */}
+            <div className="-ml-3 mt-10" style={{ transform: 'perspective(300px) rotateY(-20deg)' }}>
               <LuckyWheel 
                 luckyNumber={prediction?.lucky_prediction || 1}
                 isSpinning={wheelSpinning}
