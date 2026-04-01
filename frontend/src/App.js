@@ -83,19 +83,18 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
   const [tubeAnimation, setTubeAnimation] = useState(null); // Ball currently in tube
   const [selectionIndex, setSelectionIndex] = useState(0);
   
-  const GRAVITY = 0.12;
-  const AIR_FORCE = -0.9;
-  const FRICTION = 0.985;
+  const GRAVITY = 0.06;  // Very gentle gravity
+  const FRICTION = 0.96;
   const BOUNCE = 0.65;
 
-  // Initialize balls at bottom
+  // Initialize balls scattered throughout the container
   useEffect(() => {
     const allBalls = Array.from({ length: 42 }, (_, i) => ({
       number: i + 1,
-      x: 8 + (i % 7) * 13 + Math.random() * 4,
-      y: 65 + Math.floor(i / 7) * 6 + Math.random() * 4,
-      vx: 0,
-      vy: 0,
+      x: 10 + Math.random() * 75, // Spread across width
+      y: 15 + Math.random() * 70, // Spread across height
+      vx: (Math.random() - 0.5) * 2,
+      vy: (Math.random() - 0.5) * 2,
       captured: false
     }));
     setBalls(allBalls);
@@ -108,13 +107,13 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
       setShowResults(false);
       setSelectedBalls([]);
       setSelectionIndex(0);
-      // Reset captured state
+      // Reset captured state for all balls
       setBalls(prev => prev.map(b => ({ ...b, captured: false })));
     } else if (!isProcessing && phase === 'spinning' && winningNumbers.length > 0) {
-      // Wait 3 seconds of spinning before starting selection
+      // Wait 2.5 seconds of spinning before starting selection
       const delay = setTimeout(() => {
         setPhase('selecting');
-      }, 3000);
+      }, 2500);
       return () => clearTimeout(delay);
     }
   }, [isProcessing, winningNumbers, phase]);
@@ -124,26 +123,28 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
     if (phase === 'selecting' && selectionIndex < winningNumbers.length) {
       const ballNumber = winningNumbers[selectionIndex];
       
-      // Start tube animation
+      // Start tube animation for this specific ball
       setTubeAnimation(ballNumber);
       
-      // Mark ball as captured
+      // Mark ONLY this specific ball as captured (fades out of the container)
       setBalls(prev => prev.map(b => 
-        b.number === ballNumber ? { ...b, captured: true, y: 8, x: 85 } : b
+        b.number === ballNumber ? { ...b, captured: true } : b
       ));
       
-      // 2 seconds between each ball for dramatic effect
+      // 1.2 seconds between each ball for dramatic effect
       const timer = setTimeout(() => {
         setTubeAnimation(null);
         setSelectedBalls(prev => [...prev, ballNumber]);
         setSelectionIndex(prev => prev + 1);
-      }, 2000);
+      }, 1200);
       
       return () => clearTimeout(timer);
     } else if (phase === 'selecting' && selectionIndex >= winningNumbers.length) {
-      // All balls selected
-      setPhase('complete');
-      setShowResults(true);
+      // All balls selected - slow down and complete
+      setTimeout(() => {
+        setPhase('complete');
+        setShowResults(true);
+      }, 500);
     }
   }, [phase, selectionIndex, winningNumbers]);
 
@@ -156,35 +157,66 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
     }
   }, [winningNumbers, phase]);
 
-  // Physics loop
+  // Physics loop - always running for continuous motion
   useEffect(() => {
     const interval = setInterval(() => {
       setBalls(prev => prev.map(ball => {
-        if (ball.captured) return ball; // Don't move captured balls
+        if (ball.captured) return ball;
         
         let vx = ball.vx;
-        let vy = ball.vy + GRAVITY;
+        let vy = ball.vy;
         
-        if (phase === 'spinning' || phase === 'selecting') {
-          vy += AIR_FORCE + (Math.random() - 0.5) * 0.4;
-          vx += (Math.random() - 0.5) * 1.2;
+        const isActive = phase === 'spinning' || phase === 'selecting';
+        
+        if (isActive) {
+          // LOTTERY MACHINE PHYSICS - balls FILL the entire container!
+          // Base upward air pressure to counteract gravity
+          vy -= 0.15;
+          
+          // Strong push based on Y position - lower balls get pushed up MORE
+          if (ball.y > 60) {
+            vy -= 1.5;  // Very strong push at bottom
+          } else if (ball.y > 40) {
+            vy -= 0.8;  // Medium push in middle
+          } else if (ball.y < 25) {
+            vy += 0.4;  // Slight downward at top to prevent all sticking at ceiling
+          }
+          
+          // Random turbulence
+          vx += (Math.random() - 0.5) * 2.5;
+          vy += (Math.random() - 0.5) * 1.5;
+          
+          // Occasional strong bursts
+          if (Math.random() < 0.15) {
+            vy -= 1.0 + Math.random();
+            vx += (Math.random() - 0.5) * 2;
+          }
+        } else {
+          // IDLE - Gentle gravity, balls settle at bottom with slight drift
+          vy += GRAVITY;
+          vx += (Math.random() - 0.5) * 0.1;
         }
         
         vx *= FRICTION;
         vy *= FRICTION;
         
+        // Limit velocity
+        const maxV = isActive ? 5 : 2;
+        vx = Math.max(-maxV, Math.min(maxV, vx));
+        vy = Math.max(-maxV, Math.min(maxV, vy));
+        
         let x = ball.x + vx;
         let y = ball.y + vy;
         
-        // Boundaries
-        if (x < 6) { x = 6; vx = -vx * BOUNCE; }
-        if (x > 94) { x = 94; vx = -vx * BOUNCE; }
-        if (y < 8) { y = 8; vy = -vy * BOUNCE; }
-        if (y > 90) { y = 90; vy = -vy * BOUNCE; }
+        // Boundaries with bounce
+        if (x < 10) { x = 10; vx = Math.abs(vx) * BOUNCE; }
+        if (x > 90) { x = 90; vx = -Math.abs(vx) * BOUNCE; }
+        if (y < 12) { y = 12; vy = Math.abs(vy) * BOUNCE; }
+        if (y > 82) { y = 82; vy = -Math.abs(vy) * BOUNCE; }
         
         return { ...ball, x, y, vx, vy };
       }));
-    }, 25);
+    }, 33);
     return () => clearInterval(interval);
   }, [phase]);
 
