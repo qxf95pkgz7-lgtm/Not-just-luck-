@@ -80,30 +80,29 @@
 
 /* Lucky card */
 .lucky-card {
-  background: linear-gradient(135deg, #3D1515 0%, #4A1A1A 100%);
+  background: linear-gradient(135deg, rgba(31, 41, 55, 0.9) 0%, rgba(17, 24, 39, 0.95) 100%);
   border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 30px rgba(220, 38, 38, 0.1);
-  border: 1px solid rgba(220, 38, 38, 0.3);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3), 0 0 40px rgba(212, 175, 55, 0.05);
+  border: 1px solid rgba(212, 175, 55, 0.2);
 }
 
 /* Lucky button */
 .lucky-btn {
-  background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
-  color: white;
-  font-weight: 600;
+  background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+  color: #1a1a2e;
+  font-weight: 700;
   border-radius: 50px;
   padding: 14px 28px;
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.4);
   font-size: 15px;
 }
 
 .lucky-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5);
-  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+  box-shadow: 0 6px 25px rgba(212, 175, 55, 0.5);
 }
 
 .lucky-btn:active:not(:disabled) {

@@ -5,19 +5,18 @@
 @tailwind utilities;
 
 :root {
-  --bg-primary: #2D0A0A;
-  --bg-secondary: #1A0505;
-  --bg-card: #3D1515;
-  --accent-gold: #FFD700;
-  --accent-red: #DC2626;
-  --accent-red-light: #EF4444;
-  --accent-green: #4ADE80;
-  --accent-blue: #60A5FA;
-  --accent-pink: #F472B6;
-  --accent-purple: #A78BFA;
-  --text-primary: #FFFFFF;
-  --text-secondary: #FCA5A5;
-  --border: #7F1D1D;
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-card: #1f2937;
+  --accent-gold: #d4af37;
+  --accent-brass: #b8860b;
+  --accent-silver: #c0c0c0;
+  --accent-green: #10b981;
+  --accent-blue: #3b82f6;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border: #374151;
+  --glass: rgba(255, 255, 255, 0.1);
 }
 
 * {
@@ -29,7 +28,7 @@ body {
   font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #B91C1C 0%, #DC2626 50%, #EF4444 100%);
+  background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
   color: var(--text-primary);
   min-height: 100vh;
 }
@@ -91,43 +90,44 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::-webkit-scrollbar-track {
-  background: #2D0A0A;
+  background: #1a1a2e;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #DC2626;
+  background: #d4af37;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #EF4444;
+  background: #f0c850;
 }
 
 /* Card styles */
 .lucky-card {
-  background: linear-gradient(135deg, #3D1515 0%, #4A1A1A 100%);
-  border-radius: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 30px rgba(220, 38, 38, 0.1);
-  border: 1px solid rgba(220, 38, 38, 0.3);
+  background: linear-gradient(135deg, rgba(31, 41, 55, 0.9) 0%, rgba(17, 24, 39, 0.95) 100%);
+  border-radius: 20px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3), 0 0 40px rgba(212, 175, 55, 0.05);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  backdrop-filter: blur(10px);
 }
 
 /* Button styles */
 .lucky-btn {
-  background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
-  color: white;
-  font-weight: 600;
+  background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+  color: #1a1a2e;
+  font-weight: 700;
   border-radius: 50px;
   padding: 12px 28px;
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.4);
 }
 
 .lucky-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5);
-  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+  box-shadow: 0 6px 25px rgba(212, 175, 55, 0.5);
+  background: linear-gradient(135deg, #f0c850 0%, #d4af37 100%);
 }
 
 /* Tab styles */
@@ -141,12 +141,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .lucky-tab.active {
-  background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
-  color: white;
-  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+  background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+  color: #1a1a2e;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
 }
 
 .lucky-tab:hover:not(.active) {
-  background: rgba(220, 38, 38, 0.2);
+  background: rgba(212, 175, 55, 0.15);
   color: var(--text-primary);
 }
