@@ -1300,6 +1300,31 @@ async def get_master_prediction(birthday: str = None, name: str = None):
                                 scores[predicted]["score"] += 10
                                 scores[predicted]["reasons"].append(f"🔮 Serial missing: {missing}→P1={predicted}")
     
+    # === 23. BASE NUMBER PATTERN ===
+    # Base Number = Draw 2 P1 + Hidden
+    # This base number appears at P4 in Draw 1
+    # Can predict P4 early: nextP1 + hidden = P4
+    if len(quarter_draws) >= 2:
+        d1 = quarter_draws[0]
+        d2 = quarter_draws[1]
+        
+        # Hidden number
+        p1_hidden = abs(d2['numbers'][0] - d1['numbers'][1])
+        
+        # Base number = Draw 2 P1 + Hidden
+        base_number = d2['numbers'][0] + p1_hidden
+        
+        if 1 <= base_number <= 42:
+            scores[base_number]["score"] += 15
+            scores[base_number]["reasons"].append(f"🎯 Base number: D2_P1({d2['numbers'][0]})+hidden({p1_hidden})={base_number}")
+        
+        # Also: current P1 + hidden might predict future P4
+        if last_draw:
+            predicted_p4 = last_draw['numbers'][0] + p1_hidden
+            if 1 <= predicted_p4 <= 42:
+                scores[predicted_p4]["score"] += 10
+                scores[predicted_p4]["reasons"].append(f"🎯 P4 predict: lastP1({last_draw['numbers'][0]})+hidden({p1_hidden})={predicted_p4}")
+    
     # === 22. P4 HIDDEN NUMBER PATTERN ===
     # P4 Hidden = P1 Hidden + P2 (from first draw)
     # Then count sequence and track P4 matches
