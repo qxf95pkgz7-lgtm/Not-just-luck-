@@ -179,43 +179,46 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
         // GRAVITY always pulls down
         vy += GRAVITY;
         
-        const isActive = phase === 'spinning' || phase === 'selecting';
+        const isSpinning = phase === 'spinning' || phase === 'selecting';
         
-        if (isActive) {
-          // === AIR JETS FIGHTING GRAVITY ===
-          // Strong base upward force
-          vy -= 0.5;
-          
-          // Extra push for balls in lower half (air comes from bottom)
+        // AIR JETS - always on but stronger during spin!
+        if (isSpinning) {
+          // INTENSE air during spin
+          vy -= 0.6;
           if (ball.y > 50) {
-            vy -= 1.2 + Math.random() * 0.5;
+            vy -= 1.4 + Math.random() * 0.6;
           } else if (ball.y > 30) {
-            vy -= 0.4;
+            vy -= 0.5;
           }
-          
-          // Random turbulence - makes it chaotic!
           vx += (Math.random() - 0.5) * 2.5;
           vy += (Math.random() - 0.5) * 1.8;
-          
-          // Occasional STRONG burst (like air pocket)
           if (Math.random() < 0.1) {
             vy -= 3 + Math.random() * 2;
             vx += (Math.random() - 0.5) * 3;
+          }
+        } else {
+          // GENTLE floating when idle/complete - balls still move!
+          vy -= 0.25;
+          if (ball.y > 60) {
+            vy -= 0.4 + Math.random() * 0.3;
+          }
+          vx += (Math.random() - 0.5) * 0.8;
+          vy += (Math.random() - 0.5) * 0.5;
+          if (Math.random() < 0.03) {
+            vy -= 1.5;
           }
         }
         
         vx *= FRICTION;
         vy *= FRICTION;
         
-        // Speed limits
-        const maxV = isActive ? 7 : 3;
+        const maxV = isSpinning ? 7 : 3;
         vx = Math.max(-maxV, Math.min(maxV, vx));
         vy = Math.max(-maxV, Math.min(maxV, vy));
         
         let x = ball.x + vx;
         let y = ball.y + vy;
         
-        // Boundaries with bounce
         if (x < 8) { x = 8; vx = Math.abs(vx) * BOUNCE; }
         if (x > 82) { x = 82; vx = -Math.abs(vx) * BOUNCE; }
         if (y < 10) { y = 10; vy = Math.abs(vy) * BOUNCE; }
@@ -255,76 +258,98 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
               }}
             />
             
-            {/* === TUBE MECHANISM on the right === */}
-            <div className="absolute right-0 top-1/4 w-16 h-32 z-30">
-              {/* Tube funnel opening */}
+            {/* === BIG DRAMATIC TUBE on the right === */}
+            <div className="absolute right-0 top-[15%] w-20 h-[70%] z-30">
+              {/* Funnel opening - catches the ball */}
               <div 
-                className="absolute right-2 top-0 w-10 h-10"
+                className="absolute right-1 top-0 w-14 h-8"
                 style={{
-                  borderLeft: '15px solid transparent',
-                  borderRight: '15px solid transparent',
-                  borderTop: '20px solid #3d3d4a',
+                  background: 'linear-gradient(180deg, #4a4a5a 0%, #3d3d4a 100%)',
+                  clipPath: 'polygon(0% 0%, 100% 0%, 85% 100%, 15% 100%)',
+                  boxShadow: 'inset 0 -3px 8px rgba(0,0,0,0.4)'
                 }}
               />
               
-              {/* Tube body */}
+              {/* Tube body - transparent so you see ball rolling */}
               <div 
-                className="absolute right-3 top-5 w-8 h-24 rounded-b-lg"
+                className="absolute right-3 top-7 w-10 h-[85%] rounded-b-xl overflow-hidden"
                 style={{
-                  background: 'linear-gradient(90deg, #2a2a35 0%, #3d3d4a 50%, #2a2a35 100%)',
-                  boxShadow: 'inset 2px 0 5px rgba(0,0,0,0.5), inset -2px 0 5px rgba(0,0,0,0.3)'
+                  background: 'linear-gradient(90deg, rgba(60,65,80,0.9) 0%, rgba(80,85,100,0.8) 50%, rgba(60,65,80,0.9) 100%)',
+                  boxShadow: 'inset 3px 0 10px rgba(0,0,0,0.5), inset -3px 0 10px rgba(0,0,0,0.5), 0 0 20px rgba(0,0,0,0.3)',
+                  border: '2px solid rgba(100,105,120,0.5)'
                 }}
-              />
+              >
+                {/* Inner tube glass effect */}
+                <div 
+                  className="absolute inset-1 rounded-b-lg"
+                  style={{
+                    background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%)'
+                  }}
+                />
+              </div>
               
-              {/* Stopper mechanism - the thing that catches balls */}
+              {/* Stopper mechanism - GLOWS when catching */}
               <div 
-                className={`absolute right-4 top-3 w-6 h-2 rounded transition-all duration-300 ${
-                  catchPhase === 'catching' ? 'bg-amber-500' : 'bg-slate-500'
+                className={`absolute right-4 top-6 w-8 h-3 rounded-full transition-all duration-200 ${
+                  catchPhase === 'catching' ? 'bg-amber-400 scale-110' : 'bg-slate-600'
                 }`}
                 style={{
-                  boxShadow: catchPhase === 'catching' ? '0 0 10px rgba(245,158,11,0.5)' : 'none'
+                  boxShadow: catchPhase === 'catching' 
+                    ? '0 0 20px rgba(251,191,36,0.8), 0 0 40px rgba(251,191,36,0.4)' 
+                    : '0 2px 4px rgba(0,0,0,0.3)'
                 }}
               />
               
-              {/* Ball in tube animation */}
+              {/* Ball rolling through tube - BIG and visible! */}
               {currentCatch && (
                 <div 
-                  className={`absolute right-4 transition-all duration-500 ${
-                    catchPhase === 'catching' ? 'top-4 scale-110' : 
-                    catchPhase === 'rolling' ? 'top-20 scale-100' : 
-                    'top-24 scale-90 opacity-0'
+                  className={`absolute right-4 transition-all ease-in-out ${
+                    catchPhase === 'catching' ? 'top-8 scale-125 duration-300' : 
+                    catchPhase === 'rolling' ? 'top-[70%] scale-110 duration-700' : 
+                    'top-[90%] scale-100 opacity-0 duration-300'
                   }`}
+                  style={{
+                    filter: catchPhase === 'catching' ? 'drop-shadow(0 0 15px rgba(255,200,0,0.8))' : 'none'
+                  }}
                 >
-                  <Ball number={currentCatch} size="sm" isWinner={true} />
+                  <Ball number={currentCatch} size="md" isWinner={true} />
                 </div>
               )}
+              
+              {/* Exit chute at bottom */}
+              <div 
+                className="absolute right-2 bottom-0 w-12 h-4 rounded-b-lg"
+                style={{
+                  background: 'linear-gradient(180deg, #3d3d4a 0%, #2a2a35 100%)',
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.4)'
+                }}
+              />
             </div>
             
-            {/* Air jets at bottom */}
+            {/* Air jets at bottom - always on! */}
             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-4">
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="relative">
                   <div 
                     className="w-3 h-3 rounded-full transition-all"
                     style={{
-                      background: (phase === 'spinning' || phase === 'selecting')
-                        ? 'radial-gradient(circle, #60a5fa 0%, #3b82f6 70%)' 
-                        : 'rgba(60,70,90,0.5)',
+                      background: 'radial-gradient(circle, #60a5fa 0%, #3b82f6 70%)',
                       boxShadow: (phase === 'spinning' || phase === 'selecting') 
-                        ? '0 0 15px #3b82f6' : 'none'
+                        ? '0 0 15px #3b82f6, 0 0 25px #60a5fa' 
+                        : '0 0 8px #3b82f680'
                     }}
                   />
-                  {(phase === 'spinning' || phase === 'selecting') && (
-                    <div 
-                      className="absolute bottom-full left-1/2 -translate-x-1/2 w-2"
-                      style={{
-                        height: `${30 + Math.random() * 20}px`,
-                        background: 'linear-gradient(to top, rgba(96,165,250,0.6), transparent)',
-                        filter: 'blur(3px)',
-                        animation: 'airJet 0.3s ease-in-out infinite alternate'
-                      }}
-                    />
-                  )}
+                  {/* Air stream - always visible, stronger during spin */}
+                  <div 
+                    className="absolute bottom-full left-1/2 -translate-x-1/2 w-2"
+                    style={{
+                      height: (phase === 'spinning' || phase === 'selecting') ? '50px' : '25px',
+                      background: 'linear-gradient(to top, rgba(96,165,250,0.7), transparent)',
+                      filter: 'blur(3px)',
+                      animation: 'airJet 0.3s ease-in-out infinite alternate',
+                      opacity: (phase === 'spinning' || phase === 'selecting') ? 1 : 0.5
+                    }}
+                  />
                 </div>
               ))}
             </div>
