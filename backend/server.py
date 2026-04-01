@@ -1244,6 +1244,62 @@ async def get_master_prediction(birthday: str = None, name: str = None):
                     scores[n]["score"] += 5
                     scores[n]["reasons"].append(f"🔢 P6+Lucky family: starts with {digit1}")
     
+    # === 19. QUARTER FIRST SERIES - HIDDEN NUMBER SEQUENCE ===
+    # Pattern: First draw P1 represents hidden number (found via nextP1 - P2)
+    # Count sequence from hidden, track through P1 and P2
+    # P1 sums predict next (5+7=12 → next P1=13)
+    # Serial sequences (32,33,34) minus offset = hidden sequence (11,12,13)
+    
+    # Get quarter draws
+    quarter_size = 27  # First 3 quarters have 27 draws
+    current_quarter_start = (len(year_draws) // quarter_size) * quarter_size
+    quarter_draws = year_draws[current_quarter_start:] if year_draws else []
+    
+    if len(quarter_draws) >= 2:
+        # Find hidden number: nextP1 - P2 from first draw
+        first_draw = quarter_draws[0]
+        second_draw = quarter_draws[1]
+        hidden_num = second_draw['numbers'][0] - first_draw['numbers'][1]
+        
+        if 1 <= abs(hidden_num) <= 20:
+            # Current position in quarter
+            pos_in_quarter = len(quarter_draws)
+            
+            # Calculate expected sequence number
+            seq_num = abs(hidden_num) + pos_in_quarter
+            
+            # Boost sequence number if valid
+            if 1 <= seq_num <= 42:
+                scores[seq_num]["score"] += 15
+                scores[seq_num]["reasons"].append(f"🔮 Quarter hidden seq: {abs(hidden_num)}+{pos_in_quarter}={seq_num}")
+            
+            # P1 sum pattern: sum of last two P1s predicts next
+            if len(quarter_draws) >= 2:
+                last_p1 = quarter_draws[-1]['numbers'][0]
+                prev_p1 = quarter_draws[-2]['numbers'][0]
+                p1_sum = last_p1 + prev_p1
+                
+                # Next P1 might be p1_sum or p1_sum + 1
+                for candidate in [p1_sum, p1_sum + 1]:
+                    if 1 <= candidate <= 42:
+                        scores[candidate]["score"] += 12
+                        scores[candidate]["reasons"].append(f"🔮 P1 sum: {prev_p1}+{last_p1}={p1_sum} → {candidate}")
+            
+            # Serial pattern: look for consecutive runs, missing = appears at P1
+            if last_draw:
+                nums = sorted(last_draw['numbers'])
+                for j in range(len(nums) - 1):
+                    if nums[j+1] - nums[j] == 1:  # Consecutive
+                        # Check what's missing in the run
+                        if j + 2 < len(nums) and nums[j+2] - nums[j+1] == 2:
+                            missing = nums[j+1] + 1
+                            # The missing number minus offset might appear at P1
+                            offset = nums[j] - abs(hidden_num)
+                            predicted = missing - offset
+                            if 1 <= predicted <= 42:
+                                scores[predicted]["score"] += 10
+                                scores[predicted]["reasons"].append(f"🔮 Serial missing: {missing}→P1={predicted}")
+    
     # === 15. RARE EVENT COUNTS ===
     def get_group(n):
         if n <= 9: return 1
