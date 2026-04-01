@@ -63,25 +63,20 @@ const Ball = ({ number, size = "sm", isWinner = false, isSpinning = false, delay
   );
 };
 
-// Lottery Ball Machine with Physics (Gravity + Air Pressure)
-const BallMachine = ({ isProcessing, winningNumbers }) => {
+// Lottery Ball Machine with Result Slots - Simplified
+const BallMachine = ({ isProcessing, winningNumbers, luckyNumber }) => {
   const [balls, setBalls] = useState([]);
   const [phase, setPhase] = useState('idle'); // idle, spinning, complete
   const [showResults, setShowResults] = useState(false);
-  const GRAVITY = 0.15;
-  const AIR_PRESSURE = -0.8; // Upward force when button pressed
-  const FRICTION = 0.98;
-  const BOUNCE = 0.7;
 
-  // Initialize all 42 balls with gravity - they settle at bottom
+  // Initialize all 42 balls
   useEffect(() => {
     const allBalls = Array.from({ length: 42 }, (_, i) => ({
       number: i + 1,
-      x: 10 + (i % 7) * 12 + Math.random() * 5,
-      y: 70 + Math.floor(i / 7) * 5 + Math.random() * 5,
-      vx: 0,
-      vy: 0,
-      radius: 4
+      x: Math.random() * 80 + 10,
+      y: Math.random() * 80 + 10,
+      vx: (Math.random() - 0.5) * 4,
+      vy: (Math.random() - 0.5) * 4
     }));
     setBalls(allBalls);
   }, []);
@@ -91,137 +86,172 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
     if (isProcessing) {
       setPhase('spinning');
       setShowResults(false);
+      // Reset balls with faster movement
+      const allBalls = Array.from({ length: 42 }, (_, i) => ({
+        number: i + 1,
+        x: Math.random() * 80 + 10,
+        y: Math.random() * 80 + 10,
+        vx: (Math.random() - 0.5) * 6,
+        vy: (Math.random() - 0.5) * 6
+      }));
+      setBalls(allBalls);
     } else if (winningNumbers.length > 0 && phase === 'spinning') {
+      // Only transition to complete if we were spinning
       setPhase('complete');
       setTimeout(() => {
         setShowResults(true);
-      }, 500);
+      }, 300);
     } else if (winningNumbers.length > 0 && phase === 'idle') {
+      // Initial load with numbers - show them immediately
       setShowResults(true);
       setPhase('complete');
     }
   }, [isProcessing, winningNumbers, phase]);
 
-  // Physics simulation
+  // Animate balls when spinning
   useEffect(() => {
+    if (phase !== 'spinning') return;
+
     const interval = setInterval(() => {
       setBalls(prev => prev.map(ball => {
+        let newX = ball.x + ball.vx;
+        let newY = ball.y + ball.vy;
         let newVx = ball.vx;
         let newVy = ball.vy;
-        
-        // Apply gravity (always pulling down)
-        newVy += GRAVITY;
-        
-        // Apply air pressure when spinning (pushes balls up)
-        if (phase === 'spinning') {
-          newVy += AIR_PRESSURE + (Math.random() - 0.5) * 0.5;
-          newVx += (Math.random() - 0.5) * 1.5; // Random horizontal turbulence
-        }
-        
-        // Apply friction
-        newVx *= FRICTION;
-        newVy *= FRICTION;
-        
-        // Calculate new position
-        let newX = ball.x + newVx;
-        let newY = ball.y + newVy;
-        
+
         // Bounce off walls
-        if (newX < 5) { newX = 5; newVx = -newVx * BOUNCE; }
-        if (newX > 95) { newX = 95; newVx = -newVx * BOUNCE; }
-        if (newY < 5) { newY = 5; newVy = -newVy * BOUNCE; }
-        if (newY > 92) { newY = 92; newVy = -newVy * BOUNCE; }
-        
+        if (newX < 5 || newX > 95) newVx = -newVx * 0.9;
+        if (newY < 5 || newY > 95) newVy = -newVy * 0.9;
+
+        // Add some randomness
+        newVx += (Math.random() - 0.5) * 0.5;
+        newVy += (Math.random() - 0.5) * 0.5;
+
+        // Clamp velocity
+        newVx = Math.max(-5, Math.min(5, newVx));
+        newVy = Math.max(-5, Math.min(5, newVy));
+
         return {
           ...ball,
-          x: newX,
-          y: newY,
+          x: Math.max(5, Math.min(95, newX)),
+          y: Math.max(5, Math.min(95, newY)),
           vx: newVx,
           vy: newVy
         };
       }));
-    }, 30);
+    }, 50);
 
     return () => clearInterval(interval);
   }, [phase]);
 
   return (
     <div className="flex flex-col items-center">
-      {/* Single Big Ball Machine Box */}
-      <div className="relative w-80 h-80 mb-6">
-        <div 
-          className="absolute inset-0 rounded-3xl overflow-hidden"
-          style={{
-            background: 'linear-gradient(180deg, rgba(30,10,10,0.95) 0%, rgba(20,5,5,0.98) 100%)',
-            boxShadow: 'inset 0 0 40px rgba(0,0,0,0.5), inset 0 -20px 40px rgba(0,0,0,0.3), 0 10px 40px rgba(0,0,0,0.4)',
-            border: '4px solid #7F1D1D'
-          }}
-        >
-          {/* Glass effect overlay */}
+      {/* Two boxes side by side */}
+      <div className="flex items-center justify-center gap-4 mb-6">
+        {/* Box 1: The 42 Ball Machine */}
+        <div className="relative w-44 h-44 flex-shrink-0">
           <div 
-            className="absolute inset-0 pointer-events-none"
+            className="absolute inset-0 rounded-2xl overflow-hidden"
             style={{
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 50%)',
-              borderRadius: '20px'
+              background: 'linear-gradient(180deg, rgba(60,20,20,0.95) 0%, rgba(40,10,10,0.98) 100%)',
+              boxShadow: 'inset 0 0 20px rgba(220,38,38,0.2), 0 8px 30px rgba(0,0,0,0.3)',
+              border: '3px solid #DC2626'
             }}
-          />
-          
-          {/* Air vents at bottom (visual) */}
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2">
-            {[...Array(5)].map((_, i) => (
-              <div 
-                key={i}
-                className={`w-3 h-3 rounded-full ${phase === 'spinning' ? 'animate-pulse' : ''}`}
+          >
+            {/* Balls inside */}
+            {balls.map((ball) => (
+              <div
+                key={ball.number}
+                className="absolute"
                 style={{
-                  background: phase === 'spinning' 
-                    ? 'radial-gradient(circle, rgba(255,100,100,0.8) 0%, rgba(255,50,50,0.3) 100%)' 
-                    : 'rgba(80,30,30,0.5)',
-                  boxShadow: phase === 'spinning' ? '0 0 10px rgba(255,100,100,0.5)' : 'none'
+                  left: `${ball.x}%`,
+                  top: `${ball.y}%`,
+                  transform: 'translate(-50%, -50%)',
+                  transition: phase === 'spinning' ? 'none' : 'all 0.3s ease'
                 }}
-              />
+              >
+                <Ball 
+                  number={ball.number} 
+                  size="xs"
+                  isSpinning={phase === 'spinning'}
+                />
+              </div>
             ))}
           </div>
-          
-          {/* Balls inside */}
-          {balls.map((ball) => (
-            <div
-              key={ball.number}
-              className="absolute transition-none"
-              style={{
-                left: `${ball.x}%`,
-                top: `${ball.y}%`,
-                transform: 'translate(-50%, -50%)',
-                zIndex: Math.floor(ball.y)
-              }}
-            >
-              <Ball 
-                number={ball.number} 
-                size="sm"
-                isSpinning={phase === 'spinning'}
-              />
+          {/* Label */}
+          <div className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
+            <span className="text-xs font-bold text-red-400">🎱 42 Balls</span>
+          </div>
+          {/* Bottom decoration */}
+          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-12 h-3 bg-gradient-to-r from-red-600 to-red-700 rounded-b-lg" />
+        </div>
+
+        {/* Arrow */}
+        <div className="text-2xl text-red-400 animate-pulse">→</div>
+
+        {/* Box 2: Lucky Number Result Box */}
+        <div className="relative w-44 h-44 flex-shrink-0">
+          <div 
+            className="absolute inset-0 rounded-2xl flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(180deg, rgba(60,20,20,0.95) 0%, rgba(40,10,10,0.98) 100%)',
+              boxShadow: 'inset 0 0 20px rgba(220,38,38,0.2), 0 8px 30px rgba(0,0,0,0.3)',
+              border: '3px solid #DC2626'
+            }}
+          >
+            {/* Floating emojis */}
+            <span className="absolute top-2 left-2 text-lg animate-bounce">🍀</span>
+            <span className="absolute top-2 right-2 text-lg animate-bounce" style={{animationDelay: '0.3s'}}>🤞</span>
+            <span className="absolute bottom-2 left-2 text-sm animate-pulse">✨</span>
+            <span className="absolute bottom-2 right-2 text-sm animate-pulse" style={{animationDelay: '0.5s'}}>🌟</span>
+            
+            {/* Center content - Lucky Number Prediction */}
+            <div className="text-center">
+              <span className="text-sm font-bold text-red-400">LUCKY NUMBER</span>
+              {phase === 'spinning' ? (
+                <>
+                  <div className="text-4xl font-bold text-red-300 animate-pulse">?</div>
+                  <span className="text-xs text-red-400 animate-pulse">🤞 Guessing...</span>
+                </>
+              ) : (
+                <>
+                  <div 
+                    className="text-5xl font-bold my-1"
+                    style={{
+                      background: 'linear-gradient(135deg, #FFD700, #EF4444, #FFD700)',
+                      backgroundSize: '200% 200%',
+                      animation: luckyNumber ? 'shimmer 2s linear infinite' : 'none',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      textShadow: '0 0 20px rgba(220,38,38,0.5)'
+                    }}
+                  >
+                    {luckyNumber || '?'}
+                  </div>
+                  {luckyNumber && (
+                    <span className="text-xs text-yellow-400 font-semibold">🍀 Our guess!</span>
+                  )}
+                </>
+              )}
             </div>
-          ))}
+          </div>
+          {/* Label */}
+          <div className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
+            <span className="text-xs font-bold text-red-400">🎯 Lucky (1-6)</span>
+          </div>
+          {/* Bottom decoration */}
+          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-12 h-3 bg-gradient-to-r from-red-600 to-red-700 rounded-b-lg" />
         </div>
-        
-        {/* Label */}
-        <div className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap">
-          <span className="text-lg font-bold text-white drop-shadow-lg">🎱 Lucky Jack Machine 🎱</span>
-        </div>
-        
-        {/* Bottom stand */}
-        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-40 h-4 bg-gradient-to-b from-red-800 to-red-900 rounded-b-xl" 
-          style={{ boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}
-        />
       </div>
 
-      {/* Winning balls - horizontal row below */}
+      {/* Winning balls - horizontal row below the boxes */}
       <div 
-        className="p-5 rounded-2xl min-h-[80px] flex items-center justify-center"
+        className="p-4 rounded-2xl min-h-[70px] flex items-center justify-center"
         style={{
-          background: showResults ? 'linear-gradient(180deg, rgba(30,10,10,0.95) 0%, rgba(20,5,5,0.98) 100%)' : 'transparent',
-          boxShadow: showResults ? '0 4px 20px rgba(0,0,0,0.4)' : 'none',
-          border: showResults ? '4px solid #7F1D1D' : '3px dashed rgba(255,100,100,0.3)',
-          minWidth: '360px'
+          background: showResults ? 'linear-gradient(180deg, rgba(60,20,20,0.95) 0%, rgba(40,10,10,0.98) 100%)' : 'transparent',
+          boxShadow: showResults ? '0 4px 20px rgba(0,0,0,0.3)' : 'none',
+          border: showResults ? '3px solid #DC2626' : '3px dashed rgba(220,38,38,0.3)',
+          minWidth: '320px'
         }}
       >
         {showResults && winningNumbers.length > 0 ? (
@@ -237,8 +267,8 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
             ))}
           </div>
         ) : (
-          <span className="text-red-300 text-sm">
-            {phase === 'spinning' ? '🌪️ Air pressure activated! Drawing numbers...' : '🍀 Press button to activate air pressure! 🤞'}
+          <span className="text-red-400 text-sm">
+            {phase === 'spinning' ? '🎰 Drawing your lucky numbers...' : '🍀 Your lucky numbers will appear here 🤞'}
           </span>
         )}
       </div>
@@ -342,10 +372,11 @@ function App() {
             ✨ Your Lucky Numbers ✨
           </h2>
           
-          {/* Ball Machine */}
+          {/* Ball Machine + Result Slots */}
           <BallMachine 
             isProcessing={loading}
             winningNumbers={prediction?.main_prediction || []}
+            luckyNumber={prediction?.lucky_prediction}
           />
           
           {/* Prompt text */}

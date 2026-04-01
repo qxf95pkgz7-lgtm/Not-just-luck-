@@ -29,7 +29,7 @@ body {
   font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #B91C1C 0%, #DC2626 50%, #EF4444 100%);
+  background: linear-gradient(135deg, #1A0505 0%, #2D0A0A 50%, #450A0A 100%);
   color: var(--text-primary);
   min-height: 100vh;
 }
