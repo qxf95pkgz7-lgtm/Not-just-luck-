@@ -1210,6 +1210,40 @@ async def get_master_prediction(birthday: str = None, name: str = None):
             scores[lucky]["score"] += 15
             scores[lucky]["reasons"].append(f"🎯 Lucky→First: {lucky} (13.9% pattern)")
     
+    # === 18. POSITION 6 + LUCKY → DIGITS PATTERN (18% P1, 6.4% P2) ===
+    # Sum of Position 6 + Lucky number → digits become next P1 and P2
+    # Example: P6=35, Lucky=1 → 36 → digits 3,6 → next draw P1=3, P2=6
+    if last_draw and last_draw.get('lucky_number'):
+        p6 = last_draw['numbers'][5]  # Position 6 (last/highest number)
+        lucky = last_draw['lucky_number']
+        sum_p6_lucky = p6 + lucky
+        
+        # Extract digits
+        digit1 = sum_p6_lucky // 10  # tens digit
+        digit2 = sum_p6_lucky % 10   # ones digit
+        
+        # Boost digit1 (18% hit rate for P1!)
+        if 1 <= digit1 <= 9:
+            scores[digit1]["score"] += 18
+            scores[digit1]["reasons"].append(f"🔢 P6+Lucky: {p6}+{lucky}={sum_p6_lucky} → digit {digit1} (18%)")
+        
+        # Boost digit2 (6.4% hit rate for P2)
+        if 1 <= digit2 <= 9 and digit2 != digit1:
+            scores[digit2]["score"] += 10
+            scores[digit2]["reasons"].append(f"🔢 P6+Lucky: {p6}+{lucky}={sum_p6_lucky} → digit {digit2}")
+        
+        # Also boost combined number if ≤42
+        if 10 <= sum_p6_lucky <= 42:
+            scores[sum_p6_lucky]["score"] += 8
+            scores[sum_p6_lucky]["reasons"].append(f"🔢 P6+Lucky sum: {sum_p6_lucky}")
+        
+        # Boost numbers starting with digit1 (e.g., digit1=3 → 30,31,32...)
+        if 1 <= digit1 <= 4:
+            for n in range(digit1 * 10, min(digit1 * 10 + 10, 43)):
+                if 1 <= n <= 42:
+                    scores[n]["score"] += 5
+                    scores[n]["reasons"].append(f"🔢 P6+Lucky family: starts with {digit1}")
+    
     # === 15. RARE EVENT COUNTS ===
     def get_group(n):
         if n <= 9: return 1
