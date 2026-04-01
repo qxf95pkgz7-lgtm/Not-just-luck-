@@ -67,6 +67,7 @@ const Ball = ({ number, size = "sm", isWinner = false, isSpinning = false, delay
 const BallMachine = ({ isProcessing, winningNumbers }) => {
   const [balls, setBalls] = useState([]);
   const [phase, setPhase] = useState('idle'); // idle, spinning, complete
+  const [showResults, setShowResults] = useState(false);
 
   // Initialize all 42 balls
   useEffect(() => {
@@ -84,6 +85,7 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
   useEffect(() => {
     if (isProcessing) {
       setPhase('spinning');
+      setShowResults(false);
       // Reset balls with faster movement
       const allBalls = Array.from({ length: 42 }, (_, i) => ({
         number: i + 1,
@@ -95,6 +97,10 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
       setBalls(allBalls);
     } else if (winningNumbers.length > 0) {
       setPhase('complete');
+      // Delay showing results for jump effect
+      setTimeout(() => {
+        setShowResults(true);
+      }, 300);
     }
   }, [isProcessing, winningNumbers]);
 
@@ -135,102 +141,111 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
   }, [phase]);
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      {/* The Main Ball Machine */}
-      <div className="relative w-56 h-56 flex-shrink-0">
-        {/* Glass container */}
-        <div 
-          className="absolute inset-0 rounded-3xl overflow-hidden"
-          style={{
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,248,240,0.95) 100%)',
-            boxShadow: 'inset 0 0 30px rgba(0,0,0,0.1), 0 10px 40px rgba(0,0,0,0.1)',
-            border: '4px solid #FFD700'
-          }}
-        >
-          {/* Balls inside */}
-          {balls.map((ball) => (
-            <div
-              key={ball.number}
-              className="absolute"
-              style={{
-                left: `${ball.x}%`,
-                top: `${ball.y}%`,
-                transform: 'translate(-50%, -50%)',
-                transition: phase === 'spinning' ? 'none' : 'all 0.3s ease'
-              }}
-            >
-              <Ball 
-                number={ball.number} 
-                size="xs"
-                isSpinning={phase === 'spinning'}
-              />
+    <div className="flex flex-col items-center">
+      {/* Two boxes side by side */}
+      <div className="flex items-center justify-center gap-4 mb-6">
+        {/* Box 1: The 42 Ball Machine */}
+        <div className="relative w-44 h-44 flex-shrink-0">
+          <div 
+            className="absolute inset-0 rounded-2xl overflow-hidden"
+            style={{
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,248,240,0.95) 100%)',
+              boxShadow: 'inset 0 0 20px rgba(0,0,0,0.1), 0 8px 30px rgba(0,0,0,0.1)',
+              border: '3px solid #FFD700'
+            }}
+          >
+            {/* Balls inside */}
+            {balls.map((ball) => (
+              <div
+                key={ball.number}
+                className="absolute"
+                style={{
+                  left: `${ball.x}%`,
+                  top: `${ball.y}%`,
+                  transform: 'translate(-50%, -50%)',
+                  transition: phase === 'spinning' ? 'none' : 'all 0.3s ease'
+                }}
+              >
+                <Ball 
+                  number={ball.number} 
+                  size="xs"
+                  isSpinning={phase === 'spinning'}
+                />
+              </div>
+            ))}
+          </div>
+          {/* Label */}
+          <div className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
+            <span className="text-xs font-bold text-amber-600">🎱 42 Balls</span>
+          </div>
+          {/* Bottom decoration */}
+          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-12 h-3 bg-gradient-to-r from-amber-400 to-amber-500 rounded-b-lg" />
+        </div>
+
+        {/* Arrow */}
+        <div className="text-2xl text-amber-400 animate-pulse">→</div>
+
+        {/* Box 2: Lucky 6 Result Box */}
+        <div className="relative w-44 h-44 flex-shrink-0">
+          <div 
+            className="absolute inset-0 rounded-2xl flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(180deg, #FFF9E6 0%, #FFF3CD 100%)',
+              boxShadow: 'inset 0 0 20px rgba(255,184,0,0.1), 0 8px 30px rgba(0,0,0,0.08)',
+              border: '3px solid #FFD700'
+            }}
+          >
+            {/* Floating emojis */}
+            <span className="absolute top-2 left-2 text-lg animate-bounce">🍀</span>
+            <span className="absolute top-2 right-2 text-lg animate-bounce" style={{animationDelay: '0.3s'}}>🤞</span>
+            <span className="absolute bottom-2 left-2 text-sm animate-pulse">✨</span>
+            <span className="absolute bottom-2 right-2 text-sm animate-pulse" style={{animationDelay: '0.5s'}}>🌟</span>
+            
+            {/* Center content */}
+            <div className="text-center">
+              <span className="text-lg font-bold text-amber-600">LUCKY</span>
+              <div className="text-4xl font-bold text-amber-500">6</div>
+              {phase === 'spinning' && (
+                <span className="text-xs text-amber-500 animate-pulse">🤞 Mixing...</span>
+              )}
             </div>
-          ))}
-        </div>
-
-        {/* Machine decoration - bottom */}
-        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-16 h-5 bg-gradient-to-r from-amber-400 to-amber-500 rounded-b-xl" />
-        
-        {/* Sparkle on top */}
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <Sparkles className="w-6 h-6 text-amber-400 animate-pulse" />
-        </div>
-
-        {/* Status text below machine */}
-        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap">
-          {phase === 'spinning' && (
-            <p className="text-amber-600 font-medium animate-pulse text-sm">🤞 Mixing... 🍀</p>
-          )}
+          </div>
+          {/* Label */}
+          <div className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
+            <span className="text-xs font-bold text-amber-600">🍀 Winners</span>
+          </div>
+          {/* Bottom decoration */}
+          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-12 h-3 bg-gradient-to-r from-amber-400 to-amber-500 rounded-b-lg" />
         </div>
       </div>
 
-      {/* Result Slots Box - 6 numbered slots in horizontal row */}
+      {/* Winning balls - horizontal row below the boxes */}
       <div 
-        className="flex-shrink-0 p-3 rounded-2xl relative"
+        className="p-4 rounded-2xl min-h-[70px] flex items-center justify-center"
         style={{
-          background: 'linear-gradient(180deg, #FFF9E6 0%, #FFF3CD 100%)',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-          border: '3px solid #FFD700'
+          background: showResults ? 'linear-gradient(180deg, #FFF9E6 0%, #FFF3CD 100%)' : 'transparent',
+          boxShadow: showResults ? '0 4px 20px rgba(0,0,0,0.08)' : 'none',
+          border: showResults ? '3px solid #FFD700' : '3px dashed #FFD70050',
+          minWidth: '320px'
         }}
       >
-        {/* Floating luck emojis */}
-        <span className="absolute -top-2 -left-2 text-lg animate-bounce">🍀</span>
-        <span className="absolute -top-2 -right-2 text-lg animate-bounce" style={{animationDelay: '0.3s'}}>🤞</span>
-        <span className="absolute -bottom-2 -left-2 text-sm animate-pulse">✨</span>
-        <span className="absolute -bottom-2 -right-2 text-sm animate-pulse" style={{animationDelay: '0.5s'}}>🌟</span>
-        
-        <div className="text-center mb-2">
-          <span className="text-xs font-bold text-amber-700">🍀 LUCKY 6 🍀</span>
-        </div>
-        
-        {/* 6 Slots in horizontal row */}
-        <div className="flex gap-2">
-          {[0, 1, 2, 3, 4, 5].map((slotIndex) => {
-            const ballNumber = winningNumbers[slotIndex];
-            return (
-              <div
-                key={slotIndex}
-                className="relative w-11 h-11 rounded-xl flex items-center justify-center"
-                style={{
-                  background: ballNumber ? 'transparent' : 'rgba(255,255,255,0.8)',
-                  border: ballNumber ? 'none' : '2px dashed #FFD700',
-                }}
+        {showResults && winningNumbers.length > 0 ? (
+          <div className="flex gap-3">
+            {winningNumbers.map((num, i) => (
+              <div 
+                key={num}
+                className="ball-jump-in"
+                style={{ animationDelay: `${i * 100}ms` }}
               >
-                {/* Slot number label */}
-                {!ballNumber && (
-                  <span className="text-amber-300 font-bold text-sm">{slotIndex + 1}</span>
-                )}
-                
-                {/* Ball in slot */}
-                {ballNumber && (
-                  <div className="ball-jump-in absolute inset-0 flex items-center justify-center">
-                    <Ball number={ballNumber} size="sm" isWinner={true} />
-                  </div>
-                )}
+                <Ball number={num} size="md" isWinner={true} />
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <span className="text-amber-300 text-sm">
+            {phase === 'spinning' ? '🎰 Drawing your lucky numbers...' : '🍀 Your lucky numbers will appear here 🤞'}
+          </span>
+        )}
       </div>
     </div>
   );
