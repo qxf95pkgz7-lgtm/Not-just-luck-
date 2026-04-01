@@ -46,6 +46,8 @@ class DrawResponse(BaseModel):
     draw_number: Optional[str] = None
     numbers: List[int]
     families: List[int]  # Which groups (1 or 2) the numbers belong to
+    lucky_number: Optional[int] = None
+    replay_number: Optional[int] = None
 
 class DashboardStats(BaseModel):
     total_draws: int
@@ -482,7 +484,9 @@ async def get_draws():
             date=d['date'],
             draw_number=d.get('draw_number'),
             numbers=d['numbers'],
-            families=get_families(d['numbers'])
+            families=get_families(d['numbers']),
+            lucky_number=d.get('lucky_number'),
+            replay_number=d.get('replay_number')
         )
         for d in draws
     ]
