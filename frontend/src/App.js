@@ -1,1217 +1,319 @@
 import { useState, useEffect, useCallback } from "react";
 import "@/App.css";
 import axios from "axios";
-import { 
-  LayoutDashboard, History, Link2, Target, Plus, RefreshCw, 
-  TrendingUp, Hash, Clock, Trash2, X, Zap, Layers, Timer
-} from "lucide-react";
+import { Sparkles, Star, Gift, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Number Ball Component
-const NumberBall = ({ number, size = "md" }) => {
-  const isLow = number <= 21;
+// Lucky Ball Component with fun colors
+const LuckyBall = ({ number, size = "md", delay = 0 }) => {
+  const colors = [
+    "from-amber-400 to-orange-500",
+    "from-emerald-400 to-green-500", 
+    "from-sky-400 to-blue-500",
+    "from-pink-400 to-rose-500",
+    "from-violet-400 to-purple-500",
+    "from-teal-400 to-cyan-500"
+  ];
+  
+  const colorIndex = (number - 1) % colors.length;
+  
   const sizeClasses = {
-    sm: "w-8 h-8 text-sm",
-    md: "w-10 h-10 text-base",
-    lg: "w-14 h-14 text-xl"
+    sm: "w-10 h-10 text-sm",
+    md: "w-14 h-14 text-lg",
+    lg: "w-20 h-20 text-2xl"
   };
   
   return (
     <div 
-      className={`${sizeClasses[size]} rounded-lg flex items-center justify-center font-mono font-bold ${
-        isLow ? "bg-sky-500" : "bg-orange-500"
-      } text-white shadow-lg`}
-      data-testid={`number-ball-${number}`}
+      className={`${sizeClasses[size]} rounded-full flex items-center justify-center font-bold text-white shadow-lg bg-gradient-to-br ${colors[colorIndex]} transform hover:scale-110 transition-all duration-300`}
+      style={{ 
+        animationDelay: `${delay}ms`,
+        boxShadow: '0 4px 15px rgba(0,0,0,0.15), inset 0 -3px 10px rgba(0,0,0,0.1)'
+      }}
     >
       {number}
     </div>
   );
 };
 
-// Family Badge Component
-const FamilyBadge = ({ family }) => (
-  <span 
-    className={`px-2 py-1 rounded text-xs font-mono ${
-      family === 1 
-        ? "bg-sky-500/10 text-sky-400 border border-sky-500/20" 
-        : "bg-orange-500/10 text-orange-400 border border-orange-500/20"
-    }`}
-  >
-    {family}
-  </span>
-);
-
-// Dashboard Tab
-const Dashboard = ({ stats, onRefresh }) => {
-  if (!stats) return <div className="text-center py-10 text-zinc-400">Loading...</div>;
-
+// Spinning Lucky Wheel
+const SpinningWheel = ({ numbers, isSpinning }) => {
   return (
-    <div className="space-y-6" data-testid="dashboard-panel">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-          <div className="flex items-center justify-between">
-            <span className="text-zinc-400 text-sm">Total Draws</span>
-            <Clock className="w-4 h-4 text-zinc-500" />
-          </div>
-          <p className="text-4xl font-mono font-bold text-sky-400 mt-2" data-testid="total-draws">
-            {stats.total_draws}
-          </p>
-        </div>
-        
-        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-          <div className="flex items-center justify-between">
-            <span className="text-zinc-400 text-sm">Rare Events</span>
-            <Target className="w-4 h-4 text-zinc-500" />
-          </div>
-          <p className="text-4xl font-mono font-bold text-white mt-2">{stats.rare_events}</p>
-          <span className="text-zinc-500 text-xs">Unusual positions detected</span>
-        </div>
-        
-        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-          <div className="flex items-center justify-between">
-            <span className="text-zinc-400 text-sm">Chain Links</span>
-            <Link2 className="w-4 h-4 text-zinc-500" />
-          </div>
-          <p className="text-4xl font-mono font-bold text-white mt-2">{stats.chain_links}</p>
-          <span className="text-zinc-500 text-xs">Number connections found</span>
-        </div>
-        
-        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-          <div className="flex items-center justify-between">
-            <span className="text-zinc-400 text-sm">Series Found</span>
-            <TrendingUp className="w-4 h-4 text-zinc-500" />
-          </div>
-          <p className="text-4xl font-mono font-bold text-white mt-2">{stats.series_found}</p>
-          <span className="text-zinc-500 text-xs">Consecutive patterns</span>
-        </div>
-      </div>
-
-      {/* Number Groups */}
-      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <LayoutDashboard className="w-5 h-5" /> Number Groups
-        </h3>
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="bg-[#0F0F10] rounded-lg p-4">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sky-400 font-medium">Group 1 (Low)</span>
-              <span className="text-zinc-400 text-sm px-2 py-1 bg-[#18181A] rounded">1-21</span>
-            </div>
-            <p className="text-4xl font-mono font-bold text-white">{stats.group1_count}</p>
-            <div className="mt-3 h-2 bg-[#27272A] rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-sky-500 rounded-full transition-all duration-500"
-                style={{ width: `${stats.group1_percentage}%` }}
-              />
-            </div>
-            <span className="text-zinc-500 text-xs mt-1 block">{stats.group1_percentage}% of draws</span>
-          </div>
-          
-          <div className="bg-[#0F0F10] rounded-lg p-4">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-orange-400 font-medium">Group 2 (High)</span>
-              <span className="text-zinc-400 text-sm px-2 py-1 bg-[#18181A] rounded">22-42</span>
-            </div>
-            <p className="text-4xl font-mono font-bold text-white">{stats.group2_count}</p>
-            <div className="mt-3 h-2 bg-[#27272A] rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-orange-500 rounded-full transition-all duration-500"
-                style={{ width: `${stats.group2_percentage}%` }}
-              />
-            </div>
-            <span className="text-zinc-500 text-xs mt-1 block">{stats.group2_percentage}% of draws</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Hot & Cold Numbers */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-orange-400">
-            <TrendingUp className="w-5 h-5" /> Hot Numbers
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {stats.hot_numbers.map((item, i) => (
-              <div key={i} className="flex items-center gap-1">
-                <NumberBall number={item.number} size="sm" />
-                <span className="text-zinc-500 text-xs font-mono">{item.count}x</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-sky-400">
-            <Hash className="w-5 h-5" /> Cold Numbers
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {stats.cold_numbers.map((item, i) => (
-              <div key={i} className="flex items-center gap-1">
-                <NumberBall number={item.number} size="sm" />
-                <span className="text-zinc-500 text-xs font-mono">{item.count}x</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Last Draws */}
-      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Clock className="w-5 h-5" /> Last Draws
-        </h3>
-        <div className="space-y-3">
-          {stats.last_draws.map((draw, i) => (
-            <div key={i} className="flex items-center justify-between py-2 border-b border-[#27272A]/50 last:border-0">
-              <span className="text-zinc-400 font-mono text-sm">{draw.date}</span>
-              <div className="flex gap-2">
-                {draw.numbers.map((num, j) => (
-                  <NumberBall key={j} number={num} size="sm" />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Draw History Tab
-const DrawHistory = ({ draws, onDelete }) => {
-  return (
-    <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5" data-testid="draw-history-panel">
-      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <Clock className="w-5 h-5" /> Draw History
-      </h3>
+    <div className="relative w-64 h-64 mx-auto my-8">
+      {/* Outer ring */}
+      <div 
+        className={`absolute inset-0 rounded-full border-8 border-amber-300 ${isSpinning ? 'spin-slow' : ''}`}
+        style={{
+          background: 'conic-gradient(from 0deg, #FFD700, #FF9500, #FF6B6B, #A78BFA, #60A5FA, #4ADE80, #FFD700)'
+        }}
+      />
       
-      <div className="overflow-x-auto">
-        <table className="w-full" data-testid="draw-history-table">
-          <thead>
-            <tr className="text-xs uppercase tracking-wider text-zinc-400 border-b border-[#27272A]">
-              <th className="text-left pb-3 font-medium">Date</th>
-              <th className="text-left pb-3 font-medium">Draw #</th>
-              <th className="text-left pb-3 font-medium">Numbers</th>
-              <th className="text-left pb-3 font-medium">Families</th>
-              <th className="text-right pb-3 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {draws.map((draw) => (
-              <tr key={draw.id} className="border-b border-[#27272A]/50 hover:bg-[#27272A]/20">
-                <td className="py-4 font-mono text-sm">{draw.date}</td>
-                <td className="py-4 font-mono text-sm text-zinc-400">{draw.draw_number || "-"}</td>
-                <td className="py-4">
-                  <div className="flex gap-2">
-                    {draw.numbers.map((num, i) => (
-                      <NumberBall key={i} number={num} size="sm" />
-                    ))}
-                  </div>
-                </td>
-                <td className="py-4">
-                  <div className="flex gap-1">
-                    {draw.families.map((f, i) => (
-                      <FamilyBadge key={i} family={f} />
-                    ))}
-                  </div>
-                </td>
-                <td className="py-4 text-right">
-                  <button 
-                    onClick={() => onDelete(draw.id)}
-                    className="text-red-400 hover:text-red-300 p-2 hover:bg-red-500/10 rounded"
-                    data-testid={`delete-draw-${draw.id}`}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </td>
-              </tr>
+      {/* Inner circle */}
+      <div className="absolute inset-4 rounded-full bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center shadow-inner">
+        <div className="text-center">
+          <div className="flex flex-wrap justify-center gap-2 p-4">
+            {numbers.slice(0, 6).map((n, i) => (
+              <LuckyBall key={i} number={n} size="sm" delay={i * 100} />
             ))}
-          </tbody>
-        </table>
+          </div>
+        </div>
       </div>
       
-      {draws.length === 0 && (
-        <div className="text-center py-10 text-zinc-500">
-          No draws yet. Add your first draw!
-        </div>
-      )}
+      {/* Decorative stars */}
+      <Sparkles className="absolute -top-4 -right-4 w-8 h-8 text-amber-400 float" />
+      <Star className="absolute -bottom-2 -left-2 w-6 h-6 text-amber-400 float" style={{animationDelay: '0.5s'}} />
+      <Sparkles className="absolute top-1/2 -right-6 w-6 h-6 text-amber-400 float" style={{animationDelay: '1s'}} />
     </div>
   );
 };
 
-// Master Predictor Component
-const MasterPredictor = ({ prediction, loading, onRefresh }) => {
-  const [birthday, setBirthday] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [usesBirthday, setUsesBirthday] = useState(false);
-  const [usesName, setUsesName] = useState(false);
-
-  const handleRefreshWithPersonal = () => {
-    const bday = usesBirthday ? birthday : null;
-    const name = usesName ? fullName : null;
-    onRefresh(bday, name);
+// Simple Stats Card
+const StatCard = ({ label, value, icon, color = "amber" }) => {
+  const colors = {
+    amber: "from-amber-400 to-orange-500",
+    green: "from-emerald-400 to-green-500",
+    blue: "from-sky-400 to-blue-500",
+    pink: "from-pink-400 to-rose-500"
   };
-
-  if (loading) return <div className="text-center py-10 text-zinc-400">Generating master prediction...</div>;
-  if (!prediction) return <div className="text-center py-10 text-zinc-400">Click refresh to generate prediction</div>;
-
+  
   return (
-    <div className="space-y-6" data-testid="master-predictor-panel">
-      {/* Personal Mode */}
-      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <span className="text-2xl">✨</span> Personal Mode
-        </h3>
-        <div className="space-y-4">
-          {/* Birthday */}
-          <div className="flex flex-wrap items-center gap-4">
-            <label className="flex items-center gap-2 cursor-pointer min-w-[160px]">
-              <input 
-                type="checkbox" 
-                checked={usesBirthday}
-                onChange={(e) => setUsesBirthday(e.target.checked)}
-                className="w-5 h-5 rounded bg-[#0F0F10] border-[#27272A]"
-              />
-              <span className="text-zinc-300">🎂 Birthday</span>
-            </label>
-            {usesBirthday && (
-              <input
-                type="text"
-                value={birthday}
-                onChange={(e) => setBirthday(e.target.value)}
-                placeholder="DD/MM/YYYY"
-                className="bg-[#0F0F10] border border-[#27272A] rounded-lg px-4 py-2 text-white font-mono w-40"
-                data-testid="birthday-input"
-              />
-            )}
-          </div>
-          
-          {/* Name */}
-          <div className="flex flex-wrap items-center gap-4">
-            <label className="flex items-center gap-2 cursor-pointer min-w-[160px]">
-              <input 
-                type="checkbox" 
-                checked={usesName}
-                onChange={(e) => setUsesName(e.target.checked)}
-                className="w-5 h-5 rounded bg-[#0F0F10] border-[#27272A]"
-              />
-              <span className="text-zinc-300">🔤 Full Name</span>
-            </label>
-            {usesName && (
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Your full name"
-                className="bg-[#0F0F10] border border-[#27272A] rounded-lg px-4 py-2 text-white w-48"
-                data-testid="name-input"
-              />
-            )}
-          </div>
-          
-          <button 
-            onClick={handleRefreshWithPersonal}
-            className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg flex items-center gap-2"
-            data-testid="generate-prediction-btn"
-          >
-            <Zap className="w-4 h-4" /> Generate Prediction
-          </button>
-        </div>
-        
-        {/* Personal Lucky Numbers */}
-        {(prediction.birthday_mode || prediction.name_mode) && (
-          <div className="mt-4 space-y-2">
-            {prediction.birthday_mode && (
-              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
-                <span className="text-yellow-400 text-sm">
-                  🎂 {prediction.birthday_mode.birthday} → Lucky: {prediction.birthday_mode.lucky_numbers.join(", ")}
-                </span>
-              </div>
-            )}
-            {prediction.name_mode && (
-              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
-                <span className="text-blue-400 text-sm">
-                  🔤 {prediction.name_mode.name} ({prediction.name_mode.full_sum}) → Lucky: {prediction.name_mode.lucky_numbers.join(", ")}
-                </span>
-              </div>
-            )}
-          </div>
-        )}
+    <div className="lucky-card p-4 text-center">
+      <div className={`w-12 h-12 mx-auto mb-2 rounded-full bg-gradient-to-br ${colors[color]} flex items-center justify-center text-white`}>
+        {icon}
       </div>
-
-      {/* Header */}
-      <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-lg p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold flex items-center gap-3">
-            <Zap className="w-8 h-8 text-yellow-400" />
-            Master Prediction
-          </h2>
-        </div>
-        <p className="text-zinc-400 text-sm">
-          Draw #{prediction.for_draw.draw_number} | Q{prediction.for_draw.quarter} | Position {prediction.for_draw.position}
-        </p>
-        
-        {/* Main Prediction */}
-        <div className="mt-6">
-          <span className="text-zinc-300 text-sm">Predicted Numbers:</span>
-          <div className="flex gap-4 mt-3">
-            {prediction.main_prediction.map((n, i) => (
-              <div key={i} className="text-center">
-                <NumberBall number={n} size="lg" />
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 flex items-center gap-2">
-            <span className="text-zinc-400 text-sm">Average Confidence:</span>
-            <span className="text-yellow-400 font-mono font-bold">{prediction.average_confidence}%</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Why These Numbers */}
-      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Target className="w-5 h-5 text-green-400" /> Why These Numbers
-        </h3>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {prediction.main_prediction_details.map((p, i) => (
-            <div key={i} className="bg-[#0F0F10] rounded-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <NumberBall number={p.number} size="md" />
-                <span className="text-yellow-400 font-mono text-sm">Score: {p.score}</span>
-              </div>
-              <ul className="space-y-1">
-                {p.reasons.map((r, j) => (
-                  <li key={j} className="text-zinc-400 text-xs flex items-start gap-1">
-                    <span className="text-green-400">•</span> {r}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Alternates */}
-      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Layers className="w-5 h-5 text-purple-400" /> Alternate Numbers
-        </h3>
-        <div className="flex flex-wrap gap-3">
-          {prediction.alternate_details.map((a, i) => (
-            <div key={i} className="bg-[#0F0F10] rounded-lg p-3 text-center min-w-[80px]">
-              <NumberBall number={a.number} size="sm" />
-              <span className="text-zinc-500 text-xs mt-1 block">Score: {a.score}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Last Draw */}
-      {prediction.last_draw && (
-        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Clock className="w-5 h-5" /> Last Draw ({prediction.last_draw.date})
-          </h3>
-          <div className="flex gap-3">
-            {prediction.last_draw.numbers.map((n, i) => (
-              <NumberBall key={i} number={n} size="md" />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Patterns Used */}
-      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-        <h3 className="text-lg font-semibold mb-3 text-zinc-400">Patterns Used</h3>
-        <div className="flex flex-wrap gap-2">
-          {prediction.patterns_used.map((p, i) => (
-            <span key={i} className={`text-xs px-3 py-1 rounded-full border ${p.includes('🎂') ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' : 'bg-[#0F0F10] text-zinc-400 border-[#27272A]'}`}>
-              {p}
-            </span>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Quarter Predictor Tab
-const QuarterPredictor = ({ prediction, loading, onRefresh }) => {
-  if (loading) return <div className="text-center py-10 text-zinc-400">Loading predictor...</div>;
-  if (!prediction) return <div className="text-center py-10 text-zinc-400">Click refresh to load predictions</div>;
-
-  const pos = prediction.next_draw_position;
-
-  return (
-    <div className="space-y-6" data-testid="quarter-predictor-panel">
-      {/* Header Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-4 text-center">
-          <span className="text-zinc-400 text-sm">Year</span>
-          <p className="text-2xl font-mono font-bold text-white">{prediction.current_year}</p>
-        </div>
-        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-4 text-center">
-          <span className="text-zinc-400 text-sm">Draws This Year</span>
-          <p className="text-2xl font-mono font-bold text-sky-400">{prediction.total_draws_this_year}</p>
-        </div>
-        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-4 text-center">
-          <span className="text-zinc-400 text-sm">Current Quarter</span>
-          <p className="text-2xl font-mono font-bold text-orange-400">Q{prediction.current_quarter}</p>
-        </div>
-        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-4 text-center">
-          <span className="text-zinc-400 text-sm">Next Position</span>
-          <p className="text-2xl font-mono font-bold text-green-400">{pos.from_top}/{pos.from_bottom}</p>
-        </div>
-      </div>
-
-      {/* Position Numbers */}
-      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-yellow-400">
-          <Zap className="w-5 h-5" /> Position Numbers
-          <span className="text-zinc-400 text-sm font-normal ml-2">
-            (Position {pos.from_top} ↓ + {pos.from_bottom} ↑ = {pos.sum})
-          </span>
-        </h3>
-        <div className="flex gap-6">
-          {prediction.position_numbers.map((p, i) => (
-            <div key={i} className="text-center">
-              <NumberBall number={p.number} size="lg" />
-              <span className="text-zinc-400 text-xs mt-2 block">{p.type.replace('_', ' ')}</span>
-              <span className="text-yellow-400 text-xs font-mono">{p.confidence}%</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Linked Suggestions */}
-      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-green-400">
-          <Link2 className="w-5 h-5" /> Linked Numbers (Digit Patterns)
-        </h3>
-        <div className="flex flex-wrap gap-3">
-          {prediction.linked_suggestions.map((l, i) => (
-            <div key={i} className="bg-[#0F0F10] rounded-lg p-3 text-center">
-              <NumberBall number={l.number} size="sm" />
-              <span className="text-zinc-500 text-xs mt-1 block">↔ {l.linked_to}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Historical at this position */}
-      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-purple-400">
-          <History className="w-5 h-5" /> Historical at Position {pos.from_top}
-        </h3>
-        <div className="space-y-2">
-          {prediction.historical_at_position.map((h, i) => {
-            const hasPos = h.numbers.includes(pos.from_top) || h.numbers.includes(pos.from_bottom);
-            return (
-              <div key={i} className={`bg-[#0F0F10] rounded-lg p-3 flex items-center justify-between ${hasPos ? 'border border-green-500/30' : ''}`}>
-                <div className="flex items-center gap-3">
-                  <span className="text-zinc-400 font-mono text-sm">{h.year} Q{h.quarter}</span>
-                  <div className="flex gap-1">
-                    {h.numbers.map((n, j) => (
-                      <NumberBall key={j} number={n} size="sm" />
-                    ))}
-                  </div>
-                </div>
-                {hasPos && <span className="text-green-400 text-sm">✓ hit</span>}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Top Historical Numbers */}
-      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-orange-400">
-          <TrendingUp className="w-5 h-5" /> Hot at This Position
-        </h3>
-        <div className="flex flex-wrap gap-3">
-          {prediction.historical_suggestions.slice(0, 8).map((h, i) => (
-            <div key={i} className="bg-[#0F0F10] rounded-lg p-3 text-center min-w-[70px]">
-              <NumberBall number={h.number} size="sm" />
-              <span className="text-zinc-500 text-xs mt-1 block">{h.count}x</span>
-              <span className="text-orange-400 text-xs font-mono">{h.confidence}%</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Last Draw */}
-      {prediction.last_draw && (
-        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Clock className="w-5 h-5" /> Last Draw ({prediction.last_draw.date})
-          </h3>
-          <div className="flex gap-3">
-            {prediction.last_draw.numbers.map((n, i) => (
-              <NumberBall key={i} number={n} size="md" />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Date Patterns - NEW */}
-      {prediction.date_patterns && prediction.date_patterns.length > 0 && (
-        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-cyan-400">
-            <Clock className="w-5 h-5" /> Date Patterns (from last draw)
-          </h3>
-          <div className="flex flex-wrap gap-4">
-            {prediction.date_patterns.map((dp, i) => (
-              <div key={i} className="bg-[#0F0F10] rounded-lg p-3 text-center min-w-[100px]">
-                <NumberBall number={dp.number} size="md" />
-                <span className="text-zinc-400 text-xs mt-2 block">{dp.reason}</span>
-                <span className="text-cyan-400 text-xs font-mono">{dp.confidence}%</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Advanced Patterns Tab
-const AdvancedPatterns = ({ patterns, loading, onRefresh }) => {
-  if (loading) return <div className="text-center py-10 text-zinc-400">Analyzing patterns from 2020...</div>;
-  if (!patterns) return <div className="text-center py-10 text-zinc-400">Click refresh to load advanced patterns</div>;
-
-  return (
-    <div className="space-y-6" data-testid="advanced-patterns-panel">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Advanced Pattern Analysis (from {patterns.from_year})</h2>
-        <span className="text-zinc-400 text-sm">{patterns.total_draws_analyzed} draws analyzed</span>
-      </div>
-
-      {/* Series Completions - Your 10-11-12 + 34→13 pattern */}
-      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-yellow-400">
-          <Zap className="w-5 h-5" /> Series Completions (Digit Reversal)
-          <span className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-1 rounded text-xs ml-2">
-            {patterns.series_completions?.length || 0} found
-          </span>
-        </h3>
-        <div className="space-y-3 max-h-72 overflow-y-auto">
-          {patterns.series_completions?.map((p, i) => (
-            <div key={i} className="bg-[#0F0F10] rounded-lg p-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-zinc-400 text-sm font-mono">{p.date}</span>
-                <span className="text-yellow-400 text-xs">Series: {p.full_series?.join('-')}</span>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                {p.series?.map((n, j) => <NumberBall key={j} number={n} size="sm" />)}
-                <span className="text-zinc-500">+</span>
-                <NumberBall number={p.completed_by} size="sm" />
-                <span className="text-zinc-500">→</span>
-                <span className="text-yellow-400 font-mono font-bold">{p.as_reversed}</span>
-              </div>
-            </div>
-          ))}
-          {(!patterns.series_completions || patterns.series_completions.length === 0) && (
-            <div className="text-zinc-500 text-center py-4">No series completions found</div>
-          )}
-        </div>
-      </div>
-
-      {/* Cross-Draw Connections - Your 4+5=45→54→12 pattern */}
-      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-green-400">
-          <Link2 className="w-5 h-5" /> Cross-Draw Digit Sums
-          <span className="bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-1 rounded text-xs ml-2">
-            {patterns.cross_draw_connections?.length || 0} found
-          </span>
-        </h3>
-        <div className="space-y-2 max-h-72 overflow-y-auto">
-          {patterns.cross_draw_connections?.slice(0, 20).map((p, i) => (
-            <div key={i} className="bg-[#0F0F10] rounded-lg p-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <NumberBall number={p.numbers[0]} size="sm" />
-                <span className="text-zinc-500">+</span>
-                <NumberBall number={p.numbers[1]} size="sm" />
-                <span className="text-zinc-500">=</span>
-                <span className="font-mono text-white">{p.combined}</span>
-                <span className="text-zinc-500">→</span>
-                <span className="font-mono text-green-400">{p.reversed}</span>
-                <span className="text-zinc-500">Σ</span>
-                <span className="font-mono text-green-400 font-bold">{p.digit_sum}</span>
-              </div>
-              <span className="text-zinc-500 text-xs">{p.date}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Digit Sum Patterns */}
-      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-purple-400">
-          <Hash className="w-5 h-5" /> Digit Sum Appearances
-          <span className="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-1 rounded text-xs ml-2">
-            {patterns.digit_sum_patterns?.length || 0} found
-          </span>
-        </h3>
-        <div className="space-y-2 max-h-60 overflow-y-auto">
-          {patterns.digit_sum_patterns?.slice(0, 15).map((p, i) => (
-            <div key={i} className="bg-[#0F0F10] rounded-lg p-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <NumberBall number={p.n1} size="sm" />
-                <span className="text-zinc-500">+</span>
-                <NumberBall number={p.n2} size="sm" />
-                <span className="text-zinc-500">=</span>
-                <span className="font-mono text-purple-400 font-bold">{p.sum}</span>
-                <span className="text-zinc-500 text-xs ml-2">
-                  (in {p.sum_in_draw ? 'same draw' : 'prev draw'})
-                </span>
-              </div>
-              <span className="text-zinc-500 text-xs">{p.date}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Digit Reversals in Draws */}
-      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-orange-400">
-          <RefreshCw className="w-5 h-5" /> Digit Reversals in Draws
-          <span className="bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-1 rounded text-xs ml-2">
-            {patterns.digit_reversals_in_draws?.length || 0} found
-          </span>
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-60 overflow-y-auto">
-          {patterns.digit_reversals_in_draws?.slice(0, 24).map((p, i) => (
-            <div key={i} className="bg-[#0F0F10] rounded-lg p-2 text-center">
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <NumberBall number={p.number} size="sm" />
-                <span className="text-zinc-500">→</span>
-                <span className={`font-mono font-bold ${p.in_draw ? 'text-green-400' : 'text-orange-400'}`}>
-                  {p.reversed}
-                </span>
-              </div>
-              <span className="text-zinc-500 text-xs">{p.date}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Patterns Tab
-const Patterns = ({ patterns }) => {
-  if (!patterns) return <div className="text-center py-10 text-zinc-400">Loading...</div>;
-
-  return (
-    <div className="space-y-6" data-testid="patterns-panel">
-      {/* Digit Reversals */}
-      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Link2 className="w-5 h-5" /> Digit Reversals
-          <span className="bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2 py-1 rounded text-xs ml-2">
-            {patterns.digit_reversals.length} pairs
-          </span>
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {patterns.digit_reversals.map((pair, i) => (
-            <div key={i} className="bg-[#0F0F10] rounded-lg p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <NumberBall number={pair.num1} size="sm" />
-                <span className="text-zinc-500">→</span>
-                <NumberBall number={pair.num2} size="sm" />
-              </div>
-              <span className="text-zinc-500 text-xs font-mono">
-                {pair.count1}x / {pair.count2}x
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Series Patterns */}
-      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <TrendingUp className="w-5 h-5" /> Series Patterns
-          <span className="bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-1 rounded text-xs ml-2">
-            {patterns.series_patterns.length} found
-          </span>
-        </h3>
-        <div className="space-y-3">
-          {patterns.series_patterns.slice(0, 10).map((series, i) => (
-            <div key={i} className="bg-[#0F0F10] rounded-lg p-4 flex items-center justify-between">
-              <div>
-                <span className="text-zinc-400 text-sm font-mono">{series.date}</span>
-                <div className="flex gap-2 mt-2">
-                  {series.numbers.map((num, j) => (
-                    <NumberBall key={j} number={num} size="sm" />
-                  ))}
-                </div>
-              </div>
-              <span className="bg-orange-500/10 text-orange-400 px-2 py-1 rounded text-xs">
-                {series.length} series
-              </span>
-            </div>
-          ))}
-        </div>
-        
-        {patterns.series_patterns.length === 0 && (
-          <div className="text-center py-6 text-zinc-500">
-            No consecutive series found in recent draws
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// Predictions Tab
-const Predictions = ({ predictions, onRefresh }) => {
-  if (!predictions) return <div className="text-center py-10 text-zinc-400">Loading...</div>;
-
-  return (
-    <div className="space-y-6" data-testid="predictions-panel">
-      {/* Smart Number Generator */}
-      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Zap className="w-5 h-5 text-yellow-400" /> Smart Number Generator
-          </h3>
-          <button 
-            onClick={onRefresh}
-            className="p-2 hover:bg-[#27272A] rounded-lg transition-colors"
-            data-testid="refresh-predictions"
-          >
-            <RefreshCw className="w-4 h-4 text-zinc-400" />
-          </button>
-        </div>
-        
-        <div className="mb-4">
-          <span className="text-zinc-400 text-sm">Suggested Numbers:</span>
-          <div className="flex gap-3 mt-3">
-            {predictions.suggested_numbers.map((num, i) => (
-              <div key={i} className="text-center">
-                <NumberBall number={num} size="lg" />
-                <span className="text-zinc-500 text-xs mt-1 block">#{i + 1}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-6">
-          <span className="text-zinc-400 text-sm">Why these numbers:</span>
-          <div className="space-y-2 mt-3">
-            {predictions.explanations.map((exp, i) => (
-              <div key={i} className="flex items-center justify-between py-2 border-b border-[#27272A]/50 last:border-0">
-                <div className="flex items-center gap-3">
-                  <NumberBall number={exp.number} size="sm" />
-                  <span className="text-zinc-300 text-sm">{exp.reason}</span>
-                </div>
-                <span className={`px-2 py-1 rounded text-xs font-mono ${
-                  exp.confidence >= 70 ? "bg-green-500/10 text-green-400" : "bg-yellow-500/10 text-yellow-400"
-                }`}>
-                  {exp.confidence}%
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-4 bg-[#0F0F10] rounded-lg p-3 font-mono text-xs text-zinc-500">
-          Analysis: {predictions.cross_draw_patterns.length} addition patterns | {predictions.gap_analysis.length} due numbers | G1:G2 ratio 9:8
-        </div>
-      </div>
-
-      {/* Cross-Draw Patterns & Gap Analysis */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Layers className="w-5 h-5" /> Cross-Draw Patterns
-            <span className="bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2 py-1 rounded text-xs ml-2">
-              {predictions.cross_draw_patterns.length} found
-            </span>
-          </h3>
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {predictions.cross_draw_patterns.slice(0, 10).map((pattern, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm">
-                <NumberBall number={pattern.a} size="sm" />
-                <span className="text-zinc-500">+</span>
-                <NumberBall number={pattern.b} size="sm" />
-                <span className="text-zinc-500">=</span>
-                <NumberBall number={pattern.c} size="sm" />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Timer className="w-5 h-5" /> Gap Analysis (Due Numbers)
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {predictions.gap_analysis.map((item, i) => (
-              <div key={i} className="bg-[#0F0F10] rounded-lg p-2 text-center min-w-[60px]">
-                <NumberBall number={item.number} size="sm" />
-                <span className="text-zinc-500 text-xs mt-1 block">{item.gap} draws</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Add Draw Modal
-const AddDrawModal = ({ isOpen, onClose, onSubmit }) => {
-  const [numbers, setNumbers] = useState(["", "", "", "", "", ""]);
-  const [date, setDate] = useState("");
-  const [drawNumber, setDrawNumber] = useState("");
-  const [error, setError] = useState("");
-
-  const handleNumberChange = (index, value) => {
-    const newNumbers = [...numbers];
-    newNumbers[index] = value;
-    setNumbers(newNumbers);
-    setError("");
-  };
-
-  const handleSubmit = () => {
-    const nums = numbers.map(n => parseInt(n)).filter(n => !isNaN(n));
-    
-    if (nums.length !== 6) {
-      setError("Please enter all 6 numbers");
-      return;
-    }
-    if (nums.some(n => n < 1 || n > 42)) {
-      setError("Numbers must be between 1 and 42");
-      return;
-    }
-    if (new Set(nums).size !== 6) {
-      setError("Numbers must be unique");
-      return;
-    }
-    if (!date) {
-      setError("Please select a date");
-      return;
-    }
-
-    onSubmit({ numbers: nums, date, draw_number: drawNumber || null });
-    setNumbers(["", "", "", "", "", ""]);
-    setDate("");
-    setDrawNumber("");
-    onClose();
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" data-testid="add-draw-modal">
-      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-6 w-full max-w-md mx-4">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold">Add New Draw</h2>
-          <button onClick={onClose} className="p-1 hover:bg-[#27272A] rounded" data-testid="close-modal">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="mb-4">
-          <label className="text-zinc-400 text-sm block mb-2">Draw Numbers (1-42)</label>
-          <div className="grid grid-cols-6 gap-2">
-            {numbers.map((num, i) => (
-              <input
-                key={i}
-                type="number"
-                min="1"
-                max="42"
-                value={num}
-                onChange={(e) => handleNumberChange(i, e.target.value)}
-                className="bg-[#0F0F10] border border-[#27272A] focus:border-blue-500 rounded-md px-2 py-3 text-center font-mono text-white w-full"
-                placeholder={`#${i + 1}`}
-                data-testid={`number-input-${i + 1}`}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="text-zinc-400 text-sm block mb-2">Draw Date</label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="bg-[#0F0F10] border border-[#27272A] focus:border-blue-500 rounded-md px-3 py-2 text-white w-full"
-              data-testid="draw-date-input"
-            />
-          </div>
-          <div>
-            <label className="text-zinc-400 text-sm block mb-2">Draw Number (Optional)</label>
-            <input
-              type="text"
-              value={drawNumber}
-              onChange={(e) => setDrawNumber(e.target.value)}
-              placeholder="e.g., 1234"
-              className="bg-[#0F0F10] border border-[#27272A] focus:border-blue-500 rounded-md px-3 py-2 text-white w-full"
-              data-testid="draw-number-input"
-            />
-          </div>
-        </div>
-
-        {error && (
-          <div className="text-red-400 text-sm mb-4 bg-red-500/10 border border-red-500/20 rounded p-2">
-            {error}
-          </div>
-        )}
-
-        <button
-          onClick={handleSubmit}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-md transition-colors"
-          data-testid="submit-draw-button"
-        >
-          Add Draw
-        </button>
-      </div>
+      <p className="text-2xl font-bold text-gray-800">{value}</p>
+      <p className="text-sm text-gray-500">{label}</p>
     </div>
   );
 };
 
 // Main App
 function App() {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [prediction, setPrediction] = useState(null);
   const [stats, setStats] = useState(null);
-  const [draws, setDraws] = useState([]);
-  const [patterns, setPatterns] = useState(null);
-  const [predictions, setPredictions] = useState(null);
-  const [advancedPatterns, setAdvancedPatterns] = useState(null);
-  const [advancedLoading, setAdvancedLoading] = useState(false);
-  const [quarterPrediction, setQuarterPrediction] = useState(null);
-  const [quarterLoading, setQuarterLoading] = useState(false);
-  const [masterPrediction, setMasterPrediction] = useState(null);
-  const [masterLoading, setMasterLoading] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [spinning, setSpinning] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  
+  // Personal mode
+  const [birthday, setBirthday] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [usePersonal, setUsePersonal] = useState(false);
 
-  const fetchDashboard = useCallback(async () => {
+  const fetchPrediction = useCallback(async () => {
+    try {
+      setLoading(true);
+      setSpinning(true);
+      
+      let url = `${API}/master-predictor`;
+      const params = [];
+      if (usePersonal && birthday) params.push(`birthday=${encodeURIComponent(birthday)}`);
+      if (usePersonal && fullName) params.push(`name=${encodeURIComponent(fullName)}`);
+      if (params.length > 0) url += `?${params.join('&')}`;
+      
+      // Add delay for spinning effect
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const res = await axios.get(url);
+      setPrediction(res.data);
+    } catch (e) {
+      console.error("Error:", e);
+    } finally {
+      setLoading(false);
+      setSpinning(false);
+    }
+  }, [birthday, fullName, usePersonal]);
+
+  const fetchStats = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/dashboard`);
       setStats(res.data);
     } catch (e) {
-      console.error("Error fetching dashboard:", e);
+      console.error("Error:", e);
     }
   }, []);
-
-  const fetchDraws = useCallback(async () => {
-    try {
-      const res = await axios.get(`${API}/draws`);
-      setDraws(res.data);
-    } catch (e) {
-      console.error("Error fetching draws:", e);
-    }
-  }, []);
-
-  const fetchPatterns = useCallback(async () => {
-    try {
-      const res = await axios.get(`${API}/patterns`);
-      setPatterns(res.data);
-    } catch (e) {
-      console.error("Error fetching patterns:", e);
-    }
-  }, []);
-
-  const fetchPredictions = useCallback(async () => {
-    try {
-      const res = await axios.get(`${API}/predictions`);
-      setPredictions(res.data);
-    } catch (e) {
-      console.error("Error fetching predictions:", e);
-    }
-  }, []);
-
-  const fetchAdvancedPatterns = useCallback(async () => {
-    try {
-      setAdvancedLoading(true);
-      const res = await axios.get(`${API}/advanced-patterns?from_year=2020`);
-      setAdvancedPatterns(res.data);
-    } catch (e) {
-      console.error("Error fetching advanced patterns:", e);
-    } finally {
-      setAdvancedLoading(false);
-    }
-  }, []);
-
-  const fetchQuarterPrediction = useCallback(async () => {
-    try {
-      setQuarterLoading(true);
-      const res = await axios.get(`${API}/quarter-predictor`);
-      setQuarterPrediction(res.data);
-    } catch (e) {
-      console.error("Error fetching quarter prediction:", e);
-    } finally {
-      setQuarterLoading(false);
-    }
-  }, []);
-
-  const fetchMasterPrediction = useCallback(async (birthday = null, name = null) => {
-    try {
-      setMasterLoading(true);
-      let url = `${API}/master-predictor`;
-      const params = [];
-      if (birthday) params.push(`birthday=${encodeURIComponent(birthday)}`);
-      if (name) params.push(`name=${encodeURIComponent(name)}`);
-      if (params.length > 0) url += `?${params.join('&')}`;
-      
-      const res = await axios.get(url);
-      setMasterPrediction(res.data);
-    } catch (e) {
-      console.error("Error fetching master prediction:", e);
-    } finally {
-      setMasterLoading(false);
-    }
-  }, []);
-
-  const seedData = async () => {
-    try {
-      setLoading(true);
-      await axios.post(`${API}/seed`);
-      await refreshAll();
-    } catch (e) {
-      console.error("Error seeding data:", e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const refreshAll = async () => {
-    setLoading(true);
-    await Promise.all([fetchDashboard(), fetchDraws(), fetchPatterns(), fetchPredictions()]);
-    setLoading(false);
-  };
-
-  const handleAddDraw = async (drawData) => {
-    try {
-      await axios.post(`${API}/draws`, drawData);
-      await refreshAll();
-    } catch (e) {
-      console.error("Error adding draw:", e);
-      alert(e.response?.data?.detail || "Error adding draw");
-    }
-  };
-
-  const handleDeleteDraw = async (id) => {
-    if (!window.confirm("Delete this draw?")) return;
-    try {
-      await axios.delete(`${API}/draws/${id}`);
-      await refreshAll();
-    } catch (e) {
-      console.error("Error deleting draw:", e);
-    }
-  };
 
   useEffect(() => {
-    refreshAll();
-    fetchAdvancedPatterns();
-    fetchQuarterPrediction();
-    fetchMasterPrediction();
-    // Auto-seed if no data
-    const checkAndSeed = async () => {
-      const res = await axios.get(`${API}/dashboard`);
-      if (res.data.total_draws === 0) {
-        await seedData();
-      }
-    };
-    checkAndSeed();
+    fetchStats();
+    fetchPrediction();
   }, []);
 
-  const tabs = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "master", label: "Master AI", icon: Zap },
-    { id: "history", label: "History", icon: History },
-    { id: "patterns", label: "Patterns", icon: Link2 },
-    { id: "advanced", label: "Advanced", icon: Layers },
-    { id: "predictor", label: "Position", icon: Target },
-    { id: "predictions", label: "Smart Gen", icon: TrendingUp }
-  ];
-
   return (
-    <div className="min-h-screen bg-[#0F0F10] text-white">
+    <div className="min-h-screen pb-10">
       {/* Header */}
-      <header className="border-b border-[#27272A] px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-xl">✦</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight" style={{ fontFamily: "Manrope, sans-serif" }}>
-                LUCKY JACK
-              </h1>
-              <p className="text-zinc-500 text-xs">Switzerland Lotto Pattern Analyzer</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={refreshAll}
-              disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 border border-[#27272A] hover:bg-[#27272A] rounded-md transition-colors disabled:opacity-50"
-              data-testid="refresh-button"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-              <span className="hidden sm:inline">Refresh</span>
-            </button>
-            <button 
-              onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
-              data-testid="add-draw-button"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Draw</span>
-            </button>
-          </div>
+      <header className="text-center py-8">
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <span className="text-4xl">🍀</span>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+            Lucky Jack
+          </h1>
+          <span className="text-4xl">🎰</span>
         </div>
+        <p className="text-gray-500">Swiss Lotto Pattern Analyzer</p>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-6">
-        {/* Tabs */}
-        <div className="flex space-x-1 bg-[#18181A] p-1 rounded-lg border border-[#27272A] mb-6 w-fit">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                activeTab === tab.id
-                  ? "bg-[#27272A] text-white shadow-sm"
-                  : "text-zinc-400 hover:text-white hover:bg-[#27272A]/50"
-              }`}
-              data-testid={`${tab.id}-tab`}
+      <main className="max-w-2xl mx-auto px-4">
+        {/* Quick Stats */}
+        {stats && (
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            <StatCard 
+              label="Total Draws" 
+              value={stats.total_draws.toLocaleString()} 
+              icon={<span className="text-lg">📊</span>}
+              color="amber"
+            />
+            <StatCard 
+              label="Draw Position" 
+              value={`#${stats.total_draws + 1}`} 
+              icon={<span className="text-lg">🎯</span>}
+              color="green"
+            />
+          </div>
+        )}
+
+        {/* Lucky Wheel with Prediction */}
+        <div className="lucky-card p-8 mb-8">
+          <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">
+            ✨ Your Lucky Numbers ✨
+          </h2>
+          <p className="text-center text-gray-500 mb-4">
+            {prediction ? `Draw #${prediction.for_draw.draw_number}` : 'Loading...'}
+          </p>
+          
+          {/* Spinning Wheel */}
+          <SpinningWheel 
+            numbers={prediction?.main_prediction || [1, 2, 3, 4, 5, 6]} 
+            isSpinning={spinning}
+          />
+          
+          {/* Confidence */}
+          {prediction && (
+            <div className="text-center mt-4">
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-100 to-orange-100 px-6 py-3 rounded-full">
+                <Sparkles className="w-5 h-5 text-amber-500" />
+                <span className="font-bold text-amber-700">
+                  {prediction.average_confidence}% Lucky Score
+                </span>
+              </div>
+            </div>
+          )}
+          
+          {/* Generate Button */}
+          <div className="text-center mt-6">
+            <button 
+              onClick={fetchPrediction}
+              disabled={loading}
+              className="lucky-btn flex items-center gap-2 mx-auto"
             >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
+              <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+              {loading ? 'Finding Lucky Numbers...' : 'Get New Prediction'}
             </button>
-          ))}
+          </div>
         </div>
 
-        {/* Tab Content */}
-        {activeTab === "dashboard" && <Dashboard stats={stats} onRefresh={refreshAll} />}
-        {activeTab === "master" && <MasterPredictor prediction={masterPrediction} loading={masterLoading} onRefresh={fetchMasterPrediction} />}
-        {activeTab === "history" && <DrawHistory draws={draws} onDelete={handleDeleteDraw} />}
-        {activeTab === "patterns" && <Patterns patterns={patterns} />}
-        {activeTab === "advanced" && <AdvancedPatterns patterns={advancedPatterns} loading={advancedLoading} onRefresh={fetchAdvancedPatterns} />}
-        {activeTab === "predictor" && <QuarterPredictor prediction={quarterPrediction} loading={quarterLoading} onRefresh={fetchQuarterPrediction} />}
-        {activeTab === "predictions" && <Predictions predictions={predictions} onRefresh={fetchPredictions} />}
-      </main>
+        {/* Personal Mode Card */}
+        <div className="lucky-card p-6 mb-8">
+          <div 
+            className="flex items-center justify-between cursor-pointer"
+            onClick={() => setUsePersonal(!usePersonal)}
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">✨</span>
+              <h3 className="font-bold text-gray-800">Personalize Your Luck</h3>
+            </div>
+            {usePersonal ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+          </div>
+          
+          {usePersonal && (
+            <div className="mt-4 space-y-4">
+              <div>
+                <label className="text-sm text-gray-500 mb-1 block">🎂 Birthday</label>
+                <input
+                  type="text"
+                  value={birthday}
+                  onChange={(e) => setBirthday(e.target.value)}
+                  placeholder="DD/MM/YYYY"
+                  className="w-full px-4 py-3 rounded-xl border border-amber-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-500 mb-1 block">🔤 Full Name</label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Your full name"
+                  className="w-full px-4 py-3 rounded-xl border border-amber-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all"
+                />
+              </div>
+              
+              {(prediction?.birthday_mode || prediction?.name_mode) && (
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 space-y-2">
+                  {prediction.birthday_mode && (
+                    <p className="text-sm text-amber-700">
+                      🎂 Lucky from birthday: {prediction.birthday_mode.lucky_numbers.slice(0, 5).join(", ")}
+                    </p>
+                  )}
+                  {prediction.name_mode && (
+                    <p className="text-sm text-amber-700">
+                      🔤 Lucky from name: {prediction.name_mode.lucky_numbers.slice(0, 5).join(", ")}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
-      {/* Add Draw Modal */}
-      <AddDrawModal 
-        isOpen={showAddModal} 
-        onClose={() => setShowAddModal(false)} 
-        onSubmit={handleAddDraw}
-      />
+        {/* Alternate Numbers */}
+        {prediction && (
+          <div className="lucky-card p-6 mb-8">
+            <div 
+              className="flex items-center justify-between cursor-pointer"
+              onClick={() => setShowDetails(!showDetails)}
+            >
+              <div className="flex items-center gap-3">
+                <Gift className="w-6 h-6 text-amber-500" />
+                <h3 className="font-bold text-gray-800">Bonus Numbers</h3>
+              </div>
+              {showDetails ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+            </div>
+            
+            {showDetails && (
+              <div className="mt-4">
+                <div className="flex flex-wrap justify-center gap-3">
+                  {prediction.alternate_numbers.map((n, i) => (
+                    <LuckyBall key={i} number={n} size="sm" delay={i * 50} />
+                  ))}
+                </div>
+                
+                {/* Last Draw */}
+                {prediction.last_draw && (
+                  <div className="mt-6 text-center">
+                    <p className="text-sm text-gray-500 mb-2">Last Draw ({prediction.last_draw.date})</p>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {prediction.last_draw.numbers.map((n, i) => (
+                        <div key={i} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center font-bold text-gray-600 text-sm">
+                          {n}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="text-center text-gray-400 text-sm mt-8">
+          <p>🍀 Good luck! Play responsibly 🎰</p>
+          <p className="mt-1">Based on {stats?.total_draws.toLocaleString() || '...'} real Swiss Lotto draws</p>
+        </div>
+      </main>
     </div>
   );
 }
