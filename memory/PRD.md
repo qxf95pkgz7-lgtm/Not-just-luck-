@@ -1,61 +1,94 @@
 # Lucky Jack - Switzerland Lotto Pattern Analyzer
 
 ## Problem Statement
-Rebuild the Lucky Jack - Switzerland Lotto Pattern Analyzer app that was lost due to an error. The app analyzes Swiss lottery data to find patterns and generate smart predictions.
+A full-stack Swiss Lotto pattern analysis application with:
+- Real historical draw data (1,379 draws from 2013-2026)
+- 9 custom mathematical/pattern prediction algorithms combined into a Master Predictor
+- Personal Mode (Birthday & Name numerology)
+- Fun, friendly animated UI with 42 billiard-style balls
 
 ## Architecture
 - **Frontend**: React with Tailwind CSS
 - **Backend**: FastAPI (Python)
 - **Database**: MongoDB
-- **Styling**: Dark theme with blue/orange accents
+- **Styling**: Warm golden/orange theme with animated ball machine
 
 ## User Personas
 - Lottery enthusiasts looking for pattern analysis
-- Data analysts interested in number frequency
-- Casual players wanting smart number suggestions
+- Users who want personalized lucky numbers based on birthday/name
+- Casual players wanting a fun prediction experience
 
 ## Core Requirements (Static)
-1. Dashboard with statistics (Total Draws, Rare Events, Chain Links, Series Found)
-2. Number Groups analysis (Low 1-21, High 22-42)
-3. Hot/Cold Numbers with frequency counts
-4. Draw History table with delete functionality
-5. Pattern detection (Digit Reversals, Series Patterns)
-6. Smart Predictions with explanations
-7. Add Draw modal for manual entry
+1. Master Predictor combining 9 pattern systems:
+   - Quarterly position (28% hit rate)
+   - Digit links (11% hit rate)
+   - Date patterns (15%, 12%, 5%)
+   - Historical at position
+   - Hot/Cold numbers
+   - Due numbers
+   - Rare event counts
+   - Birthday mode (25% boost)
+   - Name mode (20% boost)
+2. 42 Billiard Ball Animation Machine
+3. Personalization with Birthday and Name inputs
+4. 1,379 real Swiss Lotto draws imported
 
-## What's Been Implemented (March 31, 2026)
-- ✅ Full backend API with all endpoints
-- ✅ Dashboard with 1159 draws loaded (11 years of data: 2015-2026)
-- ✅ Draw History tab with table view
-- ✅ Patterns tab with Digit Reversals and Series Patterns
-- ✅ Predictions tab with Smart Number Generator
-- ✅ Add Draw modal with validation
-- ✅ Refresh functionality
-- ✅ Delete draw functionality
-- ✅ All tests passing (100% backend, 100% frontend)
+## What's Been Implemented (April 1, 2026)
+
+### Backend (100% Complete)
+- ✅ Full FastAPI server with all endpoints
+- ✅ 1,379 real Swiss Lotto draws (2013-2026) in MongoDB
+- ✅ Master Predictor with 9 pattern systems
+- ✅ Position-based quarterly analysis
+- ✅ Digit link patterns (reversals, sums, products)
+- ✅ Date correlation patterns
+- ✅ Birthday numerology (25% confidence boost)
+- ✅ Name numerology (A=1, B=2... Z=26, 20% boost)
+- ✅ Hot/cold/due number analysis
+- ✅ Rare event detection (4+ from same group)
+
+### Frontend (100% Complete)
+- ✅ New "happy, friendly" UI design
+- ✅ 42 Billiard Ball Machine Animation
+   - Golden glass container with bouncing balls
+   - Balls mix/spin when generating
+   - Winner balls animate out on completion
+- ✅ "Your Lucky Numbers" display
+- ✅ Personalize Your Luck section (Birthday/Name)
+- ✅ Bonus Numbers collapsible section
+- ✅ Warm orange/gold color scheme
+- ✅ Responsive mobile-friendly layout
+
+### Known Issues
+- ⚠️ External preview URL showing old cached UI (platform routing issue)
+- ✅ Works correctly on localhost:3000
 
 ## API Endpoints
-- GET /api/dashboard - Dashboard statistics
+- GET /api/ - API info
+- GET /api/dashboard - Statistics
 - GET /api/draws - List all draws
+- GET /api/master-predictor - Main prediction (supports ?birthday=DD/MM/YYYY&name=Full%20Name)
+- GET /api/position-patterns - Position-based analysis
+- GET /api/advanced-patterns - Digit link patterns
+- GET /api/quarter-predictor - Quarterly position system
 - POST /api/draws - Add new draw
 - DELETE /api/draws/{id} - Delete draw
-- GET /api/patterns - Pattern analysis
-- GET /api/predictions - Smart predictions
-- POST /api/seed - Seed historical data
 
-## Prioritized Backlog
+## Backlog
+
 ### P0 (Critical) - Done
 - All core features implemented
 
 ### P1 (High Priority) - Future
-- Import/Export draws (CSV)
-- Advanced pattern filtering
-- Date range analysis
+- Fix external URL routing/caching issue
+- Add ball ejection "jump out" visual enhancement
+- Winning ball glow effect refinement
 
 ### P2 (Medium Priority) - Future
-- User accounts
-- Save favorite predictions
 - Historical trends charts
+- Export predictions to PDF
+- Share results feature
 
 ## Next Tasks
-- User requested features TBD
+1. Resolve platform routing issue for external preview URL
+2. Refine ball ejection animation timing
