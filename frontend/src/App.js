@@ -63,7 +63,7 @@ const Ball = ({ number, size = "sm", isWinner = false, isSpinning = false, delay
   );
 };
 
-// Lottery Ball Machine
+// Lottery Ball Machine with Result Slots
 const BallMachine = ({ isProcessing, winningNumbers, onComplete }) => {
   const [balls, setBalls] = useState([]);
   const [ejectedBalls, setEjectedBalls] = useState([]);
@@ -125,24 +125,24 @@ const BallMachine = ({ isProcessing, winningNumbers, onComplete }) => {
     return () => clearInterval(interval);
   }, [phase]);
 
-  // Eject winning balls after spinning
+  // Eject winning balls after spinning - one by one with delay
   useEffect(() => {
     if (!isProcessing && phase === 'spinning' && winningNumbers.length > 0) {
       setPhase('ejecting');
       
-      // Eject balls one by one
+      // Eject balls one by one with longer delay for dramatic effect
       winningNumbers.forEach((num, index) => {
         setTimeout(() => {
-          setEjectedBalls(prev => [...prev, num]);
+          setEjectedBalls(prev => [...prev, { number: num, slot: index }]);
           setBalls(prev => prev.filter(b => b.number !== num));
-        }, index * 400);
+        }, index * 600); // 600ms between each ball
       });
 
       // Complete after all ejected
       setTimeout(() => {
         setPhase('complete');
         if (onComplete) onComplete();
-      }, winningNumbers.length * 400 + 500);
+      }, winningNumbers.length * 600 + 500);
     }
   }, [isProcessing, phase, winningNumbers, onComplete]);
 
@@ -163,10 +163,16 @@ const BallMachine = ({ isProcessing, winningNumbers, onComplete }) => {
     }
   }, [isProcessing]);
 
+  // Get ball for a specific slot
+  const getBallForSlot = (slotIndex) => {
+    const ejected = ejectedBalls.find(b => b.slot === slotIndex);
+    return ejected ? ejected.number : null;
+  };
+
   return (
-    <div className="flex flex-col items-center">
-      {/* The Machine */}
-      <div className="relative w-72 h-72 mb-6">
+    <div className="flex items-start justify-center gap-4">
+      {/* The Main Ball Machine */}
+      <div className="relative w-56 h-56 flex-shrink-0">
         {/* Glass container */}
         <div 
           className="absolute inset-0 rounded-3xl overflow-hidden"
@@ -177,10 +183,10 @@ const BallMachine = ({ isProcessing, winningNumbers, onComplete }) => {
           }}
         >
           {/* Balls inside */}
-          {balls.map((ball, i) => (
+          {balls.map((ball) => (
             <div
               key={ball.number}
-              className="absolute transition-all"
+              className="absolute"
               style={{
                 left: `${ball.x}%`,
                 top: `${ball.y}%`,
@@ -197,32 +203,66 @@ const BallMachine = ({ isProcessing, winningNumbers, onComplete }) => {
           ))}
         </div>
 
-        {/* Machine decoration */}
-        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-20 h-6 bg-gradient-to-r from-amber-400 to-amber-500 rounded-b-xl" />
+        {/* Machine decoration - bottom */}
+        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-16 h-5 bg-gradient-to-r from-amber-400 to-amber-500 rounded-b-xl" />
+        
+        {/* Sparkle on top */}
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <Sparkles className="w-8 h-8 text-amber-400 animate-pulse" />
+          <Sparkles className="w-6 h-6 text-amber-400 animate-pulse" />
+        </div>
+
+        {/* Status text below machine */}
+        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap">
+          {phase === 'spinning' && (
+            <p className="text-amber-600 font-medium animate-pulse text-sm">🎰 Mixing...</p>
+          )}
+          {phase === 'ejecting' && (
+            <p className="text-green-600 font-medium animate-pulse text-sm">✨ Drawing!</p>
+          )}
         </div>
       </div>
 
-      {/* Ejected winning balls */}
-      <div className="h-24 flex items-center justify-center">
-        {phase === 'complete' || ejectedBalls.length > 0 ? (
-          <div className="flex gap-3">
-            {(phase === 'complete' ? winningNumbers : ejectedBalls).map((num, i) => (
-              <div 
-                key={num}
-                className="animate-bounce-in"
-                style={{ animationDelay: `${i * 100}ms` }}
+      {/* Result Slots Box - 6 numbered slots */}
+      <div 
+        className="flex-shrink-0 p-3 rounded-2xl"
+        style={{
+          background: 'linear-gradient(180deg, #FFF9E6 0%, #FFF3CD 100%)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          border: '3px solid #FFD700'
+        }}
+      >
+        <div className="text-center mb-2">
+          <span className="text-xs font-bold text-amber-700">LUCKY 6</span>
+        </div>
+        
+        {/* 6 Slots in a 2x3 grid */}
+        <div className="grid grid-cols-2 gap-2">
+          {[0, 1, 2, 3, 4, 5].map((slotIndex) => {
+            const ballNumber = getBallForSlot(slotIndex);
+            return (
+              <div
+                key={slotIndex}
+                className="relative w-12 h-12 rounded-xl flex items-center justify-center"
+                style={{
+                  background: ballNumber ? 'transparent' : 'rgba(255,255,255,0.8)',
+                  border: ballNumber ? 'none' : '2px dashed #FFD700',
+                }}
               >
-                <Ball number={num} size="md" isWinner={true} />
+                {/* Slot number label */}
+                {!ballNumber && (
+                  <span className="text-amber-300 font-bold text-lg">{slotIndex + 1}</span>
+                )}
+                
+                {/* Ball in slot */}
+                {ballNumber && (
+                  <div className="ball-jump-in absolute inset-0 flex items-center justify-center">
+                    <Ball number={ballNumber} size="sm" isWinner={phase === 'complete'} />
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
-        ) : phase === 'spinning' ? (
-          <p className="text-amber-600 font-medium animate-pulse">🎰 Mixing balls...</p>
-        ) : (
-          <p className="text-gray-400">Press the button to get lucky numbers!</p>
-        )}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -305,37 +345,41 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-md mx-auto px-4">
+      <main className="max-w-lg mx-auto px-4">
         {/* Ball Machine Card */}
         <div className="lucky-card p-6 mb-6">
-          <h2 className="text-xl font-bold text-center text-gray-800 mb-4">
+          <h2 className="text-xl font-bold text-center text-gray-800 mb-6">
             ✨ Your Lucky Numbers ✨
           </h2>
           
-          {/* Ball Machine */}
+          {/* Ball Machine + Result Slots */}
           <BallMachine 
             isProcessing={loading}
             winningNumbers={prediction?.main_prediction || []}
           />
           
-          {/* Lucky Score */}
-          {prediction && !loading && (
-            <div className="text-center mt-2">
+          {/* Prompt text */}
+          <div className="text-center mt-8 mb-4">
+            {!loading && !prediction && (
+              <p className="text-gray-400 text-sm">Press the button to get lucky numbers!</p>
+            )}
+            {prediction && !loading && (
               <span className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-100 to-orange-100 px-4 py-2 rounded-full text-sm">
                 <Sparkles className="w-4 h-4 text-amber-500" />
                 <span className="font-semibold text-amber-700">
                   {prediction.average_confidence}% Lucky Score
                 </span>
               </span>
-            </div>
-          )}
+            )}
+          </div>
           
           {/* Generate Button */}
-          <div className="text-center mt-6">
+          <div className="text-center">
             <button 
               onClick={fetchPrediction}
               disabled={loading}
               className="lucky-btn flex items-center gap-2 mx-auto"
+              data-testid="generate-btn"
             >
               <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
               {loading ? 'Finding Lucky Numbers...' : '🎲 Get New Numbers'}
