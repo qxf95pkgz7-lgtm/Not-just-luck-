@@ -5,17 +5,19 @@
 @tailwind utilities;
 
 :root {
-  --bg-primary: #FFF9F0;
-  --bg-secondary: #FFFFFF;
-  --bg-card: #FFFFFF;
-  --accent-gold: #FFB800;
+  --bg-primary: #2D0A0A;
+  --bg-secondary: #1A0505;
+  --bg-card: #3D1515;
+  --accent-gold: #FFD700;
+  --accent-red: #DC2626;
+  --accent-red-light: #EF4444;
   --accent-green: #4ADE80;
   --accent-blue: #60A5FA;
   --accent-pink: #F472B6;
   --accent-purple: #A78BFA;
-  --text-primary: #1F2937;
-  --text-secondary: #6B7280;
-  --border: #E5E7EB;
+  --text-primary: #FFFFFF;
+  --text-secondary: #FCA5A5;
+  --border: #7F1D1D;
 }
 
 * {
@@ -27,7 +29,7 @@ body {
   font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #FFF9F0 0%, #FEF3E2 50%, #FCE7D6 100%);
+  background: linear-gradient(135deg, #1A0505 0%, #2D0A0A 50%, #450A0A 100%);
   color: var(--text-primary);
   min-height: 100vh;
 }
@@ -89,29 +91,29 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::-webkit-scrollbar-track {
-  background: #FEF3E2;
+  background: #2D0A0A;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #FFB800;
+  background: #DC2626;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #E5A600;
+  background: #EF4444;
 }
 
 /* Card styles */
 .lucky-card {
-  background: white;
+  background: linear-gradient(135deg, #3D1515 0%, #4A1A1A 100%);
   border-radius: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(255, 184, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 30px rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.3);
 }
 
 /* Button styles */
 .lucky-btn {
-  background: linear-gradient(135deg, #FFB800 0%, #FF9500 100%);
+  background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
   color: white;
   font-weight: 600;
   border-radius: 50px;
@@ -119,12 +121,13 @@ h1, h2, h3, h4, h5, h6 {
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(255, 184, 0, 0.3);
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
 }
 
 .lucky-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 184, 0, 0.4);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5);
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
 }
 
 /* Tab styles */
@@ -138,12 +141,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .lucky-tab.active {
-  background: linear-gradient(135deg, #FFB800 0%, #FF9500 100%);
+  background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(255, 184, 0, 0.3);
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
 }
 
 .lucky-tab:hover:not(.active) {
-  background: rgba(255, 184, 0, 0.1);
+  background: rgba(220, 38, 38, 0.2);
   color: var(--text-primary);
 }

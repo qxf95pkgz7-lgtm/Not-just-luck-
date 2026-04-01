@@ -153,9 +153,9 @@ const BallMachine = ({ isProcessing, winningNumbers, luckyNumber }) => {
           <div 
             className="absolute inset-0 rounded-2xl overflow-hidden"
             style={{
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,248,240,0.95) 100%)',
-              boxShadow: 'inset 0 0 20px rgba(0,0,0,0.1), 0 8px 30px rgba(0,0,0,0.1)',
-              border: '3px solid #FFD700'
+              background: 'linear-gradient(180deg, rgba(60,20,20,0.95) 0%, rgba(40,10,10,0.98) 100%)',
+              boxShadow: 'inset 0 0 20px rgba(220,38,38,0.2), 0 8px 30px rgba(0,0,0,0.3)',
+              border: '3px solid #DC2626'
             }}
           >
             {/* Balls inside */}
@@ -180,23 +180,23 @@ const BallMachine = ({ isProcessing, winningNumbers, luckyNumber }) => {
           </div>
           {/* Label */}
           <div className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
-            <span className="text-xs font-bold text-amber-600">🎱 42 Balls</span>
+            <span className="text-xs font-bold text-red-400">🎱 42 Balls</span>
           </div>
           {/* Bottom decoration */}
-          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-12 h-3 bg-gradient-to-r from-amber-400 to-amber-500 rounded-b-lg" />
+          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-12 h-3 bg-gradient-to-r from-red-600 to-red-700 rounded-b-lg" />
         </div>
 
         {/* Arrow */}
-        <div className="text-2xl text-amber-400 animate-pulse">→</div>
+        <div className="text-2xl text-red-400 animate-pulse">→</div>
 
         {/* Box 2: Lucky Number Result Box */}
         <div className="relative w-44 h-44 flex-shrink-0">
           <div 
             className="absolute inset-0 rounded-2xl flex items-center justify-center"
             style={{
-              background: 'linear-gradient(180deg, #FFF9E6 0%, #FFF3CD 100%)',
-              boxShadow: 'inset 0 0 20px rgba(255,184,0,0.1), 0 8px 30px rgba(0,0,0,0.08)',
-              border: '3px solid #FFD700'
+              background: 'linear-gradient(180deg, rgba(60,20,20,0.95) 0%, rgba(40,10,10,0.98) 100%)',
+              boxShadow: 'inset 0 0 20px rgba(220,38,38,0.2), 0 8px 30px rgba(0,0,0,0.3)',
+              border: '3px solid #DC2626'
             }}
           >
             {/* Floating emojis */}
@@ -207,29 +207,29 @@ const BallMachine = ({ isProcessing, winningNumbers, luckyNumber }) => {
             
             {/* Center content - Lucky Number Prediction */}
             <div className="text-center">
-              <span className="text-sm font-bold text-amber-600">LUCKY NUMBER</span>
+              <span className="text-sm font-bold text-red-400">LUCKY NUMBER</span>
               {phase === 'spinning' ? (
                 <>
-                  <div className="text-4xl font-bold text-amber-400 animate-pulse">?</div>
-                  <span className="text-xs text-amber-500 animate-pulse">🤞 Guessing...</span>
+                  <div className="text-4xl font-bold text-red-300 animate-pulse">?</div>
+                  <span className="text-xs text-red-400 animate-pulse">🤞 Guessing...</span>
                 </>
               ) : (
                 <>
                   <div 
                     className="text-5xl font-bold my-1"
                     style={{
-                      background: 'linear-gradient(135deg, #FFD700, #FF6B6B, #FFD700)',
+                      background: 'linear-gradient(135deg, #FFD700, #EF4444, #FFD700)',
                       backgroundSize: '200% 200%',
                       animation: luckyNumber ? 'shimmer 2s linear infinite' : 'none',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
-                      textShadow: '0 0 20px rgba(255,184,0,0.3)'
+                      textShadow: '0 0 20px rgba(220,38,38,0.5)'
                     }}
                   >
                     {luckyNumber || '?'}
                   </div>
                   {luckyNumber && (
-                    <span className="text-xs text-amber-600 font-semibold">🍀 Our guess!</span>
+                    <span className="text-xs text-yellow-400 font-semibold">🍀 Our guess!</span>
                   )}
                 </>
               )}
@@ -237,10 +237,10 @@ const BallMachine = ({ isProcessing, winningNumbers, luckyNumber }) => {
           </div>
           {/* Label */}
           <div className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
-            <span className="text-xs font-bold text-amber-600">🎯 Lucky (1-6)</span>
+            <span className="text-xs font-bold text-red-400">🎯 Lucky (1-6)</span>
           </div>
           {/* Bottom decoration */}
-          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-12 h-3 bg-gradient-to-r from-amber-400 to-amber-500 rounded-b-lg" />
+          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-12 h-3 bg-gradient-to-r from-red-600 to-red-700 rounded-b-lg" />
         </div>
       </div>
 
@@ -248,9 +248,9 @@ const BallMachine = ({ isProcessing, winningNumbers, luckyNumber }) => {
       <div 
         className="p-4 rounded-2xl min-h-[70px] flex items-center justify-center"
         style={{
-          background: showResults ? 'linear-gradient(180deg, #FFF9E6 0%, #FFF3CD 100%)' : 'transparent',
-          boxShadow: showResults ? '0 4px 20px rgba(0,0,0,0.08)' : 'none',
-          border: showResults ? '3px solid #FFD700' : '3px dashed #FFD70050',
+          background: showResults ? 'linear-gradient(180deg, rgba(60,20,20,0.95) 0%, rgba(40,10,10,0.98) 100%)' : 'transparent',
+          boxShadow: showResults ? '0 4px 20px rgba(0,0,0,0.3)' : 'none',
+          border: showResults ? '3px solid #DC2626' : '3px dashed rgba(220,38,38,0.3)',
           minWidth: '320px'
         }}
       >
@@ -267,7 +267,7 @@ const BallMachine = ({ isProcessing, winningNumbers, luckyNumber }) => {
             ))}
           </div>
         ) : (
-          <span className="text-amber-300 text-sm">
+          <span className="text-red-400 text-sm">
             {phase === 'spinning' ? '🎰 Drawing your lucky numbers...' : '🍀 Your lucky numbers will appear here 🤞'}
           </span>
         )}
@@ -356,19 +356,19 @@ function App() {
       <header className="text-center py-6">
         <div className="flex items-center justify-center gap-3 mb-1">
           <span className="text-3xl animate-bounce">🍀</span>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-red-400 to-yellow-400 bg-clip-text text-transparent">
             Lucky Jack
           </h1>
           <span className="text-3xl animate-bounce" style={{animationDelay: '0.2s'}}>🤞</span>
         </div>
-        <p className="text-gray-400 text-sm">✨ Your Lucky Number Generator ✨</p>
+        <p className="text-red-300 text-sm">✨ Your Lucky Number Generator ✨</p>
       </header>
 
       {/* Main Content */}
       <main className="max-w-lg mx-auto px-4">
-        {/* Ball Machine Card */}
+        {/* Main Content */}
         <div className="lucky-card p-6 mb-6">
-          <h2 className="text-xl font-bold text-center text-gray-800 mb-6">
+          <h2 className="text-xl font-bold text-center text-white mb-6">
             ✨ Your Lucky Numbers ✨
           </h2>
           
@@ -382,12 +382,12 @@ function App() {
           {/* Prompt text */}
           <div className="text-center mt-8 mb-4">
             {!loading && !prediction && (
-              <p className="text-gray-400 text-sm">🤞 Press the button to get lucky numbers! 🍀</p>
+              <p className="text-red-300 text-sm">🤞 Press the button to get lucky numbers! 🍀</p>
             )}
             {prediction && !loading && (
-              <span className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-100 to-orange-100 px-4 py-2 rounded-full text-sm">
+              <span className="inline-flex items-center gap-2 bg-gradient-to-r from-red-900/50 to-red-800/50 px-4 py-2 rounded-full text-sm border border-red-500/30">
                 <span>🍀</span>
-                <span className="font-semibold text-amber-700">
+                <span className="font-semibold text-yellow-400">
                   {'⭐'.repeat(Math.min(5, Math.ceil(prediction.average_confidence / 20)))} Magic!
                 </span>
                 <span>🤞</span>
@@ -415,31 +415,31 @@ function App() {
             className="flex items-center justify-between cursor-pointer"
             onClick={() => setShowPersonal(!showPersonal)}
           >
-            <span className="font-semibold text-gray-700">🎂 Personalize Your Luck 🤞</span>
-            {showPersonal ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+            <span className="font-semibold text-white">🎂 Personalize Your Luck 🤞</span>
+            {showPersonal ? <ChevronUp className="w-5 h-5 text-red-400" /> : <ChevronDown className="w-5 h-5 text-red-400" />}
           </div>
           
           {showPersonal && (
             <div className="mt-4 space-y-3">
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">🎂 Birthday</label>
+                <label className="text-xs text-red-300 mb-1 block">🎂 Birthday</label>
                 <input
                   type="text"
                   value={birthday}
                   onChange={(e) => setBirthday(e.target.value)}
                   placeholder="DD/MM/YYYY"
-                  className="w-full px-4 py-2 rounded-xl border border-amber-200 focus:border-amber-400 outline-none text-sm"
+                  className="w-full px-4 py-2 rounded-xl border border-red-700 bg-red-950/50 text-white placeholder-red-400 focus:border-red-500 outline-none text-sm"
                   data-testid="birthday-input"
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">🔤 Full Name (optional)</label>
+                <label className="text-xs text-red-300 mb-1 block">🔤 Full Name (optional)</label>
                 <input
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Your full name"
-                  className="w-full px-4 py-2 rounded-xl border border-amber-200 focus:border-amber-400 outline-none text-sm"
+                  className="w-full px-4 py-2 rounded-xl border border-red-700 bg-red-950/50 text-white placeholder-red-400 focus:border-red-500 outline-none text-sm"
                   data-testid="name-input"
                 />
               </div>
@@ -469,16 +469,16 @@ function App() {
               </button>
               
               {(prediction?.birthday_mode || prediction?.name_mode) && (
-                <div className="bg-gradient-to-r from-pink-50 to-rose-50 rounded-xl p-3 text-xs border border-pink-200">
+                <div className="bg-gradient-to-r from-red-900/50 to-red-800/50 rounded-xl p-3 text-xs border border-red-500/30">
                   {prediction.birthday_mode && (
-                    <div className="flex items-center gap-2 text-pink-700">
+                    <div className="flex items-center gap-2 text-red-200">
                       <span>🎂</span>
                       <span className="font-semibold">Birthday numbers:</span>
                       <span>{prediction.birthday_mode.lucky_numbers.slice(0, 4).join(", ")}</span>
                     </div>
                   )}
                   {prediction.name_mode && (
-                    <div className="flex items-center gap-2 text-rose-700 mt-1">
+                    <div className="flex items-center gap-2 text-red-200 mt-1">
                       <span>🔤</span>
                       <span className="font-semibold">Name numbers:</span>
                       <span>{prediction.name_mode.lucky_numbers.slice(0, 4).join(", ")}</span>
@@ -497,10 +497,10 @@ function App() {
               className="flex items-center justify-between cursor-pointer"
               onClick={() => setShowBonus(!showBonus)}
             >
-              <span className="font-semibold text-gray-700 flex items-center gap-2">
-                <Gift className="w-4 h-4 text-amber-500" /> Bonus Numbers
+              <span className="font-semibold text-white flex items-center gap-2">
+                <Gift className="w-4 h-4 text-yellow-400" /> Bonus Numbers
               </span>
-              {showBonus ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+              {showBonus ? <ChevronUp className="w-5 h-5 text-red-400" /> : <ChevronDown className="w-5 h-5 text-red-400" />}
             </div>
             
             {showBonus && (
@@ -516,9 +516,9 @@ function App() {
         )}
 
         {/* Footer */}
-        <div className="text-center text-gray-400 text-xs mt-6">
+        <div className="text-center text-red-400 text-xs mt-6">
           <p>🍀 Good luck! Play responsibly 🤞</p>
-          <p className="mt-1 text-gray-300">May fortune smile upon you ✨</p>
+          <p className="mt-1 text-red-500/70">May fortune smile upon you ✨</p>
         </div>
       </main>
     </div>
