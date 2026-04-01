@@ -340,12 +340,7 @@ function App() {
           </h1>
           <span className="text-3xl animate-bounce" style={{animationDelay: '0.2s'}}>🤞</span>
         </div>
-        <p className="text-gray-500 text-sm">Swiss Lotto Pattern Analyzer</p>
-        {stats && (
-          <p className="text-xs text-gray-400 mt-1">
-            🎰 Based on {stats.total_draws.toLocaleString()} real draws
-          </p>
-        )}
+        <p className="text-gray-400 text-sm">✨ Your Lucky Number Generator ✨</p>
       </header>
 
       {/* Main Content */}
@@ -371,7 +366,7 @@ function App() {
               <span className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-100 to-orange-100 px-4 py-2 rounded-full text-sm">
                 <span>🍀</span>
                 <span className="font-semibold text-amber-700">
-                  {prediction.average_confidence}% Lucky Score
+                  {'⭐'.repeat(Math.min(5, Math.ceil(prediction.average_confidence / 20)))} Magic!
                 </span>
                 <span>🤞</span>
               </span>
@@ -426,13 +421,9 @@ function App() {
               </div>
               
               {(prediction?.birthday_mode || prediction?.name_mode) && (
-                <div className="bg-amber-50 rounded-xl p-3 text-xs text-amber-700">
-                  {prediction.birthday_mode && (
-                    <p>🎂 Birthday luck: {prediction.birthday_mode.lucky_numbers.slice(0, 4).join(", ")}</p>
-                  )}
-                  {prediction.name_mode && (
-                    <p>🔤 Name luck: {prediction.name_mode.lucky_numbers.slice(0, 4).join(", ")}</p>
-                  )}
+                <div className="bg-amber-50 rounded-xl p-3 text-xs text-amber-700 text-center">
+                  {prediction.birthday_mode && <span>🎂 Birthday magic active! </span>}
+                  {prediction.name_mode && <span>🔤 Name magic active!</span>}
                 </div>
               )}
             </div>
@@ -459,19 +450,6 @@ function App() {
                     <Ball key={i} number={n} size="sm" />
                   ))}
                 </div>
-                
-                {prediction.last_draw && (
-                  <div className="mt-4 text-center">
-                    <p className="text-xs text-gray-500 mb-2">Last Draw: {prediction.last_draw.date}</p>
-                    <div className="flex flex-wrap justify-center gap-1">
-                      {prediction.last_draw.numbers.map((n, i) => (
-                        <div key={i} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-semibold text-gray-500 text-xs">
-                          {n}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </div>
