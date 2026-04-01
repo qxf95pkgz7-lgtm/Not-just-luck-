@@ -1300,6 +1300,35 @@ async def get_master_prediction(birthday: str = None, name: str = None):
                                 scores[predicted]["score"] += 10
                                 scores[predicted]["reasons"].append(f"🔮 Serial missing: {missing}→P1={predicted}")
     
+    # === 20. P2 DRAW POINTER PATTERN ===
+    # When P2 breaks sequence, P2 value = draw number to find the answer
+    # Example: Draw 5 P2=9 (expected 12) → Draw 9 P1=12!
+    if len(quarter_draws) >= 2:
+        # Get last P2 value - it might point to a future draw
+        last_p2 = quarter_draws[-1]['numbers'][1] if quarter_draws else 0
+        pos_in_q = len(quarter_draws)
+        
+        # If P2 < current position, it pointed backward (already happened)
+        # If P2 > current position, it's pointing forward!
+        if last_p2 > pos_in_q and last_p2 <= 27:
+            # P2 is pointing to a future draw
+            # The sequence number at that draw = hidden + P2 value
+            future_seq = abs(hidden_num) + last_p2 if 'hidden_num' in dir() else last_p2
+            if 1 <= future_seq <= 42:
+                scores[future_seq]["score"] += 12
+                scores[future_seq]["reasons"].append(f"🎯 P2 pointer: P2={last_p2}→Draw {last_p2} expects {future_seq}")
+        
+        # Also: current draw number might be pointed to by earlier P2
+        # If we're at draw N, check if any earlier P2 = N
+        for j, qd in enumerate(quarter_draws[:-1], start=1):
+            if qd['numbers'][1] == pos_in_q:
+                # Earlier draw's P2 pointed to current draw!
+                # Current P1 should relate to sequence
+                expected_seq = abs(hidden_num) + pos_in_q if 'hidden_num' in dir() else pos_in_q
+                if 1 <= expected_seq <= 42:
+                    scores[expected_seq]["score"] += 15
+                    scores[expected_seq]["reasons"].append(f"🎯 P2 pointed here: Draw {j} P2={pos_in_q}→P1={expected_seq}")
+    
     # === 15. RARE EVENT COUNTS ===
     def get_group(n):
         if n <= 9: return 1
