@@ -1192,8 +1192,23 @@ async def get_master_prediction(birthday: str = None, name: str = None):
     if last_draw and last_draw.get('replay_number'):
         replay = last_draw['replay_number']
         if 1 <= replay <= 42:
-            scores[replay]["score"] += 6
+            scores[replay]["score"] += 10
             scores[replay]["reasons"].append(f"🔄 Replay number: {replay}")
+        # Also boost numbers ending in replay's digit
+        replay_digit = replay % 10
+        for n in range(replay_digit, 43, 10):
+            if 1 <= n <= 42 and n != replay:
+                scores[n]["score"] += 5
+                scores[n]["reasons"].append(f"🔄 Replay family: ends in {replay_digit}")
+    
+    # === 17. LUCKY NUMBER → FIRST POSITION PATTERN (13.9% vs 2.4%) ===
+    # Lucky number often equals the first (smallest) number in next draw
+    if last_draw and last_draw.get('lucky_number'):
+        lucky = last_draw['lucky_number']
+        # Boost the lucky number itself (might be first position)
+        if 1 <= lucky <= 6:  # Lucky is 1-6, these are often first position
+            scores[lucky]["score"] += 15
+            scores[lucky]["reasons"].append(f"🎯 Lucky→First: {lucky} (13.9% pattern)")
     
     # === 15. RARE EVENT COUNTS ===
     def get_group(n):
