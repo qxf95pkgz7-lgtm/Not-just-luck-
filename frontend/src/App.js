@@ -111,15 +111,15 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
       // Reset captured state
       setBalls(prev => prev.map(b => ({ ...b, captured: false })));
     } else if (!isProcessing && phase === 'spinning' && winningNumbers.length > 0) {
-      // Wait 2 seconds of spinning before starting selection
+      // Wait 3 seconds of spinning before starting selection
       const delay = setTimeout(() => {
         setPhase('selecting');
-      }, 2000);
+      }, 3000);
       return () => clearTimeout(delay);
     }
   }, [isProcessing, winningNumbers, phase]);
 
-  // Ball selection animation - one by one (SLOWER)
+  // Ball selection animation - one by one (DRAMATIC)
   useEffect(() => {
     if (phase === 'selecting' && selectionIndex < winningNumbers.length) {
       const ballNumber = winningNumbers[selectionIndex];
@@ -132,12 +132,12 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
         b.number === ballNumber ? { ...b, captured: true, y: 8, x: 85 } : b
       ));
       
-      // 1.5 seconds between each ball for dramatic effect
+      // 2 seconds between each ball for dramatic effect
       const timer = setTimeout(() => {
         setTubeAnimation(null);
         setSelectedBalls(prev => [...prev, ballNumber]);
         setSelectionIndex(prev => prev + 1);
-      }, 1500);
+      }, 2000);
       
       return () => clearTimeout(timer);
     } else if (phase === 'selecting' && selectionIndex >= winningNumbers.length) {
