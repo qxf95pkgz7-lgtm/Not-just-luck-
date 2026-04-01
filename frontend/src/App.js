@@ -393,7 +393,7 @@ function App() {
             className="flex items-center justify-between cursor-pointer"
             onClick={() => setShowPersonal(!showPersonal)}
           >
-            <span className="font-semibold text-gray-700">🍀 Personalize Your Luck 🤞</span>
+            <span className="font-semibold text-gray-700">🎂 Personalize Your Luck 🤞</span>
             {showPersonal ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
           </div>
           
@@ -407,26 +407,60 @@ function App() {
                   onChange={(e) => setBirthday(e.target.value)}
                   placeholder="DD/MM/YYYY"
                   className="w-full px-4 py-2 rounded-xl border border-amber-200 focus:border-amber-400 outline-none text-sm"
+                  data-testid="birthday-input"
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">🔤 Full Name</label>
+                <label className="text-xs text-gray-500 mb-1 block">🔤 Full Name (optional)</label>
                 <input
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Your full name"
                   className="w-full px-4 py-2 rounded-xl border border-amber-200 focus:border-amber-400 outline-none text-sm"
+                  data-testid="name-input"
                 />
               </div>
               
+              {/* Birthday Generate Button */}
+              <button 
+                onClick={fetchPrediction}
+                disabled={loading || !birthday}
+                className={`w-full py-3 rounded-xl font-bold text-white flex items-center justify-center gap-2 transition-all duration-300 ${
+                  birthday 
+                    ? 'bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5' 
+                    : 'bg-gray-300 cursor-not-allowed'
+                }`}
+                data-testid="birthday-generate-btn"
+              >
+                {loading ? (
+                  <>
+                    <Sparkles className="w-5 h-5 animate-spin" />
+                    <span>🎂 Generating Your Birthday Magic...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    <span>🎂 Generate with Birthday Magic! ✨</span>
+                  </>
+                )}
+              </button>
+              
               {(prediction?.birthday_mode || prediction?.name_mode) && (
-                <div className="bg-amber-50 rounded-xl p-3 text-xs text-amber-700">
+                <div className="bg-gradient-to-r from-pink-50 to-rose-50 rounded-xl p-3 text-xs border border-pink-200">
                   {prediction.birthday_mode && (
-                    <p>🎂 Birthday luck: {prediction.birthday_mode.lucky_numbers.slice(0, 4).join(", ")}</p>
+                    <div className="flex items-center gap-2 text-pink-700">
+                      <span>🎂</span>
+                      <span className="font-semibold">Birthday numbers:</span>
+                      <span>{prediction.birthday_mode.lucky_numbers.slice(0, 4).join(", ")}</span>
+                    </div>
                   )}
                   {prediction.name_mode && (
-                    <p>🔤 Name luck: {prediction.name_mode.lucky_numbers.slice(0, 4).join(", ")}</p>
+                    <div className="flex items-center gap-2 text-rose-700 mt-1">
+                      <span>🔤</span>
+                      <span className="font-semibold">Name numbers:</span>
+                      <span>{prediction.name_mode.lucky_numbers.slice(0, 4).join(", ")}</span>
+                    </div>
                   )}
                 </div>
               )}
