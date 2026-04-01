@@ -111,12 +111,15 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
       // Reset captured state
       setBalls(prev => prev.map(b => ({ ...b, captured: false })));
     } else if (!isProcessing && phase === 'spinning' && winningNumbers.length > 0) {
-      // Start selecting balls one by one
-      setPhase('selecting');
+      // Wait 2 seconds of spinning before starting selection
+      const delay = setTimeout(() => {
+        setPhase('selecting');
+      }, 2000);
+      return () => clearTimeout(delay);
     }
   }, [isProcessing, winningNumbers, phase]);
 
-  // Ball selection animation - one by one
+  // Ball selection animation - one by one (SLOWER)
   useEffect(() => {
     if (phase === 'selecting' && selectionIndex < winningNumbers.length) {
       const ballNumber = winningNumbers[selectionIndex];
@@ -129,12 +132,12 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
         b.number === ballNumber ? { ...b, captured: true, y: 8, x: 85 } : b
       ));
       
-      // After delay, add to selected balls
+      // 1.5 seconds between each ball for dramatic effect
       const timer = setTimeout(() => {
         setTubeAnimation(null);
         setSelectedBalls(prev => [...prev, ballNumber]);
         setSelectionIndex(prev => prev + 1);
-      }, 600);
+      }, 1500);
       
       return () => clearTimeout(timer);
     } else if (phase === 'selecting' && selectionIndex >= winningNumbers.length) {
@@ -342,42 +345,68 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
       <div 
         className="px-6 py-4 rounded-2xl min-h-[80px] flex items-center justify-center"
         style={{
-          background: (showResults || selectedBalls.length > 0)
-            ? 'linear-gradient(180deg, rgba(30,35,50,0.95) 0%, rgba(20,25,35,0.98) 100%)' 
-            : 'transparent',
-          boxShadow: (showResults || selectedBalls.length > 0) ? '0 8px 30px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)' : 'none',
-          border: (showResults || selectedBalls.length > 0) ? '2px solid rgba(212,175,55,0.3)' : '2px dashed rgba(212,175,55,0.2)',
-          minWidth: '380px',
+          background: 'linear-gradient(180deg, rgba(30,35,50,0.95) 0%, rgba(20,25,35,0.98) 100%)',
+          boxShadow: '0 8px 30px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
+          border: '2px solid rgba(212,175,55,0.3)',
+          minWidth: '400px',
           borderRadius: '20px'
         }}
       >
-        {selectedBalls.length > 0 ? (
+        {phase === 'spinning' ? (
+          // During spinning - show all empty slots
           <div className="flex gap-3">
-            {/* Show selected balls */}
-            {selectedBalls.map((num, i) => (
+            {[0, 1, 2, 3, 4, 5].map((i) => (
               <div 
-                key={`selected-${num}-${i}`}
-                className="ball-jump-in"
-                style={{ animationDelay: `${i * 50}ms` }}
+                key={i}
+                className="w-12 h-12 rounded-full border-2 border-dashed border-slate-600 flex items-center justify-center animate-pulse"
+                style={{ background: 'rgba(30,40,60,0.5)' }}
               >
-                <Ball number={num} size="md" isWinner={true} />
-              </div>
-            ))}
-            {/* Show empty slots for remaining */}
-            {phase === 'selecting' && Array.from({ length: 6 - selectedBalls.length }).map((_, i) => (
-              <div 
-                key={`empty-${i}`}
-                className="w-12 h-12 rounded-full border-2 border-dashed border-slate-600 flex items-center justify-center"
-              >
-                <span className="text-slate-500 text-lg">?</span>
+                <span className="text-slate-500 text-lg font-medium">?</span>
               </div>
             ))}
           </div>
+        ) : phase === 'selecting' || phase === 'complete' ? (
+          <div className="flex gap-3">
+            {/* Always show 6 slots */}
+            {[0, 1, 2, 3, 4, 5].map((i) => {
+              const ballNumber = selectedBalls[i];
+              const isCurrentlySelecting = phase === 'selecting' && i === selectedBalls.length && tubeAnimation;
+              
+              return (
+                <div key={i} className="relative">
+                  {ballNumber ? (
+                    // Show selected ball
+                    <div className="ball-jump-in">
+                      <Ball number={ballNumber} size="md" isWinner={true} />
+                    </div>
+                  ) : isCurrentlySelecting ? (
+                    // Currently selecting this slot - pulsing animation
+                    <div 
+                      className="w-12 h-12 rounded-full border-2 border-amber-500 flex items-center justify-center animate-pulse"
+                      style={{
+                        background: 'radial-gradient(circle, rgba(212,175,55,0.2) 0%, transparent 70%)',
+                        boxShadow: '0 0 15px rgba(212,175,55,0.3)'
+                      }}
+                    >
+                      <span className="text-amber-400 text-xs font-bold">●●●</span>
+                    </div>
+                  ) : (
+                    // Empty slot waiting
+                    <div 
+                      className="w-12 h-12 rounded-full border-2 border-dashed border-slate-600 flex items-center justify-center"
+                      style={{ background: 'rgba(30,40,60,0.5)' }}
+                    >
+                      <span className="text-slate-500 text-lg font-medium">?</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         ) : (
+          // Idle state - show message
           <span className="text-slate-400 text-sm font-medium">
-            {phase === 'spinning' 
-              ? '🌀 Mixing balls...' 
-              : '✨ Press button to start the machine'}
+            ✨ Press button to start the machine
           </span>
         )}
       </div>
