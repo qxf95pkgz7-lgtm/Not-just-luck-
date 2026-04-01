@@ -74,6 +74,151 @@ const Ball = ({ number, size = "sm", isWinner = false, isSpinning = false, delay
   );
 };
 
+// Lucky Number Wheel - spins like a car wheel viewed from front
+const LuckyWheel = ({ luckyNumber, isSpinning, onComplete }) => {
+  const [rotation, setRotation] = useState(0);
+  const [settled, setSettled] = useState(false);
+  const numbers = [1, 2, 3, 4, 5, 6];
+  
+  useEffect(() => {
+    if (isSpinning && luckyNumber) {
+      setSettled(false);
+      // Calculate final rotation: spin several times + land on lucky number
+      // Each number is 60 degrees apart (360/6)
+      // Number 1 at top (0°), going clockwise: 2=60°, 3=120°, 4=180°, 5=240°, 6=300°
+      const targetAngle = (luckyNumber - 1) * 60;
+      // Spin 6 full rotations + land on target at top
+      const finalRotation = 360 * 6 + (360 - targetAngle);
+      setRotation(finalRotation);
+      
+      // Settle after animation
+      setTimeout(() => {
+        setSettled(true);
+        if (onComplete) onComplete();
+      }, 3500);
+    }
+  }, [isSpinning, luckyNumber, onComplete]);
+
+  // Reset when starting new spin
+  useEffect(() => {
+    if (!isSpinning && !settled) {
+      setRotation(0);
+    }
+  }, [isSpinning, settled]);
+
+  return (
+    <div className="flex flex-col items-center">
+      <div className="text-sm font-semibold text-amber-400 mb-2">⭐ Lucky Number</div>
+      
+      {/* Wheel container */}
+      <div className="relative w-28 h-28">
+        {/* Pointer at top */}
+        <div 
+          className="absolute -top-3 left-1/2 -translate-x-1/2 z-20"
+          style={{
+            width: 0,
+            height: 0,
+            borderLeft: '10px solid transparent',
+            borderRight: '10px solid transparent',
+            borderTop: '14px solid #d4af37',
+            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))'
+          }}
+        />
+        
+        {/* Outer metallic ring */}
+        <div 
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: 'linear-gradient(180deg, #4a4a5a 0%, #2a2a35 50%, #3a3a45 100%)',
+            boxShadow: '0 6px 25px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.15), inset 0 -2px 4px rgba(0,0,0,0.3)'
+          }}
+        />
+        
+        {/* Spinning wheel face */}
+        <div 
+          className="absolute inset-2 rounded-full overflow-hidden"
+          style={{
+            background: 'conic-gradient(from 0deg, #1e293b 0deg, #334155 60deg, #1e293b 60deg, #334155 120deg, #1e293b 120deg, #334155 180deg, #1e293b 180deg, #334155 240deg, #1e293b 240deg, #334155 300deg, #1e293b 300deg, #334155 360deg)',
+            transform: `rotate(${rotation}deg)`,
+            transition: isSpinning ? 'transform 3.5s cubic-bezier(0.12, 0.8, 0.2, 1)' : 'none',
+            boxShadow: 'inset 0 0 30px rgba(0,0,0,0.6)'
+          }}
+        >
+          {/* Numbers arranged in circle - counter-rotate to stay upright */}
+          {numbers.map((num, i) => {
+            const angle = i * 60; // 360/6 = 60 degrees apart
+            const isWinner = settled && num === luckyNumber;
+            return (
+              <div
+                key={num}
+                className="absolute"
+                style={{
+                  left: '50%',
+                  top: '50%',
+                  transform: `translate(-50%, -50%) rotate(${angle}deg) translateY(-32px)`,
+                }}
+              >
+                <div 
+                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-base transition-all duration-500 ${
+                    isWinner ? 'scale-125' : ''
+                  }`}
+                  style={{
+                    background: isWinner 
+                      ? 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)'
+                      : 'linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%)',
+                    color: isWinner ? '#1a1a24' : '#1e293b',
+                    boxShadow: isWinner 
+                      ? '0 0 20px rgba(251,191,36,0.9), 0 4px 12px rgba(0,0,0,0.4)'
+                      : '0 2px 8px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.8)',
+                    transform: `rotate(-${angle + rotation}deg)`, // Counter-rotate to keep upright
+                    transition: isSpinning ? 'transform 3.5s cubic-bezier(0.12, 0.8, 0.2, 1)' : 'none'
+                  }}
+                >
+                  {num}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        
+        {/* Center hub */}
+        <div 
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full z-10"
+          style={{
+            background: 'linear-gradient(145deg, #d4af37 0%, #b8860b 100%)',
+            boxShadow: '0 3px 10px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.3)'
+          }}
+        >
+          <div 
+            className="absolute inset-1 rounded-full"
+            style={{
+              background: 'linear-gradient(145deg, #3a3a45 0%, #2a2a35 100%)',
+            }}
+          />
+        </div>
+        
+        {/* Winner glow */}
+        {settled && (
+          <div 
+            className="absolute inset-0 rounded-full pointer-events-none animate-pulse"
+            style={{
+              boxShadow: '0 0 40px rgba(251,191,36,0.6), inset 0 0 20px rgba(251,191,36,0.2)'
+            }}
+          />
+        )}
+      </div>
+      
+      {/* Result display */}
+      <div className={`mt-3 text-center transition-all duration-500 ${settled ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}>
+        <span className="text-2xl font-black text-amber-400" style={{ textShadow: '0 0 10px rgba(251,191,36,0.5)' }}>
+          {luckyNumber}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+
 // Realistic Lottery Ball Machine with Tube Selection
 const BallMachine = ({ isProcessing, winningNumbers }) => {
   const [balls, setBalls] = useState([]);
@@ -483,6 +628,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [showPersonal, setShowPersonal] = useState(false);
   const [showBonus, setShowBonus] = useState(false);
+  const [wheelSpinning, setWheelSpinning] = useState(false);
   
   // Personal mode
   const [birthday, setBirthday] = useState("");
@@ -491,6 +637,7 @@ function App() {
   const fetchPrediction = useCallback(async () => {
     try {
       setLoading(true);
+      setWheelSpinning(false); // Reset wheel
       
       let url = `${API}/master-predictor`;
       const params = [];
@@ -503,6 +650,11 @@ function App() {
       
       const res = await axios.get(url);
       setPrediction(res.data);
+      
+      // Start wheel spinning after main balls are done (about 12 seconds for 6 balls)
+      setTimeout(() => {
+        setWheelSpinning(true);
+      }, 12000);
     } catch (e) {
       console.error("Error:", e);
       // Generate random lucky numbers as fallback
@@ -514,8 +666,12 @@ function App() {
       setPrediction({
         main_prediction: randomNums.sort((a, b) => a - b),
         average_confidence: Math.floor(Math.random() * 30) + 50,
-        alternate_numbers: [3, 11, 19, 27, 33, 39]
+        alternate_numbers: [3, 11, 19, 27, 33, 39],
+        lucky_prediction: Math.floor(Math.random() * 6) + 1
       });
+      setTimeout(() => {
+        setWheelSpinning(true);
+      }, 12000);
     } finally {
       setLoading(false);
     }
@@ -572,18 +728,29 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-lg mx-auto px-4">
+      <main className="max-w-2xl mx-auto px-4">
         {/* Main Content */}
         <div className="lucky-card p-6 mb-6">
           <h2 className="text-lg font-semibold text-center text-slate-200 mb-6">
             Your Lucky Numbers
           </h2>
           
-          {/* Ball Machine */}
-          <BallMachine 
-            isProcessing={loading}
-            winningNumbers={prediction?.main_prediction || []}
-          />
+          {/* Ball Machine + Lucky Wheel */}
+          <div className="flex items-start justify-center gap-6">
+            {/* Ball Machine */}
+            <BallMachine 
+              isProcessing={loading}
+              winningNumbers={prediction?.main_prediction || []}
+            />
+            
+            {/* Lucky Number Wheel */}
+            <div className="mt-8">
+              <LuckyWheel 
+                luckyNumber={prediction?.lucky_prediction || 1}
+                isSpinning={wheelSpinning}
+              />
+            </div>
+          </div>
           
           {/* Prompt text */}
           <div className="text-center mt-6 mb-4">
