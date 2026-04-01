@@ -1300,6 +1300,35 @@ async def get_master_prediction(birthday: str = None, name: str = None):
                                 scores[predicted]["score"] += 10
                                 scores[predicted]["reasons"].append(f"🔮 Serial missing: {missing}→P1={predicted}")
     
+    # === 22. P4 HIDDEN NUMBER PATTERN ===
+    # P4 Hidden = P1 Hidden + P2 (from first draw)
+    # Then count sequence and track P4 matches
+    if len(quarter_draws) >= 2:
+        d1 = quarter_draws[0]
+        d2 = quarter_draws[1]
+        
+        # P1 hidden
+        p1_hidden = d2['numbers'][0] - d1['numbers'][1]
+        
+        # P4 hidden = P1 hidden + P2 from first draw
+        p4_hidden = abs(p1_hidden) + d1['numbers'][1]
+        
+        # Current position in quarter
+        pos = len(quarter_draws)
+        
+        # P4 sequence number
+        p4_seq = p4_hidden + pos - 1
+        
+        if 1 <= p4_seq <= 42:
+            scores[p4_seq]["score"] += 12
+            scores[p4_seq]["reasons"].append(f"🎲 P4 hidden seq: {p4_hidden}+{pos-1}={p4_seq}")
+        
+        # Also: P4 might equal P4_hidden + P1_hidden
+        p4_combo = p4_hidden + abs(p1_hidden)
+        if 1 <= p4_combo <= 42 and p4_combo != p4_seq:
+            scores[p4_combo]["score"] += 8
+            scores[p4_combo]["reasons"].append(f"🎲 P4 combo: {p4_hidden}+{abs(p1_hidden)}={p4_combo}")
+    
     # === 21. SAME DATE HISTORY PATTERN ===
     # Numbers that appeared on same date (month-day) in previous years
     from collections import Counter as Cnt
