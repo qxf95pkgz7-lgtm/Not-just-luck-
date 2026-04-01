@@ -157,3 +157,9 @@
 .selecting-ball {
   animation: selectPulse 0.5s ease-out;
 }
+
+/* Air jet animation */
+@keyframes airJet {
+  0% { height: 25px; opacity: 0.4; }
+  100% { height: 45px; opacity: 0.8; }
+}

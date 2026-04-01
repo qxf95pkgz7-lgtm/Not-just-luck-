@@ -78,86 +78,96 @@ const Ball = ({ number, size = "sm", isWinner = false, isSpinning = false, delay
 const BallMachine = ({ isProcessing, winningNumbers }) => {
   const [balls, setBalls] = useState([]);
   const [phase, setPhase] = useState('idle'); // idle, spinning, selecting, complete
-  const [showResults, setShowResults] = useState(false);
-  const [selectedBalls, setSelectedBalls] = useState([]); // Balls being selected one by one
-  const [tubeAnimation, setTubeAnimation] = useState(null); // Ball currently in tube
+  const [selectedBalls, setSelectedBalls] = useState([]);
+  const [currentCatch, setCurrentCatch] = useState(null); // Ball currently caught in tube
   const [selectionIndex, setSelectionIndex] = useState(0);
+  const [catchPhase, setCatchPhase] = useState('none'); // none, catching, rolling, revealed
+  const [hasInitialized, setHasInitialized] = useState(false);
   
-  const GRAVITY = 0.06;  // Very gentle gravity
-  const FRICTION = 0.96;
-  const BOUNCE = 0.65;
+  const GRAVITY = 0.18;  // Strong gravity - balls WANT to fall
+  const FRICTION = 0.98;
+  const BOUNCE = 0.75;
 
-  // Initialize balls scattered throughout the container
+  // Initialize all 42 balls - scattered for more interesting start
   useEffect(() => {
     const allBalls = Array.from({ length: 42 }, (_, i) => ({
       number: i + 1,
-      x: 10 + Math.random() * 75, // Spread across width
-      y: 15 + Math.random() * 70, // Spread across height
-      vx: (Math.random() - 0.5) * 2,
-      vy: (Math.random() - 0.5) * 2,
+      x: 15 + (i % 7) * 10 + Math.random() * 5,
+      y: 55 + Math.floor(i / 7) * 6 + Math.random() * 3,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: 0,
       captured: false
     }));
     setBalls(allBalls);
+    setHasInitialized(true);
   }, []);
 
-  // Handle processing phases and ball selection
+  // Handle processing phases
   useEffect(() => {
-    if (isProcessing && phase === 'idle') {
+    if (isProcessing && (phase === 'idle' || phase === 'complete')) {
+      // Starting new spin
       setPhase('spinning');
-      setShowResults(false);
       setSelectedBalls([]);
       setSelectionIndex(0);
-      // Reset captured state for all balls
+      setCurrentCatch(null);
+      setCatchPhase('none');
       setBalls(prev => prev.map(b => ({ ...b, captured: false })));
     } else if (!isProcessing && phase === 'spinning' && winningNumbers.length > 0) {
-      // Wait 2.5 seconds of spinning before starting selection
+      // After 2 seconds of spinning, start catching balls one by one
       const delay = setTimeout(() => {
         setPhase('selecting');
-      }, 2500);
+      }, 2000);
       return () => clearTimeout(delay);
     }
   }, [isProcessing, winningNumbers, phase]);
 
-  // Ball selection animation - one by one (DRAMATIC)
+  // Ball catching sequence - one at a time with dramatic tube animation
   useEffect(() => {
-    if (phase === 'selecting' && selectionIndex < winningNumbers.length) {
+    if (phase === 'selecting' && selectionIndex < winningNumbers.length && catchPhase === 'none') {
       const ballNumber = winningNumbers[selectionIndex];
       
-      // Start tube animation for this specific ball
-      setTubeAnimation(ballNumber);
+      // Phase 1: Ball gets CAUGHT by the stopper
+      setCatchPhase('catching');
+      setCurrentCatch(ballNumber);
       
-      // Mark ONLY this specific ball as captured (fades out of the container)
+      // Mark ball as captured (disappears from floating)
       setBalls(prev => prev.map(b => 
         b.number === ballNumber ? { ...b, captured: true } : b
       ));
       
-      // 1.2 seconds between each ball for dramatic effect
-      const timer = setTimeout(() => {
-        setTubeAnimation(null);
+      // Phase 2: After 0.6s, ball ROLLS through tube
+      setTimeout(() => {
+        setCatchPhase('rolling');
+      }, 600);
+      
+      // Phase 3: After 1.2s total, number is REVEALED
+      setTimeout(() => {
+        setCatchPhase('revealed');
         setSelectedBalls(prev => [...prev, ballNumber]);
-        setSelectionIndex(prev => prev + 1);
       }, 1200);
       
-      return () => clearTimeout(timer);
-    } else if (phase === 'selecting' && selectionIndex >= winningNumbers.length) {
-      // All balls selected - slow down and complete
+      // Phase 4: After 1.8s, ready for next ball
       setTimeout(() => {
-        setPhase('complete');
-        setShowResults(true);
-      }, 500);
-    }
-  }, [phase, selectionIndex, winningNumbers]);
-
-  // Reset when new prediction starts
-  useEffect(() => {
-    if (winningNumbers.length > 0 && phase === 'idle') {
-      setSelectedBalls(winningNumbers);
-      setShowResults(true);
+        setCatchPhase('none');
+        setCurrentCatch(null);
+        setSelectionIndex(prev => prev + 1);
+      }, 1800);
+    } else if (phase === 'selecting' && selectionIndex >= winningNumbers.length && catchPhase === 'none') {
+      // All done!
       setPhase('complete');
     }
-  }, [winningNumbers, phase]);
+  }, [phase, selectionIndex, winningNumbers, catchPhase]);
 
-  // Physics loop - always running for continuous motion
+  // Show initial results on first load only (not on re-render)
+  useEffect(() => {
+    if (hasInitialized && winningNumbers.length > 0 && phase === 'idle' && selectedBalls.length === 0) {
+      // Show initial results immediately without animation
+      setSelectedBalls(winningNumbers);
+      setPhase('complete');
+    }
+  }, [hasInitialized, winningNumbers, phase, selectedBalls.length]);
+
+  // Physics loop - GRAVITY vs AIR JETS battle!
   useEffect(() => {
     const interval = setInterval(() => {
       setBalls(prev => prev.map(ball => {
@@ -166,42 +176,39 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
         let vx = ball.vx;
         let vy = ball.vy;
         
+        // GRAVITY always pulls down
+        vy += GRAVITY;
+        
         const isActive = phase === 'spinning' || phase === 'selecting';
         
         if (isActive) {
-          // LOTTERY MACHINE PHYSICS - balls FILL the entire container!
-          // Base upward air pressure to counteract gravity
-          vy -= 0.15;
+          // === AIR JETS FIGHTING GRAVITY ===
+          // Strong base upward force
+          vy -= 0.5;
           
-          // Strong push based on Y position - lower balls get pushed up MORE
-          if (ball.y > 60) {
-            vy -= 1.5;  // Very strong push at bottom
-          } else if (ball.y > 40) {
-            vy -= 0.8;  // Medium push in middle
-          } else if (ball.y < 25) {
-            vy += 0.4;  // Slight downward at top to prevent all sticking at ceiling
+          // Extra push for balls in lower half (air comes from bottom)
+          if (ball.y > 50) {
+            vy -= 1.2 + Math.random() * 0.5;
+          } else if (ball.y > 30) {
+            vy -= 0.4;
           }
           
-          // Random turbulence
+          // Random turbulence - makes it chaotic!
           vx += (Math.random() - 0.5) * 2.5;
-          vy += (Math.random() - 0.5) * 1.5;
+          vy += (Math.random() - 0.5) * 1.8;
           
-          // Occasional strong bursts
-          if (Math.random() < 0.15) {
-            vy -= 1.0 + Math.random();
-            vx += (Math.random() - 0.5) * 2;
+          // Occasional STRONG burst (like air pocket)
+          if (Math.random() < 0.1) {
+            vy -= 3 + Math.random() * 2;
+            vx += (Math.random() - 0.5) * 3;
           }
-        } else {
-          // IDLE - Gentle gravity, balls settle at bottom with slight drift
-          vy += GRAVITY;
-          vx += (Math.random() - 0.5) * 0.1;
         }
         
         vx *= FRICTION;
         vy *= FRICTION;
         
-        // Limit velocity
-        const maxV = isActive ? 5 : 2;
+        // Speed limits
+        const maxV = isActive ? 7 : 3;
         vx = Math.max(-maxV, Math.min(maxV, vx));
         vy = Math.max(-maxV, Math.min(maxV, vy));
         
@@ -209,14 +216,14 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
         let y = ball.y + vy;
         
         // Boundaries with bounce
-        if (x < 10) { x = 10; vx = Math.abs(vx) * BOUNCE; }
-        if (x > 90) { x = 90; vx = -Math.abs(vx) * BOUNCE; }
-        if (y < 12) { y = 12; vy = Math.abs(vy) * BOUNCE; }
-        if (y > 82) { y = 82; vy = -Math.abs(vy) * BOUNCE; }
+        if (x < 8) { x = 8; vx = Math.abs(vx) * BOUNCE; }
+        if (x > 82) { x = 82; vx = -Math.abs(vx) * BOUNCE; }
+        if (y < 10) { y = 10; vy = Math.abs(vy) * BOUNCE; }
+        if (y > 85) { y = 85; vy = -Math.abs(vy) * BOUNCE; }
         
         return { ...ball, x, y, vx, vy };
       }));
-    }, 33);
+    }, 25);
     return () => clearInterval(interval);
   }, [phase]);
 
@@ -226,7 +233,7 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
       <div className="relative mb-6">
         {/* Machine Frame */}
         <div 
-          className="relative w-[340px] h-[320px] rounded-[40px] p-2"
+          className="relative w-[360px] h-[340px] rounded-[40px] p-2"
           style={{
             background: 'linear-gradient(180deg, #2d2d3a 0%, #1a1a24 100%)',
             boxShadow: '0 20px 60px rgba(0,0,0,0.5), inset 0 2px 1px rgba(255,255,255,0.1)'
@@ -240,79 +247,81 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
               boxShadow: 'inset 0 0 60px rgba(0,0,0,0.5), inset 0 -20px 40px rgba(0,0,0,0.3)'
             }}
           >
-            {/* Glass reflection effect */}
+            {/* Glass reflection */}
             <div 
               className="absolute inset-0 pointer-events-none rounded-[32px]"
               style={{
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 40%, transparent 60%, rgba(255,255,255,0.03) 100%)'
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 40%)'
               }}
             />
             
-            {/* TUBE - Ball exit on the right */}
-            <div 
-              className="absolute right-0 top-4 w-10 h-16 z-20"
-              style={{
-                background: 'linear-gradient(90deg, transparent 0%, rgba(30,35,50,0.95) 30%)',
-              }}
-            >
-              {/* Tube opening */}
+            {/* === TUBE MECHANISM on the right === */}
+            <div className="absolute right-0 top-1/4 w-16 h-32 z-30">
+              {/* Tube funnel opening */}
               <div 
-                className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-10 rounded-l-full"
+                className="absolute right-2 top-0 w-10 h-10"
                 style={{
-                  background: 'linear-gradient(180deg, #3d3d4a 0%, #2a2a35 100%)',
-                  boxShadow: 'inset 2px 0 8px rgba(0,0,0,0.5), -2px 0 10px rgba(0,0,0,0.3)'
+                  borderLeft: '15px solid transparent',
+                  borderRight: '15px solid transparent',
+                  borderTop: '20px solid #3d3d4a',
                 }}
               />
-              {/* Tube inner highlight */}
+              
+              {/* Tube body */}
               <div 
-                className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-8 rounded-l-full"
+                className="absolute right-3 top-5 w-8 h-24 rounded-b-lg"
                 style={{
-                  background: 'radial-gradient(ellipse at right, rgba(60,70,90,0.8) 0%, rgba(30,35,50,0.9) 100%)',
+                  background: 'linear-gradient(90deg, #2a2a35 0%, #3d3d4a 50%, #2a2a35 100%)',
+                  boxShadow: 'inset 2px 0 5px rgba(0,0,0,0.5), inset -2px 0 5px rgba(0,0,0,0.3)'
                 }}
               />
+              
+              {/* Stopper mechanism - the thing that catches balls */}
+              <div 
+                className={`absolute right-4 top-3 w-6 h-2 rounded transition-all duration-300 ${
+                  catchPhase === 'catching' ? 'bg-amber-500' : 'bg-slate-500'
+                }`}
+                style={{
+                  boxShadow: catchPhase === 'catching' ? '0 0 10px rgba(245,158,11,0.5)' : 'none'
+                }}
+              />
+              
               {/* Ball in tube animation */}
-              {tubeAnimation && (
+              {currentCatch && (
                 <div 
-                  className="absolute right-2 top-1/2 -translate-y-1/2 animate-pulse"
-                  style={{
-                    animation: 'tubeExit 0.5s ease-out forwards'
-                  }}
+                  className={`absolute right-4 transition-all duration-500 ${
+                    catchPhase === 'catching' ? 'top-4 scale-110' : 
+                    catchPhase === 'rolling' ? 'top-20 scale-100' : 
+                    'top-24 scale-90 opacity-0'
+                  }`}
                 >
-                  <Ball number={tubeAnimation} size="sm" isWinner={true} />
+                  <Ball number={currentCatch} size="sm" isWinner={true} />
                 </div>
               )}
             </div>
             
-            {/* Funnel guide lines */}
-            <div 
-              className="absolute right-8 top-2 w-16 h-12 pointer-events-none"
-              style={{
-                borderRight: '2px solid rgba(212,175,55,0.2)',
-                borderBottom: '2px solid rgba(212,175,55,0.2)',
-                borderBottomRightRadius: '20px'
-              }}
-            />
-            
-            {/* Air jets indicator */}
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-3">
-              {[...Array(7)].map((_, i) => (
+            {/* Air jets at bottom */}
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-4">
+              {[...Array(6)].map((_, i) => (
                 <div key={i} className="relative">
                   <div 
-                    className="w-2 h-2 rounded-full transition-all duration-300"
+                    className="w-3 h-3 rounded-full transition-all"
                     style={{
                       background: (phase === 'spinning' || phase === 'selecting')
-                        ? 'radial-gradient(circle, #60a5fa 0%, #3b82f6 50%, transparent 100%)' 
+                        ? 'radial-gradient(circle, #60a5fa 0%, #3b82f6 70%)' 
                         : 'rgba(60,70,90,0.5)',
-                      boxShadow: (phase === 'spinning' || phase === 'selecting') ? '0 0 12px #3b82f6, 0 0 20px #60a5fa50' : 'none'
+                      boxShadow: (phase === 'spinning' || phase === 'selecting') 
+                        ? '0 0 15px #3b82f6' : 'none'
                     }}
                   />
                   {(phase === 'spinning' || phase === 'selecting') && (
                     <div 
-                      className="absolute bottom-full left-1/2 -translate-x-1/2 w-1 animate-pulse"
+                      className="absolute bottom-full left-1/2 -translate-x-1/2 w-2"
                       style={{
-                        height: '30px',
+                        height: `${30 + Math.random() * 20}px`,
                         background: 'linear-gradient(to top, rgba(96,165,250,0.6), transparent)',
-                        filter: 'blur(2px)'
+                        filter: 'blur(3px)',
+                        animation: 'airJet 0.3s ease-in-out infinite alternate'
                       }}
                     />
                   )}
@@ -320,17 +329,16 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
               ))}
             </div>
             
-            {/* Balls */}
+            {/* Floating Balls */}
             {balls.map((ball) => (
               <div
                 key={ball.number}
-                className={`absolute transition-all ${ball.captured ? 'opacity-0' : 'opacity-100'}`}
+                className={`absolute transition-opacity duration-300 ${ball.captured ? 'opacity-0' : 'opacity-100'}`}
                 style={{
                   left: `${ball.x}%`,
                   top: `${ball.y}%`,
                   transform: 'translate(-50%, -50%)',
-                  zIndex: ball.captured ? 50 : Math.floor(ball.y),
-                  transition: ball.captured ? 'opacity 0.3s, left 0.3s, top 0.3s' : 'none'
+                  zIndex: Math.floor(ball.y)
                 }}
               >
                 <Ball 
@@ -342,105 +350,102 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
             ))}
           </div>
           
-          {/* Metallic rim */}
+          {/* Gold rim */}
           <div 
             className="absolute inset-0 rounded-[40px] pointer-events-none"
             style={{
-              border: '3px solid transparent',
-              borderImage: 'linear-gradient(180deg, #d4af37 0%, #8b7355 50%, #d4af37 100%) 1'
+              border: '3px solid rgba(212,175,55,0.4)'
             }}
           />
         </div>
         
-        {/* Machine Stand */}
-        <div 
-          className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-48 h-6 rounded-b-xl"
-          style={{
-            background: 'linear-gradient(180deg, #3d3d4a 0%, #2a2a35 100%)',
-            boxShadow: '0 4px 15px rgba(0,0,0,0.4)'
-          }}
-        />
-        
         {/* Brand plate */}
         <div 
-          className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full"
+          className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full"
           style={{
             background: 'linear-gradient(135deg, #d4af37 0%, #b8860b 100%)',
-            boxShadow: '0 2px 8px rgba(212,175,55,0.3)'
+            boxShadow: '0 2px 10px rgba(212,175,55,0.4)'
           }}
         >
-          <span className="text-[10px] font-bold text-gray-900 tracking-wider">LUCKY JACK</span>
+          <span className="text-xs font-bold text-gray-900 tracking-wider">LUCKY JACK</span>
         </div>
       </div>
 
-      {/* Results Display - Shows balls one by one */}
+      {/* Results Display - Shows numbers one by one as they're caught */}
       <div 
-        className="px-6 py-4 rounded-2xl min-h-[80px] flex items-center justify-center"
+        className="px-6 py-5 rounded-2xl"
         style={{
           background: 'linear-gradient(180deg, rgba(30,35,50,0.95) 0%, rgba(20,25,35,0.98) 100%)',
           boxShadow: '0 8px 30px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
           border: '2px solid rgba(212,175,55,0.3)',
-          minWidth: '400px',
-          borderRadius: '20px'
+          minWidth: '420px'
         }}
       >
-        {phase === 'spinning' ? (
-          // During spinning - show all empty slots
-          <div className="flex gap-3">
-            {[0, 1, 2, 3, 4, 5].map((i) => (
-              <div 
-                key={i}
-                className="w-12 h-12 rounded-full border-2 border-dashed border-slate-600 flex items-center justify-center animate-pulse"
-                style={{ background: 'rgba(30,40,60,0.5)' }}
-              >
-                <span className="text-slate-500 text-lg font-medium">?</span>
-              </div>
-            ))}
+        {/* Current catching indicator */}
+        {catchPhase !== 'none' && currentCatch && (
+          <div className="text-center mb-3">
+            <span className={`text-sm font-bold ${
+              catchPhase === 'catching' ? 'text-amber-400 animate-pulse' :
+              catchPhase === 'rolling' ? 'text-amber-300' :
+              'text-emerald-400'
+            }`}>
+              {catchPhase === 'catching' && '⚡ Ball caught!'}
+              {catchPhase === 'rolling' && '🎱 Rolling...'}
+              {catchPhase === 'revealed' && `✨ Number ${currentCatch}!`}
+            </span>
           </div>
-        ) : phase === 'selecting' || phase === 'complete' ? (
-          <div className="flex gap-3">
-            {/* Always show 6 slots */}
-            {[0, 1, 2, 3, 4, 5].map((i) => {
-              const ballNumber = selectedBalls[i];
-              const isCurrentlySelecting = phase === 'selecting' && i === selectedBalls.length && tubeAnimation;
-              
-              return (
-                <div key={i} className="relative">
-                  {ballNumber ? (
-                    // Show selected ball
-                    <div className="ball-jump-in">
-                      <Ball number={ballNumber} size="md" isWinner={true} />
-                    </div>
-                  ) : isCurrentlySelecting ? (
-                    // Currently selecting this slot - pulsing animation
-                    <div 
-                      className="w-12 h-12 rounded-full border-2 border-amber-500 flex items-center justify-center animate-pulse"
-                      style={{
-                        background: 'radial-gradient(circle, rgba(212,175,55,0.2) 0%, transparent 70%)',
-                        boxShadow: '0 0 15px rgba(212,175,55,0.3)'
-                      }}
-                    >
-                      <span className="text-amber-400 text-xs font-bold">●●●</span>
-                    </div>
-                  ) : (
-                    // Empty slot waiting
-                    <div 
-                      className="w-12 h-12 rounded-full border-2 border-dashed border-slate-600 flex items-center justify-center"
-                      style={{ background: 'rgba(30,40,60,0.5)' }}
-                    >
-                      <span className="text-slate-500 text-lg font-medium">?</span>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          // Idle state - show message
-          <span className="text-slate-400 text-sm font-medium">
-            ✨ Press button to start the machine
-          </span>
         )}
+        
+        {/* Number slots */}
+        <div className="flex gap-3 justify-center">
+          {[0, 1, 2, 3, 4, 5].map((i) => {
+            const ballNumber = selectedBalls[i];
+            const isBeingRevealed = catchPhase === 'revealed' && i === selectedBalls.length - 1;
+            
+            return (
+              <div key={i} className="relative">
+                {ballNumber ? (
+                  <div className={isBeingRevealed ? 'ball-jump-in' : ''}>
+                    <Ball number={ballNumber} size="md" isWinner={true} />
+                  </div>
+                ) : (
+                  <div 
+                    className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${
+                      phase === 'selecting' && i === selectedBalls.length 
+                        ? 'border-amber-500 animate-pulse' 
+                        : 'border-dashed border-slate-600'
+                    }`}
+                    style={{ 
+                      background: phase === 'selecting' && i === selectedBalls.length
+                        ? 'radial-gradient(circle, rgba(245,158,11,0.15) 0%, transparent 70%)'
+                        : 'rgba(30,40,60,0.5)' 
+                    }}
+                  >
+                    <span className="text-slate-500 text-lg">{i + 1}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        
+        {/* Status text */}
+        <div className="text-center mt-3">
+          {phase === 'idle' && selectedBalls.length === 0 && (
+            <span className="text-slate-400 text-sm">Press button to start</span>
+          )}
+          {phase === 'spinning' && (
+            <span className="text-blue-400 text-sm animate-pulse">🌪️ Mixing balls...</span>
+          )}
+          {phase === 'selecting' && (
+            <span className="text-amber-400 text-sm">
+              Ball {selectedBalls.length + 1} of 6
+            </span>
+          )}
+          {phase === 'complete' && (
+            <span className="text-emerald-400 text-sm">✓ Your lucky numbers!</span>
+          )}
+        </div>
       </div>
     </div>
   );
