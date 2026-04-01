@@ -791,7 +791,7 @@ def get_date_patterns(last_draw):
     return patterns
 
 @api_router.get("/master-predictor")
-async def get_master_prediction(birthday: str = None):
+async def get_master_prediction(birthday: str = None, name: str = None):
     """
     MASTER PREDICTOR - Combines ALL pattern systems:
     1. Quarterly position (28% hit rate)
@@ -802,6 +802,7 @@ async def get_master_prediction(birthday: str = None):
     6. Cross-draw patterns
     7. Rare event counts
     8. Birthday mode (optional) - pass as DD/MM/YYYY or DD-MM-YYYY
+    9. Name mode (optional) - A=1, B=2, ... Z=26
     """
     from datetime import datetime
     from collections import defaultdict
@@ -817,12 +818,91 @@ async def get_master_prediction(birthday: str = None):
     # Score accumulator for each number 1-42
     scores = defaultdict(lambda: {"score": 0, "reasons": []})
     
+    # === NAME MODE (if provided) ===
+    name_numbers = []
+    name_info = None
+    if name:
+        try:
+            name_clean = name.upper().strip()
+            letter_values = {chr(65 + i): i + 1 for i in range(26)}  # A=1, B=2, ... Z=26
+            
+            # Split into words
+            words = name_clean.split()
+            word_sums = []
+            all_letters = []
+            
+            for word in words:
+                word_sum = 0
+                for char in word:
+                    if char in letter_values:
+                        val = letter_values[char]
+                        all_letters.append({"letter": char, "value": val})
+                        word_sum += val
+                        # Individual letter values (if 1-42)
+                        if 1 <= val <= 42:
+                            name_numbers.append({"num": val, "reason": f"Letter {char}={val}"})
+                if word_sum > 0:
+                    word_sums.append({"word": word, "sum": word_sum})
+                    # Word sum (if 1-42)
+                    if 1 <= word_sum <= 42:
+                        name_numbers.append({"num": word_sum, "reason": f"'{word}'={word_sum}"})
+                    # Word sum digits
+                    if word_sum > 42:
+                        d1 = word_sum // 10
+                        d2 = word_sum % 10
+                        if 1 <= d1 <= 42:
+                            name_numbers.append({"num": d1, "reason": f"'{word}' digit {d1}"})
+                        if 1 <= d2 <= 42 and d2 != d1:
+                            name_numbers.append({"num": d2, "reason": f"'{word}' digit {d2}"})
+                        # Digit sum
+                        dsum = sum(int(d) for d in str(word_sum))
+                        if 1 <= dsum <= 42:
+                            name_numbers.append({"num": dsum, "reason": f"'{word}' reduced={dsum}"})
+            
+            # Full name sum
+            full_sum = sum(ws["sum"] for ws in word_sums)
+            if full_sum > 0:
+                # Full sum digits
+                if 1 <= full_sum <= 42:
+                    name_numbers.append({"num": full_sum, "reason": f"Full name={full_sum}"})
+                else:
+                    d1 = (full_sum // 10) % 10
+                    d2 = full_sum % 10
+                    if 1 <= d1 <= 42:
+                        name_numbers.append({"num": d1, "reason": f"Name digit {d1}"})
+                    if 1 <= d2 <= 42 and d2 != d1:
+                        name_numbers.append({"num": d2, "reason": f"Name digit {d2}"})
+                
+                # Reduce to single digit (numerology style)
+                reduced = full_sum
+                while reduced > 9:
+                    reduced = sum(int(d) for d in str(reduced))
+                if 1 <= reduced <= 9:
+                    name_numbers.append({"num": reduced, "reason": f"Name number={reduced}"})
+            
+            name_info = {
+                "name": name,
+                "words": word_sums,
+                "full_sum": full_sum,
+                "letters": all_letters[:10]  # First 10 letters
+            }
+            
+            # Apply name bonuses
+            seen = set()
+            for nn in name_numbers:
+                n = nn["num"]
+                if n not in seen:
+                    scores[n]["score"] += 20
+                    scores[n]["reasons"].append(f"🔤 {nn['reason']} (20%)")
+                    seen.add(n)
+        except:
+            pass
+    
     # === BIRTHDAY MODE (if provided) ===
     birthday_numbers = []
     birthday_info = None
     if birthday:
         try:
-            # Parse DD/MM/YYYY or DD-MM-YYYY
             parts = birthday.replace('/', '-').split('-')
             if len(parts) == 3:
                 day = int(parts[0])
@@ -831,53 +911,44 @@ async def get_master_prediction(birthday: str = None):
                 
                 birthday_info = {"day": day, "month": month, "year": year}
                 
-                # Extract all meaningful numbers from birthday
-                # Direct numbers
                 if 1 <= day <= 42:
                     birthday_numbers.append({"num": day, "reason": f"Birth day {day}"})
                 if 1 <= month <= 42:
                     birthday_numbers.append({"num": month, "reason": f"Birth month {month}"})
                 
-                # Year digits
                 year_str = str(year)
                 if len(year_str) == 4:
-                    first_two = int(year_str[:2])  # 19
-                    last_two = int(year_str[2:])   # 75
+                    first_two = int(year_str[:2])
+                    last_two = int(year_str[2:])
                     if 1 <= first_two <= 42:
-                        birthday_numbers.append({"num": first_two, "reason": f"Year first half {first_two}"})
+                        birthday_numbers.append({"num": first_two, "reason": f"Year {first_two}"})
                     if 1 <= last_two <= 42:
-                        birthday_numbers.append({"num": last_two, "reason": f"Year last half {last_two}"})
+                        birthday_numbers.append({"num": last_two, "reason": f"Year {last_two}"})
                     
-                    # Individual year digits
-                    for i, d in enumerate(year_str):
+                    for d in year_str:
                         digit = int(d)
                         if 1 <= digit <= 9:
                             birthday_numbers.append({"num": digit, "reason": f"Year digit {digit}"})
                 
-                # Combinations
                 day_plus_month = day + month
                 if 1 <= day_plus_month <= 42:
-                    birthday_numbers.append({"num": day_plus_month, "reason": f"Day+Month={day_plus_month}"})
+                    birthday_numbers.append({"num": day_plus_month, "reason": f"D+M={day_plus_month}"})
                 
-                # Sum of all year digits
                 year_digit_sum = sum(int(d) for d in year_str)
                 if 1 <= year_digit_sum <= 42:
-                    birthday_numbers.append({"num": year_digit_sum, "reason": f"Year digit sum={year_digit_sum}"})
+                    birthday_numbers.append({"num": year_digit_sum, "reason": f"Year sum={year_digit_sum}"})
                 
-                # Day reversed
                 if day >= 10:
                     day_rev = int(str(day)[::-1])
                     if 1 <= day_rev <= 42:
-                        birthday_numbers.append({"num": day_rev, "reason": f"Day reversed {day}→{day_rev}"})
+                        birthday_numbers.append({"num": day_rev, "reason": f"Day rev {day}→{day_rev}"})
                 
-                # Life path number (reduce to single digit)
                 total = day + month + sum(int(d) for d in year_str)
                 while total > 9:
                     total = sum(int(d) for d in str(total))
                 if 1 <= total <= 9:
-                    birthday_numbers.append({"num": total, "reason": f"Life path number {total}"})
+                    birthday_numbers.append({"num": total, "reason": f"Life path {total}"})
                 
-                # Apply birthday bonuses (high weight!)
                 seen = set()
                 for bn in birthday_numbers:
                     n = bn["num"]
@@ -886,7 +957,7 @@ async def get_master_prediction(birthday: str = None):
                         scores[n]["reasons"].append(f"🎂 {bn['reason']} (25%)")
                         seen.add(n)
         except:
-            pass  # Invalid birthday format, ignore
+            pass
     
     # === 1. QUARTERLY POSITION (28% confidence) ===
     expected_per_quarter = 26
@@ -1073,9 +1144,18 @@ async def get_master_prediction(birthday: str = None):
         result["birthday_mode"] = {
             "birthday": birthday,
             "parsed": birthday_info,
-            "lucky_numbers": [bn["num"] for bn in birthday_numbers]
+            "lucky_numbers": list(set([bn["num"] for bn in birthday_numbers]))[:8]
         }
         result["patterns_used"].append("🎂 Birthday mode (25%)")
+    
+    if name_info:
+        result["name_mode"] = {
+            "name": name,
+            "words": name_info["words"],
+            "full_sum": name_info["full_sum"],
+            "lucky_numbers": list(set([nn["num"] for nn in name_numbers]))[:8]
+        }
+        result["patterns_used"].append("🔤 Name mode (20%)")
     
     return result
 

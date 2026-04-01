@@ -245,10 +245,14 @@ const DrawHistory = ({ draws, onDelete }) => {
 // Master Predictor Component
 const MasterPredictor = ({ prediction, loading, onRefresh }) => {
   const [birthday, setBirthday] = useState("");
+  const [fullName, setFullName] = useState("");
   const [usesBirthday, setUsesBirthday] = useState(false);
+  const [usesName, setUsesName] = useState(false);
 
-  const handleRefreshWithBirthday = () => {
-    onRefresh(usesBirthday ? birthday : null);
+  const handleRefreshWithPersonal = () => {
+    const bday = usesBirthday ? birthday : null;
+    const name = usesName ? fullName : null;
+    onRefresh(bday, name);
   };
 
   if (loading) return <div className="text-center py-10 text-zinc-400">Generating master prediction...</div>;
@@ -256,44 +260,84 @@ const MasterPredictor = ({ prediction, loading, onRefresh }) => {
 
   return (
     <div className="space-y-6" data-testid="master-predictor-panel">
-      {/* Birthday Mode Toggle */}
+      {/* Personal Mode */}
       <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <span className="text-2xl">🎂</span> Birthday Mode
+          <span className="text-2xl">✨</span> Personal Mode
         </h3>
-        <div className="flex flex-wrap items-center gap-4">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input 
-              type="checkbox" 
-              checked={usesBirthday}
-              onChange={(e) => setUsesBirthday(e.target.checked)}
-              className="w-5 h-5 rounded bg-[#0F0F10] border-[#27272A]"
-            />
-            <span className="text-zinc-300">Use my birthday</span>
-          </label>
-          {usesBirthday && (
-            <input
-              type="text"
-              value={birthday}
-              onChange={(e) => setBirthday(e.target.value)}
-              placeholder="DD/MM/YYYY"
-              className="bg-[#0F0F10] border border-[#27272A] rounded-lg px-4 py-2 text-white font-mono w-40"
-              data-testid="birthday-input"
-            />
-          )}
+        <div className="space-y-4">
+          {/* Birthday */}
+          <div className="flex flex-wrap items-center gap-4">
+            <label className="flex items-center gap-2 cursor-pointer min-w-[160px]">
+              <input 
+                type="checkbox" 
+                checked={usesBirthday}
+                onChange={(e) => setUsesBirthday(e.target.checked)}
+                className="w-5 h-5 rounded bg-[#0F0F10] border-[#27272A]"
+              />
+              <span className="text-zinc-300">🎂 Birthday</span>
+            </label>
+            {usesBirthday && (
+              <input
+                type="text"
+                value={birthday}
+                onChange={(e) => setBirthday(e.target.value)}
+                placeholder="DD/MM/YYYY"
+                className="bg-[#0F0F10] border border-[#27272A] rounded-lg px-4 py-2 text-white font-mono w-40"
+                data-testid="birthday-input"
+              />
+            )}
+          </div>
+          
+          {/* Name */}
+          <div className="flex flex-wrap items-center gap-4">
+            <label className="flex items-center gap-2 cursor-pointer min-w-[160px]">
+              <input 
+                type="checkbox" 
+                checked={usesName}
+                onChange={(e) => setUsesName(e.target.checked)}
+                className="w-5 h-5 rounded bg-[#0F0F10] border-[#27272A]"
+              />
+              <span className="text-zinc-300">🔤 Full Name</span>
+            </label>
+            {usesName && (
+              <input
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Your full name"
+                className="bg-[#0F0F10] border border-[#27272A] rounded-lg px-4 py-2 text-white w-48"
+                data-testid="name-input"
+              />
+            )}
+          </div>
+          
           <button 
-            onClick={handleRefreshWithBirthday}
-            className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            onClick={handleRefreshWithPersonal}
+            className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg flex items-center gap-2"
             data-testid="generate-prediction-btn"
           >
-            <Zap className="w-4 h-4" /> Generate
+            <Zap className="w-4 h-4" /> Generate Prediction
           </button>
         </div>
-        {prediction.birthday_mode && (
-          <div className="mt-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
-            <span className="text-yellow-400 text-sm">
-              🎂 Birthday: {prediction.birthday_mode.birthday} → Lucky: {prediction.birthday_mode.lucky_numbers.slice(0, 6).join(", ")}
-            </span>
+        
+        {/* Personal Lucky Numbers */}
+        {(prediction.birthday_mode || prediction.name_mode) && (
+          <div className="mt-4 space-y-2">
+            {prediction.birthday_mode && (
+              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                <span className="text-yellow-400 text-sm">
+                  🎂 {prediction.birthday_mode.birthday} → Lucky: {prediction.birthday_mode.lucky_numbers.join(", ")}
+                </span>
+              </div>
+            )}
+            {prediction.name_mode && (
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                <span className="text-blue-400 text-sm">
+                  🔤 {prediction.name_mode.name} ({prediction.name_mode.full_sum}) → Lucky: {prediction.name_mode.lucky_numbers.join(", ")}
+                </span>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1011,12 +1055,15 @@ function App() {
     }
   }, []);
 
-  const fetchMasterPrediction = useCallback(async (birthday = null) => {
+  const fetchMasterPrediction = useCallback(async (birthday = null, name = null) => {
     try {
       setMasterLoading(true);
-      const url = birthday 
-        ? `${API}/master-predictor?birthday=${encodeURIComponent(birthday)}`
-        : `${API}/master-predictor`;
+      let url = `${API}/master-predictor`;
+      const params = [];
+      if (birthday) params.push(`birthday=${encodeURIComponent(birthday)}`);
+      if (name) params.push(`name=${encodeURIComponent(name)}`);
+      if (params.length > 0) url += `?${params.join('&')}`;
+      
       const res = await axios.get(url);
       setMasterPrediction(res.data);
     } catch (e) {
