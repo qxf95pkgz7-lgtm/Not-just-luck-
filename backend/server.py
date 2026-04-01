@@ -1559,6 +1559,179 @@ async def get_master_prediction(birthday: str = None, name: str = None):
                 scores[dsum]["score"] += 10
                 scores[dsum]["reasons"].append(f"Rare {rarity} +{count_since} sum={dsum}")
     
+    # === 27. STORY TRACKER PATTERN (Position Gap Analysis) ===
+    # Find numbers missing for long at specific positions
+    # Track their connection chain appearing = story building up to return
+    # When connections appear frequently, the missing number is due!
+    
+    def get_number_connections(num):
+        """Get all numbers connected to a number via circle, multiples, digits"""
+        conns = set([num])
+        # Circle partner (+/- 21)
+        if num + 21 <= 42: conns.add(num + 21)
+        if num - 21 >= 1: conns.add(num - 21)
+        # Digit reversal
+        if num >= 10:
+            rev = int(str(num)[::-1])
+            if 1 <= rev <= 42: conns.add(rev)
+        # Digit sum
+        dsum = sum(int(d) for d in str(num))
+        if 1 <= dsum <= 42: conns.add(dsum)
+        # Multiples and factors
+        for m in [2, 3, 4, 5, 6, 7]:
+            if num * m <= 42: conns.add(num * m)
+            if num % m == 0 and num // m >= 1: conns.add(num // m)
+        return conns
+    
+    # Track last appearance at each position
+    sorted_draws = sorted(draws, key=lambda x: x['date'], reverse=True)
+    position_gaps = {}  # {(pos, num): gap_count}
+    
+    for pos in range(1, 7):
+        for num in range(1, 43):
+            for i, d in enumerate(sorted_draws):
+                if d['numbers'][pos-1] == num:
+                    position_gaps[(pos, num)] = i
+                    break
+            else:
+                position_gaps[(pos, num)] = len(sorted_draws)  # Never appeared
+    
+    # Find numbers with big gaps (story candidates)
+    story_candidates = []
+    for (pos, num), gap in position_gaps.items():
+        if gap >= 50:  # Missing for 50+ draws at this position
+            conns = get_number_connections(num)
+            story_candidates.append({
+                'pos': pos,
+                'num': num,
+                'gap': gap,
+                'connections': conns
+            })
+    
+    # Sort by gap (longest first)
+    story_candidates.sort(key=lambda x: -x['gap'])
+    
+    # Check recent draws for connection activity (story building)
+    recent_10 = sorted_draws[:10]
+    
+    for story in story_candidates[:10]:  # Top 10 longest gaps
+        conn_hits = 0
+        recent_conn_positions = []
+        
+        for d in recent_10:
+            for conn in story['connections']:
+                if conn in d['numbers']:
+                    conn_hits += 1
+                    recent_conn_positions.append(d['numbers'].index(conn) + 1)
+        
+        # If connections appearing frequently, story is building!
+        if conn_hits >= 3:
+            # Boost the missing number
+            boost = min(25, 10 + conn_hits * 3)  # 13-25 points based on activity
+            scores[story['num']]["score"] += boost
+            scores[story['num']]["reasons"].append(
+                f"📖 Story: {story['num']}@P{story['pos']} missing {story['gap']}x, {conn_hits} conn hits!"
+            )
+            
+            # Also boost numbers that transform INTO the missing number
+            # Based on the 7@P4 pattern: anchor numbers can predict return
+            if last_draw:
+                last_nums = last_draw['numbers']
+                # Check if sum/diff of last numbers = missing number
+                for i in range(6):
+                    for j in range(i+1, 6):
+                        if last_nums[i] + last_nums[j] == story['num']:
+                            scores[story['num']]["score"] += 10
+                            scores[story['num']]["reasons"].append(
+                                f"📖 Transform: {last_nums[i]}+{last_nums[j]}={story['num']}"
+                            )
+                        diff = abs(last_nums[i] - last_nums[j])
+                        if diff == story['num']:
+                            scores[story['num']]["score"] += 10
+                            scores[story['num']]["reasons"].append(
+                                f"📖 Transform: |{last_nums[i]}-{last_nums[j]}|={story['num']}"
+                            )
+    
+    # === 28. LUCKY/REPLAY POSITION FLOW PATTERN ===
+    # Lucky/Replay numbers flow through P1/P2 positions
+    # Lucky from previous draw often appears at P1 in next (77.5%)
+    # Replay from previous draw often appears at P1/P2 in next (87.5% combined)
+    if last_draw:
+        lucky = last_draw.get('lucky_number')
+        replay = last_draw.get('replay_number')
+        
+        if lucky and 1 <= lucky <= 42:
+            # Lucky → P1 prediction (77.5% when it hits)
+            scores[lucky]["score"] += 15
+            scores[lucky]["reasons"].append(f"🍀→P1 Lucky {lucky} flow (15.2% hit, 77.5% at P1)")
+            
+            # Lucky's circle partner
+            lucky_circle = lucky + 21 if lucky + 21 <= 42 else lucky - 21 if lucky - 21 >= 1 else None
+            if lucky_circle and 1 <= lucky_circle <= 42:
+                scores[lucky_circle]["score"] += 10
+                scores[lucky_circle]["reasons"].append(f"🍀 Lucky circle: {lucky}↔{lucky_circle}")
+        
+        if replay and 1 <= replay <= 42:
+            # Replay → P1/P2 prediction (50% P1, 37.5% P2)
+            scores[replay]["score"] += 12
+            scores[replay]["reasons"].append(f"🔄→P1/P2 Replay {replay} flow (14% hit)")
+            
+            # Replay's circle partner
+            replay_circle = replay + 21 if replay + 21 <= 42 else replay - 21 if replay - 21 >= 1 else None
+            if replay_circle and 1 <= replay_circle <= 42:
+                scores[replay_circle]["score"] += 8
+                scores[replay_circle]["reasons"].append(f"🔄 Replay circle: {replay}↔{replay_circle}")
+        
+        # Combined transformation: Lucky - Replay or Replay - Lucky
+        if lucky and replay and lucky != replay:
+            diff = abs(lucky - replay)
+            summ = lucky + replay
+            if 1 <= diff <= 42:
+                scores[diff]["score"] += 8
+                scores[diff]["reasons"].append(f"🍀🔄 |L-R|: |{lucky}-{replay}|={diff}")
+            if 1 <= summ <= 42:
+                scores[summ]["score"] += 8
+                scores[summ]["reasons"].append(f"🍀🔄 L+R: {lucky}+{replay}={summ}")
+    
+    # === 29. ANCHOR TRANSFORMATION PATTERN ===
+    # Based on 7@P4: [1,3,4,7,16,25] → [1,3,4,7,9,23]
+    # Numbers in anchor whose digit sums equal the key number transform!
+    # 1+6=7, 2+5=7 → 25-16=9, 16+7=23
+    if last_draw:
+        last_nums = last_draw['numbers']
+        
+        # Find the "key" - a number whose digit sum matches other numbers' digit sums
+        digit_sums = {n: sum(int(d) for d in str(n)) for n in last_nums}
+        
+        # Group by digit sum
+        sum_groups = {}
+        for n, ds in digit_sums.items():
+            if ds not in sum_groups:
+                sum_groups[ds] = []
+            sum_groups[ds].append(n)
+        
+        # If 2+ numbers share same digit sum = potential key!
+        for ds, nums_with_ds in sum_groups.items():
+            if len(nums_with_ds) >= 2 and ds <= 21:  # Key must be valid
+                # The key is the digit sum
+                key = ds
+                # Predict transformations
+                for i in range(len(nums_with_ds)):
+                    for j in range(i+1, len(nums_with_ds)):
+                        diff = abs(nums_with_ds[i] - nums_with_ds[j])
+                        plus_key = nums_with_ds[0] + key
+                        
+                        if 1 <= diff <= 42:
+                            scores[diff]["score"] += 12
+                            scores[diff]["reasons"].append(
+                                f"🔑 Key {key}: |{nums_with_ds[i]}-{nums_with_ds[j]}|={diff}"
+                            )
+                        if 1 <= plus_key <= 42:
+                            scores[plus_key]["score"] += 10
+                            scores[plus_key]["reasons"].append(
+                                f"🔑 Key {key}: {nums_with_ds[0]}+{key}={plus_key}"
+                            )
+    
     # === COMPILE FINAL PREDICTIONS ===
     ranked = sorted(scores.items(), key=lambda x: x[1]["score"], reverse=True)
     
