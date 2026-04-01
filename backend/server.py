@@ -1764,8 +1764,33 @@ async def get_master_prediction(birthday: str = None, name: str = None):
     avg_score = sum(t["score"] for t in top_6) / 6 if top_6 else 0
     
     # === PREDICT LUCKY NUMBER (1-6) ===
-    # Based on patterns: P1/P2 of last draw, last Lucky, last Replay, date
+    # Based on patterns: Story (gaps), P1/P2 of last draw, last Lucky, last Replay, date
     lucky_candidates = []
+    
+    # STORY PATTERN: Track Lucky number gaps (which ones haven't appeared)
+    lucky_history = []
+    for d in sorted(draws, key=lambda x: x['date'], reverse=True)[:50]:  # Last 50 draws
+        ln = d.get('lucky_number', 0)
+        if 1 <= ln <= 6:
+            lucky_history.append(ln)
+    
+    # Find gaps for each Lucky number (1-6)
+    lucky_gaps = {}
+    for num in range(1, 7):
+        try:
+            gap = lucky_history.index(num)
+        except ValueError:
+            gap = 50  # Not found in last 50
+        lucky_gaps[num] = gap
+    
+    # Story: Numbers with bigger gaps are more due!
+    print(f"Lucky number gaps: {lucky_gaps}")  # Debug
+    for num, gap in lucky_gaps.items():
+        if gap >= 8:  # Missing 8+ draws = story building
+            score = min(40, 15 + gap * 2)  # Higher gap = higher score
+            lucky_candidates.append((num, score, f"📖 Story: missing {gap} draws"))
+        elif gap >= 5:
+            lucky_candidates.append((num, 12, f"Due: missing {gap} draws"))
     
     if last_draw:
         p1 = last_draw['numbers'][0]
@@ -1775,49 +1800,65 @@ async def get_master_prediction(birthday: str = None, name: str = None):
         
         # P1 if <= 6
         if 1 <= p1 <= 6:
-            lucky_candidates.append((p1, 25, "P1 of last draw"))
+            lucky_candidates.append((p1, 20, "P1 of last draw"))
         
         # P2 if <= 6
         if 1 <= p2 <= 6:
-            lucky_candidates.append((p2, 20, "P2 of last draw"))
+            lucky_candidates.append((p2, 15, "P2 of last draw"))
         
-        # Last Lucky (tends to repeat or follow pattern)
+        # Last Lucky - might repeat or move to next
         if 1 <= last_lucky <= 6:
-            lucky_candidates.append((last_lucky, 30, "Last Lucky"))
-            # Next in sequence
+            # Repeat chance
+            lucky_candidates.append((last_lucky, 18, "Last Lucky repeat"))
+            # Next in sequence (Lucky numbers often follow pattern)
             next_lucky = (last_lucky % 6) + 1
-            lucky_candidates.append((next_lucky, 15, "Lucky+1 sequence"))
+            lucky_candidates.append((next_lucky, 22, f"Lucky sequence: {last_lucky}→{next_lucky}"))
+            # Circle pattern: +3 or -3 (half of 6)
+            circle_lucky = ((last_lucky + 2) % 6) + 1  # +3 mod 6
+            lucky_candidates.append((circle_lucky, 12, f"Lucky circle: {last_lucky}→{circle_lucky}"))
         
         # Last Replay if <= 6
         if 1 <= last_replay <= 6:
-            lucky_candidates.append((last_replay, 18, "Last Replay"))
+            lucky_candidates.append((last_replay, 15, "Last Replay"))
         
-        # Digit sum of P1
-        p1_digit = p1 % 10 if p1 % 10 <= 6 and p1 % 10 > 0 else sum(int(d) for d in str(p1))
-        if 1 <= p1_digit <= 6:
-            lucky_candidates.append((p1_digit, 12, "P1 digit"))
+        # Digit connections from main numbers
+        for n in last_draw['numbers'][:3]:  # P1, P2, P3
+            digit = n % 10 if n % 10 != 0 else n // 10
+            if 1 <= digit <= 6:
+                lucky_candidates.append((digit, 8, f"Digit of P{last_draw['numbers'].index(n)+1}"))
     
     # Date-based
     import random as rnd
     day = datetime.now().day
     month = datetime.now().month
-    day_mod = (day % 6) + 1 if day % 6 != 0 else 6
-    month_mod = (month % 6) + 1 if month % 6 != 0 else 6
-    lucky_candidates.append((day_mod, 10, "Day mod 6"))
-    lucky_candidates.append((month_mod, 8, "Month mod 6"))
+    day_mod = ((day - 1) % 6) + 1  # 1-6
+    month_mod = ((month - 1) % 6) + 1  # 1-6
+    lucky_candidates.append((day_mod, 8, f"Day {day}→{day_mod}"))
+    lucky_candidates.append((month_mod, 6, f"Month {month}→{month_mod}"))
     
     # Weighted random selection for Lucky Number
     if lucky_candidates:
-        total_weight = sum(w for _, w, _ in lucky_candidates)
+        # Combine scores for same numbers
+        combined_scores = {}
+        combined_reasons = {}
+        for num, weight, reason in lucky_candidates:
+            if num not in combined_scores:
+                combined_scores[num] = 0
+                combined_reasons[num] = []
+            combined_scores[num] += weight
+            combined_reasons[num].append(reason)
+        
+        total_weight = sum(combined_scores.values())
         r = rnd.random() * total_weight
         cumulative = 0
         lucky_prediction = 1
         lucky_reason = "Random"
-        for num, weight, reason in lucky_candidates:
-            cumulative += weight
+        
+        for num in sorted(combined_scores.keys(), key=lambda x: -combined_scores[x]):
+            cumulative += combined_scores[num]
             if r <= cumulative:
                 lucky_prediction = num
-                lucky_reason = reason
+                lucky_reason = combined_reasons[num][0]  # Primary reason
                 break
     else:
         lucky_prediction = rnd.randint(1, 6)
