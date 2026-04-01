@@ -135,7 +135,7 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
   }, [phase]);
 
   return (
-    <div className="flex items-start justify-center gap-4">
+    <div className="flex flex-col items-center gap-4">
       {/* The Main Ball Machine */}
       <div className="relative w-56 h-56 flex-shrink-0">
         {/* Glass container */}
@@ -184,7 +184,7 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
         </div>
       </div>
 
-      {/* Result Slots Box - 6 numbered slots */}
+      {/* Result Slots Box - 6 numbered slots in horizontal row */}
       <div 
         className="flex-shrink-0 p-3 rounded-2xl relative"
         style={{
@@ -203,14 +203,14 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
           <span className="text-xs font-bold text-amber-700">🍀 LUCKY 6 🍀</span>
         </div>
         
-        {/* 6 Slots in a 2x3 grid */}
-        <div className="grid grid-cols-2 gap-2">
+        {/* 6 Slots in horizontal row */}
+        <div className="flex gap-2">
           {[0, 1, 2, 3, 4, 5].map((slotIndex) => {
             const ballNumber = winningNumbers[slotIndex];
             return (
               <div
                 key={slotIndex}
-                className="relative w-12 h-12 rounded-xl flex items-center justify-center"
+                className="relative w-11 h-11 rounded-xl flex items-center justify-center"
                 style={{
                   background: ballNumber ? 'transparent' : 'rgba(255,255,255,0.8)',
                   border: ballNumber ? 'none' : '2px dashed #FFD700',
@@ -218,7 +218,7 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
               >
                 {/* Slot number label */}
                 {!ballNumber && (
-                  <span className="text-amber-300 font-bold text-lg">{slotIndex + 1}</span>
+                  <span className="text-amber-300 font-bold text-sm">{slotIndex + 1}</span>
                 )}
                 
                 {/* Ball in slot */}
