@@ -244,11 +244,60 @@ const DrawHistory = ({ draws, onDelete }) => {
 
 // Master Predictor Component
 const MasterPredictor = ({ prediction, loading, onRefresh }) => {
+  const [birthday, setBirthday] = useState("");
+  const [usesBirthday, setUsesBirthday] = useState(false);
+
+  const handleRefreshWithBirthday = () => {
+    onRefresh(usesBirthday ? birthday : null);
+  };
+
   if (loading) return <div className="text-center py-10 text-zinc-400">Generating master prediction...</div>;
   if (!prediction) return <div className="text-center py-10 text-zinc-400">Click refresh to generate prediction</div>;
 
   return (
     <div className="space-y-6" data-testid="master-predictor-panel">
+      {/* Birthday Mode Toggle */}
+      <div className="bg-[#18181A] border border-[#27272A] rounded-lg p-5">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <span className="text-2xl">🎂</span> Birthday Mode
+        </h3>
+        <div className="flex flex-wrap items-center gap-4">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input 
+              type="checkbox" 
+              checked={usesBirthday}
+              onChange={(e) => setUsesBirthday(e.target.checked)}
+              className="w-5 h-5 rounded bg-[#0F0F10] border-[#27272A]"
+            />
+            <span className="text-zinc-300">Use my birthday</span>
+          </label>
+          {usesBirthday && (
+            <input
+              type="text"
+              value={birthday}
+              onChange={(e) => setBirthday(e.target.value)}
+              placeholder="DD/MM/YYYY"
+              className="bg-[#0F0F10] border border-[#27272A] rounded-lg px-4 py-2 text-white font-mono w-40"
+              data-testid="birthday-input"
+            />
+          )}
+          <button 
+            onClick={handleRefreshWithBirthday}
+            className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            data-testid="generate-prediction-btn"
+          >
+            <Zap className="w-4 h-4" /> Generate
+          </button>
+        </div>
+        {prediction.birthday_mode && (
+          <div className="mt-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+            <span className="text-yellow-400 text-sm">
+              🎂 Birthday: {prediction.birthday_mode.birthday} → Lucky: {prediction.birthday_mode.lucky_numbers.slice(0, 6).join(", ")}
+            </span>
+          </div>
+        )}
+      </div>
+
       {/* Header */}
       <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
@@ -256,9 +305,6 @@ const MasterPredictor = ({ prediction, loading, onRefresh }) => {
             <Zap className="w-8 h-8 text-yellow-400" />
             Master Prediction
           </h2>
-          <button onClick={onRefresh} className="p-2 hover:bg-white/10 rounded-lg">
-            <RefreshCw className="w-5 h-5" />
-          </button>
         </div>
         <p className="text-zinc-400 text-sm">
           Draw #{prediction.for_draw.draw_number} | Q{prediction.for_draw.quarter} | Position {prediction.for_draw.position}
@@ -339,7 +385,7 @@ const MasterPredictor = ({ prediction, loading, onRefresh }) => {
         <h3 className="text-lg font-semibold mb-3 text-zinc-400">Patterns Used</h3>
         <div className="flex flex-wrap gap-2">
           {prediction.patterns_used.map((p, i) => (
-            <span key={i} className="bg-[#0F0F10] text-zinc-400 text-xs px-3 py-1 rounded-full border border-[#27272A]">
+            <span key={i} className={`text-xs px-3 py-1 rounded-full border ${p.includes('🎂') ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' : 'bg-[#0F0F10] text-zinc-400 border-[#27272A]'}`}>
               {p}
             </span>
           ))}
@@ -965,10 +1011,13 @@ function App() {
     }
   }, []);
 
-  const fetchMasterPrediction = useCallback(async () => {
+  const fetchMasterPrediction = useCallback(async (birthday = null) => {
     try {
       setMasterLoading(true);
-      const res = await axios.get(`${API}/master-predictor`);
+      const url = birthday 
+        ? `${API}/master-predictor?birthday=${encodeURIComponent(birthday)}`
+        : `${API}/master-predictor`;
+      const res = await axios.get(url);
       setMasterPrediction(res.data);
     } catch (e) {
       console.error("Error fetching master prediction:", e);

@@ -791,7 +791,7 @@ def get_date_patterns(last_draw):
     return patterns
 
 @api_router.get("/master-predictor")
-async def get_master_prediction():
+async def get_master_prediction(birthday: str = None):
     """
     MASTER PREDICTOR - Combines ALL pattern systems:
     1. Quarterly position (28% hit rate)
@@ -801,6 +801,7 @@ async def get_master_prediction():
     5. Hot/Cold numbers
     6. Cross-draw patterns
     7. Rare event counts
+    8. Birthday mode (optional) - pass as DD/MM/YYYY or DD-MM-YYYY
     """
     from datetime import datetime
     from collections import defaultdict
@@ -815,6 +816,77 @@ async def get_master_prediction():
     
     # Score accumulator for each number 1-42
     scores = defaultdict(lambda: {"score": 0, "reasons": []})
+    
+    # === BIRTHDAY MODE (if provided) ===
+    birthday_numbers = []
+    birthday_info = None
+    if birthday:
+        try:
+            # Parse DD/MM/YYYY or DD-MM-YYYY
+            parts = birthday.replace('/', '-').split('-')
+            if len(parts) == 3:
+                day = int(parts[0])
+                month = int(parts[1])
+                year = int(parts[2])
+                
+                birthday_info = {"day": day, "month": month, "year": year}
+                
+                # Extract all meaningful numbers from birthday
+                # Direct numbers
+                if 1 <= day <= 42:
+                    birthday_numbers.append({"num": day, "reason": f"Birth day {day}"})
+                if 1 <= month <= 42:
+                    birthday_numbers.append({"num": month, "reason": f"Birth month {month}"})
+                
+                # Year digits
+                year_str = str(year)
+                if len(year_str) == 4:
+                    first_two = int(year_str[:2])  # 19
+                    last_two = int(year_str[2:])   # 75
+                    if 1 <= first_two <= 42:
+                        birthday_numbers.append({"num": first_two, "reason": f"Year first half {first_two}"})
+                    if 1 <= last_two <= 42:
+                        birthday_numbers.append({"num": last_two, "reason": f"Year last half {last_two}"})
+                    
+                    # Individual year digits
+                    for i, d in enumerate(year_str):
+                        digit = int(d)
+                        if 1 <= digit <= 9:
+                            birthday_numbers.append({"num": digit, "reason": f"Year digit {digit}"})
+                
+                # Combinations
+                day_plus_month = day + month
+                if 1 <= day_plus_month <= 42:
+                    birthday_numbers.append({"num": day_plus_month, "reason": f"Day+Month={day_plus_month}"})
+                
+                # Sum of all year digits
+                year_digit_sum = sum(int(d) for d in year_str)
+                if 1 <= year_digit_sum <= 42:
+                    birthday_numbers.append({"num": year_digit_sum, "reason": f"Year digit sum={year_digit_sum}"})
+                
+                # Day reversed
+                if day >= 10:
+                    day_rev = int(str(day)[::-1])
+                    if 1 <= day_rev <= 42:
+                        birthday_numbers.append({"num": day_rev, "reason": f"Day reversed {day}→{day_rev}"})
+                
+                # Life path number (reduce to single digit)
+                total = day + month + sum(int(d) for d in year_str)
+                while total > 9:
+                    total = sum(int(d) for d in str(total))
+                if 1 <= total <= 9:
+                    birthday_numbers.append({"num": total, "reason": f"Life path number {total}"})
+                
+                # Apply birthday bonuses (high weight!)
+                seen = set()
+                for bn in birthday_numbers:
+                    n = bn["num"]
+                    if n not in seen:
+                        scores[n]["score"] += 25
+                        scores[n]["reasons"].append(f"🎂 {bn['reason']} (25%)")
+                        seen.add(n)
+        except:
+            pass  # Invalid birthday format, ignore
     
     # === 1. QUARTERLY POSITION (28% confidence) ===
     expected_per_quarter = 26
@@ -853,7 +925,7 @@ async def get_master_prediction():
             scores[n]["score"] += dp["confidence"]
             scores[n]["reasons"].append(f"{dp['reason']} ({dp['confidence']}%)")
     
-    # === 4. DIGIT LINKS from last draw numbers (11% confidence) ===
+    # === 4. DIGIT LINKS from last draw numbers (8% confidence) ===
     if last_draw:
         for num in last_draw['numbers']:
             links = get_digit_links(num)
@@ -908,7 +980,7 @@ async def get_master_prediction():
         scores[n]["score"] += bonus
         scores[n]["reasons"].append(f"Due: {gap} draws ago ({bonus}%)")
     
-    # === 8. RARE EVENT COUNTS (NEW!) ===
+    # === 8. RARE EVENT COUNTS ===
     def get_group(n):
         if n <= 9: return 1
         elif n <= 19: return 2
@@ -923,7 +995,6 @@ async def get_master_prediction():
             groups[g] = groups.get(g, 0) + 1
         return groups
     
-    # Find recent rare events
     rare_events = []
     for i, draw in enumerate(all_draws_2020):
         groups = count_groups(draw['numbers'])
@@ -931,16 +1002,14 @@ async def get_master_prediction():
         if max_group >= 4:
             rare_events.append({'index': i, 'date': draw['date'], 'count': max_group})
     
-    # For last 5 rare events, calculate counts to current draw
     current_draw_idx = len(all_draws_2020)
     rare_predictions = []
     for rare in rare_events[-5:]:
         count_since = current_draw_idx - rare['index']
         rarity = "🔥🔥🔥" if rare['count'] == 6 else ("🔥🔥" if rare['count'] == 5 else "🔥")
         
-        # The count itself
         if 1 <= count_since <= 42:
-            scores[count_since]["score"] += 15 * (rare['count'] - 3)  # Higher for rarer events
+            scores[count_since]["score"] += 15 * (rare['count'] - 3)
             scores[count_since]["reasons"].append(f"Rare {rarity} +{count_since} draws (15%)")
             rare_predictions.append({
                 "rare_date": rare['date'],
@@ -949,7 +1018,6 @@ async def get_master_prediction():
                 "predicted": count_since
             })
         
-        # Digit breakdown for counts > 42
         if count_since > 42:
             d1 = count_since // 10
             d2 = count_since % 10
@@ -972,7 +1040,7 @@ async def get_master_prediction():
     
     avg_score = sum(t["score"] for t in top_6) / 6 if top_6 else 0
     
-    return {
+    result = {
         "prediction_date": datetime.now().isoformat(),
         "for_draw": {
             "year": current_year,
@@ -997,9 +1065,19 @@ async def get_master_prediction():
             "Historical at position",
             "Hot numbers",
             "Due numbers",
-            "Rare event counts (NEW!)"
+            "Rare event counts"
         ]
     }
+    
+    if birthday_info:
+        result["birthday_mode"] = {
+            "birthday": birthday,
+            "parsed": birthday_info,
+            "lucky_numbers": [bn["num"] for bn in birthday_numbers]
+        }
+        result["patterns_used"].append("🎂 Birthday mode (25%)")
+    
+    return result
 
 @api_router.get("/predictions", response_model=PredictionData)
 async def get_predictions():
