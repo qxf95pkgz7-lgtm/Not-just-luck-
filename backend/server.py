@@ -1404,7 +1404,110 @@ async def get_master_prediction(birthday: str = None, name: str = None):
                     scores[expected_seq]["score"] += 15
                     scores[expected_seq]["reasons"].append(f"🎯 P2 pointed here: Draw {j} P2={pos_in_q}→P1={expected_seq}")
     
-    # === 15. RARE EVENT COUNTS ===
+    # === 25. RARE EVENT COUNT SEQUENCE (Your Pattern!) ===
+    # Count from last VERY rare event (5 in same gruppe)
+    # Count number OR its circle partner (+/-21) appears in draws
+    # ALWAYS USE DATE CONNECTION
+    import random as pattern_random
+    
+    # Find all very rare events (5+ in same gruppe 1-9, 10-19, 20-29, 30-39)
+    def get_gruppe(n):
+        if n <= 9: return "1-9"
+        elif n <= 19: return "10-19"
+        elif n <= 29: return "20-29"
+        elif n <= 39: return "30-39"
+        else: return "40-42"
+    
+    very_rare_events = []
+    sorted_all = sorted(draws, key=lambda x: x['date'])
+    
+    for i, d in enumerate(sorted_all):
+        nums = d['numbers']
+        g1 = len([n for n in nums if 1 <= n <= 9])
+        g2 = len([n for n in nums if 10 <= n <= 19])
+        g3 = len([n for n in nums if 20 <= n <= 29])
+        g4 = len([n for n in nums if 30 <= n <= 39])
+        
+        if max(g1, g2, g3, g4) >= 5:
+            outsider = None
+            if g1 >= 5:
+                outsider = [n for n in nums if n > 9]
+            elif g2 >= 5:
+                outsider = [n for n in nums if n < 10 or n > 19]
+            elif g3 >= 5:
+                outsider = [n for n in nums if n < 20 or n > 29]
+            elif g4 >= 5:
+                outsider = [n for n in nums if n < 30 or n > 39]
+            
+            very_rare_events.append({
+                'index': i,
+                'date': d['date'],
+                'numbers': nums,
+                'outsider': outsider[0] if outsider else None
+            })
+    
+    # Count from most recent very rare event
+    if very_rare_events:
+        last_rare = very_rare_events[-1]
+        current_idx = len(sorted_all)
+        count_from_rare = current_idx - last_rare['index']
+        
+        # The count number (wrapped to 1-42)
+        count_num = count_from_rare if count_from_rare <= 42 else ((count_from_rare - 1) % 42) + 1
+        circle_partner = count_num + 21 if count_num + 21 <= 42 else count_num - 21
+        
+        # Boost count number and circle partner
+        if 1 <= count_num <= 42:
+            scores[count_num]["score"] += 20
+            scores[count_num]["reasons"].append(f"🔢 Rare count: {count_from_rare} from {last_rare['date']}")
+        
+        if 1 <= circle_partner <= 42:
+            scores[circle_partner]["score"] += 18
+            scores[circle_partner]["reasons"].append(f"🔢 Rare circle: {count_num}↔{circle_partner}")
+        
+        # Also boost the outsider's circle partner (key number!)
+        if last_rare['outsider']:
+            out = last_rare['outsider']
+            out_circle = out + 21 if out + 21 <= 42 else out - 21
+            if 1 <= out_circle <= 42:
+                scores[out_circle]["score"] += 15
+                scores[out_circle]["reasons"].append(f"🔢 Rare outsider: {out}↔{out_circle}")
+    
+    # === 26. DATE ALWAYS PATTERN (Always Active!) ===
+    # Date connections are ALWAYS used
+    current_date = datetime.now()
+    day = current_date.day
+    month = current_date.month
+    
+    # Day and its circle
+    day_circle = day + 21 if day + 21 <= 42 else day - 21
+    scores[day]["score"] += 12
+    scores[day]["reasons"].append(f"📅 Date day: {day}")
+    if 1 <= day_circle <= 42:
+        scores[day_circle]["score"] += 12
+        scores[day_circle]["reasons"].append(f"📅 Date day circle: {day}↔{day_circle}")
+    
+    # Month and its circle  
+    month_circle = month + 21 if month + 21 <= 42 else month - 21
+    scores[month]["score"] += 10
+    scores[month]["reasons"].append(f"📅 Date month: {month}")
+    if 1 <= month_circle <= 42:
+        scores[month_circle]["score"] += 10
+        scores[month_circle]["reasons"].append(f"📅 Date month circle: {month}↔{month_circle}")
+    
+    # Day + Month combination
+    day_month_sum = day + month
+    if 1 <= day_month_sum <= 42:
+        scores[day_month_sum]["score"] += 8
+        scores[day_month_sum]["reasons"].append(f"📅 Day+Month: {day}+{month}={day_month_sum}")
+    
+    # === SMART PATTERN SELECTION ===
+    # Not all patterns fire every time - some are situational
+    # Date patterns (25, 26) ALWAYS active
+    # Others activate based on conditions
+    active_patterns = ["Date (always)", "Rare Count (if recent)"]
+    
+    # 15. RARE EVENT COUNTS ===
     def get_group(n):
         if n <= 9: return 1
         elif n <= 19: return 2
