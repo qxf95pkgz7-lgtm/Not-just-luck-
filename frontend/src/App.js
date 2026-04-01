@@ -214,25 +214,31 @@ const BallMachine = ({ isProcessing, winningNumbers, onComplete }) => {
         {/* Status text below machine */}
         <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap">
           {phase === 'spinning' && (
-            <p className="text-amber-600 font-medium animate-pulse text-sm">🎰 Mixing...</p>
+            <p className="text-amber-600 font-medium animate-pulse text-sm">🤞 Mixing... 🍀</p>
           )}
           {phase === 'ejecting' && (
-            <p className="text-green-600 font-medium animate-pulse text-sm">✨ Drawing!</p>
+            <p className="text-green-600 font-medium animate-pulse text-sm">✨ Drawing! 🎯</p>
           )}
         </div>
       </div>
 
       {/* Result Slots Box - 6 numbered slots */}
       <div 
-        className="flex-shrink-0 p-3 rounded-2xl"
+        className="flex-shrink-0 p-3 rounded-2xl relative"
         style={{
           background: 'linear-gradient(180deg, #FFF9E6 0%, #FFF3CD 100%)',
           boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
           border: '3px solid #FFD700'
         }}
       >
+        {/* Floating luck emojis */}
+        <span className="absolute -top-2 -left-2 text-lg animate-bounce">🍀</span>
+        <span className="absolute -top-2 -right-2 text-lg animate-bounce" style={{animationDelay: '0.3s'}}>🤞</span>
+        <span className="absolute -bottom-2 -left-2 text-sm animate-pulse">✨</span>
+        <span className="absolute -bottom-2 -right-2 text-sm animate-pulse" style={{animationDelay: '0.5s'}}>🌟</span>
+        
         <div className="text-center mb-2">
-          <span className="text-xs font-bold text-amber-700">LUCKY 6</span>
+          <span className="text-xs font-bold text-amber-700">🍀 LUCKY 6 🍀</span>
         </div>
         
         {/* 6 Slots in a 2x3 grid */}
@@ -330,16 +336,16 @@ function App() {
       {/* Header */}
       <header className="text-center py-6">
         <div className="flex items-center justify-center gap-3 mb-1">
-          <span className="text-3xl">🍀</span>
+          <span className="text-3xl animate-bounce">🍀</span>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
             Lucky Jack
           </h1>
-          <span className="text-3xl">🎰</span>
+          <span className="text-3xl animate-bounce" style={{animationDelay: '0.2s'}}>🤞</span>
         </div>
         <p className="text-gray-500 text-sm">Swiss Lotto Pattern Analyzer</p>
         {stats && (
           <p className="text-xs text-gray-400 mt-1">
-            Based on {stats.total_draws.toLocaleString()} real draws
+            🎰 Based on {stats.total_draws.toLocaleString()} real draws
           </p>
         )}
       </header>
@@ -361,14 +367,15 @@ function App() {
           {/* Prompt text */}
           <div className="text-center mt-8 mb-4">
             {!loading && !prediction && (
-              <p className="text-gray-400 text-sm">Press the button to get lucky numbers!</p>
+              <p className="text-gray-400 text-sm">🤞 Press the button to get lucky numbers! 🍀</p>
             )}
             {prediction && !loading && (
               <span className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-100 to-orange-100 px-4 py-2 rounded-full text-sm">
-                <Sparkles className="w-4 h-4 text-amber-500" />
+                <span>🍀</span>
                 <span className="font-semibold text-amber-700">
                   {prediction.average_confidence}% Lucky Score
                 </span>
+                <span>🤞</span>
               </span>
             )}
           </div>
@@ -382,7 +389,7 @@ function App() {
               data-testid="generate-btn"
             >
               <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-              {loading ? 'Finding Lucky Numbers...' : '🎲 Get New Numbers'}
+              {loading ? '🤞 Finding Lucky Numbers...' : '🍀 Get New Numbers 🍀'}
             </button>
           </div>
         </div>
@@ -393,7 +400,7 @@ function App() {
             className="flex items-center justify-between cursor-pointer"
             onClick={() => setShowPersonal(!showPersonal)}
           >
-            <span className="font-semibold text-gray-700">✨ Personalize Your Luck</span>
+            <span className="font-semibold text-gray-700">🍀 Personalize Your Luck 🤞</span>
             {showPersonal ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
           </div>
           
@@ -474,7 +481,8 @@ function App() {
 
         {/* Footer */}
         <div className="text-center text-gray-400 text-xs mt-6">
-          <p>🍀 Good luck! Play responsibly 🎰</p>
+          <p>🍀 Good luck! Play responsibly 🤞</p>
+          <p className="mt-1 text-gray-300">May fortune smile upon you ✨</p>
         </div>
       </main>
     </div>
