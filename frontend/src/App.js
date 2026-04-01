@@ -95,14 +95,18 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
         vy: (Math.random() - 0.5) * 6
       }));
       setBalls(allBalls);
-    } else if (winningNumbers.length > 0) {
+    } else if (winningNumbers.length > 0 && phase === 'spinning') {
+      // Only transition to complete if we were spinning
       setPhase('complete');
-      // Delay showing results for jump effect
       setTimeout(() => {
         setShowResults(true);
       }, 300);
+    } else if (winningNumbers.length > 0 && phase === 'idle') {
+      // Initial load with numbers - show them immediately
+      setShowResults(true);
+      setPhase('complete');
     }
-  }, [isProcessing, winningNumbers]);
+  }, [isProcessing, winningNumbers, phase]);
 
   // Animate balls when spinning
   useEffect(() => {
