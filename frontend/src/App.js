@@ -64,7 +64,7 @@ const Ball = ({ number, size = "sm", isWinner = false, isSpinning = false, delay
 };
 
 // Lottery Ball Machine with Result Slots - Simplified
-const BallMachine = ({ isProcessing, winningNumbers }) => {
+const BallMachine = ({ isProcessing, winningNumbers, luckyNumber }) => {
   const [balls, setBalls] = useState([]);
   const [phase, setPhase] = useState('idle'); // idle, spinning, complete
   const [showResults, setShowResults] = useState(false);
@@ -189,7 +189,7 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
         {/* Arrow */}
         <div className="text-2xl text-amber-400 animate-pulse">→</div>
 
-        {/* Box 2: Lucky 6 Result Box */}
+        {/* Box 2: Lucky Number Result Box */}
         <div className="relative w-44 h-44 flex-shrink-0">
           <div 
             className="absolute inset-0 rounded-2xl flex items-center justify-center"
@@ -205,18 +205,39 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
             <span className="absolute bottom-2 left-2 text-sm animate-pulse">✨</span>
             <span className="absolute bottom-2 right-2 text-sm animate-pulse" style={{animationDelay: '0.5s'}}>🌟</span>
             
-            {/* Center content */}
+            {/* Center content - Lucky Number Prediction */}
             <div className="text-center">
-              <span className="text-lg font-bold text-amber-600">LUCKY</span>
-              <div className="text-4xl font-bold text-amber-500">6</div>
-              {phase === 'spinning' && (
-                <span className="text-xs text-amber-500 animate-pulse">🤞 Mixing...</span>
+              <span className="text-sm font-bold text-amber-600">LUCKY NUMBER</span>
+              {phase === 'spinning' ? (
+                <>
+                  <div className="text-4xl font-bold text-amber-400 animate-pulse">?</div>
+                  <span className="text-xs text-amber-500 animate-pulse">🤞 Guessing...</span>
+                </>
+              ) : (
+                <>
+                  <div 
+                    className="text-5xl font-bold my-1"
+                    style={{
+                      background: 'linear-gradient(135deg, #FFD700, #FF6B6B, #FFD700)',
+                      backgroundSize: '200% 200%',
+                      animation: luckyNumber ? 'shimmer 2s linear infinite' : 'none',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      textShadow: '0 0 20px rgba(255,184,0,0.3)'
+                    }}
+                  >
+                    {luckyNumber || '?'}
+                  </div>
+                  {luckyNumber && (
+                    <span className="text-xs text-amber-600 font-semibold">🍀 Our guess!</span>
+                  )}
+                </>
               )}
             </div>
           </div>
           {/* Label */}
           <div className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
-            <span className="text-xs font-bold text-amber-600">🍀 Winners</span>
+            <span className="text-xs font-bold text-amber-600">🎯 Lucky (1-6)</span>
           </div>
           {/* Bottom decoration */}
           <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-12 h-3 bg-gradient-to-r from-amber-400 to-amber-500 rounded-b-lg" />
@@ -355,6 +376,7 @@ function App() {
           <BallMachine 
             isProcessing={loading}
             winningNumbers={prediction?.main_prediction || []}
+            luckyNumber={prediction?.lucky_prediction}
           />
           
           {/* Prompt text */}

@@ -1763,6 +1763,66 @@ async def get_master_prediction(birthday: str = None, name: str = None):
     
     avg_score = sum(t["score"] for t in top_6) / 6 if top_6 else 0
     
+    # === PREDICT LUCKY NUMBER (1-6) ===
+    # Based on patterns: P1/P2 of last draw, last Lucky, last Replay, date
+    lucky_candidates = []
+    
+    if last_draw:
+        p1 = last_draw['numbers'][0]
+        p2 = last_draw['numbers'][1]
+        last_lucky = last_draw.get('lucky_number', 0)
+        last_replay = last_draw.get('replay_number', 0)
+        
+        # P1 if <= 6
+        if 1 <= p1 <= 6:
+            lucky_candidates.append((p1, 25, "P1 of last draw"))
+        
+        # P2 if <= 6
+        if 1 <= p2 <= 6:
+            lucky_candidates.append((p2, 20, "P2 of last draw"))
+        
+        # Last Lucky (tends to repeat or follow pattern)
+        if 1 <= last_lucky <= 6:
+            lucky_candidates.append((last_lucky, 30, "Last Lucky"))
+            # Next in sequence
+            next_lucky = (last_lucky % 6) + 1
+            lucky_candidates.append((next_lucky, 15, "Lucky+1 sequence"))
+        
+        # Last Replay if <= 6
+        if 1 <= last_replay <= 6:
+            lucky_candidates.append((last_replay, 18, "Last Replay"))
+        
+        # Digit sum of P1
+        p1_digit = p1 % 10 if p1 % 10 <= 6 and p1 % 10 > 0 else sum(int(d) for d in str(p1))
+        if 1 <= p1_digit <= 6:
+            lucky_candidates.append((p1_digit, 12, "P1 digit"))
+    
+    # Date-based
+    import random as rnd
+    day = datetime.now().day
+    month = datetime.now().month
+    day_mod = (day % 6) + 1 if day % 6 != 0 else 6
+    month_mod = (month % 6) + 1 if month % 6 != 0 else 6
+    lucky_candidates.append((day_mod, 10, "Day mod 6"))
+    lucky_candidates.append((month_mod, 8, "Month mod 6"))
+    
+    # Weighted random selection for Lucky Number
+    if lucky_candidates:
+        total_weight = sum(w for _, w, _ in lucky_candidates)
+        r = rnd.random() * total_weight
+        cumulative = 0
+        lucky_prediction = 1
+        lucky_reason = "Random"
+        for num, weight, reason in lucky_candidates:
+            cumulative += weight
+            if r <= cumulative:
+                lucky_prediction = num
+                lucky_reason = reason
+                break
+    else:
+        lucky_prediction = rnd.randint(1, 6)
+        lucky_reason = "Random"
+    
     result = {
         "prediction_date": datetime.now().isoformat(),
         "for_draw": {
@@ -1777,6 +1837,8 @@ async def get_master_prediction(birthday: str = None, name: str = None):
         } if last_draw else None,
         "main_prediction": sorted([t["number"] for t in top_6]),
         "main_prediction_details": top_6,
+        "lucky_prediction": lucky_prediction,
+        "lucky_reason": lucky_reason,
         "alternate_numbers": sorted([a["number"] for a in alternates]),
         "alternate_details": alternates,
         "average_confidence": round(avg_score, 1),
