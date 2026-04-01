@@ -1300,6 +1300,27 @@ async def get_master_prediction(birthday: str = None, name: str = None):
                                 scores[predicted]["score"] += 10
                                 scores[predicted]["reasons"].append(f"🔮 Serial missing: {missing}→P1={predicted}")
     
+    # === 21. SAME DATE HISTORY PATTERN ===
+    # Numbers that appeared on same date (month-day) in previous years
+    from collections import Counter as Cnt
+    current_date = datetime.now()
+    current_md = f"{current_date.month:02d}-{current_date.day:02d}"
+    
+    # Find all draws on same month-day from previous years
+    same_date_draws = [d for d in draws if d['date'][5:] == current_md]
+    if len(same_date_draws) >= 2:
+        same_date_nums = []
+        for sd in same_date_draws:
+            same_date_nums.extend(sd['numbers'])
+        
+        sd_freq = Cnt(same_date_nums)
+        # Boost numbers that appeared 2+ times on this date
+        for n, count in sd_freq.items():
+            if count >= 2 and 1 <= n <= 42:
+                bonus = min(count * 5, 15)
+                scores[n]["score"] += bonus
+                scores[n]["reasons"].append(f"📅 Same date history: {count}x on {current_md}")
+    
     # === 20. P2 DRAW POINTER PATTERN ===
     # When P2 breaks sequence, P2 value = draw number to find the answer
     # Example: Draw 5 P2=9 (expected 12) → Draw 9 P1=12!
