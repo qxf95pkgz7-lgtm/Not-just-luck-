@@ -421,9 +421,13 @@ function App() {
               </div>
               
               {(prediction?.birthday_mode || prediction?.name_mode) && (
-                <div className="bg-amber-50 rounded-xl p-3 text-xs text-amber-700 text-center">
-                  {prediction.birthday_mode && <span>🎂 Birthday magic active! </span>}
-                  {prediction.name_mode && <span>🔤 Name magic active!</span>}
+                <div className="bg-amber-50 rounded-xl p-3 text-xs text-amber-700">
+                  {prediction.birthday_mode && (
+                    <p>🎂 Birthday luck: {prediction.birthday_mode.lucky_numbers.slice(0, 4).join(", ")}</p>
+                  )}
+                  {prediction.name_mode && (
+                    <p>🔤 Name luck: {prediction.name_mode.lucky_numbers.slice(0, 4).join(", ")}</p>
+                  )}
                 </div>
               )}
             </div>
