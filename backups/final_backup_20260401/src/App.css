@@ -1,0 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Fredoka:wght@400;500;600;700&display=swap');
+
+/* Animations */
+@keyframes bounce-in {
+  0% { 
+    transform: scale(0) translateY(-50px); 
+    opacity: 0;
+  }
+  50% { 
+    transform: scale(1.2) translateY(0); 
+  }
+  70% { 
+    transform: scale(0.9); 
+  }
+  100% { 
+    transform: scale(1); 
+    opacity: 1;
+  }
+}
+
+@keyframes ball-jump {
+  0% { 
+    transform: scale(0) translateX(-100px) translateY(-20px) rotate(-180deg);
+    opacity: 0;
+  }
+  30% {
+    transform: scale(1.3) translateX(-30px) translateY(-40px) rotate(-90deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1) translateX(0) translateY(-60px) rotate(-30deg);
+  }
+  70% {
+    transform: scale(1.2) translateX(5px) translateY(-20px) rotate(10deg);
+  }
+  85% {
+    transform: scale(0.95) translateX(0) translateY(5px) rotate(-5deg);
+  }
+  100% { 
+    transform: scale(1) translateX(0) translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.ball-jump-in {
+  animation: ball-jump 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px) rotate(-1deg); }
+  75% { transform: translateX(3px) rotate(1deg); }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 15px rgba(255,184,0,0.4); }
+  50% { box-shadow: 0 0 25px rgba(255,184,0,0.7); }
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+.spinning-ball {
+  animation: shake 0.1s ease-in-out infinite;
+}
+
+.winner-ball {
+  animation: glow 1.5s ease-in-out infinite;
+}
+
+/* Lucky card */
+.lucky-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(255, 184, 0, 0.15);
+}
+
+/* Lucky button */
+.lucky-btn {
+  background: linear-gradient(135deg, #FFB800 0%, #FF9500 100%);
+  color: white;
+  font-weight: 600;
+  border-radius: 50px;
+  padding: 14px 28px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 184, 0, 0.35);
+  font-size: 15px;
+}
+
+.lucky-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 184, 0, 0.45);
+}
+
+.lucky-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.lucky-btn:disabled {
+  opacity: 0.8;
+  cursor: wait;
+}
+
+/* Ball shine effect */
+.ball-shine {
+  position: absolute;
+  top: 15%;
+  left: 20%;
+  width: 25%;
+  height: 25%;
+  background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%);
+  border-radius: 50%;
+}
