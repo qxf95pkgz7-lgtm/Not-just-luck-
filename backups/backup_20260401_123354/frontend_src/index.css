@@ -1,0 +1,149 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Fredoka:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #FFF9F0;
+  --bg-secondary: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --accent-gold: #FFB800;
+  --accent-green: #4ADE80;
+  --accent-blue: #60A5FA;
+  --accent-pink: #F472B6;
+  --accent-purple: #A78BFA;
+  --text-primary: #1F2937;
+  --text-secondary: #6B7280;
+  --border: #E5E7EB;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #FFF9F0 0%, #FEF3E2 50%, #FCE7D6 100%);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Fredoka', sans-serif;
+}
+
+/* Spinning animation */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 184, 0, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(255, 184, 0, 0.6); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Lucky ball colors */
+.ball-gold { background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); }
+.ball-green { background: linear-gradient(135deg, #4ADE80 0%, #22C55E 100%); }
+.ball-blue { background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%); }
+.ball-pink { background: linear-gradient(135deg, #F472B6 0%, #EC4899 100%); }
+.ball-purple { background: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 100%); }
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FEF3E2;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #FFB800;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #E5A600;
+}
+
+/* Card styles */
+.lucky-card {
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 184, 0, 0.1);
+}
+
+/* Button styles */
+.lucky-btn {
+  background: linear-gradient(135deg, #FFB800 0%, #FF9500 100%);
+  color: white;
+  font-weight: 600;
+  border-radius: 50px;
+  padding: 12px 28px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 184, 0, 0.3);
+}
+
+.lucky-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 184, 0, 0.4);
+}
+
+/* Tab styles */
+.lucky-tab {
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 10px 20px;
+  border-radius: 50px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.lucky-tab.active {
+  background: linear-gradient(135deg, #FFB800 0%, #FF9500 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 184, 0, 0.3);
+}
+
+.lucky-tab:hover:not(.active) {
+  background: rgba(255, 184, 0, 0.1);
+  color: var(--text-primary);
+}
