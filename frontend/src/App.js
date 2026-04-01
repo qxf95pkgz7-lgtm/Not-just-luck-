@@ -63,11 +63,10 @@ const Ball = ({ number, size = "sm", isWinner = false, isSpinning = false, delay
   );
 };
 
-// Lottery Ball Machine with Result Slots
-const BallMachine = ({ isProcessing, winningNumbers, onComplete }) => {
+// Lottery Ball Machine with Result Slots - Simplified
+const BallMachine = ({ isProcessing, winningNumbers }) => {
   const [balls, setBalls] = useState([]);
-  const [ejectedBalls, setEjectedBalls] = useState([]);
-  const [phase, setPhase] = useState('idle'); // idle, spinning, ejecting, complete
+  const [phase, setPhase] = useState('idle'); // idle, spinning, complete
 
   // Initialize all 42 balls
   useEffect(() => {
@@ -83,11 +82,21 @@ const BallMachine = ({ isProcessing, winningNumbers, onComplete }) => {
 
   // Handle processing phases
   useEffect(() => {
-    if (isProcessing && phase === 'idle') {
+    if (isProcessing) {
       setPhase('spinning');
-      setEjectedBalls([]);
+      // Reset balls with faster movement
+      const allBalls = Array.from({ length: 42 }, (_, i) => ({
+        number: i + 1,
+        x: Math.random() * 80 + 10,
+        y: Math.random() * 80 + 10,
+        vx: (Math.random() - 0.5) * 6,
+        vy: (Math.random() - 0.5) * 6
+      }));
+      setBalls(allBalls);
+    } else if (winningNumbers.length > 0) {
+      setPhase('complete');
     }
-  }, [isProcessing, phase]);
+  }, [isProcessing, winningNumbers]);
 
   // Animate balls when spinning
   useEffect(() => {
@@ -124,50 +133,6 @@ const BallMachine = ({ isProcessing, winningNumbers, onComplete }) => {
 
     return () => clearInterval(interval);
   }, [phase]);
-
-  // Eject winning balls after spinning - one by one with delay
-  useEffect(() => {
-    if (!isProcessing && phase === 'spinning' && winningNumbers.length > 0) {
-      setPhase('ejecting');
-      
-      // Eject balls one by one with longer delay for dramatic effect
-      winningNumbers.forEach((num, index) => {
-        setTimeout(() => {
-          setEjectedBalls(prev => [...prev, { number: num, slot: index }]);
-          setBalls(prev => prev.filter(b => b.number !== num));
-        }, index * 600); // 600ms between each ball
-      });
-
-      // Complete after all ejected
-      setTimeout(() => {
-        setPhase('complete');
-        if (onComplete) onComplete();
-      }, winningNumbers.length * 600 + 500);
-    }
-  }, [isProcessing, phase, winningNumbers, onComplete]);
-
-  // Reset when starting new prediction
-  useEffect(() => {
-    if (isProcessing) {
-      // Reset all balls
-      const allBalls = Array.from({ length: 42 }, (_, i) => ({
-        number: i + 1,
-        x: Math.random() * 80 + 10,
-        y: Math.random() * 80 + 10,
-        vx: (Math.random() - 0.5) * 6,
-        vy: (Math.random() - 0.5) * 6
-      }));
-      setBalls(allBalls);
-      setEjectedBalls([]);
-      setPhase('spinning');
-    }
-  }, [isProcessing]);
-
-  // Get ball for a specific slot
-  const getBallForSlot = (slotIndex) => {
-    const ejected = ejectedBalls.find(b => b.slot === slotIndex);
-    return ejected ? ejected.number : null;
-  };
 
   return (
     <div className="flex items-start justify-center gap-4">
@@ -216,9 +181,6 @@ const BallMachine = ({ isProcessing, winningNumbers, onComplete }) => {
           {phase === 'spinning' && (
             <p className="text-amber-600 font-medium animate-pulse text-sm">🤞 Mixing... 🍀</p>
           )}
-          {phase === 'ejecting' && (
-            <p className="text-green-600 font-medium animate-pulse text-sm">✨ Drawing! 🎯</p>
-          )}
         </div>
       </div>
 
@@ -244,7 +206,7 @@ const BallMachine = ({ isProcessing, winningNumbers, onComplete }) => {
         {/* 6 Slots in a 2x3 grid */}
         <div className="grid grid-cols-2 gap-2">
           {[0, 1, 2, 3, 4, 5].map((slotIndex) => {
-            const ballNumber = getBallForSlot(slotIndex);
+            const ballNumber = winningNumbers[slotIndex];
             return (
               <div
                 key={slotIndex}
@@ -262,7 +224,7 @@ const BallMachine = ({ isProcessing, winningNumbers, onComplete }) => {
                 {/* Ball in slot */}
                 {ballNumber && (
                   <div className="ball-jump-in absolute inset-0 flex items-center justify-center">
-                    <Ball number={ballNumber} size="sm" isWinner={phase === 'complete'} />
+                    <Ball number={ballNumber} size="sm" isWinner={true} />
                   </div>
                 )}
               </div>
