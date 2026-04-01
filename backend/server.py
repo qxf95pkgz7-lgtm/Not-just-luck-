@@ -1106,7 +1106,30 @@ async def get_master_prediction(birthday: str = None, name: str = None):
     # === COMPILE FINAL PREDICTIONS ===
     ranked = sorted(scores.items(), key=lambda x: x[1]["score"], reverse=True)
     
-    top_6 = [{"number": n, "score": data["score"], "reasons": data["reasons"][:4]} for n, data in ranked[:6]]
+    # Add slight randomization to top candidates for variety
+    # Take top 15 and randomly select 6 weighted by score
+    top_candidates = ranked[:15]
+    if len(top_candidates) >= 6:
+        weights = [max(1, data["score"]) for n, data in top_candidates]
+        selected_indices = set()
+        selected = []
+        while len(selected) < 6 and len(selected_indices) < len(top_candidates):
+            remaining = [(i, top_candidates[i], weights[i]) for i in range(len(top_candidates)) if i not in selected_indices]
+            if not remaining:
+                break
+            total_weight = sum(w for _, _, w in remaining)
+            r = random.random() * total_weight
+            cumulative = 0
+            for idx, (n, data), w in remaining:
+                cumulative += w
+                if r <= cumulative:
+                    selected.append({"number": n, "score": data["score"], "reasons": data["reasons"][:4]})
+                    selected_indices.add(idx)
+                    break
+        top_6 = selected
+    else:
+        top_6 = [{"number": n, "score": data["score"], "reasons": data["reasons"][:4]} for n, data in ranked[:6]]
+    
     alternates = [{"number": n, "score": data["score"], "reasons": data["reasons"][:2]} for n, data in ranked[6:12]]
     
     avg_score = sum(t["score"] for t in top_6) / 6 if top_6 else 0
