@@ -1800,6 +1800,31 @@ async def get_master_prediction(birthday: str = None, name: str = None):
             scores[num]["score"] += min(10, gap // 5)
             scores[num]["reasons"].append(f"🥇P1 due: {num} missing {gap}+ draws at P1")
     
+    # === 31. P1/P2 TRANSFORMATION PATTERN ===
+    # |P1 - P2| from last draw often appears at P1 (8.1%) or P2 (4.8%) of next draw
+    # P1 + P2 from last draw often appears somewhere in next draw (14.6%)
+    # Get the absolute most recent draw
+    all_draws_sorted = sorted(draws, key=lambda x: x['date'], reverse=True)
+    most_recent = all_draws_sorted[0] if all_draws_sorted else None
+    
+    if most_recent:
+        last_nums = sorted(most_recent['numbers'])
+        if len(last_nums) >= 2:
+            last_p1 = last_nums[0]
+            last_p2 = last_nums[1]
+            
+            # |P1 - P2| → Strong P1/P2 predictor (12.9% combined)
+            diff = abs(last_p1 - last_p2)
+            if 1 <= diff <= 42:
+                scores[diff]["score"] += 18  # Strong boost
+                scores[diff]["reasons"].append(f"🔗P1-P2: |{last_p1}-{last_p2}|={diff} → likely P1/P2 (12.9%)")
+            
+            # P1 + P2 → Appears somewhere (14.6%)
+            summ = last_p1 + last_p2
+            if 1 <= summ <= 42:
+                scores[summ]["score"] += 12
+                scores[summ]["reasons"].append(f"🔗P1+P2: {last_p1}+{last_p2}={summ} → any pos (14.6%)")
+    
     # === COMPILE FINAL PREDICTIONS ===
     ranked = sorted(scores.items(), key=lambda x: x[1]["score"], reverse=True)
     
@@ -1820,12 +1845,12 @@ async def get_master_prediction(birthday: str = None, name: str = None):
             for idx, (n, data), w in remaining:
                 cumulative += w
                 if r <= cumulative:
-                    selected.append({"number": n, "score": data["score"], "reasons": data["reasons"][:4]})
+                    selected.append({"number": n, "score": data["score"], "reasons": data["reasons"][:6]})
                     selected_indices.add(idx)
                     break
         top_6 = selected
     else:
-        top_6 = [{"number": n, "score": data["score"], "reasons": data["reasons"][:4]} for n, data in ranked[:6]]
+        top_6 = [{"number": n, "score": data["score"], "reasons": data["reasons"][:6]} for n, data in ranked[:6]]
     
     alternates = [{"number": n, "score": data["score"], "reasons": data["reasons"][:2]} for n, data in ranked[6:12]]
     
