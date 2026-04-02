@@ -2044,6 +2044,42 @@ async def get_master_prediction(birthday: str = None, name: str = None):
         scores[combo]["score"] += 10
         scores[combo]["reasons"].append(f"📅 Today: {today_day}/{today_month} → {combo} (75%)")
     
+    # === 40. NUMBER 9 AT P1 PREDICTOR ===
+    # Special pattern: When does 9 appear as smallest number (P1)?
+    # Signals: Family 9 (29/39) in prev draw (43%), 9 missing 10+ draws (hunger)
+    if most_recent:
+        last_nums = sorted(most_recent.get('numbers', []))
+        
+        # Check family 9 in last draw
+        family_9_present = [n for n in last_nums if n in [9, 19, 29, 39]]
+        
+        # Check 9 gap
+        nine_gap = 0
+        for d in all_draws_sorted:
+            if 9 in d.get('numbers', []):
+                break
+            nine_gap += 1
+        
+        # Calculate 9@P1 likelihood
+        signals = 0
+        reasons_9 = []
+        
+        if family_9_present:
+            signals += 1
+            reasons_9.append(f"Family 9 {family_9_present} triggers")
+        
+        if nine_gap >= 15:
+            signals += 1
+            reasons_9.append(f"9 hungry ({nine_gap} draws)")
+        
+        if len(last_nums) >= 2 and last_nums[0] in [2, 5, 6, 7, 12]:
+            signals += 1
+            reasons_9.append(f"P1={last_nums[0]} pattern")
+        
+        if signals >= 2:
+            scores[9]["score"] += 20
+            scores[9]["reasons"].append(f"🔢 9@P1 likely: {', '.join(reasons_9)}")
+    
     # === COMPILE FINAL PREDICTIONS ===
     ranked = sorted(scores.items(), key=lambda x: x[1]["score"], reverse=True)
     
