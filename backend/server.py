@@ -1732,6 +1732,74 @@ async def get_master_prediction(birthday: str = None, name: str = None):
                                 f"🔑 Key {key}: {nums_with_ds[0]}+{key}={plus_key}"
                             )
     
+    # === 30. P1/P2 POSITION ANALYSIS PATTERN ===
+    # Analyze historical frequency of numbers at Position 1 (smallest) and Position 2
+    # P1 typically ranges 1-15 (avg ~6), P2 typically ranges 2-20 (avg ~12)
+    # Boost numbers that frequently appear at P1/P2
+    
+    p1_counter = Counter()
+    p2_counter = Counter()
+    
+    for d in draws:
+        nums = sorted(d.get('numbers', []))
+        if len(nums) >= 6:
+            p1_counter[nums[0]] += 1
+            p2_counter[nums[1]] += 1
+    
+    # Top P1 numbers (most frequent at position 1)
+    p1_top = p1_counter.most_common(10)  # Top 10
+    for num, count in p1_top[:5]:  # Top 5 get strong boost
+        pct = count / len(draws) * 100 if draws else 0
+        boost = min(15, int(pct * 1.2))  # Scale boost by frequency
+        scores[num]["score"] += boost
+        scores[num]["reasons"].append(f"🥇P1 hot: {num} appears {count}x ({pct:.1f}%)")
+    
+    # Top P2 numbers (most frequent at position 2)
+    p2_top = p2_counter.most_common(10)
+    for num, count in p2_top[:5]:
+        pct = count / len(draws) * 100 if draws else 0
+        boost = min(12, int(pct * 1.0))
+        scores[num]["score"] += boost
+        scores[num]["reasons"].append(f"🥈P2 hot: {num} appears {count}x ({pct:.1f}%)")
+    
+    # Recent P1/P2 trend analysis (last 20 draws)
+    recent_p1 = []
+    recent_p2 = []
+    for d in sorted(draws, key=lambda x: x['date'], reverse=True)[:20]:
+        nums = sorted(d.get('numbers', []))
+        if len(nums) >= 6:
+            recent_p1.append(nums[0])
+            recent_p2.append(nums[1])
+    
+    # Numbers appearing frequently in recent P1
+    recent_p1_counter = Counter(recent_p1)
+    for num, count in recent_p1_counter.most_common(3):
+        if count >= 2:  # Appeared 2+ times in last 20 at P1
+            scores[num]["score"] += 8
+            scores[num]["reasons"].append(f"🥇P1 trend: {num} hit {count}x in last 20")
+    
+    # Numbers appearing frequently in recent P2
+    recent_p2_counter = Counter(recent_p2)
+    for num, count in recent_p2_counter.most_common(3):
+        if count >= 2:
+            scores[num]["score"] += 6
+            scores[num]["reasons"].append(f"🥈P2 trend: {num} hit {count}x in last 20")
+    
+    # P1/P2 GAP ANALYSIS - numbers overdue at these positions
+    # If a typical P1 number hasn't appeared at P1 recently, it's due
+    p1_typical = set(num for num, _ in p1_top[:8])  # Numbers that often hit P1
+    for num in p1_typical:
+        last_at_p1 = None
+        for i, d in enumerate(sorted(draws, key=lambda x: x['date'], reverse=True)):
+            nums = sorted(d.get('numbers', []))
+            if len(nums) >= 6 and nums[0] == num:
+                last_at_p1 = i
+                break
+        if last_at_p1 is None or last_at_p1 > 30:
+            gap = last_at_p1 if last_at_p1 else 50
+            scores[num]["score"] += min(10, gap // 5)
+            scores[num]["reasons"].append(f"🥇P1 due: {num} missing {gap}+ draws at P1")
+    
     # === COMPILE FINAL PREDICTIONS ===
     ranked = sorted(scores.items(), key=lambda x: x[1]["score"], reverse=True)
     
