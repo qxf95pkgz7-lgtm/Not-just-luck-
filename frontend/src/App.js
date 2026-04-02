@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import "@/App.css";
 import axios from "axios";
-import { Sparkles, RefreshCw, ChevronDown, ChevronUp, Gift } from "lucide-react";
+import { Sparkles, RefreshCw, ChevronDown, ChevronUp, Gift, Lock } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -604,11 +604,37 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [showPersonal, setShowPersonal] = useState(false);
   const [showBonus, setShowBonus] = useState(false);
+  const [showLocks, setShowLocks] = useState(false);
   const [wheelSpinning, setWheelSpinning] = useState(false);
   
   // Personal mode
   const [birthday, setBirthday] = useState("");
   const [fullName, setFullName] = useState("");
+  
+  // Locked positions (P1-P6) - user can lock 1-4 positions
+  const [lockedPositions, setLockedPositions] = useState({
+    p1: "", p2: "", p3: "", p4: "", p5: "", p6: ""
+  });
+
+  const handleLockChange = (position, value) => {
+    // Validate: must be 1-42 or empty
+    const num = parseInt(value);
+    if (value === "" || (num >= 1 && num <= 42)) {
+      // Count current locks
+      const currentLocks = Object.values(lockedPositions).filter(v => v !== "").length;
+      const isClearing = value === "";
+      const isNewLock = lockedPositions[position] === "" && value !== "";
+      
+      // Max 4 locks
+      if (isNewLock && currentLocks >= 4) {
+        return; // Silently reject
+      }
+      
+      setLockedPositions(prev => ({...prev, [position]: value}));
+    }
+  };
+
+  const getLockedCount = () => Object.values(lockedPositions).filter(v => v !== "").length;
 
   const fetchPrediction = useCallback(async () => {
     try {
@@ -619,6 +645,15 @@ function App() {
       const params = [];
       if (birthday) params.push(`birthday=${encodeURIComponent(birthday)}`);
       if (fullName) params.push(`name=${encodeURIComponent(fullName)}`);
+      
+      // Add locked positions
+      if (lockedPositions.p1) params.push(`lock_p1=${lockedPositions.p1}`);
+      if (lockedPositions.p2) params.push(`lock_p2=${lockedPositions.p2}`);
+      if (lockedPositions.p3) params.push(`lock_p3=${lockedPositions.p3}`);
+      if (lockedPositions.p4) params.push(`lock_p4=${lockedPositions.p4}`);
+      if (lockedPositions.p5) params.push(`lock_p5=${lockedPositions.p5}`);
+      if (lockedPositions.p6) params.push(`lock_p6=${lockedPositions.p6}`);
+      
       if (params.length > 0) url += `?${params.join('&')}`;
       
       // Delay for animation
@@ -651,7 +686,7 @@ function App() {
     } finally {
       setLoading(false);
     }
-  }, [birthday, fullName]);
+  }, [birthday, fullName, lockedPositions]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -829,6 +864,96 @@ function App() {
                       <span className="text-amber-300">{prediction.name_mode.lucky_numbers.slice(0, 4).join(", ")}</span>
                     </div>
                   )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Lock Positions Card */}
+        <div className="lucky-card p-4 mb-4">
+          <div 
+            className="flex items-center justify-between cursor-pointer"
+            onClick={() => setShowLocks(!showLocks)}
+            data-testid="lock-positions-toggle"
+          >
+            <span className="font-semibold text-slate-200 flex items-center gap-2">
+              🔒 Lock Positions
+              {getLockedCount() > 0 && (
+                <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">
+                  {getLockedCount()}/4
+                </span>
+              )}
+            </span>
+            {showLocks ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+          </div>
+          
+          {showLocks && (
+            <div className="mt-4">
+              <p className="text-xs text-slate-400 mb-3">
+                Lock 1-4 numbers at specific positions. Generator fills the rest.
+              </p>
+              
+              <div className="grid grid-cols-6 gap-2 mb-3">
+                {['p1', 'p2', 'p3', 'p4', 'p5', 'p6'].map((pos, idx) => (
+                  <div key={pos} className="text-center">
+                    <label className="text-xs text-slate-500 block mb-1">P{idx + 1}</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="42"
+                      value={lockedPositions[pos]}
+                      onChange={(e) => handleLockChange(pos, e.target.value)}
+                      placeholder="—"
+                      disabled={lockedPositions[pos] === "" && getLockedCount() >= 4}
+                      className={`w-full px-1 py-2 rounded-lg text-center text-sm font-bold
+                        ${lockedPositions[pos] 
+                          ? 'bg-amber-500/20 border-amber-500/50 text-amber-400' 
+                          : 'bg-slate-800/50 border-slate-600 text-white placeholder-slate-600'}
+                        ${lockedPositions[pos] === "" && getLockedCount() >= 4 
+                          ? 'opacity-50 cursor-not-allowed' 
+                          : ''}
+                        border focus:border-amber-500/50 focus:outline-none`}
+                      data-testid={`lock-${pos}`}
+                    />
+                  </div>
+                ))}
+              </div>
+              
+              {/* Position hints */}
+              <div className="text-xs text-slate-500 space-y-1 bg-slate-800/30 rounded-lg p-2">
+                <div className="flex justify-between">
+                  <span>P1-P2:</span><span className="text-slate-400">Low (1-15)</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>P3-P4:</span><span className="text-slate-400">Mid (10-32)</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>P5-P6:</span><span className="text-slate-400">High (25-42)</span>
+                </div>
+              </div>
+              
+              {getLockedCount() > 0 && (
+                <button
+                  onClick={() => setLockedPositions({p1: "", p2: "", p3: "", p4: "", p5: "", p6: ""})}
+                  className="mt-3 w-full py-2 rounded-lg bg-slate-700/50 text-slate-400 text-sm hover:bg-slate-700 transition-colors"
+                  data-testid="clear-locks-btn"
+                >
+                  Clear All Locks
+                </button>
+              )}
+              
+              {/* Show locked positions in response */}
+              {prediction?.locked_positions && Object.keys(prediction.locked_positions).length > 0 && (
+                <div className="mt-3 bg-amber-500/10 border border-amber-500/20 rounded-lg p-2">
+                  <div className="flex items-center gap-2 text-xs text-amber-400">
+                    <span>🔒 Locked:</span>
+                    {Object.entries(prediction.locked_positions).map(([pos, num]) => (
+                      <span key={pos} className="bg-amber-500/20 px-2 py-0.5 rounded">
+                        {pos}={num}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

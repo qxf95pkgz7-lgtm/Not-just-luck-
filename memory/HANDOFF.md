@@ -9,6 +9,9 @@ sudo supervisorctl status  # Check all running
 # Test backend
 curl localhost:8001/api/master-predictor | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['main_prediction'])"
 
+# Test with locked positions
+curl "localhost:8001/api/master-predictor?lock_p1=9&lock_p4=28"
+
 # Test frontend
 # Screenshot localhost:3000
 ```
@@ -16,14 +19,20 @@ curl localhost:8001/api/master-predictor | python3 -c "import sys,json; d=json.l
 ## Project Summary
 Swiss Lotto Pattern Analyzer ("Lucky Jack") - A physics-based lottery number generator with **42 custom numerology patterns** built from the user's personal theories.
 
+## NEW FEATURE: Lock Positions (April 2, 2026)
+Users can now lock 1-4 numbers at specific positions (P1-P6), and the generator fills the remaining positions using all 42 patterns.
+
+**Backend:** `GET /api/master-predictor?lock_p1=9&lock_p4=28`
+**Frontend:** Collapsible "🔒 Lock Positions" panel with P1-P6 inputs
+
 ## Architecture
 ```
 /app/
 ├── backend/
-│   ├── server.py          # ~2,450 lines - THE BRAIN (42 patterns)
+│   ├── server.py          # ~2,550 lines - THE BRAIN (42 patterns + locks)
 │   └── .env               # MONGO_URL, DB_NAME
 ├── frontend/
-│   ├── src/App.js         # Physics lottery machine + Lucky Wheel
+│   ├── src/App.js         # Physics lottery machine + Lucky Wheel + Lock UI
 │   ├── src/App.css        # 3D animations, air jets, ball physics
 │   └── .env               # REACT_APP_BACKEND_URL
 ├── memory/

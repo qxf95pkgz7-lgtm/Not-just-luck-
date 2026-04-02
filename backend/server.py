@@ -795,7 +795,16 @@ def get_date_patterns(last_draw):
     return patterns
 
 @api_router.get("/master-predictor")
-async def get_master_prediction(birthday: str = None, name: str = None):
+async def get_master_prediction(
+    birthday: str = None, 
+    name: str = None,
+    lock_p1: int = None,
+    lock_p2: int = None,
+    lock_p3: int = None,
+    lock_p4: int = None,
+    lock_p5: int = None,
+    lock_p6: int = None
+):
     """
     MASTER PREDICTOR - Combines ALL pattern systems:
     1. Quarterly position (28% hit rate)
@@ -807,9 +816,24 @@ async def get_master_prediction(birthday: str = None, name: str = None):
     7. Rare event counts
     8. Birthday mode (optional) - pass as DD/MM/YYYY or DD-MM-YYYY
     9. Name mode (optional) - A=1, B=2, ... Z=26
+    10. Locked positions (optional) - lock_p1 through lock_p6, max 4 locks
     """
     from datetime import datetime
     from collections import defaultdict
+    
+    # Parse locked positions
+    locked_positions = {}  # {position_index: number}
+    lock_params = [lock_p1, lock_p2, lock_p3, lock_p4, lock_p5, lock_p6]
+    for i, lock_val in enumerate(lock_params):
+        if lock_val is not None and 1 <= lock_val <= 42:
+            locked_positions[i] = lock_val
+    
+    # Validate: max 4 locks, no duplicate numbers
+    if len(locked_positions) > 4:
+        return {"error": "Maximum 4 locked positions allowed"}
+    locked_numbers = list(locked_positions.values())
+    if len(locked_numbers) != len(set(locked_numbers)):
+        return {"error": "Duplicate locked numbers not allowed"}
     
     draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).to_list(2000)
     if not draws:
@@ -2194,16 +2218,25 @@ async def get_master_prediction(birthday: str = None, name: str = None):
                         )
     
     # === COMPILE FINAL PREDICTIONS ===
-    ranked = sorted(scores.items(), key=lambda x: x[1]["score"], reverse=True)
+    # Filter out locked numbers from candidates
+    locked_nums_set = set(locked_positions.values()) if locked_positions else set()
+    ranked = sorted(
+        [(n, data) for n, data in scores.items() if n not in locked_nums_set],
+        key=lambda x: x[1]["score"], 
+        reverse=True
+    )
+    
+    # Calculate how many positions we need to fill
+    positions_to_fill = 6 - len(locked_positions)
     
     # Add slight randomization to top candidates for variety
-    # Take top 15 and randomly select 6 weighted by score
+    # Take top 15 and randomly select needed positions weighted by score
     top_candidates = ranked[:15]
-    if len(top_candidates) >= 6:
+    if len(top_candidates) >= positions_to_fill:
         weights = [max(1, data["score"]) for n, data in top_candidates]
         selected_indices = set()
         selected = []
-        while len(selected) < 6 and len(selected_indices) < len(top_candidates):
+        while len(selected) < positions_to_fill and len(selected_indices) < len(top_candidates):
             remaining = [(i, top_candidates[i], weights[i]) for i in range(len(top_candidates)) if i not in selected_indices]
             if not remaining:
                 break
@@ -2216,13 +2249,65 @@ async def get_master_prediction(birthday: str = None, name: str = None):
                     selected.append({"number": n, "score": data["score"], "reasons": data["reasons"][:6]})
                     selected_indices.add(idx)
                     break
-        top_6 = selected
+        generated_picks = selected
     else:
-        top_6 = [{"number": n, "score": data["score"], "reasons": data["reasons"][:6]} for n, data in ranked[:6]]
+        generated_picks = [{"number": n, "score": data["score"], "reasons": data["reasons"][:6]} for n, data in ranked[:positions_to_fill]]
     
-    alternates = [{"number": n, "score": data["score"], "reasons": data["reasons"][:2]} for n, data in ranked[6:12]]
+    # Build final 6-number array respecting locked positions
+    # Position 0 = P1 (smallest), Position 5 = P6 (largest)
+    final_numbers = [None] * 6
     
-    avg_score = sum(t["score"] for t in top_6) / 6 if top_6 else 0
+    # Place locked numbers first
+    for pos_idx, locked_num in locked_positions.items():
+        final_numbers[pos_idx] = {
+            "number": locked_num, 
+            "score": 999,  # Special score for locked
+            "reasons": [f"🔒 Locked at P{pos_idx + 1}"],
+            "locked": True
+        }
+    
+    # Fill remaining positions with generated picks
+    gen_idx = 0
+    for i in range(6):
+        if final_numbers[i] is None and gen_idx < len(generated_picks):
+            pick = generated_picks[gen_idx].copy() if isinstance(generated_picks[gen_idx], dict) else generated_picks[gen_idx]
+            if isinstance(pick, dict):
+                pick["locked"] = False
+            final_numbers[i] = pick
+            gen_idx += 1
+    
+    # Sort the final array by number value (P1 smallest to P6 largest)
+    # But preserve locked positions - they override sorting
+    unlocked_entries = [(i, final_numbers[i]) for i in range(6) if final_numbers[i] and not final_numbers[i].get("locked")]
+    locked_entries = [(i, final_numbers[i]) for i in range(6) if final_numbers[i] and final_numbers[i].get("locked")]
+    
+    # Sort unlocked by number
+    unlocked_nums = sorted([e[1]["number"] for e in unlocked_entries])
+    
+    # Rebuild final array
+    top_6 = [None] * 6
+    unlocked_idx = 0
+    for i in range(6):
+        if i in locked_positions:
+            # Keep locked number at its position
+            top_6[i] = final_numbers[i]
+        elif unlocked_idx < len(unlocked_nums):
+            # Find the entry with this number
+            num = unlocked_nums[unlocked_idx]
+            for entry in generated_picks:
+                if entry["number"] == num:
+                    top_6[i] = {**entry, "locked": False}
+                    break
+            unlocked_idx += 1
+    
+    # Fill any remaining Nones
+    for i in range(6):
+        if top_6[i] is None and generated_picks:
+            top_6[i] = {**generated_picks[0], "locked": False}
+    
+    alternates = [{"number": n, "score": data["score"], "reasons": data["reasons"][:2]} for n, data in ranked[positions_to_fill:positions_to_fill+6]]
+    
+    avg_score = sum(t["score"] for t in top_6 if t and not t.get("locked")) / max(1, positions_to_fill) if top_6 else 0
     
     # === PREDICT LUCKY NUMBER (1-6) ===
     # Based on patterns: Story (gaps), P1/P2 of last draw, last Lucky, last Replay, date
@@ -2337,8 +2422,9 @@ async def get_master_prediction(birthday: str = None, name: str = None):
             "date": last_draw["date"],
             "numbers": last_draw["numbers"]
         } if last_draw else None,
-        "main_prediction": sorted([t["number"] for t in top_6]),
+        "main_prediction": sorted([t["number"] for t in top_6 if t]),
         "main_prediction_details": top_6,
+        "locked_positions": {f"P{k+1}": v for k, v in locked_positions.items()} if locked_positions else None,
         "lucky_prediction": lucky_prediction,
         "lucky_reason": lucky_reason,
         "alternate_numbers": sorted([a["number"] for a in alternates]),
