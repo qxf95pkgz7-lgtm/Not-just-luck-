@@ -1,51 +1,61 @@
 # Lucky Jack - Agent Handoff Document
-**Last Updated:** April 2, 2026
+**Last Updated:** April 2, 2026 (Verified ✓)
 
 ## Quick Start
 ```bash
 # Services auto-run via supervisor
-sudo supervisorctl status  # Check all running
+sudo supervisorctl status
 
-# Test backend
-curl localhost:8001/api/master-predictor | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['main_prediction'])"
+# Test backend with all features
+curl "localhost:8001/api/master-predictor?lock_p1=9&lock_p4=28&num_tickets=5"
 
-# Test with locked positions + multiple tickets
-curl "localhost:8001/api/master-predictor?lock_p1=9&num_tickets=5"
-
-# Test frontend
-# Screenshot localhost:3000
+# Expected: 5 tickets, all containing 9 and 28
 ```
 
 ## Project Summary
-Swiss Lotto Pattern Analyzer ("Lucky Jack") - A physics-based lottery number generator with **42 custom numerology patterns** built from the user's personal theories.
+Swiss Lotto Pattern Analyzer ("Lucky Jack") - Physics-based lottery generator with **42 custom numerology patterns**.
 
-## FEATURES (April 2, 2026)
+## VERIFIED FEATURES ✓
 
-### 1. Lock Positions
-Users can lock 1-4 numbers at specific positions (P1-P6), generator fills the rest.
-- **Backend:** `GET /api/master-predictor?lock_p1=9&lock_p4=28`
-- **Frontend:** "🔒 Lock Positions" collapsible panel
+### 1. Lock Positions ✓
+Lock 1-4 numbers at specific positions (P1-P6).
+- **API:** `?lock_p1=9&lock_p4=28`
+- **UI:** "🔒 Lock Positions" panel with P1-P6 inputs, amber highlight
 
-### 2. Multiple Tickets (NEW)
-Generate 1-20 complete 6-number tickets, each ranked by confidence.
-- **Backend:** `GET /api/master-predictor?num_tickets=5`
-- **Frontend:** "🎫 Multiple Tickets" panel with buttons (1, 3, 5, 8, 10, 15, 20)
-- **Generate Button:** Inside panel - no need to scroll up!
+### 2. Multiple Tickets ✓
+Generate 1-20 complete 6-number tickets ranked by confidence.
+- **API:** `?num_tickets=5`
+- **UI:** "🎫 Multiple Tickets" panel with buttons (1, 3, 5, 8, 10, 15, 20)
+- **Generate Button:** Green button inside panel - no scroll needed!
+
+### 3. Combined Features ✓
+Lock + Multiple tickets work together perfectly:
+```
+✓ Ticket 1: [2, 4, 9, 16, 18, 28] [156%]
+✓ Ticket 2: [9, 12, 21, 28, 31, 42] [166%]
+... all tickets contain locked numbers
+```
 
 ## Architecture
 ```
 /app/
-├── backend/
-│   ├── server.py          # ~2,600 lines - THE BRAIN (42 patterns + locks + multi-tickets)
-│   └── .env               # MONGO_URL, DB_NAME
-├── frontend/
-│   ├── src/App.js         # Physics machine + Wheel + Lock UI + Multi-Ticket UI
-│   ├── src/App.css        # 3D animations, air jets, ball physics
-│   └── .env               # REACT_APP_BACKEND_URL
-├── memory/
-│   ├── PRD.md             # Product requirements
-│   └── HANDOFF.md         # THIS FILE
+├── backend/server.py      # ~2,600 lines (42 patterns + locks + multi-tickets)
+├── frontend/src/App.js    # Physics machine + Lock UI + Multi-Ticket UI
+├── memory/HANDOFF.md      # THIS FILE
 ```
+
+## Test Commands
+```bash
+# Backend health
+curl localhost:8001/api/master-predictor | python3 -c "import sys,json; print(json.load(sys.stdin)['main_prediction'])"
+
+# Full feature test
+curl "localhost:8001/api/master-predictor?lock_p1=9&num_tickets=3"
+```
+
+## Known Limitations
+- Preview URL returns 404 (platform ingress) - test via localhost
+- React state resets on page reload (normal behavior)
 
 ## Key Endpoints
 | Endpoint | Purpose |
