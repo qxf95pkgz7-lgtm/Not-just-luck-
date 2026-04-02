@@ -1437,7 +1437,6 @@ async def get_master_prediction(
     # Count from last VERY rare event (5 in same gruppe)
     # Count number OR its circle partner (+/-21) appears in draws
     # ALWAYS USE DATE CONNECTION
-    import random as pattern_random
     
     # Find all very rare events (5+ in same gruppe 1-9, 10-19, 20-29, 30-39)
     def get_gruppe(n):
@@ -2455,7 +2454,6 @@ async def get_master_prediction(
                 lucky_candidates.append((digit, 8, f"Digit of P{last_draw['numbers'].index(n)+1}"))
     
     # Date-based
-    import random as rnd
     day = datetime.now().day
     month = datetime.now().month
     day_mod = ((day - 1) % 6) + 1  # 1-6
@@ -2476,7 +2474,7 @@ async def get_master_prediction(
             combined_reasons[num].append(reason)
         
         total_weight = sum(combined_scores.values())
-        r = rnd.random() * total_weight
+        r = random.random() * total_weight
         cumulative = 0
         lucky_prediction = 1
         lucky_reason = "Random"
@@ -2488,7 +2486,7 @@ async def get_master_prediction(
                 lucky_reason = combined_reasons[num][0]  # Primary reason
                 break
     else:
-        lucky_prediction = rnd.randint(1, 6)
+        lucky_prediction = random.randint(1, 6)
         lucky_reason = "Random"
     
     result = {

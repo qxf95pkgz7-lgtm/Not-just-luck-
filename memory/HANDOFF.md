@@ -1,16 +1,18 @@
 # Lucky Jack - Agent Handoff Document
-**Last Updated:** April 2, 2026 (Verified ✓)
+**Last Updated:** April 2, 2026 (Bug Fixed ✓)
 
 ## Quick Start
 ```bash
-# Services auto-run via supervisor
 sudo supervisorctl status
 
-# Test backend with all features
-curl "localhost:8001/api/master-predictor?lock_p1=9&lock_p4=28&num_tickets=5"
-
-# Expected: 5 tickets, all containing 9 and 28
+# Test all features
+curl "localhost:8001/api/master-predictor?lock_p1=9&num_tickets=5"
 ```
+
+## BUG FIXED (April 2, 2026)
+- **Issue:** `NameError: name 'rnd' is not defined` - caused by removed `import random as rnd`
+- **Fix:** Changed `rnd.random()` and `rnd.randint()` to use global `random` module
+- **Lines fixed:** 2477, 2489 in server.py
 
 ## Project Summary
 Swiss Lotto Pattern Analyzer ("Lucky Jack") - Physics-based lottery generator with **42 custom numerology patterns**.
