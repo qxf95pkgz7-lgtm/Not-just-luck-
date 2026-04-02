@@ -1038,24 +1038,32 @@ function App() {
           {showMultiTickets && (
             <div className="mt-4">
               <p className="text-xs text-slate-400 mb-3">
-                Generate multiple ticket predictions ranked by confidence.
+                Generate multiple ticket predictions ranked by confidence. <span className="text-amber-400">2.50 CHF per ticket</span>
               </p>
               
-              {/* Ticket count selector */}
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-sm text-slate-300">How many tickets?</span>
-                <div className="flex gap-1">
+              {/* Ticket count selector with prices */}
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm text-slate-300">How many tickets?</span>
+                  <span className="text-xs text-amber-400 font-semibold">
+                    Total: {(numTickets * 2.5).toFixed(2)} CHF
+                  </span>
+                </div>
+                <div className="grid grid-cols-7 gap-1">
                   {[1, 3, 5, 8, 10, 15, 20].map(n => (
                     <button
                       key={n}
                       onClick={() => setNumTickets(n)}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all
+                      className={`flex flex-col items-center px-2 py-1.5 rounded-lg text-sm font-medium transition-all
                         ${numTickets === n 
                           ? 'bg-emerald-500 text-white' 
                           : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'}`}
                       data-testid={`tickets-${n}`}
                     >
-                      {n}
+                      <span className="font-bold">{n}</span>
+                      <span className={`text-[10px] ${numTickets === n ? 'text-emerald-100' : 'text-slate-500'}`}>
+                        {(n * 2.5).toFixed(1)}fr
+                      </span>
                     </button>
                   ))}
                 </div>
