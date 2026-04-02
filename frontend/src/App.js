@@ -605,6 +605,7 @@ function App() {
   const [showPersonal, setShowPersonal] = useState(false);
   const [showBonus, setShowBonus] = useState(false);
   const [showLocks, setShowLocks] = useState(false);
+  const [showMultiTickets, setShowMultiTickets] = useState(false);
   const [wheelSpinning, setWheelSpinning] = useState(false);
   
   // Personal mode
@@ -615,6 +616,9 @@ function App() {
   const [lockedPositions, setLockedPositions] = useState({
     p1: "", p2: "", p3: "", p4: "", p5: "", p6: ""
   });
+  
+  // Multi-ticket mode
+  const [numTickets, setNumTickets] = useState(1);
 
   const handleLockChange = (position, value) => {
     // Validate: must be 1-42 or empty
@@ -654,6 +658,9 @@ function App() {
       if (lockedPositions.p5) params.push(`lock_p5=${lockedPositions.p5}`);
       if (lockedPositions.p6) params.push(`lock_p6=${lockedPositions.p6}`);
       
+      // Add num_tickets
+      if (numTickets > 1) params.push(`num_tickets=${numTickets}`);
+      
       if (params.length > 0) url += `?${params.join('&')}`;
       
       // Delay for animation
@@ -686,7 +693,7 @@ function App() {
     } finally {
       setLoading(false);
     }
-  }, [birthday, fullName, lockedPositions]);
+  }, [birthday, fullName, lockedPositions, numTickets]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -955,6 +962,87 @@ function App() {
                     ))}
                   </div>
                 </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Multi-Ticket Mode */}
+        <div className="lucky-card p-4 mb-4">
+          <div 
+            className="flex items-center justify-between cursor-pointer"
+            onClick={() => setShowMultiTickets(!showMultiTickets)}
+            data-testid="multi-tickets-toggle"
+          >
+            <span className="font-semibold text-slate-200 flex items-center gap-2">
+              🎫 Multiple Tickets
+              {numTickets > 1 && (
+                <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">
+                  {numTickets} tickets
+                </span>
+              )}
+            </span>
+            {showMultiTickets ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+          </div>
+          
+          {showMultiTickets && (
+            <div className="mt-4">
+              <p className="text-xs text-slate-400 mb-3">
+                Generate multiple ticket predictions ranked by confidence.
+              </p>
+              
+              {/* Ticket count selector */}
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-sm text-slate-300">How many tickets?</span>
+                <div className="flex gap-1">
+                  {[1, 3, 5, 8, 10, 15, 20].map(n => (
+                    <button
+                      key={n}
+                      onClick={() => setNumTickets(n)}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all
+                        ${numTickets === n 
+                          ? 'bg-emerald-500 text-white' 
+                          : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'}`}
+                      data-testid={`tickets-${n}`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Display all tickets */}
+              {prediction?.all_tickets && prediction.all_tickets.length > 1 && (
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+                  {prediction.all_tickets.map((ticket, idx) => (
+                    <div 
+                      key={idx}
+                      className={`flex items-center gap-3 p-2 rounded-lg ${
+                        idx === 0 
+                          ? 'bg-gradient-to-r from-amber-500/20 to-amber-600/10 border border-amber-500/30' 
+                          : 'bg-slate-800/50 border border-slate-700/50'
+                      }`}
+                    >
+                      <span className={`text-xs font-bold w-6 ${idx === 0 ? 'text-amber-400' : 'text-slate-500'}`}>
+                        #{ticket.ticket_num}
+                      </span>
+                      <div className="flex gap-1.5 flex-1">
+                        {ticket.numbers.map((num, i) => (
+                          <Ball key={i} number={num} size="xs" />
+                        ))}
+                      </div>
+                      <span className={`text-xs ${idx === 0 ? 'text-amber-400' : 'text-slate-500'}`}>
+                        {Math.round(ticket.confidence)}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {numTickets > 1 && !prediction?.all_tickets && (
+                <p className="text-xs text-slate-500 text-center py-2">
+                  Press "Get New Numbers" to generate {numTickets} tickets
+                </p>
               )}
             </div>
           )}

@@ -803,7 +803,8 @@ async def get_master_prediction(
     lock_p3: int = None,
     lock_p4: int = None,
     lock_p5: int = None,
-    lock_p6: int = None
+    lock_p6: int = None,
+    num_tickets: int = 1
 ):
     """
     MASTER PREDICTOR - Combines ALL pattern systems:
@@ -817,9 +818,13 @@ async def get_master_prediction(
     8. Birthday mode (optional) - pass as DD/MM/YYYY or DD-MM-YYYY
     9. Name mode (optional) - A=1, B=2, ... Z=26
     10. Locked positions (optional) - lock_p1 through lock_p6, max 4 locks
+    11. Multiple tickets (optional) - num_tickets=1-20 for multiple predictions
     """
     from datetime import datetime
     from collections import defaultdict
+    
+    # Validate num_tickets
+    num_tickets = max(1, min(20, num_tickets))
     
     # Parse locked positions
     locked_positions = {}  # {position_index: number}
@@ -2305,6 +2310,82 @@ async def get_master_prediction(
         if top_6[i] is None and generated_picks:
             top_6[i] = {**generated_picks[0], "locked": False}
     
+    # === GENERATE MULTIPLE TICKETS (if num_tickets > 1) ===
+    all_tickets = []
+    
+    # First ticket is the main prediction (top_6)
+    ticket_1_numbers = sorted([t["number"] for t in top_6 if t])
+    all_tickets.append({
+        "ticket_num": 1,
+        "numbers": ticket_1_numbers,
+        "details": top_6,
+        "confidence": sum(t["score"] for t in top_6 if t and not t.get("locked")) / max(1, positions_to_fill)
+    })
+    
+    # Generate additional tickets from remaining candidates
+    if num_tickets > 1:
+        used_numbers = set(ticket_1_numbers)
+        used_numbers.update(locked_nums_set)
+        
+        # Get all available numbers sorted by score
+        available = [(n, data) for n, data in ranked if n not in locked_nums_set]
+        
+        for ticket_idx in range(2, num_tickets + 1):
+            ticket_numbers = list(locked_nums_set)  # Start with locked numbers
+            ticket_details = []
+            
+            # Add locked positions to details
+            for pos_idx, locked_num in locked_positions.items():
+                ticket_details.append({
+                    "number": locked_num,
+                    "score": 999,
+                    "reasons": [f"🔒 Locked at P{pos_idx + 1}"],
+                    "locked": True
+                })
+            
+            # Fill remaining positions from available numbers
+            # Use weighted random selection with decreasing weights for variety
+            remaining_available = [(n, data) for n, data in available if n not in ticket_numbers]
+            
+            while len(ticket_numbers) < 6 and remaining_available:
+                # Weight by score but add variety factor based on ticket number
+                weights = [max(1, data["score"] - (ticket_idx - 1) * 5) for n, data in remaining_available]
+                total_weight = sum(weights)
+                
+                if total_weight <= 0:
+                    # Fallback: just pick sequentially
+                    pick = remaining_available[0]
+                else:
+                    r = random.random() * total_weight
+                    cumulative = 0
+                    pick = remaining_available[0]
+                    for i, ((n, data), w) in enumerate(zip(remaining_available, weights)):
+                        cumulative += w
+                        if r <= cumulative:
+                            pick = (n, data)
+                            break
+                
+                n, data = pick
+                ticket_numbers.append(n)
+                ticket_details.append({
+                    "number": n,
+                    "score": data["score"],
+                    "reasons": data["reasons"][:3],
+                    "locked": False
+                })
+                remaining_available = [(nn, dd) for nn, dd in remaining_available if nn != n]
+            
+            # Sort ticket numbers
+            ticket_numbers_sorted = sorted(ticket_numbers)
+            confidence = sum(d["score"] for d in ticket_details if not d.get("locked")) / max(1, len([d for d in ticket_details if not d.get("locked")]))
+            
+            all_tickets.append({
+                "ticket_num": ticket_idx,
+                "numbers": ticket_numbers_sorted,
+                "details": ticket_details,
+                "confidence": round(confidence, 1)
+            })
+    
     alternates = [{"number": n, "score": data["score"], "reasons": data["reasons"][:2]} for n, data in ranked[positions_to_fill:positions_to_fill+6]]
     
     avg_score = sum(t["score"] for t in top_6 if t and not t.get("locked")) / max(1, positions_to_fill) if top_6 else 0
@@ -2425,6 +2506,8 @@ async def get_master_prediction(
         "main_prediction": sorted([t["number"] for t in top_6 if t]),
         "main_prediction_details": top_6,
         "locked_positions": {f"P{k+1}": v for k, v in locked_positions.items()} if locked_positions else None,
+        "num_tickets": num_tickets,
+        "all_tickets": all_tickets if num_tickets > 1 else None,
         "lucky_prediction": lucky_prediction,
         "lucky_reason": lucky_reason,
         "alternate_numbers": sorted([a["number"] for a in alternates]),
