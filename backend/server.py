@@ -1916,6 +1916,65 @@ async def get_master_prediction(birthday: str = None, name: str = None):
                     scores[doubled]["score"] += 6
                     scores[doubled]["reasons"].append(f"⭐ Lucky doubled: {prev_lucky}→{doubled} (6.8%)")
     
+    # === 36. P3/P4 POSITION ANALYSIS ===
+    # P3 hot numbers (avg 18.2): 21, 19, 14, 17, 16
+    # P4 hot numbers (avg 24.5): 28, 21, 31, 22, 23, 29
+    p3_counter = Counter()
+    p4_counter = Counter()
+    
+    for d in draws:
+        nums = sorted(d.get('numbers', []))
+        if len(nums) >= 6:
+            p3_counter[nums[2]] += 1
+            p4_counter[nums[3]] += 1
+    
+    # Top P3 numbers
+    p3_top = p3_counter.most_common(8)
+    for num, count in p3_top[:5]:
+        pct = count / len(draws) * 100 if draws else 0
+        boost = min(10, int(pct * 1.5))
+        scores[num]["score"] += boost
+        scores[num]["reasons"].append(f"🥉P3 hot: {num} appears {count}x ({pct:.1f}%)")
+    
+    # Top P4 numbers
+    p4_top = p4_counter.most_common(8)
+    for num, count in p4_top[:5]:
+        pct = count / len(draws) * 100 if draws else 0
+        boost = min(10, int(pct * 1.5))
+        scores[num]["score"] += boost
+        scores[num]["reasons"].append(f"🏅P4 hot: {num} appears {count}x ({pct:.1f}%)")
+    
+    # === 37. P3/P4 TRANSFORMATION PATTERNS ===
+    # |P3-P4| → often P1/P2 (14.4%), P3-P1 (16.2%), P4-P2 (14.6%), P3+P1 (13.7%)
+    if most_recent:
+        last_nums = sorted(most_recent['numbers'])
+        if len(last_nums) >= 4:
+            p1, p2, p3, p4 = last_nums[0], last_nums[1], last_nums[2], last_nums[3]
+            
+            # |P3-P4| → likely P1/P2 (14.4%)
+            diff_34 = abs(p3 - p4)
+            if 1 <= diff_34 <= 42:
+                scores[diff_34]["score"] += 12
+                scores[diff_34]["reasons"].append(f"🔗|P3-P4|: |{p3}-{p4}|={diff_34} → P1/P2 (14.4%)")
+            
+            # P3-P1 (16.2% - strongest!)
+            val = p3 - p1
+            if 1 <= val <= 42:
+                scores[val]["score"] += 15
+                scores[val]["reasons"].append(f"🔗P3-P1: {p3}-{p1}={val} (16.2%)")
+            
+            # P4-P2 (14.6%)
+            val = p4 - p2
+            if 1 <= val <= 42:
+                scores[val]["score"] += 12
+                scores[val]["reasons"].append(f"🔗P4-P2: {p4}-{p2}={val} (14.6%)")
+            
+            # P3+P1 (13.7%)
+            val = p3 + p1
+            if 1 <= val <= 42:
+                scores[val]["score"] += 11
+                scores[val]["reasons"].append(f"🔗P3+P1: {p3}+{p1}={val} (13.7%)")
+    
     # === COMPILE FINAL PREDICTIONS ===
     ranked = sorted(scores.items(), key=lambda x: x[1]["score"], reverse=True)
     
