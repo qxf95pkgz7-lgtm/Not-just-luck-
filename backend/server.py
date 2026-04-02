@@ -1825,6 +1825,46 @@ async def get_master_prediction(birthday: str = None, name: str = None):
                 scores[summ]["score"] += 12
                 scores[summ]["reasons"].append(f"🔗P1+P2: {last_p1}+{last_p2}={summ} → any pos (14.6%)")
     
+    # === 32. FAMILY HUNGER PATTERN ===
+    # If multiple numbers from same family (ending in same digit) appeared recently,
+    # the missing family member is "hungry" and likely to appear
+    families = {
+        1: [1, 11, 21, 31, 41],
+        2: [2, 12, 22, 32, 42],
+        3: [3, 13, 23, 33],
+        4: [4, 14, 24, 34],
+        5: [5, 15, 25, 35],
+        6: [6, 16, 26, 36],
+        7: [7, 17, 27, 37],
+        8: [8, 18, 28, 38],
+        9: [9, 19, 29, 39],
+        0: [10, 20, 30, 40],
+    }
+    
+    # Track last appearance
+    num_last_seen = {}
+    for i, d in enumerate(all_draws_sorted):
+        for num in d.get('numbers', []):
+            if num not in num_last_seen:
+                num_last_seen[num] = i
+    
+    # Check last 10 draws for chain building
+    recent_10_nums = set()
+    for d in all_draws_sorted[:10]:
+        recent_10_nums.update(d.get('numbers', []))
+    
+    for digit, family in families.items():
+        appeared = [n for n in family if n in recent_10_nums]
+        missing = [n for n in family if n not in recent_10_nums]
+        
+        if len(appeared) >= 2 and missing:  # Chain building!
+            for m in missing:
+                gap = num_last_seen.get(m, 50)
+                # More chain members = stronger hunger
+                boost = len(appeared) * 5 + min(15, gap // 2)
+                scores[m]["score"] += boost
+                scores[m]["reasons"].append(f"🍽️ Hungry: Family-{digit} chain {appeared}, gap {gap}")
+    
     # === COMPILE FINAL PREDICTIONS ===
     ranked = sorted(scores.items(), key=lambda x: x[1]["score"], reverse=True)
     
