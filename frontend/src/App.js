@@ -216,12 +216,13 @@ const LuckyWheel = ({ luckyNumber, isSpinning, onComplete }) => {
 // Realistic Lottery Ball Machine with Tube Selection
 const BallMachine = ({ isProcessing, winningNumbers }) => {
   const [balls, setBalls] = useState([]);
-  const [phase, setPhase] = useState('idle'); // idle, spinning, selecting, complete
+  const [phase, setPhase] = useState('idle'); // idle, spinning, selecting, complete, resetting
   const [selectedBalls, setSelectedBalls] = useState([]);
   const [currentCatch, setCurrentCatch] = useState(null); // Ball currently caught in tube
   const [selectionIndex, setSelectionIndex] = useState(0);
   const [catchPhase, setCatchPhase] = useState('none'); // none, catching, rolling, revealed
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [fallingBalls, setFallingBalls] = useState([]); // Balls falling back into dome
   
   const GRAVITY = 0.18;  // Strong gravity - balls WANT to fall
   const FRICTION = 0.98;
@@ -292,8 +293,39 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
         setSelectionIndex(prev => prev + 1);
       }, 1800);
     } else if (phase === 'selecting' && selectionIndex >= winningNumbers.length && catchPhase === 'none') {
-      // All done!
+      // All done! Start the falling back animation after 3 seconds
       setPhase('complete');
+      
+      // After 3 seconds, start dropping balls back into dome
+      setTimeout(() => {
+        setPhase('resetting');
+        // Drop balls one by one with staggered timing
+        winningNumbers.forEach((ballNum, idx) => {
+          setTimeout(() => {
+            setFallingBalls(prev => [...prev, ballNum]);
+            // After ball finishes falling, mark it as not captured
+            setTimeout(() => {
+              setBalls(prev => prev.map(b => 
+                b.number === ballNum ? { 
+                  ...b, 
+                  captured: false,
+                  x: 30 + Math.random() * 40,
+                  y: 20 + Math.random() * 10,
+                  vy: 2 + Math.random() * 2,
+                  vx: (Math.random() - 0.5) * 2
+                } : b
+              ));
+              setFallingBalls(prev => prev.filter(n => n !== ballNum));
+            }, 800);
+          }, idx * 300); // Stagger each ball by 300ms
+        });
+        
+        // After all balls have fallen, reset to idle
+        setTimeout(() => {
+          setPhase('idle');
+          setSelectedBalls([]);
+        }, winningNumbers.length * 300 + 1000);
+      }, 3000);
     }
   }, [phase, selectionIndex, winningNumbers, catchPhase]);
 
@@ -583,15 +615,33 @@ const BallMachine = ({ isProcessing, winningNumbers }) => {
           {phase === 'spinning' && (
             <span className="text-blue-400 text-sm animate-pulse">🌪️ Mixing balls...</span>
           )}
-          {phase === 'selecting' && (
+          {phase === 'selecting' && selectedBalls.length < 6 && (
             <span className="text-amber-400 text-sm">
-              Ball {selectedBalls.length + 1} of 6
+              Ball {Math.min(selectedBalls.length + 1, 6)} of 6
             </span>
           )}
           {phase === 'complete' && (
             <span className="text-emerald-400 text-sm">✓ Your lucky numbers!</span>
           )}
+          {phase === 'resetting' && (
+            <span className="text-blue-400 text-sm animate-pulse">🎱 Balls returning...</span>
+          )}
         </div>
+        
+        {/* Falling balls indicator */}
+        {fallingBalls.length > 0 && (
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 flex gap-2">
+            {fallingBalls.map((num, idx) => (
+              <div 
+                key={num} 
+                className="ball-fall-down"
+                style={{ animationDelay: `${idx * 0.1}s` }}
+              >
+                <Ball number={num} size="sm" isWinner={true} />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

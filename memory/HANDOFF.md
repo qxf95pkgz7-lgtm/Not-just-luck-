@@ -1,18 +1,29 @@
 # Lucky Jack - Agent Handoff Document
-**Last Updated:** April 2, 2026 (Bug Fixed ✓)
+**Last Updated:** April 2, 2026 (Ball Fall Animation Added ✓)
 
 ## Quick Start
 ```bash
 sudo supervisorctl status
-
-# Test all features
 curl "localhost:8001/api/master-predictor?lock_p1=9&num_tickets=5"
 ```
 
-## BUG FIXED (April 2, 2026)
-- **Issue:** `NameError: name 'rnd' is not defined` - caused by removed `import random as rnd`
-- **Fix:** Changed `rnd.random()` and `rnd.randint()` to use global `random` module
-- **Lines fixed:** 2477, 2489 in server.py
+## LATEST FEATURES
+
+### Ball Fall Back Animation (NEW)
+After draw completes, balls dramatically fall back into the dome:
+1. Complete phase shows "✓ Your lucky numbers!" for 3 seconds
+2. "Balls returning..." message appears
+3. Balls animate falling back into dome one by one (300ms stagger)
+4. Dome returns to idle state, ready for next draw
+
+### Previous Features
+- **Lock Positions:** Lock 1-4 numbers at P1-P6
+- **Multiple Tickets:** Generate 1-20 tickets ranked by confidence
+- **42 Patterns:** Full numerology algorithm suite
+
+## Bug Fixes This Session
+- Fixed `NameError: rnd not defined` (changed to global `random`)
+- Fixed "Ball 7 of 6" display glitch
 
 ## Project Summary
 Swiss Lotto Pattern Analyzer ("Lucky Jack") - Physics-based lottery generator with **42 custom numerology patterns**.
