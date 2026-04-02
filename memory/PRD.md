@@ -5,8 +5,11 @@ Physics-based lottery number generator with **42 custom numerology patterns** - 
 
 ## What's Implemented (Updated: April 2, 2026)
 - **Ball Machine**: 42 balls with gravity vs air jets physics, tube catching mechanism
-- **Lucky Wheel**: Spinning wheel (1-6) with perspective angle, connected to main machine
+- **Ball Fall Animation**: After draw, balls fall back into dome dramatically
+- **Lucky Wheel**: Spinning wheel (1-6) with perspective angle
 - **42 Pattern Algorithms**: Master Predictor with all user-validated numerology patterns
+- **Lock Positions**: Lock 1-4 numbers at specific positions (P1-P6)
+- **Multiple Tickets**: Generate 1-20 tickets ranked by confidence
 - **Personalization**: Birthday and name-based predictions
 
 ### Pattern System (42 Algorithms)
@@ -26,8 +29,10 @@ Physics-based lottery number generator with **42 custom numerology patterns** - 
 ## UI Features
 - Realistic ball physics (gravity pulls down, air pushes up)
 - Tube catches balls one by one with glow effect
+- **Balls fall back into dome** after draw completes (3s delay, staggered)
 - Lucky wheel spins and lands on predicted number
-- Compact layout with angled wheel perspective
+- Lock Positions panel with P1-P6 inputs
+- Multiple Tickets panel with generate button inside
 
 ## Tech Stack
 - React.js + Tailwind CSS (Frontend)
