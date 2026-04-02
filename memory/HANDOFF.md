@@ -9,8 +9,8 @@ sudo supervisorctl status  # Check all running
 # Test backend
 curl localhost:8001/api/master-predictor | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['main_prediction'])"
 
-# Test with locked positions
-curl "localhost:8001/api/master-predictor?lock_p1=9&lock_p4=28"
+# Test with locked positions + multiple tickets
+curl "localhost:8001/api/master-predictor?lock_p1=9&num_tickets=5"
 
 # Test frontend
 # Screenshot localhost:3000
@@ -19,20 +19,27 @@ curl "localhost:8001/api/master-predictor?lock_p1=9&lock_p4=28"
 ## Project Summary
 Swiss Lotto Pattern Analyzer ("Lucky Jack") - A physics-based lottery number generator with **42 custom numerology patterns** built from the user's personal theories.
 
-## NEW FEATURE: Lock Positions (April 2, 2026)
-Users can now lock 1-4 numbers at specific positions (P1-P6), and the generator fills the remaining positions using all 42 patterns.
+## FEATURES (April 2, 2026)
 
-**Backend:** `GET /api/master-predictor?lock_p1=9&lock_p4=28`
-**Frontend:** Collapsible "🔒 Lock Positions" panel with P1-P6 inputs
+### 1. Lock Positions
+Users can lock 1-4 numbers at specific positions (P1-P6), generator fills the rest.
+- **Backend:** `GET /api/master-predictor?lock_p1=9&lock_p4=28`
+- **Frontend:** "🔒 Lock Positions" collapsible panel
+
+### 2. Multiple Tickets (NEW)
+Generate 1-20 complete 6-number tickets, each ranked by confidence.
+- **Backend:** `GET /api/master-predictor?num_tickets=5`
+- **Frontend:** "🎫 Multiple Tickets" panel with buttons (1, 3, 5, 8, 10, 15, 20)
+- **Generate Button:** Inside panel - no need to scroll up!
 
 ## Architecture
 ```
 /app/
 ├── backend/
-│   ├── server.py          # ~2,550 lines - THE BRAIN (42 patterns + locks)
+│   ├── server.py          # ~2,600 lines - THE BRAIN (42 patterns + locks + multi-tickets)
 │   └── .env               # MONGO_URL, DB_NAME
 ├── frontend/
-│   ├── src/App.js         # Physics lottery machine + Lucky Wheel + Lock UI
+│   ├── src/App.js         # Physics machine + Wheel + Lock UI + Multi-Ticket UI
 │   ├── src/App.css        # 3D animations, air jets, ball physics
 │   └── .env               # REACT_APP_BACKEND_URL
 ├── memory/

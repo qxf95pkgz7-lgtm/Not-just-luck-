@@ -1039,11 +1039,16 @@ function App() {
                 </div>
               )}
               
-              {numTickets > 1 && !prediction?.all_tickets && (
-                <p className="text-xs text-slate-500 text-center py-2">
-                  Press "Get New Numbers" to generate {numTickets} tickets
-                </p>
-              )}
+              {/* Generate button inside panel */}
+              <button 
+                onClick={fetchPrediction}
+                disabled={loading}
+                className="mt-4 w-full py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-400 hover:to-emerald-500 shadow-lg disabled:opacity-50"
+                data-testid="generate-tickets-btn"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                {loading ? 'Generating...' : `🎫 Generate ${numTickets} Ticket${numTickets > 1 ? 's' : ''}`}
+              </button>
             </div>
           )}
         </div>
