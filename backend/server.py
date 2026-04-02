@@ -2080,6 +2080,41 @@ async def get_master_prediction(birthday: str = None, name: str = None):
             scores[9]["score"] += 20
             scores[9]["reasons"].append(f"🔢 9@P1 likely: {', '.join(reasons_9)}")
     
+    # === 41. 9 ↔ 19 CONNECTION PATTERN ===
+    # 19 in prev draw → 9 next (18.8%), 9 in prev → 19 next (15.9%)
+    # Average gap between 9 and 19: 3.2 draws
+    if most_recent:
+        last_nums = most_recent.get('numbers', [])
+        
+        # 19 appeared → boost 9 (18.8%)
+        if 19 in last_nums:
+            scores[9]["score"] += 15
+            scores[9]["reasons"].append(f"🔗 19→9: 19 in prev → 9 likely (18.8%)")
+        
+        # 9 appeared → boost 19 (15.9%)
+        if 9 in last_nums:
+            scores[19]["score"] += 12
+            scores[19]["reasons"].append(f"🔗 9→19: 9 in prev → 19 likely (15.9%)")
+        
+        # Check gaps - if one is due and other appeared recently, boost the due one
+        nine_gap = 0
+        nineteen_gap = 0
+        for i, d in enumerate(all_draws_sorted):
+            if nine_gap == 0 and 9 in d.get('numbers', []):
+                nine_gap = i
+            if nineteen_gap == 0 and 19 in d.get('numbers', []):
+                nineteen_gap = i
+            if nine_gap > 0 and nineteen_gap > 0:
+                break
+        
+        # 9-19 oscillation: if one appeared recently and other is overdue
+        if nineteen_gap <= 3 and nine_gap >= 10:
+            scores[9]["score"] += 12
+            scores[9]["reasons"].append(f"🔗 9↔19 oscillation: 19 recent, 9 due ({nine_gap} gap)")
+        elif nine_gap <= 3 and nineteen_gap >= 10:
+            scores[19]["score"] += 12
+            scores[19]["reasons"].append(f"🔗 9↔19 oscillation: 9 recent, 19 due ({nineteen_gap} gap)")
+    
     # === COMPILE FINAL PREDICTIONS ===
     ranked = sorted(scores.items(), key=lambda x: x[1]["score"], reverse=True)
     
