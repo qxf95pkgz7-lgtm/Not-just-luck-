@@ -342,6 +342,22 @@ def create_euromillions_router(db):
         """Add all missing data if not already present"""
         added = 0
         
+        # Add 2012-2013 data
+        try:
+            from euromillions_data_2012_2013 import EUROMILLIONS_DRAWS_2012_2013
+            check = await db.euromillions_draws.find_one({"date": "03.01.2012"})
+            if not check:
+                documents = [{
+                    "date": d["date"],
+                    "numbers": sorted(d["numbers"]),
+                    "stars": sorted(d["stars"]),
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                } for d in EUROMILLIONS_DRAWS_2012_2013]
+                await db.euromillions_draws.insert_many(documents)
+                added += len(documents)
+        except ImportError:
+            pass
+        
         # Add 2016-2018 missing data (2017 full year + gaps)
         try:
             from euromillions_data_missing import EUROMILLIONS_DRAWS_MISSING
@@ -687,6 +703,7 @@ def create_euromillions_router(db):
     @router.get("/stats")
     async def get_stats():
         await seed_euromillions_if_empty()
+        await add_new_draws_if_needed()
         draws = await get_euromillions_draws()
         
         if not draws:
