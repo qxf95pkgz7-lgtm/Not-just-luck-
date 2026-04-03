@@ -108,6 +108,7 @@ The user's numerology is unconventional. Follow their logic exactly.
 | 48 | P1+P6 Magic Sum | Smallest+Largest sum predicts next | 35-54% |
 | 49 | Digit Echo | Digits 1,2,3 repeat across draws | 85-89% |
 | 50 | Replay Predictor | Replay number predicts next draw | 41-50% |
+| 51 | P4>33 Signal | When P4>33, P6=42 is 41% likely! | 41% |
 
 ## User's Key Theories (CRITICAL)
 1. **Family System**: Numbers ending in same digit are "family" (7,17,27,37)
