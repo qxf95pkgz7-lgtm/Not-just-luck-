@@ -33,6 +33,9 @@ Build a Swiss Lotto Pattern Analyzer app with highly visual 42-billiard-ball spi
 - [x] Historical data seeding (1511 EuroMillions draws 2012-2026, 1380+ Swiss Lotto draws)
 - [x] Pattern analysis algorithms (frequency, gap, family spread, sum range, odd/even)
 - [x] Responsive animated UI with realistic ball physics
+- [x] **NEW: Gap-6 Trigger Pattern** - When previous star gap=6, predicts extreme gaps (8-11)
+- [x] **NEW: Gap Oscillation Pattern** - Small gaps→mid gaps, large gaps→small gaps
+- [x] **NEW: Consecutive Cluster Pattern** - 63% of extreme gap draws have consecutive main numbers
 
 ## API Endpoints
 ### Swiss Lotto

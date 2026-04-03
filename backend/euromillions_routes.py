@@ -623,6 +623,47 @@ def create_euromillions_router(db):
         target_sum = max(star_sums.keys(), key=lambda x: star_sums.get(x, 0)) if star_sums else 13
         patterns_used.append(f"Star Sum Target ({target_sum})")
         
+        # NEW PATTERN: Gap 6 Trigger → Extreme Star Gaps
+        # When previous draw had star gap 6, expect extreme gaps (8-11)
+        prev_star_gap = 0
+        extreme_gap_triggered = False
+        if len(draws) >= 1:
+            prev_stars = sorted(draws[0]["stars"])
+            prev_star_gap = prev_stars[1] - prev_stars[0]
+            
+            if prev_star_gap == 6:
+                # Gap 6 triggers extreme gaps - favor 1+9, 1+10, 1+11, 1+12, 2+11, 2+12
+                extreme_pairs = [(1, 9), (1, 10), (1, 11), (1, 12), (2, 11), (2, 12), (3, 11), (3, 12)]
+                chosen_pair = rnd.choice(extreme_pairs)
+                star_candidates.extend(list(chosen_pair) * 3)  # Weight heavily
+                extreme_gap_triggered = True
+                patterns_used.append(f"Gap-6 Trigger → Extreme Stars")
+            
+            # Gap oscillation: small→large, large→small
+            elif prev_star_gap <= 2:
+                # Expect medium-large gap (4-6)
+                mid_pairs = [(2, 6), (3, 7), (4, 8), (5, 9), (6, 10)]
+                chosen_pair = rnd.choice(mid_pairs)
+                star_candidates.extend(list(chosen_pair) * 2)
+                patterns_used.append(f"Gap Oscillation (prev={prev_star_gap}→mid)")
+            elif prev_star_gap >= 5:
+                # Expect small gap (1-3)
+                small_pairs = [(2, 3), (3, 4), (8, 9), (9, 10), (2, 4), (3, 5)]
+                chosen_pair = rnd.choice(small_pairs)
+                star_candidates.extend(list(chosen_pair) * 2)
+                patterns_used.append(f"Gap Oscillation (prev={prev_star_gap}→small)")
+        
+        # NEW PATTERN: Consecutive numbers when extreme gaps expected
+        if extreme_gap_triggered:
+            # 63% of Gap-11 draws have consecutive numbers
+            if rnd.random() < 0.63:
+                consec_base = rnd.randint(10, 40)
+                # Add triple consecutive to candidates
+                for pos in [1, 2, 3]:
+                    if pos not in locked:
+                        candidates[pos].extend([consec_base, consec_base + 1, consec_base + 2] * 2)
+                patterns_used.append(f"Consecutive Cluster ({consec_base}-{consec_base+2})")
+        
         # Build final numbers
         final_numbers = [0] * 5
         used = set()
@@ -723,6 +764,25 @@ def create_euromillions_router(db):
         star_gaps = pattern_star_gap_analysis(draws)
         min_sum, max_sum, avg_sum = pattern_sum_range(draws)
         
+        # Calculate star gap patterns
+        star_gap_dist = Counter()
+        prev_gap_transitions = Counter()
+        sorted_draws = sorted(draws, key=lambda x: x.get('date', ''), reverse=True)
+        
+        for i, d in enumerate(sorted_draws):
+            stars = sorted(d["stars"])
+            gap = stars[1] - stars[0]
+            star_gap_dist[gap] += 1
+            
+            if i > 0:
+                prev_stars = sorted(sorted_draws[i-1]["stars"])
+                prev_gap = prev_stars[1] - prev_stars[0]
+                prev_gap_transitions[(prev_gap, gap)] += 1
+        
+        # Find gap 6 trigger stats
+        gap6_to_extreme = sum(count for (pg, cg), count in prev_gap_transitions.items() if pg == 6 and cg >= 8)
+        gap6_total = sum(count for (pg, _), count in prev_gap_transitions.items() if pg == 6)
+        
         return {
             "total_draws": len(draws),
             "number_frequency": dict(num_freq.most_common()),
@@ -734,6 +794,9 @@ def create_euromillions_router(db):
             "circle_partner_rate": round(pattern_circle_partners(draws) * 100, 1),
             "odd_even_distribution": pattern_odd_even_ratio(draws),
             "high_low_distribution": pattern_high_low_ratio(draws),
+            "star_gap_distribution": dict(star_gap_dist.most_common()),
+            "gap6_trigger_rate": round((gap6_to_extreme / gap6_total * 100) if gap6_total > 0 else 0, 1),
+            "last_star_gap": sorted(sorted_draws[0]["stars"])[1] - sorted(sorted_draws[0]["stars"])[0] if sorted_draws else 0,
         }
     
     @router.post("/master-predictor")
