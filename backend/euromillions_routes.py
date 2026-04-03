@@ -1104,4 +1104,127 @@ def create_euromillions_router(db):
         
         return analysis
     
+    # ========== AUTO-UPDATE EUROMILLIONS RESULTS ==========
+    @router.post("/update-results")
+    async def update_euromillions_results():
+        """
+        Fetch latest EuroMillions results from API and update database.
+        Uses the free pedro-mealha EuroMillions API.
+        """
+        import httpx
+        
+        try:
+            added_count = 0
+            skipped_count = 0
+            
+            # Fetch current year and last year
+            current_year = datetime.now().year
+            years_to_fetch = [current_year, current_year - 1]
+            
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                for year in years_to_fetch:
+                    response = await client.get(f"https://euromillions.api.pedromealha.dev/v1/draws?year={year}")
+                    
+                    if response.status_code != 200:
+                        continue
+                    
+                    draws_data = response.json()
+                    
+                    for draw in draws_data:
+                        draw_date_raw = draw.get("date", "")
+                        
+                        try:
+                            dt = datetime.strptime(draw_date_raw, "%Y-%m-%d")
+                            draw_date = dt.strftime("%d.%m.%Y")
+                        except:
+                            continue
+                        
+                        numbers_raw = draw.get("numbers", [])
+                        stars_raw = draw.get("stars", [])
+                        
+                        numbers = sorted([int(n) for n in numbers_raw])
+                        stars = sorted([int(s) for s in stars_raw])
+                        
+                        if len(numbers) != 5 or len(stars) != 2:
+                            continue
+                        
+                        existing = await db.euromillions_draws.find_one({"date": draw_date})
+                        if existing:
+                            skipped_count += 1
+                            continue
+                        
+                        new_draw = {
+                            "date": draw_date,
+                            "numbers": numbers,
+                            "stars": stars,
+                            "created_at": datetime.now(timezone.utc).isoformat()
+                        }
+                        
+                        await db.euromillions_draws.insert_one(new_draw)
+                        added_count += 1
+            
+            total = await db.euromillions_draws.count_documents({})
+            
+            # Get actual latest draw by parsing dates
+            all_draws = await db.euromillions_draws.find().to_list(length=None)
+            
+            def parse_date(d):
+                try:
+                    return datetime.strptime(d['date'], '%d.%m.%Y')
+                except:
+                    return datetime.min
+            
+            if all_draws:
+                latest = max(all_draws, key=parse_date)
+                latest_date = latest["date"]
+                latest_numbers = latest.get("numbers", [])
+                latest_stars = latest.get("stars", [])
+            else:
+                latest_date = "N/A"
+                latest_numbers = []
+                latest_stars = []
+            
+            return {
+                "message": f"Update complete! Added {added_count} new draws.",
+                "added": added_count,
+                "skipped": skipped_count,
+                "total": total,
+                "latest_draw": {
+                    "date": latest_date,
+                    "numbers": latest_numbers,
+                    "stars": latest_stars
+                }
+            }
+            
+        except httpx.TimeoutException:
+            raise HTTPException(status_code=504, detail="API request timed out")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error updating results: {str(e)}")
+    
+    @router.get("/last-update")
+    async def get_last_update():
+        """Get info about the most recent draw in database"""
+        total = await db.euromillions_draws.count_documents({})
+        
+        if total == 0:
+            return {"message": "No draws in database", "total": 0}
+        
+        # Get actual latest draw by parsing dates
+        all_draws = await db.euromillions_draws.find().to_list(length=None)
+        
+        def parse_date(d):
+            try:
+                return datetime.strptime(d['date'], '%d.%m.%Y')
+            except:
+                return datetime.min
+        
+        latest = max(all_draws, key=parse_date)
+        
+        return {
+            "latest_date": latest["date"],
+            "latest_numbers": latest.get("numbers", []),
+            "latest_stars": latest.get("stars", []),
+            "total_draws": total
+        }
+    
     return router

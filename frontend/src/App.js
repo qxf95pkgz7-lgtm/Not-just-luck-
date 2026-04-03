@@ -544,6 +544,8 @@ function App() {
   const [numTickets, setNumTickets] = useState(1);
   const [oliviaKiss, setOliviaKiss] = useState(false);
   const [showKissHearts, setShowKissHearts] = useState(false);
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const [updateMessage, setUpdateMessage] = useState('');
 
   // Olivia's Kiss of Luck function
   const giveKissOfLuck = () => {
@@ -1132,7 +1134,35 @@ function App() {
                 {stats.total_draws || stats.total || 0}
               </span>
               <span className="text-slate-400 text-xs"> historical draws</span>
+              
+              {/* Update Results Button - EuroMillions only */}
+              {lotteryMode === 'euro' && (
+                <button
+                  onClick={async () => {
+                    setUpdateLoading(true);
+                    try {
+                      const res = await axios.post(`${API}/euromillions/update-results`);
+                      setUpdateMessage(`✅ ${res.data.message} Latest: ${res.data.latest_draw?.date}`);
+                      // Refresh stats
+                      const statsRes = await axios.get(`${API}/euromillions/stats`);
+                      setStats(statsRes.data);
+                    } catch (err) {
+                      setUpdateMessage('❌ Update failed');
+                    }
+                    setUpdateLoading(false);
+                    setTimeout(() => setUpdateMessage(''), 5000);
+                  }}
+                  disabled={updateLoading}
+                  className="ml-3 px-3 py-1 text-xs rounded-full bg-blue-600/30 text-blue-300 hover:bg-blue-600/50 transition-all"
+                  data-testid="update-results-btn"
+                >
+                  {updateLoading ? '🔄 Updating...' : '🔄 Update Results'}
+                </button>
+              )}
             </div>
+            {updateMessage && (
+              <div className="text-center mt-2 text-xs text-emerald-400">{updateMessage}</div>
+            )}
           </div>
         )}
 
