@@ -534,6 +534,13 @@ function App() {
   const [birthday, setBirthday] = useState("");
   const [fullName, setFullName] = useState("");
   const [lockedPositions, setLockedPositions] = useState({ p1: "", p2: "", p3: "", p4: "", p5: "", p6: "" });
+  
+  // Saved names for quick selection
+  const savedNames = [
+    { name: "Patrick Pulfer", birthday: "16/06/1977" },
+    { name: "Samantha Pulfer", birthday: "04/01/1978" },
+    { name: "Jack Pulfer", birthday: "27/08/2015" }
+  ];
   const [numTickets, setNumTickets] = useState(1);
 
   const maxLocks = lotteryMode === 'swiss' ? 4 : 3;
@@ -827,6 +834,28 @@ function App() {
           
           {showPersonal && (
             <div className="mt-4 space-y-3">
+              {/* Quick Select Names */}
+              <div>
+                <label className="text-xs text-slate-400 mb-2 block">Quick Select</label>
+                <div className="flex flex-wrap gap-2">
+                  {savedNames.map((person, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => { setFullName(person.name); setBirthday(person.birthday); }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                        fullName === person.name 
+                          ? lotteryMode === 'swiss' 
+                            ? 'bg-amber-500 text-gray-900' 
+                            : 'bg-blue-500 text-white'
+                          : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600'
+                      }`}
+                      data-testid={`quick-name-${idx}`}
+                    >
+                      {person.name.split(' ')[0]}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div>
                 <label className="text-xs text-slate-400 mb-1 block">Birthday</label>
                 <input
@@ -939,14 +968,14 @@ function App() {
           {showMultiTickets && (
             <div className="mt-4">
               <p className="text-xs text-slate-400 mb-3">
-                Generate multiple ticket predictions ranked by confidence. <span className={lotteryMode === 'swiss' ? 'text-amber-400' : 'text-blue-400'}>{lotteryMode === 'swiss' ? '2.50 CHF' : '2.50 EUR'} per ticket</span>
+                Generate multiple ticket predictions ranked by confidence. <span className={lotteryMode === 'swiss' ? 'text-amber-400' : 'text-blue-400'}>{lotteryMode === 'swiss' ? '3.50 CHF' : '3.50 fr'} per ticket</span>
               </p>
               
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-sm text-slate-300">How many tickets?</span>
                   <span className={`text-xs font-semibold ${lotteryMode === 'swiss' ? 'text-amber-400' : 'text-blue-400'}`}>
-                    Total: {(numTickets * 2.5).toFixed(2)} {lotteryMode === 'swiss' ? 'CHF' : 'EUR'}
+                    Total: {(numTickets * 3.5).toFixed(2)} fr
                   </span>
                 </div>
                 <div className="grid grid-cols-7 gap-1">
@@ -962,7 +991,7 @@ function App() {
                     >
                       <span className="font-bold">{n}</span>
                       <span className={`text-[10px] ${numTickets === n ? 'text-emerald-100' : 'text-slate-500'}`}>
-                        {(n * 2.5).toFixed(1)}
+                        {(n * 3.5).toFixed(1)}
                       </span>
                     </button>
                   ))}
