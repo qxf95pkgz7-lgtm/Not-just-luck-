@@ -2298,6 +2298,55 @@ async def get_master_prediction(
         scores[day_month_diff]["score"] += 6
         scores[day_month_diff]["reasons"].append(f"📅 |Day-Month|: |{day_num}-{month_num}|={day_month_diff}")
     
+    # === 45. P5-P6 DANCE PATTERN ===
+    # P5-P6 are the highest positions, they stay close! Average gap: 6.1
+    # Consecutive (P6=P5+1): 13.8%, Small gaps (1-3): 38.6%
+    # Hot pairs: 41-42 (2.2%), 37-40, 40-42, 39-42, 39-41
+    # Hot P6: 42 (14.3%), 40 (12.2%), 41 (11.6%)
+    # Hot P5: 36 (7.1%), 33 (6.9%), 32 (6.7%)
+    
+    # Analyze recent P5-P6 patterns
+    p5_p6_diffs = []
+    recent_p5_p6_pairs = []
+    for d in all_draws_sorted[:50]:
+        nums = sorted(d.get('numbers', []))
+        if len(nums) >= 6:
+            p5, p6 = nums[4], nums[5]
+            p5_p6_diffs.append(p6 - p5)
+            recent_p5_p6_pairs.append((p5, p6))
+    
+    # Hot P5-P6 dance partners
+    hot_p5_p6_pairs = [(41, 42), (37, 40), (40, 42), (39, 42), (39, 41), (37, 38), (39, 40), (36, 42)]
+    
+    # Hot P6 numbers (highest position loves high numbers)
+    p6_hot = {42, 40, 41, 39, 38, 37}
+    for num in p6_hot:
+        boost = 12 if num == 42 else 10 if num in {40, 41} else 8
+        scores[num]["score"] += boost
+        scores[num]["reasons"].append(f"🎯 P6 favorite: {num} dominates P6 ({14 if num==42 else 12 if num==40 else 11}%)")
+    
+    # Hot P5 numbers
+    p5_hot = {36, 33, 32, 37, 35, 31, 30, 34}
+    for num in p5_hot:
+        scores[num]["score"] += 8
+        scores[num]["reasons"].append(f"🎯 P5 favorite: {num} at P5 position")
+    
+    # Boost hot P5-P6 pairs
+    for p5, p6 in hot_p5_p6_pairs:
+        scores[p5]["score"] += 6
+        scores[p6]["score"] += 6
+        scores[p5]["reasons"].append(f"💃 Hot P5-P6 pair: {p5}-{p6}")
+    
+    # Recent gap pattern prediction
+    if p5_p6_diffs:
+        avg_recent_gap = sum(p5_p6_diffs[:10]) / min(10, len(p5_p6_diffs))
+        # If recent gaps are small, boost consecutive high numbers
+        if avg_recent_gap <= 4:
+            for base in [37, 38, 39, 40, 41]:
+                scores[base]["score"] += 4
+                scores[base + 1]["score"] += 4 if base + 1 <= 42 else 0
+                scores[base]["reasons"].append(f"💃 P5-P6 tight gap trend: {avg_recent_gap:.1f}")
+    
     # === COMPILE FINAL PREDICTIONS ===
     # Filter out locked numbers from candidates
     locked_nums_set = set(locked_positions.values()) if locked_positions else set()
