@@ -339,7 +339,7 @@ def create_euromillions_router(db):
         return 0
     
     async def add_new_draws_if_needed():
-        """Add 2018-2020 and 2024-2026 data if not already present"""
+        """Add 2018-2020, 2021-2023, and 2024-2026 data if not already present"""
         added = 0
         
         # Add 2018-2020 data
@@ -353,6 +353,22 @@ def create_euromillions_router(db):
                     "stars": sorted(d["stars"]),
                     "created_at": datetime.now(timezone.utc).isoformat()
                 } for d in EUROMILLIONS_DRAWS_2018_2020]
+                await db.euromillions_draws.insert_many(documents)
+                added += len(documents)
+        except ImportError:
+            pass
+        
+        # Add 2021-2023 data
+        try:
+            from euromillions_data_2021_2023 import EUROMILLIONS_DRAWS_2021_2023
+            check = await db.euromillions_draws.find_one({"date": {"$regex": "^..\\...\\.(2021|2022|2023)"}})
+            if not check:
+                documents = [{
+                    "date": d["date"],
+                    "numbers": sorted(d["numbers"]),
+                    "stars": sorted(d["stars"]),
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                } for d in EUROMILLIONS_DRAWS_2021_2023]
                 await db.euromillions_draws.insert_many(documents)
                 added += len(documents)
         except ImportError:

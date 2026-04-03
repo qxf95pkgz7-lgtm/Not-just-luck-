@@ -16,7 +16,7 @@ Dual lottery pattern analyzer system featuring physics-based number generators w
 
 ### EuroMillions "Lucky Stars" (NEW - API Integration)
 - **Format**: 5 main numbers (1-50) + 2 star numbers (1-12)
-- **Historical Data**: 754 draws seeded from 2014-2026 (extracted from lotto24.ch images)
+- **Historical Data**: **1,067 draws** seeded from 2014-2026 (complete 12-year dataset!)
 - **API Endpoints**:
   - `GET /api/euromillions/health` - Health check
   - `GET /api/euromillions/draws` - Historical draws
