@@ -321,14 +321,40 @@ def create_euromillions_router(db):
         """Seed EuroMillions data if collection is empty"""
         count = await db.euromillions_draws.count_documents({})
         if count == 0:
+            # Import additional 2018-2020 data
+            try:
+                from euromillions_data_2018_2020 import EUROMILLIONS_DRAWS_2018_2020
+                all_data = EUROMILLIONS_SEED_DATA + EUROMILLIONS_DRAWS_2018_2020
+            except ImportError:
+                all_data = EUROMILLIONS_SEED_DATA
+            
             documents = [{
                 "date": d["date"],
                 "numbers": sorted(d["numbers"]),
                 "stars": sorted(d["stars"]),
                 "created_at": datetime.now(timezone.utc).isoformat()
-            } for d in EUROMILLIONS_SEED_DATA]
+            } for d in all_data]
             await db.euromillions_draws.insert_many(documents)
             return len(documents)
+        return 0
+    
+    async def add_new_draws_if_needed():
+        """Add 2018-2020 data if not already present"""
+        try:
+            from euromillions_data_2018_2020 import EUROMILLIONS_DRAWS_2018_2020
+            # Check if we have 2018+ data
+            check = await db.euromillions_draws.find_one({"date": {"$regex": "^..\\...\\.(2018|2019|2020)"}})
+            if not check:
+                documents = [{
+                    "date": d["date"],
+                    "numbers": sorted(d["numbers"]),
+                    "stars": sorted(d["stars"]),
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                } for d in EUROMILLIONS_DRAWS_2018_2020]
+                await db.euromillions_draws.insert_many(documents)
+                return len(documents)
+        except ImportError:
+            pass
         return 0
     
     def pattern_position_frequency(draws, position):
@@ -603,8 +629,9 @@ def create_euromillions_router(db):
     @router.get("/draws")
     async def get_draws(limit: int = 50):
         seeded = await seed_euromillions_if_empty()
+        added = await add_new_draws_if_needed()
         draws = await get_euromillions_draws()
-        return {"draws": draws[:limit], "count": len(draws[:limit]), "seeded": seeded}
+        return {"draws": draws[:limit], "count": len(draws[:limit]), "seeded": seeded, "added_new": added, "total_in_db": len(draws)}
     
     @router.get("/stats")
     async def get_stats():
