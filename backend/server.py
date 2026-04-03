@@ -2937,6 +2937,11 @@ async def seed_data():
 # Include the router in the main app
 app.include_router(api_router)
 
+# Include EuroMillions router
+from euromillions_routes import create_euromillions_router
+euromillions_router = create_euromillions_router(db)
+app.include_router(euromillions_router)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,

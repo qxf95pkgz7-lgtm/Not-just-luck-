@@ -1,494 +1,556 @@
-import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios";
-import { Sparkles, RefreshCw, ChevronDown, ChevronUp, Star, Upload } from "lucide-react";
+import React, { useState, useEffect, useCallback } from 'react';
+import './App.css';
 
-const API = process.env.REACT_APP_BACKEND_URL || "http://localhost:8002";
+const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 
-// Ball component for main numbers (1-50)
-const Ball = ({ number, size = "md", isWinner = false }) => {
-  const sizeClasses = {
-    xs: "w-8 h-8 text-xs",
-    sm: "w-10 h-10 text-sm",
-    md: "w-12 h-12 text-base",
-    lg: "w-14 h-14 text-lg"
-  };
-  
-  // Color based on decade
-  const getColor = (n) => {
-    if (n <= 10) return "from-blue-500 to-blue-700";
-    if (n <= 20) return "from-green-500 to-green-700";
-    if (n <= 30) return "from-yellow-500 to-yellow-700";
-    if (n <= 40) return "from-orange-500 to-orange-700";
-    return "from-red-500 to-red-700";
-  };
-  
-  return (
-    <div className={`
-      ${sizeClasses[size]} 
-      rounded-full 
-      bg-gradient-to-br ${getColor(number)}
-      flex items-center justify-center 
-      font-bold text-white
-      shadow-lg
-      ${isWinner ? 'ring-2 ring-yellow-400 animate-pulse' : ''}
-    `}>
-      {number}
-    </div>
-  );
+// Ball colors for main numbers (1-50)
+const getMainBallColor = (num) => {
+  if (num <= 10) return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+  if (num <= 20) return 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+  if (num <= 30) return 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';
+  if (num <= 40) return 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)';
+  return 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)';
 };
 
-// Star component for star numbers (1-12)
-const StarBall = ({ number, size = "md" }) => {
-  const sizeClasses = {
-    sm: "w-10 h-10 text-sm",
-    md: "w-12 h-12 text-base",
-    lg: "w-14 h-14 text-lg"
-  };
-  
-  return (
-    <div className={`
-      ${sizeClasses[size]}
-      flex items-center justify-center
-      relative
-    `}>
-      <Star className="absolute w-full h-full text-yellow-400 fill-yellow-400" />
-      <span className="relative z-10 font-bold text-yellow-900">{number}</span>
-    </div>
-  );
-};
+// Star colors
+const STAR_COLOR = 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%)';
 
-// Physics-based Ball Machine
-const BallMachine = ({ isProcessing, mainNumbers, starNumbers }) => {
-  const [phase, setPhase] = useState('idle');
-  const [selectedMain, setSelectedMain] = useState([]);
-  const [selectedStars, setSelectedStars] = useState([]);
-  
-  useEffect(() => {
-    if (isProcessing) {
-      setPhase('spinning');
-      setSelectedMain([]);
-      setSelectedStars([]);
-      
-      // Animate main numbers one by one
-      mainNumbers.forEach((num, idx) => {
-        setTimeout(() => {
-          setSelectedMain(prev => [...prev, num]);
-        }, (idx + 1) * 1500);
-      });
-      
-      // Animate stars after main numbers
-      starNumbers.forEach((num, idx) => {
-        setTimeout(() => {
-          setSelectedStars(prev => [...prev, num]);
-        }, (mainNumbers.length + idx + 1) * 1500);
-      });
-      
-      // Complete
-      setTimeout(() => {
-        setPhase('complete');
-      }, (mainNumbers.length + starNumbers.length + 1) * 1500);
-    }
-  }, [isProcessing, mainNumbers, starNumbers]);
-  
-  return (
-    <div className="relative">
-      {/* Machine Container */}
-      <div className="bg-gradient-to-b from-slate-800 to-slate-900 rounded-3xl p-6 border border-slate-700">
-        {/* Glass Dome */}
-        <div className="relative h-48 bg-gradient-to-b from-slate-700/50 to-slate-800/50 rounded-full mx-auto w-64 border border-slate-600 overflow-hidden">
-          {/* Floating balls animation */}
-          <div className="absolute inset-0 flex flex-wrap justify-center items-center gap-1 p-4">
-            {Array.from({length: 20}, (_, i) => (
-              <div 
-                key={i}
-                className={`w-4 h-4 rounded-full opacity-60 ${
-                  phase === 'spinning' ? 'animate-bounce' : ''
-                }`}
-                style={{
-                  backgroundColor: ['#3b82f6', '#22c55e', '#eab308', '#f97316', '#ef4444'][i % 5],
-                  animationDelay: `${i * 0.1}s`
-                }}
-              />
-            ))}
-          </div>
-          
-          {/* Center glow */}
-          {phase === 'spinning' && (
-            <div className="absolute inset-0 bg-blue-500/20 animate-pulse" />
-          )}
-        </div>
-        
-        {/* Selected Numbers Display */}
-        <div className="mt-6 space-y-4">
-          {/* Main Numbers */}
-          <div className="flex justify-center gap-2">
-            {[0,1,2,3,4].map(idx => (
-              <div key={idx} className="relative">
-                {selectedMain[idx] ? (
-                  <Ball number={selectedMain[idx]} isWinner={true} />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-slate-700/50 border-2 border-dashed border-slate-600 flex items-center justify-center text-slate-500">
-                    ?
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-          
-          {/* Stars */}
-          <div className="flex justify-center gap-3">
-            {[0,1].map(idx => (
-              <div key={idx}>
-                {selectedStars[idx] ? (
-                  <StarBall number={selectedStars[idx]} />
-                ) : (
-                  <div className="w-12 h-12 flex items-center justify-center">
-                    <Star className="w-10 h-10 text-slate-600" />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        {/* Status */}
-        <div className="text-center mt-4">
-          {phase === 'idle' && (
-            <span className="text-slate-400 text-sm">Press button to generate</span>
-          )}
-          {phase === 'spinning' && (
-            <span className="text-blue-400 text-sm animate-pulse">
-              🌪️ Selecting numbers... ({selectedMain.length}/5 + {selectedStars.length}/2 ⭐)
-            </span>
-          )}
-          {phase === 'complete' && (
-            <span className="text-emerald-400 text-sm">✓ Your EuroMillions numbers!</span>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Main App
 function App() {
+  const [draws, setDraws] = useState([]);
+  const [stats, setStats] = useState(null);
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [showLocks, setShowLocks] = useState(false);
-  const [showMultiTickets, setShowMultiTickets] = useState(false);
-  const [stats, setStats] = useState(null);
-  
-  // Locked positions
-  const [lockedMain, setLockedMain] = useState({ p1: "", p2: "", p3: "", p4: "", p5: "" });
-  const [lockedStars, setLockedStars] = useState({ s1: "", s2: "" });
+  const [spinning, setSpinning] = useState(false);
+  const [showNumbers, setShowNumbers] = useState(false);
+  const [birthday, setBirthday] = useState('');
+  const [name, setName] = useState('');
   const [numTickets, setNumTickets] = useState(1);
-  
-  const getLockedMainCount = () => Object.values(lockedMain).filter(v => v !== "").length;
-  const getLockedStarCount = () => Object.values(lockedStars).filter(v => v !== "").length;
-  
-  const handleMainLockChange = (pos, value) => {
-    const num = parseInt(value);
-    if (value === "" || (num >= 1 && num <= 50)) {
-      if (value !== "" && getLockedMainCount() >= 4 && lockedMain[pos] === "") return;
-      setLockedMain(prev => ({...prev, [pos]: value}));
-    }
-  };
-  
-  const handleStarLockChange = (pos, value) => {
-    const num = parseInt(value);
-    if (value === "" || (num >= 1 && num <= 12)) {
-      setLockedStars(prev => ({...prev, [pos]: value}));
-    }
-  };
-  
-  const fetchPrediction = useCallback(async () => {
+  const [lockedPositions, setLockedPositions] = useState({});
+  const [activeTab, setActiveTab] = useState('predictor');
+  const [analyzeNumbers, setAnalyzeNumbers] = useState('');
+  const [analyzeStars, setAnalyzeStars] = useState('');
+  const [analysisResult, setAnalysisResult] = useState(null);
+
+  useEffect(() => {
+    fetchDraws();
+    fetchStats();
+  }, []);
+
+  const fetchDraws = async () => {
     try {
-      setLoading(true);
-      
-      let url = `${API}/master-predictor`;
-      const params = [];
-      
-      if (lockedMain.p1) params.push(`lock_p1=${lockedMain.p1}`);
-      if (lockedMain.p2) params.push(`lock_p2=${lockedMain.p2}`);
-      if (lockedMain.p3) params.push(`lock_p3=${lockedMain.p3}`);
-      if (lockedMain.p4) params.push(`lock_p4=${lockedMain.p4}`);
-      if (lockedMain.p5) params.push(`lock_p5=${lockedMain.p5}`);
-      if (lockedStars.s1) params.push(`lock_star1=${lockedStars.s1}`);
-      if (lockedStars.s2) params.push(`lock_star2=${lockedStars.s2}`);
-      if (numTickets > 1) params.push(`num_tickets=${numTickets}`);
-      
-      if (params.length > 0) url += `?${params.join('&')}`;
-      
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const res = await axios.get(url);
-      setPrediction(res.data);
-    } catch (e) {
-      console.error("Error:", e);
-      // Fallback random
-      const mainNums = [];
-      while (mainNums.length < 5) {
-        const n = Math.floor(Math.random() * 50) + 1;
-        if (!mainNums.includes(n)) mainNums.push(n);
-      }
-      const stars = [];
-      while (stars.length < 2) {
-        const n = Math.floor(Math.random() * 12) + 1;
-        if (!stars.includes(n)) stars.push(n);
-      }
-      setPrediction({
-        main_prediction: mainNums.sort((a,b) => a-b),
-        star_prediction: stars.sort((a,b) => a-b),
-        average_confidence: 50
+      const res = await fetch(`${API_URL}/api/draws?limit=20`);
+      const data = await res.json();
+      setDraws(data.draws || []);
+    } catch (err) {
+      console.error('Failed to fetch draws:', err);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/stats`);
+      const data = await res.json();
+      setStats(data);
+    } catch (err) {
+      console.error('Failed to fetch stats:', err);
+    }
+  };
+
+  const generatePrediction = useCallback(async () => {
+    setLoading(true);
+    setSpinning(true);
+    setShowNumbers(false);
+    setPrediction(null);
+
+    try {
+      const res = await fetch(`${API_URL}/api/master-predictor`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          birthday: birthday || null,
+          name: name || null,
+          num_tickets: numTickets,
+          locked_positions: Object.keys(lockedPositions).length > 0 ? lockedPositions : null,
+        }),
       });
-    } finally {
+      const data = await res.json();
+
+      // Simulate spinning animation
+      setTimeout(() => {
+        setSpinning(false);
+        setTimeout(() => {
+          setPrediction(data);
+          setShowNumbers(true);
+          setLoading(false);
+        }, 500);
+      }, 3000);
+    } catch (err) {
+      console.error('Prediction failed:', err);
+      setSpinning(false);
       setLoading(false);
     }
-  }, [lockedMain, lockedStars, numTickets]);
-  
-  useEffect(() => {
-    axios.get(`${API}/dashboard`).then(res => setStats(res.data)).catch(() => {});
-  }, []);
-  
+  }, [birthday, name, numTickets, lockedPositions]);
+
+  const analyzeTicket = async () => {
+    if (!analyzeNumbers || !analyzeStars) return;
+    
+    try {
+      const res = await fetch(
+        `${API_URL}/api/analyze-ticket?numbers=${encodeURIComponent(analyzeNumbers)}&stars=${encodeURIComponent(analyzeStars)}`
+      );
+      const data = await res.json();
+      setAnalysisResult(data);
+    } catch (err) {
+      console.error('Analysis failed:', err);
+    }
+  };
+
+  const handleLockPosition = (position, value) => {
+    if (value && !isNaN(parseInt(value)) && parseInt(value) >= 1 && parseInt(value) <= 50) {
+      setLockedPositions(prev => ({ ...prev, [position]: parseInt(value) }));
+    } else {
+      setLockedPositions(prev => {
+        const newLocked = { ...prev };
+        delete newLocked[position];
+        return newLocked;
+      });
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-blue-950 to-slate-900 text-white">
+    <div className="app" data-testid="euromillions-app">
+      {/* Stars Background */}
+      <div className="stars-bg">
+        {[...Array(50)].map((_, i) => (
+          <div
+            key={i}
+            className="star-particle"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+            }}
+          />
+        ))}
+      </div>
+
       {/* Header */}
-      <header className="py-6 px-4 text-center border-b border-blue-800/30">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-yellow-400 to-blue-400 bg-clip-text text-transparent">
-          🌟 EuroMillions Pattern Analyzer
-        </h1>
-        <p className="text-blue-300/70 mt-1">5 Numbers (1-50) + 2 Stars (1-12)</p>
-        {stats?.total_draws > 0 && (
-          <p className="text-xs text-slate-500 mt-1">{stats.total_draws} historical draws loaded</p>
-        )}
+      <header className="header">
+        <div className="logo">
+          <span className="star-icon">⭐</span>
+          <h1>Lucky Stars</h1>
+          <span className="star-icon">⭐</span>
+        </div>
+        <p className="subtitle">EuroMillions Pattern Analyzer</p>
+        <p className="rules">5 Numbers (1-50) + 2 Stars (1-12)</p>
       </header>
-      
-      <main className="max-w-2xl mx-auto p-4 space-y-6">
-        {/* Ball Machine */}
-        <BallMachine 
-          isProcessing={loading}
-          mainNumbers={prediction?.main_prediction || []}
-          starNumbers={prediction?.star_prediction || []}
-        />
-        
-        {/* Generate Button */}
+
+      {/* Navigation */}
+      <nav className="nav-tabs">
         <button
-          onClick={fetchPrediction}
-          disabled={loading}
-          className="w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 disabled:opacity-50 shadow-lg shadow-blue-900/50"
-          data-testid="generate-btn"
+          data-testid="nav-predictor"
+          className={`nav-tab ${activeTab === 'predictor' ? 'active' : ''}`}
+          onClick={() => setActiveTab('predictor')}
         >
-          <RefreshCw className={`w-6 h-6 ${loading ? 'animate-spin' : ''}`} />
-          {loading ? 'Generating...' : 'Generate EuroMillions Numbers'}
+          🎰 Predictor
         </button>
-        
-        {/* Lock Positions */}
-        <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-          <div 
-            className="flex items-center justify-between cursor-pointer"
-            onClick={() => setShowLocks(!showLocks)}
-            data-testid="lock-toggle"
-          >
-            <span className="font-semibold flex items-center gap-2">
-              🔒 Lock Positions
-              {(getLockedMainCount() > 0 || getLockedStarCount() > 0) && (
-                <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full">
-                  {getLockedMainCount()}/4 + {getLockedStarCount()}/2⭐
-                </span>
+        <button
+          data-testid="nav-history"
+          className={`nav-tab ${activeTab === 'history' ? 'active' : ''}`}
+          onClick={() => setActiveTab('history')}
+        >
+          📊 History
+        </button>
+        <button
+          data-testid="nav-analyze"
+          className={`nav-tab ${activeTab === 'analyze' ? 'active' : ''}`}
+          onClick={() => setActiveTab('analyze')}
+        >
+          🔍 Analyze
+        </button>
+        <button
+          data-testid="nav-stats"
+          className={`nav-tab ${activeTab === 'stats' ? 'active' : ''}`}
+          onClick={() => setActiveTab('stats')}
+        >
+          📈 Stats
+        </button>
+      </nav>
+
+      <main className="main-content">
+        {/* Predictor Tab */}
+        {activeTab === 'predictor' && (
+          <div className="predictor-section" data-testid="predictor-section">
+            {/* Lottery Machine */}
+            <div className="lottery-machine">
+              <div className={`ball-chamber ${spinning ? 'spinning' : ''}`}>
+                {/* Main Number Balls */}
+                <div className="main-balls-container">
+                  {[...Array(50)].map((_, i) => (
+                    <div
+                      key={i}
+                      className={`ball main-ball ${spinning ? 'bouncing' : ''}`}
+                      style={{
+                        background: getMainBallColor(i + 1),
+                        animationDelay: `${Math.random() * 0.5}s`,
+                        left: `${10 + Math.random() * 80}%`,
+                        top: `${10 + Math.random() * 60}%`,
+                      }}
+                    >
+                      {i + 1}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Star Balls */}
+                <div className="star-balls-container">
+                  {[...Array(12)].map((_, i) => (
+                    <div
+                      key={i}
+                      className={`ball star-ball ${spinning ? 'bouncing' : ''}`}
+                      style={{
+                        background: STAR_COLOR,
+                        animationDelay: `${Math.random() * 0.5}s`,
+                        left: `${15 + Math.random() * 70}%`,
+                        top: `${70 + Math.random() * 20}%`,
+                      }}
+                    >
+                      ⭐{i + 1}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Result Display */}
+              {showNumbers && prediction && (
+                <div className="result-display" data-testid="prediction-result">
+                  <h3>Your Lucky Numbers</h3>
+                  <div className="result-numbers">
+                    {prediction.tickets[0].numbers.map((num, i) => (
+                      <div
+                        key={i}
+                        className="result-ball main"
+                        style={{ background: getMainBallColor(num), animationDelay: `${i * 0.2}s` }}
+                      >
+                        {num}
+                      </div>
+                    ))}
+                    <span className="separator">+</span>
+                    {prediction.tickets[0].stars.map((star, i) => (
+                      <div
+                        key={`star-${i}`}
+                        className="result-ball star"
+                        style={{ background: STAR_COLOR, animationDelay: `${(5 + i) * 0.2}s` }}
+                      >
+                        {star}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="confidence-bar">
+                    <div
+                      className="confidence-fill"
+                      style={{ width: `${prediction.tickets[0].confidence * 100}%` }}
+                    />
+                    <span>{Math.round(prediction.tickets[0].confidence * 100)}% Confidence</span>
+                  </div>
+                </div>
               )}
-            </span>
-            {showLocks ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-          </div>
-          
-          {showLocks && (
-            <div className="mt-4 space-y-4">
-              {/* Main number locks */}
-              <div>
-                <p className="text-xs text-slate-400 mb-2">Main Numbers (1-50)</p>
-                <div className="grid grid-cols-5 gap-2">
-                  {['p1', 'p2', 'p3', 'p4', 'p5'].map((pos, idx) => (
-                    <div key={pos} className="text-center">
-                      <label className="text-xs text-slate-500">P{idx + 1}</label>
+            </div>
+
+            {/* Controls */}
+            <div className="controls-panel">
+              {/* Personalization */}
+              <div className="control-group">
+                <h4>✨ Personalization</h4>
+                <div className="input-row">
+                  <input
+                    type="text"
+                    placeholder="Birthday (DD.MM.YYYY)"
+                    value={birthday}
+                    onChange={(e) => setBirthday(e.target.value)}
+                    data-testid="birthday-input"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Your Name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    data-testid="name-input"
+                  />
+                </div>
+              </div>
+
+              {/* Lock Positions */}
+              <div className="control-group">
+                <h4>🔒 Lock Positions (P1-P5)</h4>
+                <div className="lock-positions">
+                  {['P1', 'P2', 'P3', 'P4', 'P5'].map((pos) => (
+                    <div key={pos} className="lock-input">
+                      <label>{pos}</label>
                       <input
                         type="number"
                         min="1"
                         max="50"
-                        value={lockedMain[pos]}
-                        onChange={(e) => handleMainLockChange(pos, e.target.value)}
-                        placeholder="—"
-                        className={`w-full px-1 py-2 rounded-lg text-center text-sm font-bold
-                          ${lockedMain[pos] ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' : 'bg-slate-700/50 border-slate-600 text-white'}
-                          border focus:outline-none`}
-                        data-testid={`lock-${pos}`}
+                        placeholder="-"
+                        value={lockedPositions[pos] || ''}
+                        onChange={(e) => handleLockPosition(pos, e.target.value)}
+                        data-testid={`lock-${pos.toLowerCase()}`}
                       />
                     </div>
                   ))}
                 </div>
               </div>
-              
-              {/* Star locks */}
-              <div>
-                <p className="text-xs text-slate-400 mb-2">Star Numbers (1-12)</p>
-                <div className="grid grid-cols-2 gap-2 max-w-[200px] mx-auto">
-                  {['s1', 's2'].map((pos, idx) => (
-                    <div key={pos} className="text-center">
-                      <label className="text-xs text-yellow-500">⭐{idx + 1}</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="12"
-                        value={lockedStars[pos]}
-                        onChange={(e) => handleStarLockChange(pos, e.target.value)}
-                        placeholder="—"
-                        className={`w-full px-1 py-2 rounded-lg text-center text-sm font-bold
-                          ${lockedStars[pos] ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400' : 'bg-slate-700/50 border-slate-600 text-white'}
-                          border focus:outline-none`}
-                        data-testid={`lock-${pos}`}
-                      />
-                    </div>
-                  ))}
+
+              {/* Ticket Count */}
+              <div className="control-group">
+                <h4>🎫 Number of Tickets</h4>
+                <div className="ticket-selector">
+                  <input
+                    type="range"
+                    min="1"
+                    max="20"
+                    value={numTickets}
+                    onChange={(e) => setNumTickets(parseInt(e.target.value))}
+                    data-testid="ticket-slider"
+                  />
+                  <span className="ticket-count">{numTickets} ticket{numTickets > 1 ? 's' : ''}</span>
+                  <span className="ticket-price">€{(numTickets * 2.5).toFixed(2)}</span>
                 </div>
               </div>
+
+              {/* Generate Button */}
+              <button
+                className={`generate-btn ${loading ? 'loading' : ''}`}
+                onClick={generatePrediction}
+                disabled={loading}
+                data-testid="generate-btn"
+              >
+                {loading ? '✨ Generating...' : '🎰 Generate Lucky Numbers'}
+              </button>
             </div>
-          )}
-        </div>
-        
-        {/* Multiple Tickets */}
-        <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-          <div 
-            className="flex items-center justify-between cursor-pointer"
-            onClick={() => setShowMultiTickets(!showMultiTickets)}
-            data-testid="multi-tickets-toggle"
-          >
-            <span className="font-semibold flex items-center gap-2">
-              🎫 Multiple Tickets
-              {numTickets > 1 && (
-                <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">
-                  {numTickets} tickets
-                </span>
-              )}
-            </span>
-            {showMultiTickets ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-          </div>
-          
-          {showMultiTickets && (
-            <div className="mt-4">
-              <p className="text-xs text-slate-400 mb-3">
-                Generate multiple tickets. <span className="text-yellow-400">€2.50 per ticket</span>
-              </p>
-              
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-sm">How many?</span>
-                  <span className="text-xs text-yellow-400 font-semibold">
-                    Total: €{(numTickets * 2.5).toFixed(2)}
-                  </span>
-                </div>
-                <div className="grid grid-cols-7 gap-1">
-                  {[1, 3, 5, 8, 10, 15, 20].map(n => (
-                    <button
-                      key={n}
-                      onClick={() => setNumTickets(n)}
-                      className={`flex flex-col items-center px-2 py-1.5 rounded-lg text-sm font-medium transition-all
-                        ${numTickets === n ? 'bg-emerald-500 text-white' : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'}`}
-                      data-testid={`tickets-${n}`}
-                    >
-                      <span className="font-bold">{n}</span>
-                      <span className={`text-[10px] ${numTickets === n ? 'text-emerald-100' : 'text-slate-500'}`}>
-                        €{(n * 2.5).toFixed(1)}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Display tickets */}
-              {prediction?.all_tickets && prediction.all_tickets.length > 1 && (
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {prediction.all_tickets.map((ticket, idx) => (
-                    <div 
-                      key={idx}
-                      className={`flex items-center gap-2 p-2 rounded-lg ${
-                        idx === 0 ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/10 border border-yellow-500/30' : 'bg-slate-800/50'
-                      }`}
-                    >
-                      <span className={`text-xs font-bold w-6 ${idx === 0 ? 'text-yellow-400' : 'text-slate-500'}`}>
-                        #{ticket.ticket_num}
-                      </span>
-                      <div className="flex gap-1 flex-1">
-                        {ticket.main_numbers.map((num, i) => (
-                          <Ball key={i} number={num} size="xs" />
+
+            {/* Multiple Tickets Display */}
+            {prediction && prediction.tickets.length > 1 && (
+              <div className="tickets-grid" data-testid="tickets-grid">
+                <h3>Your {prediction.total_tickets} Tickets (Total: €{prediction.total_price.toFixed(2)})</h3>
+                <div className="tickets-list">
+                  {prediction.tickets.map((ticket, idx) => (
+                    <div key={idx} className="ticket-card">
+                      <div className="ticket-header">
+                        <span className="ticket-num">#{ticket.ticket_number}</span>
+                        <span className="ticket-confidence">{Math.round(ticket.confidence * 100)}%</span>
+                      </div>
+                      <div className="ticket-numbers">
+                        {ticket.numbers.map((num, i) => (
+                          <span key={i} className="mini-ball main" style={{ background: getMainBallColor(num) }}>
+                            {num}
+                          </span>
                         ))}
-                        <span className="mx-1 text-slate-500">+</span>
-                        {ticket.stars.map((num, i) => (
-                          <StarBall key={i} number={num} size="sm" />
+                        <span className="mini-separator">+</span>
+                        {ticket.stars.map((star, i) => (
+                          <span key={`s-${i}`} className="mini-ball star" style={{ background: STAR_COLOR }}>
+                            {star}
+                          </span>
                         ))}
                       </div>
                     </div>
                   ))}
                 </div>
-              )}
-              
-              <button 
-                onClick={fetchPrediction}
-                disabled={loading}
-                className="mt-4 w-full py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-400 hover:to-emerald-500"
-                data-testid="generate-tickets-btn"
-              >
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                Generate {numTickets} Ticket{numTickets > 1 ? 's' : ''}
-              </button>
-            </div>
-          )}
-        </div>
-        
-        {/* Stats */}
-        {stats?.total_draws > 0 && (
-          <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-            <h3 className="font-semibold mb-3">📊 Statistics ({stats.total_draws} draws)</h3>
-            
-            {stats.last_draw && (
-              <div className="mb-4">
-                <p className="text-xs text-slate-400 mb-1">Last Draw: {stats.last_draw.date}</p>
-                <div className="flex gap-2 items-center">
-                  {stats.last_draw.numbers?.map((n, i) => (
-                    <Ball key={i} number={n} size="sm" />
-                  ))}
-                  <span className="text-slate-500">+</span>
-                  {stats.last_draw.stars?.map((s, i) => (
-                    <StarBall key={i} number={s} size="sm" />
+              </div>
+            )}
+
+            {/* Patterns Used */}
+            {prediction && (
+              <div className="patterns-panel" data-testid="patterns-panel">
+                <h4>🔮 Patterns Applied</h4>
+                <div className="patterns-list">
+                  {prediction.tickets[0].patterns_used.map((pattern, i) => (
+                    <span key={i} className="pattern-tag">{pattern}</span>
                   ))}
                 </div>
               </div>
             )}
-            
-            {stats.hot_main && (
-              <div className="text-sm">
-                <span className="text-slate-400">Hot numbers: </span>
-                <span className="text-red-400">
-                  {stats.hot_main.slice(0, 5).map(([n]) => n).join(', ')}
-                </span>
+          </div>
+        )}
+
+        {/* History Tab */}
+        {activeTab === 'history' && (
+          <div className="history-section" data-testid="history-section">
+            <h2>Recent EuroMillions Draws</h2>
+            <div className="draws-list">
+              {draws.map((draw, idx) => (
+                <div key={idx} className="draw-card">
+                  <span className="draw-date">{draw.date}</span>
+                  <div className="draw-numbers">
+                    {draw.numbers.map((num, i) => (
+                      <span key={i} className="mini-ball main" style={{ background: getMainBallColor(num) }}>
+                        {num}
+                      </span>
+                    ))}
+                    <span className="mini-separator">+</span>
+                    {draw.stars.map((star, i) => (
+                      <span key={`s-${i}`} className="mini-ball star" style={{ background: STAR_COLOR }}>
+                        {star}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Analyze Tab */}
+        {activeTab === 'analyze' && (
+          <div className="analyze-section" data-testid="analyze-section">
+            <h2>Analyze Your Ticket</h2>
+            <div className="analyze-form">
+              <div className="input-group">
+                <label>Main Numbers (comma-separated)</label>
+                <input
+                  type="text"
+                  placeholder="e.g., 5, 12, 23, 34, 45"
+                  value={analyzeNumbers}
+                  onChange={(e) => setAnalyzeNumbers(e.target.value)}
+                  data-testid="analyze-numbers-input"
+                />
+              </div>
+              <div className="input-group">
+                <label>Star Numbers (comma-separated)</label>
+                <input
+                  type="text"
+                  placeholder="e.g., 3, 9"
+                  value={analyzeStars}
+                  onChange={(e) => setAnalyzeStars(e.target.value)}
+                  data-testid="analyze-stars-input"
+                />
+              </div>
+              <button className="analyze-btn" onClick={analyzeTicket} data-testid="analyze-btn">
+                🔍 Analyze Ticket
+              </button>
+            </div>
+
+            {analysisResult && (
+              <div className="analysis-result" data-testid="analysis-result">
+                <div className="analysis-header">
+                  <h3>Analysis Result</h3>
+                  <div className={`rating ${analysisResult.rating?.toLowerCase()}`}>
+                    {analysisResult.rating} ({analysisResult.score}/100)
+                  </div>
+                </div>
+                <div className="analyzed-numbers">
+                  {analysisResult.numbers?.map((num, i) => (
+                    <span key={i} className="mini-ball main" style={{ background: getMainBallColor(num) }}>
+                      {num}
+                    </span>
+                  ))}
+                  <span className="mini-separator">+</span>
+                  {analysisResult.stars?.map((star, i) => (
+                    <span key={`s-${i}`} className="mini-ball star" style={{ background: STAR_COLOR }}>
+                      {star}
+                    </span>
+                  ))}
+                </div>
+                <div className="insights-list">
+                  {analysisResult.insights?.map((insight, i) => (
+                    <div key={i} className="insight-item">{insight}</div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
         )}
-        
-        {/* No Data Message */}
-        {stats?.total_draws === 0 && (
-          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 text-center">
-            <Upload className="w-8 h-8 mx-auto mb-2 text-yellow-400" />
-            <p className="text-yellow-400 font-semibold">No Historical Data</p>
-            <p className="text-sm text-slate-400 mt-1">
-              Import EuroMillions draw history to enable pattern analysis
-            </p>
+
+        {/* Stats Tab */}
+        {activeTab === 'stats' && stats && (
+          <div className="stats-section" data-testid="stats-section">
+            <h2>Statistical Analysis</h2>
+            
+            <div className="stats-grid">
+              <div className="stat-card">
+                <h4>Total Draws Analyzed</h4>
+                <span className="stat-value">{stats.total_draws}</span>
+              </div>
+              <div className="stat-card">
+                <h4>Typical Sum Range</h4>
+                <span className="stat-value">{stats.sum_stats?.min} - {stats.sum_stats?.max}</span>
+                <span className="stat-sub">Avg: {stats.sum_stats?.avg}</span>
+              </div>
+              <div className="stat-card">
+                <h4>Consecutive Pair Rate</h4>
+                <span className="stat-value">{stats.consecutive_pair_rate}%</span>
+              </div>
+              <div className="stat-card">
+                <h4>Circle Partner Rate</h4>
+                <span className="stat-value">{stats.circle_partner_rate}%</span>
+              </div>
+            </div>
+
+            <div className="frequency-section">
+              <h3>Number Frequency (Top 15)</h3>
+              <div className="frequency-bars">
+                {stats.number_frequency && Object.entries(stats.number_frequency)
+                  .slice(0, 15)
+                  .map(([num, count]) => (
+                    <div key={num} className="freq-item">
+                      <span className="mini-ball main" style={{ background: getMainBallColor(parseInt(num)) }}>
+                        {num}
+                      </span>
+                      <div className="freq-bar">
+                        <div 
+                          className="freq-fill" 
+                          style={{ width: `${(count / stats.total_draws) * 100 * 5}%` }}
+                        />
+                      </div>
+                      <span className="freq-count">{count}</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            <div className="frequency-section">
+              <h3>Star Frequency</h3>
+              <div className="frequency-bars">
+                {stats.star_frequency && Object.entries(stats.star_frequency)
+                  .map(([num, count]) => (
+                    <div key={num} className="freq-item">
+                      <span className="mini-ball star" style={{ background: STAR_COLOR }}>
+                        {num}
+                      </span>
+                      <div className="freq-bar star">
+                        <div 
+                          className="freq-fill" 
+                          style={{ width: `${(count / (stats.total_draws * 2)) * 100 * 6}%` }}
+                        />
+                      </div>
+                      <span className="freq-count">{count}</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            <div className="distribution-section">
+              <h3>Odd/Even Distribution</h3>
+              <div className="distribution-chips">
+                {stats.odd_even_distribution && Object.entries(stats.odd_even_distribution)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([ratio, freq]) => (
+                    <div key={ratio} className="dist-chip">
+                      <span className="dist-ratio">{ratio}</span>
+                      <span className="dist-freq">{(freq * 100).toFixed(1)}%</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
           </div>
         )}
-        
-        {/* Footer */}
-        <footer className="text-center text-xs text-slate-500 py-4">
-          Good luck! Play responsibly 🍀
-        </footer>
       </main>
+
+      {/* Footer */}
+      <footer className="footer">
+        <p>Lucky Stars - EuroMillions Pattern Analyzer</p>
+        <p className="disclaimer">For entertainment purposes only. Gambling involves risk.</p>
+      </footer>
     </div>
   );
 }
