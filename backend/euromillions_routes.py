@@ -59,6 +59,89 @@ def get_full_circle(n: int) -> list:
             circle.append(current)
     return circle
 
+def get_hidden_groups(nums: list) -> dict:
+    """Find hidden groups in numbers - multiples, +10 family, etc."""
+    groups = {}
+    
+    # Check multiples of 7, 8, etc.
+    for base in [7, 8, 9]:
+        multiples = [n for n in nums if n % base == 0]
+        if len(multiples) >= 2:
+            # Find missing member
+            all_multiples = [base * i for i in range(1, 8) if base * i <= 50]
+            missing = [m for m in all_multiples if m not in nums]
+            groups[f"mult_{base}"] = {"present": multiples, "missing": missing[:3]}
+    
+    # Check +10 families (4-14-24-34-44, etc.)
+    for base in range(1, 11):
+        family = [base + 10*i for i in range(5) if base + 10*i <= 50]
+        present = [n for n in nums if n in family]
+        if len(present) >= 2:
+            missing = [n for n in family if n not in nums]
+            groups[f"fam10_{base}"] = {"present": present, "missing": missing}
+    
+    return groups
+
+def find_abc_pattern(nums: list) -> list:
+    """Find A + B = C patterns within the numbers"""
+    patterns = []
+    sorted_nums = sorted(nums)
+    for i, a in enumerate(sorted_nums):
+        for j, b in enumerate(sorted_nums):
+            if i < j:
+                c = a + b
+                if c in sorted_nums:
+                    patterns.append((a, b, c))
+    return patterns
+
+def find_difference_pattern(nums: list, target: int) -> list:
+    """Find A - B = target patterns"""
+    patterns = []
+    for a in nums:
+        for b in nums:
+            if a != b and a - b == target:
+                patterns.append((a, b))
+    return patterns
+
+def decode_hidden_number(n: int) -> dict:
+    """Decode hidden patterns in a number (like 49 → 490)"""
+    hidden = {
+        "original": n,
+        "with_zero": n * 10,
+        "digit_sum": sum(int(d) for d in str(n)),
+        "digit_product": 1,
+        "factors": []
+    }
+    # Digit product
+    for d in str(n):
+        if int(d) > 0:
+            hidden["digit_product"] *= int(d)
+    
+    # Find factor pairs for n*10
+    n10 = n * 10
+    for i in range(2, min(51, n10)):
+        if n10 % i == 0 and n10 // i <= 50:
+            hidden["factors"].append((i, n10 // i))
+    
+    return hidden
+
+def predict_p1p2_from_hidden(p3: int, p5: int) -> tuple:
+    """
+    Predict next P1P2 using the hidden pattern:
+    P5 as (P5*10) + P3 = P1P2 combined
+    """
+    hidden = p5 * 10  # 49 → 490
+    combined = hidden + p3  # 490 + 24 = 514
+    
+    # Split into P1 and P2
+    combined_str = str(combined)
+    if len(combined_str) >= 3:
+        p1 = int(combined_str[0])
+        p2 = int(combined_str[1:])
+        if 1 <= p1 <= 50 and 1 <= p2 <= 50:
+            return (p1, p2, combined)
+    return None
+
 
 class EuroMillionsPredictionRequest(BaseModel):
     birthday: Optional[str] = None
@@ -716,6 +799,64 @@ def create_euromillions_router(db):
                     if pos not in locked:
                         candidates[pos].extend([consec_base, consec_base + 1, consec_base + 2] * 2)
                 patterns_used.append(f"Consecutive Cluster ({consec_base}-{consec_base+2})")
+        
+        # NEW PATTERN 10: Hidden Groups (multiples, +10 family)
+        # When 2+ numbers from same group appear, missing member is significant
+        if draws:
+            recent_nums = draws[0]["numbers"]
+            hidden_groups = get_hidden_groups(recent_nums)
+            for group_name, group_info in hidden_groups.items():
+                if group_info["missing"]:
+                    # Add missing members as candidates
+                    for missing in group_info["missing"][:2]:
+                        for pos in range(5):
+                            if pos not in locked:
+                                candidates[pos].append(missing)
+                    patterns_used.append(f"Hidden Group ({group_name})")
+        
+        # NEW PATTERN 11: A + B = C (three numbers connected by addition)
+        if draws:
+            recent_nums = draws[0]["numbers"]
+            abc_patterns = find_abc_pattern(recent_nums)
+            if abc_patterns:
+                # Use these numbers as likely candidates
+                for a, b, c in abc_patterns:
+                    for pos in range(5):
+                        if pos not in locked:
+                            candidates[pos].extend([a, b, c])
+                patterns_used.append(f"A+B=C Pattern")
+        
+        # NEW PATTERN 12: P3 Prediction (P3 is most important!)
+        # Use previous P3 + hidden calculations
+        if draws:
+            recent = draws[0]["numbers"]
+            recent_sorted = sorted(recent)
+            prev_p3 = recent_sorted[2]  # P3 position
+            prev_p5 = recent_sorted[4]  # P5 position
+            
+            # P1P2 prediction from hidden (P5*10 + P3 = P1P2)
+            prediction = predict_p1p2_from_hidden(prev_p3, prev_p5)
+            if prediction:
+                p1, p2, combined = prediction
+                if 0 not in locked:
+                    candidates[0].extend([p1] * 3)  # Weight P1
+                if 1 not in locked:
+                    candidates[1].extend([p2] * 3)  # Weight P2
+                patterns_used.append(f"P1P2 Hidden ({prev_p5}0+{prev_p3}={combined})")
+        
+        # NEW PATTERN 13: Fibonacci Addition Connection
+        # Numbers that add to Fibonacci (5, 8, 13, 21, 34)
+        fib_nums = [5, 8, 13, 21, 34]
+        for fib in fib_nums:
+            for a in range(1, fib):
+                b = fib - a
+                if 1 <= b <= 50 and rnd.random() < 0.3:
+                    for pos in range(5):
+                        if pos not in locked:
+                            candidates[pos].append(a)
+                            candidates[pos].append(b)
+                    break
+        patterns_used.append("Fibonacci Addends")
         
         # Build final numbers
         final_numbers = [0] * 5
