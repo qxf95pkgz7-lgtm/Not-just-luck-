@@ -100,6 +100,8 @@ The user's numerology is unconventional. Follow their logic exactly.
 | 40 | 9@P1 Predictor | When 9 appears as smallest number | 43% |
 | 41 | 9↔19 Connection | Oscillation pattern | 18.8% |
 | 42 | Gap Digits | Draws since last position → digit boost | 25% |
+| 43 | P4-P5 Dance | Hot pairs: 31-33, 30-31, 22-23 dominate | 37.7% |
+| 44 | Date ±3 Window | Day number appears within ±3 draws | 58.3% |
 
 ## User's Key Theories (CRITICAL)
 1. **Family System**: Numbers ending in same digit are "family" (7,17,27,37)

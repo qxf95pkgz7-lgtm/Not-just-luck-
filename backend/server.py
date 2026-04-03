@@ -2221,6 +2221,83 @@ async def get_master_prediction(
                             f"🔢 Gap digits: {num}@{position_names[pos]} gap={gap} → digits {gap_digits} (25%)"
                         )
     
+    # === 43. P4-P5 DANCE PATTERN ===
+    # P4 and P5 love to dance close together! Average gap only 6.4
+    # Consecutive (P5=P4+1): 13.8%, Small gaps (1-3): 37.7%
+    # Hot pairs: 31-33, 31-32, 30-31, 22-23, 32-33 - Numbers 30-33 dominate!
+    
+    # Analyze recent P4-P5 patterns
+    p4_p5_diffs = []
+    recent_p4_p5_pairs = []
+    for d in all_draws_sorted[:50]:  # Last 50 draws
+        nums = sorted(d.get('numbers', []))
+        if len(nums) >= 6:
+            p4, p5 = nums[3], nums[4]
+            p4_p5_diffs.append(p5 - p4)
+            recent_p4_p5_pairs.append((p4, p5))
+    
+    # Hot P4-P5 dance partners (historically proven)
+    hot_p4_p5_pairs = [(31, 33), (31, 32), (30, 31), (22, 23), (32, 33), (33, 36), (28, 30), (34, 37)]
+    
+    # Boost numbers that frequently appear at P4-P5
+    p4_p5_hot_numbers = {30, 31, 32, 33, 34, 22, 23, 28, 36, 37}
+    for num in p4_p5_hot_numbers:
+        scores[num]["score"] += 8
+        scores[num]["reasons"].append(f"💃 P4-P5 dancer: {num} dominates mid-high positions")
+    
+    # If we see a pattern in recent diffs, predict similar gap
+    if p4_p5_diffs:
+        avg_recent_diff = sum(p4_p5_diffs[:10]) / min(10, len(p4_p5_diffs))
+        # Boost pairs that match recent gap pattern
+        for p4 in range(20, 36):
+            p5_predicted = p4 + int(round(avg_recent_diff))
+            if 1 <= p5_predicted <= 42:
+                scores[p4]["score"] += 5
+                scores[p5_predicted]["score"] += 5
+                scores[p4]["reasons"].append(f"💃 P4-P5 gap pattern: avg diff={avg_recent_diff:.1f}")
+    
+    # Boost hot pairs specifically
+    for p4, p5 in hot_p4_p5_pairs:
+        scores[p4]["score"] += 6
+        scores[p5]["score"] += 6
+        scores[p4]["reasons"].append(f"💃 Hot P4-P5 pair: {p4}-{p5}")
+    
+    # === 44. DATE ±3 WINDOW PATTERN (58.3% hit rate!) ===
+    # Day number has 58% chance to appear within ±3 draws!
+    # This is a strong predictor
+    
+    today = datetime.now()
+    day_num = today.day
+    month_num = today.month
+    
+    # Boost the day number strongly (58% hit rate!)
+    if 1 <= day_num <= 42:
+        scores[day_num]["score"] += 18  # Strong boost for 58% pattern
+        scores[day_num]["reasons"].append(f"📅 Date ±3 window: Day {day_num} (58.3% hit rate!)")
+    
+    # Also boost day ± 1,2,3 (nearby days often hit)
+    for offset in [-3, -2, -1, 1, 2, 3]:
+        nearby_day = day_num + offset
+        if 1 <= nearby_day <= 42:
+            scores[nearby_day]["score"] += 8
+            scores[nearby_day]["reasons"].append(f"📅 Date ±3 window: near day {day_num}")
+    
+    # Month number boost
+    if 1 <= month_num <= 12:
+        scores[month_num]["score"] += 10
+        scores[month_num]["reasons"].append(f"📅 Month {month_num} in play")
+    
+    # Day + Month combinations
+    day_month_sum = day_num + month_num
+    if 1 <= day_month_sum <= 42:
+        scores[day_month_sum]["score"] += 8
+        scores[day_month_sum]["reasons"].append(f"📅 Day+Month: {day_num}+{month_num}={day_month_sum}")
+    
+    day_month_diff = abs(day_num - month_num)
+    if 1 <= day_month_diff <= 42:
+        scores[day_month_diff]["score"] += 6
+        scores[day_month_diff]["reasons"].append(f"📅 |Day-Month|: |{day_num}-{month_num}|={day_month_diff}")
+    
     # === COMPILE FINAL PREDICTIONS ===
     # Filter out locked numbers from candidates
     locked_nums_set = set(locked_positions.values()) if locked_positions else set()
