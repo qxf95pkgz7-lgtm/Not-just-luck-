@@ -542,6 +542,28 @@ function App() {
     { name: "Jack Pulfer", birthday: "27/08/2015" }
   ];
   const [numTickets, setNumTickets] = useState(1);
+  const [oliviaKiss, setOliviaKiss] = useState(false);
+  const [showKissHearts, setShowKissHearts] = useState(false);
+
+  // Olivia's Kiss of Luck function
+  const giveKissOfLuck = () => {
+    setOliviaKiss(true);
+    setShowKissHearts(true);
+    
+    // Play "Ya man" sound
+    const utterance = new SpeechSynthesisUtterance("Ya man!");
+    utterance.rate = 0.8;
+    utterance.pitch = 0.7;
+    speechSynthesis.speak(utterance);
+    
+    // Reset after animation
+    setTimeout(() => {
+      setOliviaKiss(false);
+    }, 1500);
+    setTimeout(() => {
+      setShowKissHearts(false);
+    }, 2500);
+  };
 
   const maxLocks = lotteryMode === 'swiss' ? 4 : 3;
   const maxPositions = lotteryMode === 'swiss' ? 6 : 5;
@@ -811,7 +833,7 @@ function App() {
           </div>
           
           {/* Generate Button */}
-          <div className="text-center">
+          <div className="text-center space-y-3">
             <button 
               onClick={fetchPrediction}
               disabled={loading}
@@ -822,6 +844,41 @@ function App() {
               <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
               {loading ? '🤞 Finding Lucky Numbers...' : lotteryMode === 'swiss' ? '🍀 Get New Numbers 🍀' : '⭐ Get New Numbers ⭐'}
             </button>
+            
+            {/* Olivia's Kiss of Luck */}
+            <div className="relative inline-block">
+              <button
+                onClick={giveKissOfLuck}
+                className={`px-6 py-2 rounded-full font-bold text-sm transition-all duration-300 ${
+                  oliviaKiss 
+                    ? 'bg-gradient-to-r from-pink-500 to-red-500 text-white scale-110 shadow-lg shadow-pink-500/50' 
+                    : 'bg-gradient-to-r from-pink-600/30 to-red-600/30 text-pink-300 hover:from-pink-500/50 hover:to-red-500/50 border border-pink-500/30'
+                }`}
+                data-testid="olivia-kiss-btn"
+              >
+                💋 Olivia's Kiss of Luck 💋
+              </button>
+              
+              {/* Flying Hearts Animation */}
+              {showKissHearts && (
+                <div className="absolute inset-0 pointer-events-none overflow-visible">
+                  {[...Array(8)].map((_, i) => (
+                    <span
+                      key={i}
+                      className="absolute text-2xl animate-ping"
+                      style={{
+                        left: `${20 + Math.random() * 60}%`,
+                        top: `${Math.random() * 100}%`,
+                        animationDelay: `${i * 0.1}s`,
+                        animationDuration: '1s'
+                      }}
+                    >
+                      {['💋', '❤️', '💕', '💗'][i % 4]}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
