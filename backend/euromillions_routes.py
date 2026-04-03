@@ -339,10 +339,12 @@ def create_euromillions_router(db):
         return 0
     
     async def add_new_draws_if_needed():
-        """Add 2018-2020 data if not already present"""
+        """Add 2018-2020 and 2024-2026 data if not already present"""
+        added = 0
+        
+        # Add 2018-2020 data
         try:
             from euromillions_data_2018_2020 import EUROMILLIONS_DRAWS_2018_2020
-            # Check if we have 2018+ data
             check = await db.euromillions_draws.find_one({"date": {"$regex": "^..\\...\\.(2018|2019|2020)"}})
             if not check:
                 documents = [{
@@ -352,10 +354,27 @@ def create_euromillions_router(db):
                     "created_at": datetime.now(timezone.utc).isoformat()
                 } for d in EUROMILLIONS_DRAWS_2018_2020]
                 await db.euromillions_draws.insert_many(documents)
-                return len(documents)
+                added += len(documents)
         except ImportError:
             pass
-        return 0
+        
+        # Add 2024-2026 data
+        try:
+            from euromillions_data_2024_2026 import EUROMILLIONS_DRAWS_2024_2026
+            check = await db.euromillions_draws.find_one({"date": {"$regex": "^..\\...\\.(2024|2025|2026)"}})
+            if not check:
+                documents = [{
+                    "date": d["date"],
+                    "numbers": sorted(d["numbers"]),
+                    "stars": sorted(d["stars"]),
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                } for d in EUROMILLIONS_DRAWS_2024_2026]
+                await db.euromillions_draws.insert_many(documents)
+                added += len(documents)
+        except ImportError:
+            pass
+        
+        return added
     
     def pattern_position_frequency(draws, position):
         counts = Counter()
