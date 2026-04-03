@@ -26,10 +26,38 @@ FAMILIES = {
 }
 
 def get_circle_partner(n: int) -> int:
+    """Get +25 partner on the circle"""
     partner = n + 25
     if partner > MAX_NUMBER:
         partner -= MAX_NUMBER
     return partner
+
+def reverse_mod50(n: int) -> int:
+    """Reverse digits and mod 50"""
+    rev = int(str(n)[::-1])
+    if rev > 50:
+        rev = rev % 50
+        if rev == 0:
+            rev = 50
+    return rev
+
+def get_reverse_circle_partner(n: int) -> int:
+    """Get reverse circle partner: n+25 then reverse digits"""
+    plus25 = get_circle_partner(n)
+    return reverse_mod50(plus25)
+
+def get_full_circle(n: int) -> list:
+    """Get all numbers in n's circle: n → +25 → reverse → +25 → reverse..."""
+    circle = [n]
+    current = n
+    for i in range(5):
+        if i % 2 == 0:
+            current = get_circle_partner(current)
+        else:
+            current = reverse_mod50(current)
+        if current not in circle:
+            circle.append(current)
+    return circle
 
 
 class EuroMillionsPredictionRequest(BaseModel):
@@ -584,6 +612,31 @@ def create_euromillions_router(db):
         odd_even = pattern_odd_even_ratio(draws)
         best_ratio = max(odd_even.keys(), key=lambda x: odd_even.get(x, 0)) if odd_even else "3O-2E"
         patterns_used.append(f"Odd/Even ({best_ratio})")
+        
+        # Pattern 8: REVERSE CIRCLE (34.4% hit rate!) ⭐ NEW
+        # When a number appears, its reverse circle partner often follows
+        if draws:
+            recent_nums = draws[0]["numbers"]
+            reverse_partners = []
+            for n in recent_nums:
+                rev_partner = get_reverse_circle_partner(n)
+                if rev_partner not in recent_nums:
+                    reverse_partners.append(rev_partner)
+            if reverse_partners:
+                for pos in range(5):
+                    if pos not in locked:
+                        candidates[pos].extend(reverse_partners)
+                patterns_used.append("Reverse Circle (34.4%)")
+        
+        # Pattern 9: Full Circle Family
+        # Pick a starting number and include its full circle
+        if rnd.random() < 0.5:
+            seed = rnd.randint(1, 25)
+            circle = get_full_circle(seed)
+            for pos in range(5):
+                if pos not in locked:
+                    candidates[pos].extend(circle[:3])
+            patterns_used.append(f"Circle Family ({seed})")
         
         # Birthday Integration
         if birthday:
