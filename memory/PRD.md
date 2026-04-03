@@ -1,78 +1,63 @@
-# Lucky Jack - Swiss Lotto + EuroMillions Pattern Analyzer
+# Lucky Jack - Lottery Pattern Analyzer PRD
 
-## Overview
-Dual lottery pattern analyzer system featuring physics-based number generators with comprehensive numerology patterns.
-
-## What's Implemented (Updated: April 3, 2026)
-
-### Swiss Lotto "Lucky Jack" (Main App)
-- **Ball Machine**: 42 balls with gravity vs air jets physics, tube catching mechanism
-- **Ball Fall Animation**: After draw, balls fall back into dome dramatically
-- **Lucky Wheel**: Spinning wheel (1-6) with perspective angle
-- **51 Pattern Algorithms**: Master Predictor with all user-validated numerology patterns
-- **Lock Positions**: Lock 1-4 numbers at specific positions (P1-P6)
-- **Multiple Tickets**: Generate 1-20 tickets ranked by confidence
-- **Personalization**: Birthday and name-based predictions
-
-### EuroMillions "Lucky Stars" (NEW - API Integration)
-- **Format**: 5 main numbers (1-50) + 2 star numbers (1-12)
-- **Historical Data**: **1,067 draws** seeded from 2014-2026 (complete 12-year dataset!)
-- **API Endpoints**:
-  - `GET /api/euromillions/health` - Health check
-  - `GET /api/euromillions/draws` - Historical draws
-  - `GET /api/euromillions/stats` - Statistical analysis
-  - `POST /api/euromillions/master-predictor` - Generate predictions
-  - `GET /api/euromillions/analyze-ticket` - Analyze user tickets
-- **Patterns Adapted**: Position Frequency, Gap Analysis, Family Spread, Consecutive Pairs, Odd/Even, High/Low, Star patterns
-- **Price**: €2.50 per ticket
-
-## Tech Stack
-- React.js + Tailwind CSS (Frontend)
-- FastAPI + Motor (Backend)
-- MongoDB (Swiss Lotto: 1,380 draws, EuroMillions: 262 draws)
+## Original Problem Statement
+Build a Swiss Lotto Pattern Analyzer app with highly visual 42-billiard-ball spinning animations for predictions, custom numerology patterns, and probability scores. Additionally, create a brand new mode for EuroMillions (5 main numbers 1-50, 2 stars 1-12).
 
 ## Architecture
-```
-/app/
-├── backend/
-│   ├── server.py           # Main Swiss Lotto backend with 51 patterns
-│   ├── euromillions_routes.py  # EuroMillions API routes with 262 draws
-│   └── requirements.txt
-├── frontend/
-│   └── src/App.js          # Swiss Lotto UI
-├── euromillions/           # Scaffolded standalone EuroMillions app (future)
-│   ├── backend/
-│   └── frontend/
-└── memory/
-    ├── PRD.md
-    └── HANDOFF.md
-```
+- **Frontend**: React.js with animated ball machines, Tailwind CSS
+- **Backend**: FastAPI (Python) with pattern analysis algorithms
+- **Database**: MongoDB for historical draw storage
+- **Structure**: Unified monolithic backend with modular routes
 
-## API Routes Summary
+## User Personas
+1. **Casual Lottery Player** - Wants quick number suggestions with visual entertainment
+2. **Pattern Enthusiast** - Interested in numerology, birthdays, and number patterns
+3. **Multi-Ticket Player** - Generates multiple tickets ranked by confidence
 
-### Swiss Lotto (/api/*)
-- `GET /api/` - Root info
-- `GET /api/dashboard` - Dashboard stats
+## Core Requirements (Static)
+- Swiss Lotto: 6 numbers (1-42) + 1 lucky number (1-6)
+- EuroMillions: 5 numbers (1-50) + 2 stars (1-12)
+- Animated ball machine with physics simulation
+- Birthday/name personalization
+- Lock positions feature (up to 4 for Swiss, 3 for Euro)
+- Multi-ticket generation (1-20 tickets)
+- Historical data analysis
+
+## What's Been Implemented (Jan 2026)
+- [x] Swiss Lotto full implementation with 42-ball machine
+- [x] EuroMillions mode with 50-ball machine + 2 star wheels
+- [x] Mode toggle between Swiss Lotto and EuroMillions
+- [x] Birthday and name-based numerology integration
+- [x] Position locking feature
+- [x] Multi-ticket generation with confidence ranking
+- [x] Historical data seeding (1511 EuroMillions draws 2012-2026, 1380+ Swiss Lotto draws)
+- [x] Pattern analysis algorithms (frequency, gap, family spread, sum range, odd/even)
+- [x] Responsive animated UI with realistic ball physics
+
+## API Endpoints
+### Swiss Lotto
 - `GET /api/master-predictor` - Generate predictions
-- `GET /api/analyze-patterns` - Pattern analysis
+- `GET /api/dashboard` - Stats and analysis
 
-### EuroMillions (/api/euromillions/*)
-- `GET /api/euromillions/health` - Health check
-- `GET /api/euromillions/draws` - Historical draws
-- `GET /api/euromillions/stats` - Statistical analysis  
+### EuroMillions
 - `POST /api/euromillions/master-predictor` - Generate predictions
-- `GET /api/euromillions/analyze-ticket` - Analyze tickets
+- `GET /api/euromillions/stats` - Stats and analysis
+- `GET /api/euromillions/draws` - Historical draws
 
-## Next Tasks (P1)
-- Build EuroMillions frontend UI with ball machine (5 main balls + 2 star balls)
-- Add lottery selector to switch between Swiss Lotto and EuroMillions
-- Add sound effects for catches/rolls
+## Backlog (P0/P1/P2)
+### P0 (Next Priority)
+- None currently
 
-## Future Tasks (P2)
-- History/Saved Tickets feature
-- Compare generated vs actual results
-- Mobile responsive improvements
+### P1 (Medium Priority)
+- Sound effects for lottery machine and wheel
+- History/Saved Tickets feature to compare against results
 
-## Known Limitations
-- Preview URL API routing returns 404 (platform ingress issue)
-- Test via localhost:8001 for backend, localhost:3000 for frontend
+### P2 (Low Priority)
+- Delete abandoned `/app/euromillions/` directory (technical debt)
+- Additional lottery formats (Powerball, Mega Millions)
+- Ticket comparison tool
+
+## Next Tasks
+1. Monitor user feedback for UX improvements
+2. Consider adding sound effects for ball animations
+3. Implement ticket history/comparison feature
