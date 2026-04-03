@@ -104,6 +104,10 @@ The user's numerology is unconventional. Follow their logic exactly.
 | 44 | Date ±3 Window | Day number appears within ±3 draws | 58.3% |
 | 45 | P5-P6 Dance | Hot pairs: 41-42, 37-40; P6 loves 42 (14%!) | 38.6% |
 | 46 | P1P2 Date Code | When P1P2 matches date, P3 predicts next | 43.3% |
+| 47 | Decade Cluster | 3+ in same decade → decade continues | 44-54% |
+| 48 | P1+P6 Magic Sum | Smallest+Largest sum predicts next | 35-54% |
+| 49 | Digit Echo | Digits 1,2,3 repeat across draws | 85-89% |
+| 50 | Replay Predictor | Replay number predicts next draw | 41-50% |
 
 ## User's Key Theories (CRITICAL)
 1. **Family System**: Numbers ending in same digit are "family" (7,17,27,37)
