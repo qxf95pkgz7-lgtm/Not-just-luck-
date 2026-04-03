@@ -339,13 +339,29 @@ def create_euromillions_router(db):
         return 0
     
     async def add_new_draws_if_needed():
-        """Add 2018-2020, 2021-2023, and 2024-2026 data if not already present"""
+        """Add all missing data if not already present"""
         added = 0
+        
+        # Add 2016-2018 missing data (2017 full year + gaps)
+        try:
+            from euromillions_data_missing import EUROMILLIONS_DRAWS_MISSING
+            check = await db.euromillions_draws.find_one({"date": "03.01.2017"})
+            if not check:
+                documents = [{
+                    "date": d["date"],
+                    "numbers": sorted(d["numbers"]),
+                    "stars": sorted(d["stars"]),
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                } for d in EUROMILLIONS_DRAWS_MISSING]
+                await db.euromillions_draws.insert_many(documents)
+                added += len(documents)
+        except ImportError:
+            pass
         
         # Add 2018-2020 data
         try:
             from euromillions_data_2018_2020 import EUROMILLIONS_DRAWS_2018_2020
-            check = await db.euromillions_draws.find_one({"date": {"$regex": "^..\\...\\.(2018|2019|2020)"}})
+            check = await db.euromillions_draws.find_one({"date": "10.07.2018"})
             if not check:
                 documents = [{
                     "date": d["date"],
@@ -361,7 +377,7 @@ def create_euromillions_router(db):
         # Add 2021-2023 data
         try:
             from euromillions_data_2021_2023 import EUROMILLIONS_DRAWS_2021_2023
-            check = await db.euromillions_draws.find_one({"date": {"$regex": "^..\\...\\.(2021|2022|2023)"}})
+            check = await db.euromillions_draws.find_one({"date": "01.01.2021"})
             if not check:
                 documents = [{
                     "date": d["date"],
@@ -377,7 +393,7 @@ def create_euromillions_router(db):
         # Add 2024-2026 data
         try:
             from euromillions_data_2024_2026 import EUROMILLIONS_DRAWS_2024_2026
-            check = await db.euromillions_draws.find_one({"date": {"$regex": "^..\\...\\.(2024|2025|2026)"}})
+            check = await db.euromillions_draws.find_one({"date": "02.01.2024"})
             if not check:
                 documents = [{
                     "date": d["date"],
