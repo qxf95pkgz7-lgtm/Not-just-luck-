@@ -537,9 +537,9 @@ function App() {
   
   // Saved names for quick selection
   const savedNames = [
-    { name: "Patrick Pulfer", birthday: "16/06/1977" },
-    { name: "Samantha Pulfer", birthday: "04/01/1978" },
-    { name: "Jack Pulfer", birthday: "27/08/2015" }
+    { name: "Avi", birthday: "" },
+    { name: "Olivia", birthday: "" },
+    { name: "Dathi", birthday: "" }
   ];
   const [numTickets, setNumTickets] = useState(1);
   const [oliviaKiss, setOliviaKiss] = useState(false);
