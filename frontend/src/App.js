@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import "@/App.css";
 import axios from "axios";
 import { Sparkles, RefreshCw, ChevronDown, ChevronUp, Gift, Star, Globe, History, Trash2 } from "lucide-react";
@@ -537,9 +537,9 @@ function App() {
   
   // Saved names for quick selection
   const savedNames = [
-    { name: "Avi", birthday: "" },
-    { name: "Olivia", birthday: "" },
-    { name: "Dathi", birthday: "" }
+    { name: "Patrick Pulfer", birthday: "16/06/1977" },
+    { name: "Samantha Pulfer", birthday: "04/01/1978" },
+    { name: "Jack Pulfer", birthday: "27/08/2015" }
   ];
   const [numTickets, setNumTickets] = useState(1);
   const [oliviaKiss, setOliviaKiss] = useState(false);
@@ -549,92 +549,11 @@ function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState([]);
   const [historyStats, setHistoryStats] = useState(null);
-  const [soundEnabled, setSoundEnabled] = useState(true);
-
-  // Shared AudioContext for all sounds
-  const audioContextRef = useRef(null);
-  
-  // Initialize AudioContext on first user interaction
-  const getAudioContext = useCallback(() => {
-    if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    // Resume if suspended (browser autoplay policy)
-    if (audioContextRef.current.state === 'suspended') {
-      audioContextRef.current.resume();
-    }
-    return audioContextRef.current;
-  }, []);
-
-  // Sound effects using Web Audio API
-  const playSound = useCallback((type) => {
-    if (!soundEnabled) return;
-    
-    try {
-      const audioCtx = getAudioContext();
-      
-      const playTone = (freq, startTime, duration, volume = 0.3, waveType = 'sine') => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.type = waveType;
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + startTime);
-        gain.gain.setValueAtTime(volume, audioCtx.currentTime + startTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + startTime + duration);
-        osc.start(audioCtx.currentTime + startTime);
-        osc.stop(audioCtx.currentTime + startTime + duration);
-      };
-      
-      switch(type) {
-        case 'spin':
-          // Spinning wheel - whoosh sound
-          playTone(300, 0, 0.1, 0.4, 'sawtooth');
-          playTone(500, 0.05, 0.1, 0.3, 'sawtooth');
-          playTone(700, 0.1, 0.15, 0.2, 'sawtooth');
-          break;
-        case 'ball':
-          // Ball drop - bouncy pop
-          playTone(800, 0, 0.05, 0.5, 'square');
-          playTone(400, 0.05, 0.1, 0.4, 'triangle');
-          playTone(200, 0.1, 0.15, 0.3, 'sine');
-          break;
-        case 'lucky':
-          // Lucky number - magical sparkle
-          playTone(880, 0, 0.1, 0.3);      // A5
-          playTone(1108, 0.08, 0.1, 0.3);  // C#6
-          playTone(1318, 0.16, 0.2, 0.4);  // E6
-          break;
-        case 'complete':
-          // Jackpot jingle - triumphant!
-          playTone(523, 0, 0.15, 0.4);     // C5
-          playTone(659, 0.12, 0.15, 0.4);  // E5
-          playTone(784, 0.24, 0.15, 0.4);  // G5
-          playTone(1047, 0.36, 0.4, 0.5);  // C6 (hold longer)
-          break;
-        case 'kiss':
-          // Smooch - playful pop
-          playTone(500, 0, 0.05, 0.3);
-          playTone(300, 0.04, 0.08, 0.4);
-          playTone(600, 0.1, 0.1, 0.3);
-          break;
-        case 'click':
-          // Button click
-          playTone(600, 0, 0.03, 0.2, 'square');
-          break;
-        default:
-          break;
-      }
-    } catch (e) {
-      console.log('Sound error:', e);
-    }
-  }, [soundEnabled, getAudioContext]);
 
   // Olivia's Kiss of Luck function
   const giveKissOfLuck = () => {
     setOliviaKiss(true);
     setShowKissHearts(true);
-    playSound('kiss');
     
     // Play "Ya man" sound
     const utterance = new SpeechSynthesisUtterance("Ya man!");
@@ -671,7 +590,6 @@ function App() {
     try {
       setLoading(true);
       setWheelSpinning(false);
-      playSound('spin'); // Machine starting!
       
       const apiBase = lotteryMode === 'swiss' ? `${API}/master-predictor` : `${API}/euromillions/master-predictor`;
       let url = apiBase;
@@ -721,16 +639,7 @@ function App() {
         setPrediction(res.data);
       }
       
-      // Play ball sounds for each number
       const ballCount = lotteryMode === 'swiss' ? 6 : 5;
-      for (let i = 0; i < ballCount; i++) {
-        setTimeout(() => playSound('ball'), i * 300);
-      }
-      // Lucky/stars sound
-      setTimeout(() => playSound('lucky'), ballCount * 300 + 200);
-      // Complete jingle
-      setTimeout(() => playSound('complete'), ballCount * 300 + 600);
-      
       setTimeout(() => setWheelSpinning(true), ballCount * 2000);
     } catch (e) {
       console.error("Error:", e);
@@ -769,7 +678,7 @@ function App() {
     } finally {
       setLoading(false);
     }
-  }, [birthday, fullName, lockedPositions, numTickets, lotteryMode, playSound]);
+  }, [birthday, fullName, lockedPositions, numTickets, lotteryMode]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -886,7 +795,7 @@ function App() {
         <p className="text-slate-400 text-sm">{lotteryMode === 'swiss' ? 'Swiss Lotto' : 'EuroMillions'} Number Generator</p>
         
         {/* Lottery Mode Toggle */}
-        <div className="flex justify-center mt-4 gap-3 items-center">
+        <div className="flex justify-center mt-4">
           <div className="inline-flex rounded-full p-1" style={{ background: 'rgba(30,35,50,0.9)', border: '1px solid rgba(100,100,120,0.3)' }}>
             <button
               onClick={() => setLotteryMode('swiss')}
@@ -911,22 +820,6 @@ function App() {
               🇪🇺 EuroMillions
             </button>
           </div>
-          {/* Sound Toggle */}
-          <button
-            onClick={() => {
-              const newState = !soundEnabled;
-              setSoundEnabled(newState);
-              if (newState) {
-                // Play a test sound when enabling
-                setTimeout(() => playSound('click'), 50);
-              }
-            }}
-            className={`p-2 rounded-full transition-all ${soundEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700/50 text-slate-500'}`}
-            title={soundEnabled ? 'Sound ON' : 'Sound OFF'}
-            data-testid="sound-toggle"
-          >
-            {soundEnabled ? '🔊' : '🔇'}
-          </button>
         </div>
       </header>
 
@@ -1053,16 +946,6 @@ function App() {
                       {person.name.split(' ')[0]}
                     </button>
                   ))}
-                  {/* Clear Button */}
-                  {(fullName || birthday) && (
-                    <button
-                      onClick={() => { setFullName(''); setBirthday(''); }}
-                      className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30"
-                      data-testid="clear-personalize-btn"
-                    >
-                      ✕ Clear
-                    </button>
-                  )}
                 </div>
               </div>
               <div>
