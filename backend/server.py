@@ -2545,6 +2545,115 @@ async def get_master_prediction(
                 scores[41]["reasons"].append(f"📈 P4>33 → high P6 expected")
                 scores[40]["reasons"].append(f"📈 P4>33 → high P6 expected")
     
+    # === 52. MAGIC NUMBER PATTERN (17 & 38 - EuroMillions Bridge) ===
+    # When 17 or 38 appears in a draw, it's a "magic trigger"
+    # 17 + 21 = 38 (Circle partners) - the MAGIC PAIR
+    # 21 in Swiss = 71 in EuroMillions thinking → digits 7,1 = 17
+    # After 17 appears: digit 1 and 7 often appear next
+    # After 38 appears: digit 3 and 8 often appear next
+    # Magic + 21 together = TRIPLE CONNECTION (strongest signal!)
+    
+    if last_draw:
+        last_nums = last_draw.get('numbers', [])
+        has_17 = 17 in last_nums
+        has_38 = 38 in last_nums
+        has_21 = 21 in last_nums
+        
+        if has_17 or has_38:
+            # Magic trigger activated!
+            magic_type = "17+38" if (has_17 and has_38) else ("17" if has_17 else "38")
+            
+            if has_17 and has_38:
+                # DOUBLE MAGIC - both circle partners appeared!
+                # This is very rare - boost their digit echoes strongly
+                scores[1]["score"] += 20
+                scores[7]["score"] += 20
+                scores[3]["score"] += 20
+                scores[8]["score"] += 20
+                scores[1]["reasons"].append(f"✨✨ Double Magic 17+38! Digit 1 echo")
+                scores[7]["reasons"].append(f"✨✨ Double Magic 17+38! Digit 7 echo")
+                scores[3]["reasons"].append(f"✨✨ Double Magic 17+38! Digit 3 echo")
+                scores[8]["reasons"].append(f"✨✨ Double Magic 17+38! Digit 8 echo")
+                
+                # Also boost 17 and 38 family numbers
+                for n in [11, 21, 31, 41, 27, 37]:  # 7-family and 1-family
+                    if 1 <= n <= 42:
+                        scores[n]["score"] += 12
+                        scores[n]["reasons"].append(f"✨✨ Double Magic: 17 family")
+                for n in [13, 23, 33, 18, 28]:  # 3-family and 8-family
+                    if 1 <= n <= 42:
+                        scores[n]["score"] += 12
+                        scores[n]["reasons"].append(f"✨✨ Double Magic: 38 family")
+            
+            elif has_17:
+                # Magic 17 - boost digit echoes
+                scores[1]["score"] += 15
+                scores[7]["score"] += 15
+                scores[17]["score"] += 10  # 17 might repeat
+                scores[1]["reasons"].append(f"✨ Magic 17! Digit 1 echo")
+                scores[7]["reasons"].append(f"✨ Magic 17! Digit 7 echo")
+                scores[17]["reasons"].append(f"✨ Magic 17 might repeat")
+                
+                # 17's circle partner 38 is now activated
+                scores[38]["score"] += 12
+                scores[38]["reasons"].append(f"✨ Magic 17 → Circle 38 activated")
+            
+            elif has_38:
+                # Magic 38 - boost digit echoes
+                scores[3]["score"] += 15
+                scores[8]["score"] += 15
+                scores[38]["score"] += 10  # 38 might repeat
+                scores[3]["reasons"].append(f"✨ Magic 38! Digit 3 echo")
+                scores[8]["reasons"].append(f"✨ Magic 38! Digit 8 echo")
+                scores[38]["reasons"].append(f"✨ Magic 38 might repeat")
+                
+                # 38's circle partner 17 is now activated
+                scores[17]["score"] += 12
+                scores[17]["reasons"].append(f"✨ Magic 38 → Circle 17 activated")
+            
+            # TRIPLE CONNECTION: Magic + 21 together!
+            if has_21 and (has_17 or has_38):
+                # 21 = 71 in Euro thinking = digits 17!
+                # This is the BRIDGE between Swiss and EuroMillions
+                scores[21]["score"] += 18
+                scores[21]["reasons"].append(f"✨✨✨ TRIPLE: Magic + 21 (Euro bridge)")
+                
+                # 21's connections get boost
+                scores[12]["score"] += 15  # 21 reversed = 12
+                scores[12]["reasons"].append(f"✨✨✨ TRIPLE: 21↔12 reversal active")
+                
+                # Circle partners of 21
+                scores[42]["score"] += 12  # 21 + 21 = 42
+                scores[42]["reasons"].append(f"✨✨✨ TRIPLE: 21 circle to 42")
+            
+            # ESSENCE PREDICTION when magic appears
+            # Most common essences: E=9 (6x), E=8 (5x), E=10 (4x)
+            # Boost numbers that create these essences
+            magic_essences = [9, 8, 10]
+            for target_e in magic_essences:
+                # Numbers whose digit sum = target essence
+                for n in range(1, 43):
+                    if sum(int(d) for d in str(n)) == target_e:
+                        scores[n]["score"] += 6
+                        scores[n]["reasons"].append(f"✨ Magic essence E={target_e}")
+    
+    # Check for 12↔21 reversal pattern (the BRIDGE)
+    # This reversal appeared multiple times with magic numbers
+    if last_draw:
+        last_nums = last_draw.get('numbers', [])
+        if 12 in last_nums and 21 in last_nums:
+            # The reversal pair is present - strong magic signal!
+            scores[17]["score"] += 15
+            scores[38]["score"] += 15
+            scores[17]["reasons"].append(f"🔮 12↔21 reversal → Magic 17 likely")
+            scores[38]["reasons"].append(f"🔮 12↔21 reversal → Magic 38 likely")
+        elif 12 in last_nums:
+            scores[21]["score"] += 12
+            scores[21]["reasons"].append(f"🔮 12 present → 21 reversal likely")
+        elif 21 in last_nums:
+            scores[12]["score"] += 12
+            scores[12]["reasons"].append(f"🔮 21 present → 12 reversal likely")
+    
     # === COMPILE FINAL PREDICTIONS ===
     # Filter out locked numbers from candidates
     locked_nums_set = set(locked_positions.values()) if locked_positions else set()
@@ -2843,8 +2952,16 @@ async def get_master_prediction(
             "Historical at position",
             "Hot numbers",
             "Due numbers",
-            "Rare event counts"
-        ]
+            "Rare event counts",
+            "✨ Magic Number (17/38 EuroMillions Bridge)"
+        ],
+        "magic_status": {
+            "last_draw_magic": (17 in last_draw.get('numbers', []) or 38 in last_draw.get('numbers', [])) if last_draw else False,
+            "has_17": 17 in last_draw.get('numbers', []) if last_draw else False,
+            "has_38": 38 in last_draw.get('numbers', []) if last_draw else False,
+            "has_21": 21 in last_draw.get('numbers', []) if last_draw else False,
+            "triple_connection": (21 in last_draw.get('numbers', []) and (17 in last_draw.get('numbers', []) or 38 in last_draw.get('numbers', []))) if last_draw else False
+        }
     }
     
     if birthday_info:
