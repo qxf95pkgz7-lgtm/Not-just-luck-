@@ -37,6 +37,9 @@ Build a Swiss Lotto Pattern Analyzer app with highly visual 42-billiard-ball spi
 - [x] **Auto-seed on startup** - Database automatically populated with real historical draws when server starts (April 4, 2026)
 - [x] **Persona System** - Avi (crazy random), Olivia (+1 modifier), Dathi (+3 modifier) for number personalization (April 4, 2026)
 - [x] **Auto-fetch Lottery Results** - "Update Draws" button fetches latest EuroMillions from API + Swiss Lotto scraping (April 4, 2026)
+- [x] **Scheduled Auto-Sync** - APScheduler runs automatic syncs after each draw (April 4, 2026):
+  - 🇨🇭 Swiss Lotto: Wednesday & Saturday at 21:00 UTC
+  - 🇪🇺 EuroMillions: Tuesday & Friday at 21:00 UTC
 
 ### Pattern Engine (58 Patterns Total!)
 - [x] Patterns 1-52: Original numerology patterns (frequency, gap, family spread, sum range, odd/even, etc.)

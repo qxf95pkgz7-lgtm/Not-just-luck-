@@ -3478,6 +3478,36 @@ async def get_latest_external_results():
         "note": "Use POST /sync-results to save these to database"
     }
 
+@api_router.get("/sync-schedule")
+async def get_sync_schedule():
+    """
+    Get the auto-sync schedule status
+    Shows when the next automatic syncs will happen
+    """
+    from apscheduler.schedulers.asyncio import AsyncIOScheduler
+    jobs = []
+    
+    try:
+        for job in scheduler.get_jobs():
+            next_run = job.next_run_time.isoformat() if job.next_run_time else None
+            jobs.append({
+                "id": job.id,
+                "next_run": next_run,
+                "trigger": str(job.trigger)
+            })
+    except:
+        pass
+    
+    return {
+        "scheduler_running": scheduler.running if 'scheduler' in globals() else False,
+        "schedule": {
+            "swiss_lotto": "Wednesday & Saturday at 21:00 UTC (after 20:30 CET draws)",
+            "euromillions": "Tuesday & Friday at 21:00 UTC (after 20:30 CET draws)"
+        },
+        "jobs": jobs,
+        "note": "Draws are automatically fetched ~30 minutes after official draw times"
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 
@@ -3592,4 +3622,55 @@ async def startup_auto_seed():
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
+    # Stop the scheduler
+    if scheduler.running:
+        scheduler.shutdown()
     client.close()
+
+# ============ SCHEDULED AUTO-SYNC ============
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+from lottery_fetcher import auto_sync_all
+
+# Initialize the scheduler
+scheduler = AsyncIOScheduler()
+
+async def scheduled_sync_job():
+    """Background job to sync lottery results"""
+    logger.info("⏰ Scheduled sync triggered!")
+    try:
+        stats = await auto_sync_all(db)
+        if stats["total_new"] > 0:
+            logger.info(f"✅ Scheduled sync: Added {stats['total_new']} new draws!")
+        else:
+            logger.info("✅ Scheduled sync: No new draws found")
+    except Exception as e:
+        logger.error(f"❌ Scheduled sync error: {e}")
+
+# Schedule syncs after draw times (draws typically at 20:30-21:00 CET)
+# Swiss Lotto: Wednesday & Saturday at 21:30 CET
+# EuroMillions: Tuesday & Friday at 21:30 CET
+
+# Run sync at 22:00 CET (21:00 UTC in winter, 20:00 UTC in summer) to catch all results
+# Using UTC times for consistency
+
+# Tuesday 21:00 UTC - EuroMillions
+scheduler.add_job(scheduled_sync_job, CronTrigger(day_of_week='tue', hour=21, minute=0), id='euro_tuesday')
+# Wednesday 21:00 UTC - Swiss Lotto  
+scheduler.add_job(scheduled_sync_job, CronTrigger(day_of_week='wed', hour=21, minute=0), id='swiss_wednesday')
+# Friday 21:00 UTC - EuroMillions
+scheduler.add_job(scheduled_sync_job, CronTrigger(day_of_week='fri', hour=21, minute=0), id='euro_friday')
+# Saturday 21:00 UTC - Swiss Lotto
+scheduler.add_job(scheduled_sync_job, CronTrigger(day_of_week='sat', hour=21, minute=0), id='swiss_saturday')
+
+# Also run once at startup (30 seconds after start to let everything initialize)
+scheduler.add_job(scheduled_sync_job, 'date', run_date=datetime.now(timezone.utc).replace(microsecond=0) + __import__('datetime').timedelta(seconds=30), id='startup_sync')
+
+@app.on_event("startup")
+async def start_scheduler():
+    """Start the APScheduler when the app starts"""
+    scheduler.start()
+    logger.info("📅 Scheduler started - Auto-sync scheduled for:")
+    logger.info("   🇨🇭 Swiss Lotto: Wednesday & Saturday at 21:00 UTC")
+    logger.info("   🇪🇺 EuroMillions: Tuesday & Friday at 21:00 UTC")
+

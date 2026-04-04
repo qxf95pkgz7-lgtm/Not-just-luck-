@@ -1014,6 +1014,11 @@ function App() {
                 {syncResult.error || syncResult.message}
               </div>
             )}
+            
+            {/* Auto-sync schedule info */}
+            <p className="text-xs text-slate-500 mt-2 text-center">
+              📅 Auto-sync: Wed & Sat (Swiss), Tue & Fri (Euro) at 21:00 UTC
+            </p>
           </div>
         </div>
 
