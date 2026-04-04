@@ -3427,6 +3427,128 @@ async def get_prediction_stats():
         ) if history else 0
     }
 
+# === PROGRESSIVE PHASE PREDICTOR (Avi's Strategy) ===
+# Works in phases: every 20 CHF until 100 CHF, then reset
+# Phase 1: Core numbers
+# Phase 2-5: Keep 2 assumed correct + introduce NEW numbers
+
+@api_router.get("/progressive-predictor")
+async def get_progressive_prediction(
+    phase: int = 1,
+    core_num1: int = 3,
+    core_num2: int = 25,
+    num_tickets: int = 8
+):
+    """
+    PROGRESSIVE PHASE PREDICTOR - Avi's Strategy
+    
+    - Phase 1 (0-20 CHF): Core pattern numbers (3, 4, 9, 13, 25, 31)
+    - Phase 2 (20-40 CHF): Keep 2 correct (core_num1, core_num2) + NEW numbers
+    - Phase 3 (40-60 CHF): Same 2 + MORE new numbers
+    - Phase 4 (60-80 CHF): Same 2 + MORE new numbers  
+    - Phase 5 (80-100 CHF): Same 2 + remaining numbers
+    - At 100 CHF (Phase 6+): Reset to Phase 1
+    
+    Args:
+        phase: Current phase (1-5, resets after 5)
+        core_num1: First assumed correct number (default 3)
+        core_num2: Second assumed correct number (default 25)
+        num_tickets: Number of tickets to generate (default 8 = 20 CHF)
+    """
+    import random
+    
+    # Reset phase after 5
+    phase = ((phase - 1) % 5) + 1
+    
+    # Core numbers for Phase 1
+    phase1_core = [3, 4, 9, 13, 25, 31]
+    phase1_extras = [12, 18, 19, 21, 27, 30, 36, 38, 39, 40]
+    
+    # All numbers 1-42
+    all_numbers = set(range(1, 43))
+    
+    # Numbers used in Phase 1
+    phase1_used = set(phase1_core + phase1_extras)
+    
+    # New numbers not in Phase 1
+    new_numbers = sorted(all_numbers - phase1_used)
+    # [1, 2, 5, 6, 7, 8, 10, 11, 14, 15, 16, 17, 20, 22, 23, 24, 26, 28, 29, 32, 33, 34, 35, 37, 41, 42]
+    
+    # Split new numbers into 4 groups for phases 2-5
+    chunk_size = len(new_numbers) // 4
+    new_chunks = [
+        new_numbers[0:chunk_size+2],           # Phase 2
+        new_numbers[chunk_size:chunk_size*2+2], # Phase 3
+        new_numbers[chunk_size*2:chunk_size*3+2], # Phase 4
+        new_numbers[chunk_size*3:]              # Phase 5
+    ]
+    
+    tickets = []
+    lucky_numbers = [2, 3]  # Alternating lucky numbers
+    
+    if phase == 1:
+        # Phase 1: Use core numbers with variations
+        ticket_templates = [
+            [3, 4, 9, 13, 25, 31],      # Dream core
+            [3, 4, 9, 25, 31, 40],      # + Momentum
+            [3, 4, 13, 25, 31, 38],     # + 38 Zone
+            [3, 4, 9, 19, 25, 31],      # + SWAP 19
+            [3, 9, 13, 25, 31, 40],     # 3 leads
+            [3, 4, 12, 21, 25, 30],     # 3 multiples
+            [3, 9, 18, 25, 27, 36],     # 3-9 shadows
+            [3, 4, 9, 13, 31, 39],      # + 39
+            [3, 4, 13, 19, 25, 40],     # Mix
+            [3, 9, 13, 25, 38, 40],     # High zone
+        ]
+        
+        for i in range(min(num_tickets, len(ticket_templates))):
+            tickets.append({
+                "ticket_num": i + 1,
+                "numbers": sorted(ticket_templates[i]),
+                "lucky": lucky_numbers[i % 2],
+                "phase": 1,
+                "strategy": "Core Pattern"
+            })
+    else:
+        # Phases 2-5: Keep core_num1 & core_num2 + new numbers from chunk
+        chunk_idx = phase - 2  # 0, 1, 2, 3 for phases 2-5
+        available_new = new_chunks[chunk_idx] if chunk_idx < len(new_chunks) else new_numbers
+        
+        for i in range(num_tickets):
+            # Start with the 2 core numbers
+            ticket = [core_num1, core_num2]
+            
+            # Add 4 numbers from available new numbers
+            remaining = [n for n in available_new if n not in ticket]
+            random.shuffle(remaining)
+            ticket.extend(remaining[:4])
+            
+            # Rotate through available new numbers for variety
+            available_new = available_new[2:] + available_new[:2]
+            
+            tickets.append({
+                "ticket_num": i + 1,
+                "numbers": sorted(ticket),
+                "lucky": lucky_numbers[i % 2],
+                "phase": phase,
+                "strategy": f"Phase {phase}: Keep {core_num1}&{core_num2} + New"
+            })
+    
+    # Calculate total spent based on phase
+    total_spent = phase * 20  # Each phase is 20 CHF
+    reset_at = 100
+    
+    return {
+        "phase": phase,
+        "total_spent": f"{total_spent} CHF",
+        "reset_at": f"{reset_at} CHF",
+        "core_numbers": [core_num1, core_num2] if phase > 1 else phase1_core,
+        "tickets": tickets,
+        "next_phase": (phase % 5) + 1,
+        "instruction": f"Phase {phase}/5 - {'Core patterns' if phase == 1 else f'Keep {core_num1} & {core_num2} + explore new numbers'}",
+        "at_reset": phase >= 5
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 
