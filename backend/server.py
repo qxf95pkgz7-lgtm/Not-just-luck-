@@ -2654,6 +2654,186 @@ async def get_master_prediction(
             scores[12]["score"] += 12
             scores[12]["reasons"].append(f"🔮 21 present → 12 reversal likely")
     
+    # === 53. SHADOW NUMBER STRATEGY (Missing 9 Pattern) ===
+    # When a number is "missing" (avoided), boost its echoes instead:
+    # - Circle partner (+/- 21)
+    # - Multiples (×2, ×3, ×4)
+    # - Digit sum family
+    # - Neighborhood (±1)
+    # This is the "Shadow 9" strategy from our analysis
+    
+    def get_shadow_echoes(n):
+        """Get all echo numbers for a 'shadow' number we're avoiding"""
+        echoes = set()
+        # Circle partner
+        circle = n + 21 if n + 21 <= 42 else n - 21 if n - 21 >= 1 else None
+        if circle and 1 <= circle <= 42:
+            echoes.add((circle, f"circle {n}↔{circle}"))
+        # Multiples
+        for mult in [2, 3, 4]:
+            if 1 <= n * mult <= 42:
+                echoes.add((n * mult, f"×{mult}={n*mult}"))
+        # Digit sum family (numbers with same essence)
+        essence = sum(int(d) for d in str(n))
+        for x in range(1, 43):
+            if sum(int(d) for d in str(x)) == essence and x != n:
+                echoes.add((x, f"essence={essence}"))
+        # Neighborhood
+        if 1 <= n - 1 <= 42:
+            echoes.add((n - 1, f"neighbor-"))
+        if 1 <= n + 1 <= 42:
+            echoes.add((n + 1, f"neighbor+"))
+        return echoes
+    
+    # Check for "shadow" numbers - numbers that are overdue but we invoke via echoes
+    shadow_numbers = []
+    for num in range(1, 43):
+        gap = num_last_seen.get(num, 100)
+        if gap >= 20:  # Missing for 20+ draws = potential shadow
+            shadow_numbers.append((num, gap))
+    
+    # Boost shadows' echoes (especially 9 if missing long)
+    for shadow_num, gap in sorted(shadow_numbers, key=lambda x: x[1], reverse=True)[:3]:
+        echoes = get_shadow_echoes(shadow_num)
+        boost = min(20, gap // 3)
+        for echo_num, echo_type in echoes:
+            if echo_num != shadow_num:  # Don't boost the shadow itself
+                scores[echo_num]["score"] += boost
+                scores[echo_num]["reasons"].append(f"👻 Shadow {shadow_num} ({gap} gap): {echo_type}")
+    
+    # === 54. P6 MOMENTUM TRACKING ===
+    # When the same number appears at P6 (highest position) multiple times recently,
+    # it has "momentum" - either continue riding it or transform to its circle
+    
+    p6_counter = Counter()
+    for d in all_draws_sorted[:20]:  # Last 20 draws
+        nums = sorted(d.get('numbers', []))
+        if len(nums) >= 6:
+            p6_counter[nums[5]] += 1  # P6 = index 5
+    
+    # Find P6 with momentum (appeared 2+ times in last 20)
+    p6_momentum = [(num, count) for num, count in p6_counter.items() if count >= 2]
+    
+    for p6_num, count in p6_momentum:
+        # Boost the momentum number - INSERT AT FRONT for visibility
+        boost = count * 12  # Increased from count * 8
+        scores[p6_num]["score"] += boost
+        scores[p6_num]["reasons"].insert(0, f"🎯 P6 MOMENTUM: {p6_num} hit {count}x at P6 ({boost}%)")
+        
+        # Also boost its circle partner (transformation option)
+        p6_circle = p6_num + 21 if p6_num + 21 <= 42 else p6_num - 21 if p6_num - 21 >= 1 else None
+        if p6_circle and 1 <= p6_circle <= 42:
+            circle_boost = count * 10  # Increased from count * 6
+            scores[p6_circle]["score"] += circle_boost
+            scores[p6_circle]["reasons"].insert(0, f"🌀 P6 CIRCLE: {p6_num}↔{p6_circle} ({circle_boost}%)")
+    
+    # === 55. AIR PATTERN (P1+P2 Sum Analysis) ===
+    # When P1+P2 from recent draws sums to a specific value (like 20),
+    # boost that "Air" number and its family
+    # Air family: the sum, its factors, its circle, numbers that create it
+    
+    p1p2_sums = []
+    for d in all_draws_sorted[:10]:  # Last 10 draws
+        nums = sorted(d.get('numbers', []))
+        if len(nums) >= 2:
+            p1p2_sums.append(nums[0] + nums[1])
+    
+    # Find recurring P1+P2 sums
+    sum_counter = Counter(p1p2_sums)
+    air_numbers = [(s, c) for s, c in sum_counter.items() if c >= 2 and 1 <= s <= 42]
+    
+    for air_sum, count in air_numbers:
+        # Boost the Air number itself
+        scores[air_sum]["score"] += count * 10
+        scores[air_sum]["reasons"].append(f"💨 AIR: P1+P2={air_sum} appeared {count}x")
+        
+        # Air circle
+        air_circle = air_sum + 21 if air_sum + 21 <= 42 else air_sum - 21 if air_sum - 21 >= 1 else None
+        if air_circle and 1 <= air_circle <= 42:
+            scores[air_circle]["score"] += count * 8
+            scores[air_circle]["reasons"].append(f"💨 AIR circle: {air_sum}↔{air_circle}")
+        
+        # Numbers that sum to Air (P1+P2 candidates)
+        for a in range(1, min(air_sum, 22)):
+            b = air_sum - a
+            if 1 <= b <= 42 and a < b:
+                scores[a]["score"] += 4
+                scores[b]["score"] += 4
+                scores[a]["reasons"].append(f"💨 AIR pair: {a}+{b}={air_sum}")
+                scores[b]["reasons"].append(f"💨 AIR pair: {a}+{b}={air_sum}")
+    
+    # === 56. POSITION ANCHORS (Quarterly Repeat Detection) ===
+    # Detect numbers that repeat at specific positions in recent draws
+    # These become "anchors" with high confidence
+    
+    # Track position frequencies for P3, P4, P5, P6 in last quarter (~27 draws)
+    quarter_draws = all_draws_sorted[-27:] if len(all_draws_sorted) >= 27 else all_draws_sorted
+    
+    position_counters = {
+        3: Counter(),  # P3
+        4: Counter(),  # P4
+        5: Counter(),  # P5
+        6: Counter(),  # P6
+    }
+    
+    for d in quarter_draws:
+        nums = sorted(d.get('numbers', []))
+        if len(nums) >= 6:
+            position_counters[3][nums[2]] += 1
+            position_counters[4][nums[3]] += 1
+            position_counters[5][nums[4]] += 1
+            position_counters[6][nums[5]] += 1
+    
+    # Find position anchors (appeared 3+ times at same position)
+    position_names = {3: "P3", 4: "P4", 5: "P5", 6: "P6"}
+    for pos, counter in position_counters.items():
+        anchors = [(num, count) for num, count in counter.items() if count >= 3]
+        for anchor_num, count in anchors:
+            boost = count * 6
+            scores[anchor_num]["score"] += boost
+            scores[anchor_num]["reasons"].append(f"⚓ {position_names[pos]} anchor: {anchor_num} hit {count}x")
+    
+    # === 57. CIRCLE TRANSFORMATION STRATEGY ===
+    # For top scoring numbers, also boost their circle partners
+    # This creates the "RIDE vs SWAP" strategy options
+    
+    # Get current top 10 candidates
+    temp_ranked = sorted(scores.items(), key=lambda x: x[1]["score"], reverse=True)[:10]
+    
+    for num, data in temp_ranked:
+        if data["score"] >= 50:  # Only for strong candidates
+            circle = num + 21 if num + 21 <= 42 else num - 21 if num - 21 >= 1 else None
+            if circle and 1 <= circle <= 42:
+                # Add smaller boost to circle (transformation option)
+                circle_boost = min(15, data["score"] // 5)
+                scores[circle]["score"] += circle_boost
+                scores[circle]["reasons"].append(f"🔄 Circle of hot {num}: {num}↔{circle}")
+    
+    # === 58. DATE ESSENCE DOUBLING ===
+    # When date digits repeat (like 4/4), that essence is DOUBLED in power
+    # Boost that number and its entire family heavily
+    # INSERT AT BEGINNING of reasons list for visibility!
+    
+    today = datetime.now()
+    if today.day == today.month:  # Same day and month!
+        double_essence = today.day
+        
+        # Heavy boost to the doubled number - INSERT AT FRONT
+        if 1 <= double_essence <= 42:
+            scores[double_essence]["score"] += 50  # Increased from 25
+            scores[double_essence]["reasons"].insert(0, f"✨✨ DATE DOUBLE: {double_essence}/{double_essence}! (50%)")
+        
+        # Boost circle partner - INSERT AT FRONT
+        double_circle = double_essence + 21 if double_essence + 21 <= 42 else double_essence - 21
+        if 1 <= double_circle <= 42:
+            scores[double_circle]["score"] += 40  # Increased from 20
+            scores[double_circle]["reasons"].insert(0, f"✨✨ DATE DOUBLE circle: {double_essence}↔{double_circle} (40%)")
+        
+        # Boost family (numbers ending in that digit) - INSERT AT FRONT
+        for n in range(double_essence + 10, 43, 10):
+            scores[n]["score"] += 20  # Increased from 12
+            scores[n]["reasons"].insert(0, f"✨ DATE family: ends in {double_essence} (20%)")
+    
     # === COMPILE FINAL PREDICTIONS ===
     # Filter out locked numbers from candidates
     locked_nums_set = set(locked_positions.values()) if locked_positions else set()
@@ -2683,12 +2863,12 @@ async def get_master_prediction(
             for idx, (n, data), w in remaining:
                 cumulative += w
                 if r <= cumulative:
-                    selected.append({"number": n, "score": data["score"], "reasons": data["reasons"][:6]})
+                    selected.append({"number": n, "score": data["score"], "reasons": data["reasons"][:10]})
                     selected_indices.add(idx)
                     break
         generated_picks = selected
     else:
-        generated_picks = [{"number": n, "score": data["score"], "reasons": data["reasons"][:6]} for n, data in ranked[:positions_to_fill]]
+        generated_picks = [{"number": n, "score": data["score"], "reasons": data["reasons"][:10]} for n, data in ranked[:positions_to_fill]]
     
     # Build final 6-number array respecting locked positions
     # Position 0 = P1 (smallest), Position 5 = P6 (largest)

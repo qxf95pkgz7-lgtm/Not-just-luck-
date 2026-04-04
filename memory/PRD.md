@@ -23,7 +23,9 @@ Build a Swiss Lotto Pattern Analyzer app with highly visual 42-billiard-ball spi
 - Multi-ticket generation (1-20 tickets)
 - Historical data analysis
 
-## What's Been Implemented (Jan 2026)
+## What's Been Implemented (April 2026)
+
+### Core Features
 - [x] Swiss Lotto full implementation with 42-ball machine
 - [x] EuroMillions mode with 50-ball machine + 2 star wheels
 - [x] Mode toggle between Swiss Lotto and EuroMillions
@@ -31,15 +33,26 @@ Build a Swiss Lotto Pattern Analyzer app with highly visual 42-billiard-ball spi
 - [x] Position locking feature
 - [x] Multi-ticket generation with confidence ranking
 - [x] Historical data seeding (1511 EuroMillions draws 2012-2026, 1380+ Swiss Lotto draws)
-- [x] Pattern analysis algorithms (frequency, gap, family spread, sum range, odd/even)
 - [x] Responsive animated UI with realistic ball physics
-- [x] **NEW: Gap-6 Trigger Pattern** - When previous star gap=6, predicts extreme gaps (8-11)
-- [x] **NEW: Gap Oscillation Pattern** - Small gaps→mid gaps, large gaps→small gaps
-- [x] **NEW: Consecutive Cluster Pattern** - 63% of extreme gap draws have consecutive main numbers
+
+### Pattern Engine (58 Patterns Total!)
+- [x] Patterns 1-52: Original numerology patterns (frequency, gap, family spread, sum range, odd/even, etc.)
+- [x] **Pattern 53: Shadow Number Strategy** - Avoid numbers but boost their echoes (circle, multiples, essence)
+- [x] **Pattern 54: P6 Momentum Tracking** - Detect P6 repeats and boost momentum/circle swap
+- [x] **Pattern 55: Air Pattern (P1+P2 Sum)** - When P1+P2 sums to recurring values, boost that family
+- [x] **Pattern 56: Position Anchors** - Detect quarterly position repeats (P3, P4, P5, P6)
+- [x] **Pattern 57: Circle Transformation** - For hot numbers, also boost circle partners (RIDE vs SWAP)
+- [x] **Pattern 58: Date Essence Doubling** - Special boost when day==month (like 4/4)
+
+### Analysis Features (April 4, 2026 Session)
+- [x] Analyzed 40 appearing 6x at P6 in last 20 draws (MOMENTUM!)
+- [x] Missing 9 "Shadow" strategy - use echoes 18, 27, 30, 36 instead
+- [x] Air 20 pattern from P1+P2=20 analysis
+- [x] Date 4/4 special doubling
 
 ## API Endpoints
 ### Swiss Lotto
-- `GET /api/master-predictor` - Generate predictions
+- `GET /api/master-predictor` - Generate predictions with all 58 patterns
 - `GET /api/dashboard` - Stats and analysis
 
 ### EuroMillions
@@ -64,3 +77,8 @@ Build a Swiss Lotto Pattern Analyzer app with highly visual 42-billiard-ball spi
 1. Monitor user feedback for UX improvements
 2. Consider adding sound effects for ball animations
 3. Implement ticket history/comparison feature
+
+## Technical Notes
+- Pattern reasons now show 10 items (increased from 6) for visibility
+- New patterns use `insert(0, ...)` to show at top of reasons list
+- Date doubling: +50% for exact match, +40% for circle, +20% for family
