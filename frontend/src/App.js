@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import "@/App.css";
 import axios from "axios";
 import { Sparkles, RefreshCw, ChevronDown, ChevronUp, Gift, Star, Globe, History, Trash2 } from "lucide-react";
@@ -551,88 +551,84 @@ function App() {
   const [historyStats, setHistoryStats] = useState(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
+  // Shared AudioContext for all sounds
+  const audioContextRef = useRef(null);
+  
+  // Initialize AudioContext on first user interaction
+  const getAudioContext = useCallback(() => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    // Resume if suspended (browser autoplay policy)
+    if (audioContextRef.current.state === 'suspended') {
+      audioContextRef.current.resume();
+    }
+    return audioContextRef.current;
+  }, []);
+
   // Sound effects using Web Audio API
   const playSound = useCallback((type) => {
     if (!soundEnabled) return;
     
     try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
+      const audioCtx = getAudioContext();
       
-      oscillator.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
+      const playTone = (freq, startTime, duration, volume = 0.3, waveType = 'sine') => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = waveType;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + startTime);
+        gain.gain.setValueAtTime(volume, audioCtx.currentTime + startTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + startTime + duration);
+        osc.start(audioCtx.currentTime + startTime);
+        osc.stop(audioCtx.currentTime + startTime + duration);
+      };
       
       switch(type) {
         case 'spin':
-          // Spinning wheel sound - rising frequency
-          oscillator.type = 'sine';
-          oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
-          oscillator.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.3);
-          gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-          oscillator.start();
-          oscillator.stop(audioCtx.currentTime + 0.3);
+          // Spinning wheel - whoosh sound
+          playTone(300, 0, 0.1, 0.4, 'sawtooth');
+          playTone(500, 0.05, 0.1, 0.3, 'sawtooth');
+          playTone(700, 0.1, 0.15, 0.2, 'sawtooth');
           break;
         case 'ball':
-          // Ball drop - descending pop
-          oscillator.type = 'triangle';
-          oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
-          oscillator.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.15);
-          gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-          oscillator.start();
-          oscillator.stop(audioCtx.currentTime + 0.15);
+          // Ball drop - bouncy pop
+          playTone(800, 0, 0.05, 0.5, 'square');
+          playTone(400, 0.05, 0.1, 0.4, 'triangle');
+          playTone(200, 0.1, 0.15, 0.3, 'sine');
           break;
         case 'lucky':
-          // Lucky number - magical chime
-          oscillator.type = 'sine';
-          oscillator.frequency.setValueAtTime(523, audioCtx.currentTime); // C5
-          oscillator.frequency.setValueAtTime(659, audioCtx.currentTime + 0.1); // E5
-          oscillator.frequency.setValueAtTime(784, audioCtx.currentTime + 0.2); // G5
-          gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-          oscillator.start();
-          oscillator.stop(audioCtx.currentTime + 0.4);
+          // Lucky number - magical sparkle
+          playTone(880, 0, 0.1, 0.3);      // A5
+          playTone(1108, 0.08, 0.1, 0.3);  // C#6
+          playTone(1318, 0.16, 0.2, 0.4);  // E6
           break;
         case 'complete':
-          // Jackpot jingle!
-          const playNote = (freq, time, duration) => {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.type = 'sine';
-            osc.frequency.value = freq;
-            gain.gain.setValueAtTime(0.15, audioCtx.currentTime + time);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + time + duration);
-            osc.start(audioCtx.currentTime + time);
-            osc.stop(audioCtx.currentTime + time + duration);
-          };
-          // C-E-G-C (major chord arpeggio)
-          playNote(523, 0, 0.15);    // C5
-          playNote(659, 0.1, 0.15);  // E5
-          playNote(784, 0.2, 0.15);  // G5
-          playNote(1047, 0.3, 0.3);  // C6
+          // Jackpot jingle - triumphant!
+          playTone(523, 0, 0.15, 0.4);     // C5
+          playTone(659, 0.12, 0.15, 0.4);  // E5
+          playTone(784, 0.24, 0.15, 0.4);  // G5
+          playTone(1047, 0.36, 0.4, 0.5);  // C6 (hold longer)
           break;
         case 'kiss':
-          // Smooch sound
-          oscillator.type = 'sine';
-          oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
-          oscillator.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.08);
-          oscillator.frequency.exponentialRampToValueAtTime(500, audioCtx.currentTime + 0.12);
-          gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-          oscillator.start();
-          oscillator.stop(audioCtx.currentTime + 0.15);
+          // Smooch - playful pop
+          playTone(500, 0, 0.05, 0.3);
+          playTone(300, 0.04, 0.08, 0.4);
+          playTone(600, 0.1, 0.1, 0.3);
+          break;
+        case 'click':
+          // Button click
+          playTone(600, 0, 0.03, 0.2, 'square');
           break;
         default:
           break;
       }
     } catch (e) {
-      console.log('Sound not available');
+      console.log('Sound error:', e);
     }
-  }, [soundEnabled]);
+  }, [soundEnabled, getAudioContext]);
 
   // Olivia's Kiss of Luck function
   const giveKissOfLuck = () => {
@@ -917,7 +913,14 @@ function App() {
           </div>
           {/* Sound Toggle */}
           <button
-            onClick={() => setSoundEnabled(!soundEnabled)}
+            onClick={() => {
+              const newState = !soundEnabled;
+              setSoundEnabled(newState);
+              if (newState) {
+                // Play a test sound when enabling
+                setTimeout(() => playSound('click'), 50);
+              }
+            }}
             className={`p-2 rounded-full transition-all ${soundEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700/50 text-slate-500'}`}
             title={soundEnabled ? 'Sound ON' : 'Sound OFF'}
             data-testid="sound-toggle"
