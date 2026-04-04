@@ -549,11 +549,96 @@ function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState([]);
   const [historyStats, setHistoryStats] = useState(null);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
+  // Sound effects using Web Audio API
+  const playSound = useCallback((type) => {
+    if (!soundEnabled) return;
+    
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      
+      switch(type) {
+        case 'spin':
+          // Spinning wheel sound - rising frequency
+          oscillator.type = 'sine';
+          oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.3);
+          gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+          oscillator.start();
+          oscillator.stop(audioCtx.currentTime + 0.3);
+          break;
+        case 'ball':
+          // Ball drop - descending pop
+          oscillator.type = 'triangle';
+          oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.15);
+          gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+          oscillator.start();
+          oscillator.stop(audioCtx.currentTime + 0.15);
+          break;
+        case 'lucky':
+          // Lucky number - magical chime
+          oscillator.type = 'sine';
+          oscillator.frequency.setValueAtTime(523, audioCtx.currentTime); // C5
+          oscillator.frequency.setValueAtTime(659, audioCtx.currentTime + 0.1); // E5
+          oscillator.frequency.setValueAtTime(784, audioCtx.currentTime + 0.2); // G5
+          gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+          oscillator.start();
+          oscillator.stop(audioCtx.currentTime + 0.4);
+          break;
+        case 'complete':
+          // Jackpot jingle!
+          const playNote = (freq, time, duration) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime + time);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + time + duration);
+            osc.start(audioCtx.currentTime + time);
+            osc.stop(audioCtx.currentTime + time + duration);
+          };
+          // C-E-G-C (major chord arpeggio)
+          playNote(523, 0, 0.15);    // C5
+          playNote(659, 0.1, 0.15);  // E5
+          playNote(784, 0.2, 0.15);  // G5
+          playNote(1047, 0.3, 0.3);  // C6
+          break;
+        case 'kiss':
+          // Smooch sound
+          oscillator.type = 'sine';
+          oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.08);
+          oscillator.frequency.exponentialRampToValueAtTime(500, audioCtx.currentTime + 0.12);
+          gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+          oscillator.start();
+          oscillator.stop(audioCtx.currentTime + 0.15);
+          break;
+        default:
+          break;
+      }
+    } catch (e) {
+      console.log('Sound not available');
+    }
+  }, [soundEnabled]);
 
   // Olivia's Kiss of Luck function
   const giveKissOfLuck = () => {
     setOliviaKiss(true);
     setShowKissHearts(true);
+    playSound('kiss');
     
     // Play "Ya man" sound
     const utterance = new SpeechSynthesisUtterance("Ya man!");
@@ -590,6 +675,7 @@ function App() {
     try {
       setLoading(true);
       setWheelSpinning(false);
+      playSound('spin'); // Machine starting!
       
       const apiBase = lotteryMode === 'swiss' ? `${API}/master-predictor` : `${API}/euromillions/master-predictor`;
       let url = apiBase;
@@ -639,7 +725,16 @@ function App() {
         setPrediction(res.data);
       }
       
+      // Play ball sounds for each number
       const ballCount = lotteryMode === 'swiss' ? 6 : 5;
+      for (let i = 0; i < ballCount; i++) {
+        setTimeout(() => playSound('ball'), i * 300);
+      }
+      // Lucky/stars sound
+      setTimeout(() => playSound('lucky'), ballCount * 300 + 200);
+      // Complete jingle
+      setTimeout(() => playSound('complete'), ballCount * 300 + 600);
+      
       setTimeout(() => setWheelSpinning(true), ballCount * 2000);
     } catch (e) {
       console.error("Error:", e);
@@ -678,7 +773,7 @@ function App() {
     } finally {
       setLoading(false);
     }
-  }, [birthday, fullName, lockedPositions, numTickets, lotteryMode]);
+  }, [birthday, fullName, lockedPositions, numTickets, lotteryMode, playSound]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -795,7 +890,7 @@ function App() {
         <p className="text-slate-400 text-sm">{lotteryMode === 'swiss' ? 'Swiss Lotto' : 'EuroMillions'} Number Generator</p>
         
         {/* Lottery Mode Toggle */}
-        <div className="flex justify-center mt-4">
+        <div className="flex justify-center mt-4 gap-3 items-center">
           <div className="inline-flex rounded-full p-1" style={{ background: 'rgba(30,35,50,0.9)', border: '1px solid rgba(100,100,120,0.3)' }}>
             <button
               onClick={() => setLotteryMode('swiss')}
@@ -820,6 +915,15 @@ function App() {
               🇪🇺 EuroMillions
             </button>
           </div>
+          {/* Sound Toggle */}
+          <button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className={`p-2 rounded-full transition-all ${soundEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700/50 text-slate-500'}`}
+            title={soundEnabled ? 'Sound ON' : 'Sound OFF'}
+            data-testid="sound-toggle"
+          >
+            {soundEnabled ? '🔊' : '🔇'}
+          </button>
         </div>
       </header>
 
