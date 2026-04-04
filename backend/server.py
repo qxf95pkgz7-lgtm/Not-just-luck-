@@ -78,6 +78,23 @@ class AdvancedPatternData(BaseModel):
     cross_draw_connections: List[dict]  # Numbers combining across draws
     series_completions: List[dict]  # 10-11-12 + 34(13) = full series
 
+class PredictionHistory(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    lottery_type: str  # 'swiss' or 'euromillions'
+    target_draw_date: Optional[str] = None  # The draw date this prediction is for
+    numbers: List[int]
+    lucky_number: Optional[int] = None  # Swiss Lotto only
+    stars: Optional[List[int]] = None  # EuroMillions only
+    confidence: float = 0
+    top_reasons: List[str] = []
+    actual_numbers: Optional[List[int]] = None  # Filled in after draw
+    actual_lucky: Optional[int] = None
+    actual_stars: Optional[List[int]] = None
+    matches: Optional[int] = None  # How many numbers matched
+    lucky_match: Optional[bool] = None
+    stars_matched: Optional[int] = None
+
 # Helper functions
 def get_families(numbers: List[int]) -> List[int]:
     """Return which group each number belongs to: 1 (1-21) or 2 (22-42)"""
@@ -3161,6 +3178,40 @@ async def get_master_prediction(
         }
         result["patterns_used"].append("🔤 Name mode (20%)")
     
+    # === SAVE ALL TICKETS TO PREDICTION HISTORY ===
+    tickets_to_save = all_tickets if num_tickets > 1 else [{
+        "ticket_num": 1,
+        "numbers": sorted([t["number"] for t in top_6 if t]),
+        "details": top_6,
+        "confidence": round(avg_score, 1)
+    }]
+    
+    for ticket in tickets_to_save:
+        # Get top reasons from ticket details
+        top_reasons = []
+        for detail in ticket.get("details", [])[:3]:
+            if detail.get("reasons"):
+                top_reasons.append(f"{detail['number']}: {detail['reasons'][0][:50]}")
+        
+        history_doc = {
+            "id": str(uuid.uuid4()),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "lottery_type": "swiss",
+            "target_draw_date": None,  # Could be set based on next draw date
+            "numbers": ticket["numbers"],
+            "lucky_number": lucky_prediction,
+            "stars": None,
+            "confidence": ticket.get("confidence", 0),
+            "top_reasons": top_reasons,
+            "actual_numbers": None,
+            "actual_lucky": None,
+            "actual_stars": None,
+            "matches": None,
+            "lucky_match": None,
+            "stars_matched": None
+        }
+        await db.prediction_history.insert_one(history_doc)
+    
     return result
 
 @api_router.get("/predictions", response_model=PredictionData)
@@ -3230,6 +3281,151 @@ async def seed_data():
     await db.draws.insert_many(draws_data)
     
     return {"message": f"Seeded {len(draws_data)} draws successfully"}
+
+# === PREDICTION HISTORY ENDPOINTS ===
+
+@api_router.get("/prediction-history")
+async def get_prediction_history(limit: int = 100, lottery_type: str = None):
+    """Get prediction history with optional filtering"""
+    query = {}
+    if lottery_type:
+        query["lottery_type"] = lottery_type
+    
+    history = await db.prediction_history.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    # Calculate stats
+    total = len(history)
+    with_results = [h for h in history if h.get("matches") is not None]
+    
+    stats = {
+        "total_predictions": total,
+        "with_results": len(with_results),
+        "avg_matches": sum(h.get("matches", 0) for h in with_results) / len(with_results) if with_results else 0,
+        "perfect_matches": sum(1 for h in with_results if h.get("matches") == 6),
+        "lucky_matches": sum(1 for h in with_results if h.get("lucky_match")),
+    }
+    
+    return {
+        "history": history,
+        "stats": stats
+    }
+
+@api_router.post("/prediction-history/compare/{draw_date}")
+async def compare_predictions_to_draw(draw_date: str):
+    """Compare all predictions for a draw date with actual results"""
+    # Get the actual draw
+    actual_draw = await db.draws.find_one({"date": draw_date}, {"_id": 0})
+    if not actual_draw:
+        raise HTTPException(status_code=404, detail=f"No draw found for {draw_date}")
+    
+    actual_numbers = set(actual_draw.get("numbers", []))
+    actual_lucky = actual_draw.get("lucky_number")
+    
+    # Get all predictions that haven't been compared yet
+    # (predictions made before the draw date)
+    predictions = await db.prediction_history.find({
+        "lottery_type": "swiss",
+        "matches": None,
+        "created_at": {"$lt": draw_date + "T23:59:59"}
+    }, {"_id": 0}).to_list(1000)
+    
+    results = []
+    for pred in predictions:
+        pred_numbers = set(pred.get("numbers", []))
+        matches = len(pred_numbers & actual_numbers)
+        lucky_match = pred.get("lucky_number") == actual_lucky if actual_lucky else None
+        
+        # Update the prediction with results
+        await db.prediction_history.update_one(
+            {"id": pred["id"]},
+            {"$set": {
+                "actual_numbers": list(actual_numbers),
+                "actual_lucky": actual_lucky,
+                "matches": matches,
+                "lucky_match": lucky_match
+            }}
+        )
+        
+        results.append({
+            "id": pred["id"],
+            "predicted": pred.get("numbers"),
+            "actual": list(actual_numbers),
+            "matches": matches,
+            "lucky_match": lucky_match
+        })
+    
+    return {
+        "draw_date": draw_date,
+        "actual_numbers": list(actual_numbers),
+        "actual_lucky": actual_lucky,
+        "predictions_compared": len(results),
+        "results": results,
+        "summary": {
+            "avg_matches": sum(r["matches"] for r in results) / len(results) if results else 0,
+            "best_match": max(r["matches"] for r in results) if results else 0,
+            "with_3_plus": sum(1 for r in results if r["matches"] >= 3),
+            "with_4_plus": sum(1 for r in results if r["matches"] >= 4),
+            "with_5_plus": sum(1 for r in results if r["matches"] >= 5),
+        }
+    }
+
+@api_router.delete("/prediction-history/clear")
+async def clear_prediction_history():
+    """Clear all prediction history"""
+    result = await db.prediction_history.delete_many({})
+    return {"message": f"Deleted {result.deleted_count} predictions"}
+
+@api_router.get("/prediction-history/stats")
+async def get_prediction_stats():
+    """Get detailed statistics about prediction accuracy"""
+    history = await db.prediction_history.find({"matches": {"$ne": None}}, {"_id": 0}).to_list(10000)
+    
+    if not history:
+        return {"message": "No compared predictions yet", "stats": {}}
+    
+    # Number frequency in predictions vs actual matches
+    predicted_freq = Counter()
+    matched_freq = Counter()
+    
+    for h in history:
+        for num in h.get("numbers", []):
+            predicted_freq[num] += 1
+        for num in h.get("numbers", []):
+            if num in h.get("actual_numbers", []):
+                matched_freq[num] += 1
+    
+    # Calculate hit rate per number
+    number_stats = {}
+    for num in range(1, 43):
+        predicted = predicted_freq.get(num, 0)
+        matched = matched_freq.get(num, 0)
+        hit_rate = (matched / predicted * 100) if predicted > 0 else 0
+        number_stats[num] = {
+            "predicted": predicted,
+            "matched": matched,
+            "hit_rate": round(hit_rate, 1)
+        }
+    
+    # Best performing numbers (by hit rate, min 10 predictions)
+    best_numbers = sorted(
+        [(n, s) for n, s in number_stats.items() if s["predicted"] >= 10],
+        key=lambda x: x[1]["hit_rate"],
+        reverse=True
+    )[:10]
+    
+    # Match distribution
+    match_dist = Counter(h.get("matches", 0) for h in history)
+    
+    return {
+        "total_predictions": len(history),
+        "match_distribution": {str(k): v for k, v in sorted(match_dist.items())},
+        "avg_matches": round(sum(h.get("matches", 0) for h in history) / len(history), 2),
+        "best_numbers": [{"number": n, **s} for n, s in best_numbers],
+        "worst_numbers": [{"number": n, **s} for n, s in best_numbers[-10:]],
+        "lucky_accuracy": round(
+            sum(1 for h in history if h.get("lucky_match")) / len(history) * 100, 1
+        ) if history else 0
+    }
 
 # Include the router in the main app
 app.include_router(api_router)

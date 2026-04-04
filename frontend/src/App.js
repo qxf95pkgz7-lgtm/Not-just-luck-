@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import "@/App.css";
 import axios from "axios";
-import { Sparkles, RefreshCw, ChevronDown, ChevronUp, Gift, Star, Globe } from "lucide-react";
+import { Sparkles, RefreshCw, ChevronDown, ChevronUp, Gift, Star, Globe, History, Trash2 } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -546,6 +546,9 @@ function App() {
   const [showKissHearts, setShowKissHearts] = useState(false);
   const [updateLoading, setUpdateLoading] = useState(false);
   const [updateMessage, setUpdateMessage] = useState('');
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [historyStats, setHistoryStats] = useState(null);
 
   // Olivia's Kiss of Luck function
   const giveKissOfLuck = () => {
@@ -687,6 +690,28 @@ function App() {
     }
   }, [lotteryMode]);
 
+  const fetchHistory = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API}/prediction-history?limit=50&lottery_type=${lotteryMode === 'swiss' ? 'swiss' : 'euromillions'}`);
+      setHistory(res.data.history || []);
+      setHistoryStats(res.data.stats || null);
+    } catch (e) {
+      console.error("Error fetching history:", e);
+    }
+  }, [lotteryMode]);
+
+  const clearHistory = async () => {
+    if (window.confirm('Clear all prediction history?')) {
+      try {
+        await axios.delete(`${API}/prediction-history/clear`);
+        setHistory([]);
+        setHistoryStats(null);
+      } catch (e) {
+        console.error("Error clearing history:", e);
+      }
+    }
+  };
+
   useEffect(() => {
     fetchStats();
     const fetchInitial = async () => {
@@ -737,7 +762,15 @@ function App() {
     setShowBonus(false);
     setShowMultiTickets(false);
     setWheelSpinning(false);
+    setShowHistory(false);
   }, [lotteryMode]);
+
+  // Fetch history when showing it
+  useEffect(() => {
+    if (showHistory) {
+      fetchHistory();
+    }
+  }, [showHistory, fetchHistory]);
 
   return (
     <div className="min-h-screen pb-10">
@@ -1165,6 +1198,82 @@ function App() {
             )}
           </div>
         )}
+
+        {/* Prediction History */}
+        <div className="lucky-card p-4 mb-4" style={lotteryMode === 'euro' ? { background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(2,6,23,0.98) 100%)', borderColor: 'rgba(59,130,246,0.3)' } : {}}>
+          <div className="flex items-center justify-between cursor-pointer" onClick={() => setShowHistory(!showHistory)}>
+            <span className="font-semibold text-slate-200 flex items-center gap-2">
+              <History className={`w-4 h-4 ${lotteryMode === 'swiss' ? 'text-amber-400' : 'text-blue-400'}`} /> Prediction History
+              {historyStats?.total_predictions > 0 && (
+                <span className="text-xs text-slate-500">({historyStats.total_predictions})</span>
+              )}
+            </span>
+            {showHistory ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+          </div>
+          
+          {showHistory && (
+            <div className="mt-4">
+              {/* Stats summary */}
+              {historyStats && historyStats.total_predictions > 0 && (
+                <div className="flex justify-between items-center mb-3 text-xs text-slate-400">
+                  <span>📊 {historyStats.total_predictions} predictions saved</span>
+                  <button 
+                    onClick={clearHistory}
+                    className="flex items-center gap-1 text-red-400 hover:text-red-300 transition-colors"
+                  >
+                    <Trash2 className="w-3 h-3" /> Clear
+                  </button>
+                </div>
+              )}
+              
+              {/* History list */}
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+                {history.length === 0 ? (
+                  <div className="text-center text-slate-500 text-sm py-4">
+                    No predictions yet. Generate some!
+                  </div>
+                ) : (
+                  history.map((h, idx) => (
+                    <div 
+                      key={h.id || idx}
+                      className={`p-2 rounded-lg text-xs ${
+                        lotteryMode === 'swiss'
+                          ? 'bg-gradient-to-r from-amber-500/10 to-amber-600/5 border border-amber-500/20'
+                          : 'bg-gradient-to-r from-blue-500/10 to-blue-600/5 border border-blue-500/20'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-slate-500">
+                          {new Date(h.created_at).toLocaleDateString()} {new Date(h.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </span>
+                        <span className={`font-medium ${lotteryMode === 'swiss' ? 'text-amber-400' : 'text-blue-400'}`}>
+                          {h.confidence?.toFixed(0)}%
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 flex-wrap">
+                        {h.numbers?.map((n, i) => (
+                          <Ball key={i} number={n} size="xs" maxNum={lotteryMode === 'swiss' ? 42 : 50} />
+                        ))}
+                        {h.lucky_number && lotteryMode === 'swiss' && (
+                          <span className="ml-2 text-amber-400">🍀 {h.lucky_number}</span>
+                        )}
+                        {h.stars && lotteryMode === 'euro' && (
+                          <span className="ml-2 text-yellow-400">⭐ {h.stars.join(', ')}</span>
+                        )}
+                      </div>
+                      {h.matches !== null && h.matches !== undefined && (
+                        <div className="mt-1 text-emerald-400">
+                          ✓ {h.matches} match{h.matches !== 1 ? 'es' : ''}
+                          {h.lucky_match && ' + Lucky!'}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Footer */}
         <div className="text-center text-slate-500 text-xs mt-6 pb-4">
