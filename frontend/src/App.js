@@ -535,11 +535,13 @@ function App() {
   const [fullName, setFullName] = useState("");
   const [lockedPositions, setLockedPositions] = useState({ p1: "", p2: "", p3: "", p4: "", p5: "", p6: "" });
   
-  // Saved names for quick selection
-  const savedNames = [
-    { name: "Patrick Pulfer", birthday: "16/06/1977" },
-    { name: "Samantha Pulfer", birthday: "04/01/1978" },
-    { name: "Jack Pulfer", birthday: "27/08/2015" }
+  // Special personas with unique number modifiers
+  // Avi = adds a "crazy" wild number, Olivia = +1 modifier, Dathi = +3 modifier
+  const [activePersona, setActivePersona] = useState(null);
+  const personas = [
+    { name: "Avi", modifier: "crazy", description: "Adds wild crazy number" },
+    { name: "Olivia", modifier: "+1", description: "Adds +1 to numbers" },
+    { name: "Dathi", modifier: "+3", description: "Adds +3 to numbers" }
   ];
   const [numTickets, setNumTickets] = useState(1);
   const [oliviaKiss, setOliviaKiss] = useState(false);
@@ -586,6 +588,49 @@ function App() {
 
   const getLockedCount = () => Object.values(lockedPositions).filter(v => v !== "").length;
 
+  // Apply persona modifiers to prediction numbers
+  const applyPersonaModifier = (numbers, persona, maxNum) => {
+    if (!persona) return numbers;
+    
+    let modified = [...numbers];
+    
+    if (persona === "Avi") {
+      // Avi adds a "crazy" wild number - pick a number NOT in the prediction
+      const crazyOptions = [];
+      for (let i = 1; i <= maxNum; i++) {
+        if (!modified.includes(i)) crazyOptions.push(i);
+      }
+      // Pick a truly random crazy number and swap it with one position
+      if (crazyOptions.length > 0) {
+        const crazyNum = crazyOptions[Math.floor(Math.random() * crazyOptions.length)];
+        const swapIdx = Math.floor(Math.random() * modified.length);
+        modified[swapIdx] = crazyNum;
+      }
+    } else if (persona === "Olivia") {
+      // Olivia adds +1 to each number (wrap around max)
+      modified = modified.map(n => {
+        let newN = n + 1;
+        if (newN > maxNum) newN = 1;
+        return newN;
+      });
+    } else if (persona === "Dathi") {
+      // Dathi adds +3 to each number (wrap around max)
+      modified = modified.map(n => {
+        let newN = n + 3;
+        if (newN > maxNum) newN = newN - maxNum;
+        return newN;
+      });
+    }
+    
+    // Ensure no duplicates and sort
+    const unique = [...new Set(modified)];
+    while (unique.length < numbers.length) {
+      const extra = Math.floor(Math.random() * maxNum) + 1;
+      if (!unique.includes(extra)) unique.push(extra);
+    }
+    return unique.sort((a, b) => a - b);
+  };
+
   const fetchPrediction = useCallback(async () => {
     try {
       setLoading(true);
@@ -622,21 +667,30 @@ function App() {
       // Transform EuroMillions response format
       if (lotteryMode === 'euro' && res.data.tickets) {
         const mainTicket = res.data.tickets[0];
+        const maxNum = 50;
         const transformed = {
-          main_prediction: mainTicket.numbers,
+          main_prediction: applyPersonaModifier(mainTicket.numbers, activePersona, maxNum),
           stars_prediction: mainTicket.stars,
           average_confidence: Math.round(mainTicket.confidence * 100),
           alternate_numbers: res.data.tickets.length > 1 ? res.data.tickets[1].numbers : [3, 11, 19, 27, 33],
           all_tickets: res.data.tickets.map((t, i) => ({
             ticket_num: i + 1,
-            numbers: t.numbers,
+            numbers: applyPersonaModifier(t.numbers, activePersona, maxNum),
             stars: t.stars,
             confidence: Math.round(t.confidence * 100)
-          }))
+          })),
+          persona_applied: activePersona
         };
         setPrediction(transformed);
       } else {
-        setPrediction(res.data);
+        // Swiss Lotto
+        const maxNum = 42;
+        const modifiedData = {
+          ...res.data,
+          main_prediction: applyPersonaModifier(res.data.main_prediction, activePersona, maxNum),
+          persona_applied: activePersona
+        };
+        setPrediction(modifiedData);
       }
       
       const ballCount = lotteryMode === 'swiss' ? 6 : 5;
@@ -678,7 +732,7 @@ function App() {
     } finally {
       setLoading(false);
     }
-  }, [birthday, fullName, lockedPositions, numTickets, lotteryMode]);
+  }, [birthday, fullName, lockedPositions, numTickets, lotteryMode, activePersona]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -926,27 +980,36 @@ function App() {
           
           {showPersonal && (
             <div className="mt-4 space-y-3">
-              {/* Quick Select Names */}
+              {/* Persona Selection - Special modifiers */}
               <div>
-                <label className="text-xs text-slate-400 mb-2 block">Quick Select</label>
+                <label className="text-xs text-slate-400 mb-2 block">Choose Your Lucky Persona ✨</label>
                 <div className="flex flex-wrap gap-2">
-                  {savedNames.map((person, idx) => (
+                  {personas.map((persona, idx) => (
                     <button
                       key={idx}
-                      onClick={() => { setFullName(person.name); setBirthday(person.birthday); }}
+                      onClick={() => {
+                        setActivePersona(activePersona === persona.name ? null : persona.name);
+                        setFullName(persona.name);
+                      }}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                        fullName === person.name 
+                        activePersona === persona.name 
                           ? lotteryMode === 'swiss' 
-                            ? 'bg-amber-500 text-gray-900' 
-                            : 'bg-blue-500 text-white'
+                            ? 'bg-amber-500 text-gray-900 ring-2 ring-amber-300' 
+                            : 'bg-blue-500 text-white ring-2 ring-blue-300'
                           : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600'
                       }`}
-                      data-testid={`quick-name-${idx}`}
+                      data-testid={`persona-${persona.name.toLowerCase()}`}
+                      title={persona.description}
                     >
-                      {person.name.split(' ')[0]}
+                      {persona.name} <span className="opacity-70">({persona.modifier})</span>
                     </button>
                   ))}
                 </div>
+                {activePersona && (
+                  <p className="text-xs text-amber-400 mt-1">
+                    {personas.find(p => p.name === activePersona)?.description}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="text-xs text-slate-400 mb-1 block">Birthday</label>
