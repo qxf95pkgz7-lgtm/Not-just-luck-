@@ -775,7 +775,11 @@ def get_date_patterns(last_draw):
         return patterns
     
     last_date = last_draw['date']
-    y, m, d = last_date.split('-')
+    # Handle both DD.MM.YYYY and YYYY-MM-DD formats
+    if '.' in last_date:
+        d, m, y = last_date.split('.')
+    else:
+        y, m, d = last_date.split('-')
     last_day = int(d)
     last_month = int(m)
     day_plus_month = last_day + last_month
