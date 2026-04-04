@@ -3431,6 +3431,53 @@ async def get_prediction_stats():
         ) if history else 0
     }
 
+# ============ AUTO-FETCH LOTTERY RESULTS ============
+from lottery_fetcher import auto_sync_all, sync_euromillions_to_db, sync_swisslotto_to_db, fetch_euromillions_latest
+
+@api_router.post("/sync-results")
+async def sync_lottery_results():
+    """
+    Manually trigger sync of latest lottery results from external sources
+    - EuroMillions: Fetches from free API (euromillions.api.pedromealha.dev)
+    - Swiss Lotto: Scrapes from lottoland.com / swisslos.ch
+    """
+    stats = await auto_sync_all(db)
+    return {
+        "message": f"Sync complete! Added {stats['total_new']} new draws",
+        "details": stats
+    }
+
+@api_router.post("/sync-euromillions")
+async def sync_euromillions_only():
+    """Sync only EuroMillions results"""
+    stats = await sync_euromillions_to_db(db, limit=50)
+    return {
+        "message": f"EuroMillions sync complete! Added {stats['new']} new draws",
+        "stats": stats
+    }
+
+@api_router.post("/sync-swisslotto")
+async def sync_swisslotto_only():
+    """Sync only Swiss Lotto results"""
+    stats = await sync_swisslotto_to_db(db, limit=50)
+    return {
+        "message": f"Swiss Lotto sync complete! Added {stats['new']} new draws",
+        "stats": stats
+    }
+
+@api_router.get("/latest-results")
+async def get_latest_external_results():
+    """
+    Preview latest results from external sources WITHOUT saving to database
+    Useful for checking what new draws are available
+    """
+    euro_draws = await fetch_euromillions_latest(5)
+    return {
+        "euromillions": euro_draws,
+        "swisslotto": [],  # Scraping may not always work
+        "note": "Use POST /sync-results to save these to database"
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 

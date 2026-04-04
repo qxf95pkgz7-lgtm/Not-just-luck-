@@ -551,6 +551,25 @@ function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState([]);
   const [historyStats, setHistoryStats] = useState(null);
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [syncResult, setSyncResult] = useState(null);
+
+  // Sync latest lottery results from external sources
+  const syncLatestResults = async () => {
+    setSyncLoading(true);
+    setSyncResult(null);
+    try {
+      const res = await axios.post(`${API}/sync-results`);
+      setSyncResult(res.data);
+      // Refresh stats after sync
+      fetchStats();
+    } catch (e) {
+      console.error("Sync error:", e);
+      setSyncResult({ error: "Failed to sync results" });
+    } finally {
+      setSyncLoading(false);
+    }
+  };
 
   // Olivia's Kiss of Luck function
   const giveKissOfLuck = () => {
@@ -968,6 +987,33 @@ function App() {
                 </div>
               )}
             </div>
+            
+            {/* Sync Latest Results Button */}
+            <button
+              onClick={syncLatestResults}
+              disabled={syncLoading}
+              className={`px-4 py-2 rounded-full text-xs font-medium transition-all duration-300 ${
+                syncLoading
+                  ? 'bg-slate-700 text-slate-400 cursor-wait'
+                  : 'bg-gradient-to-r from-green-600/30 to-emerald-600/30 text-green-300 hover:from-green-500/50 hover:to-emerald-500/50 border border-green-500/30'
+              }`}
+              data-testid="sync-results-btn"
+            >
+              {syncLoading ? '🔄 Syncing...' : '📡 Update Draws'}
+            </button>
+            
+            {/* Sync Result Message */}
+            {syncResult && (
+              <div className={`mt-2 text-xs px-3 py-1 rounded-lg ${
+                syncResult.error 
+                  ? 'bg-red-500/20 text-red-300' 
+                  : syncResult.total_new > 0 
+                    ? 'bg-green-500/20 text-green-300'
+                    : 'bg-slate-700/50 text-slate-400'
+              }`}>
+                {syncResult.error || syncResult.message}
+              </div>
+            )}
           </div>
         </div>
 
