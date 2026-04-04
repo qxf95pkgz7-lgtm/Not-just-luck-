@@ -32,8 +32,9 @@ Build a Swiss Lotto Pattern Analyzer app with highly visual 42-billiard-ball spi
 - [x] Birthday and name-based numerology integration
 - [x] Position locking feature
 - [x] Multi-ticket generation with confidence ranking
-- [x] Historical data seeding (1511 EuroMillions draws 2012-2026, 1380+ Swiss Lotto draws)
+- [x] Historical data seeding (1377 Swiss Lotto draws, 1612 EuroMillions draws = 2989 total!)
 - [x] Responsive animated UI with realistic ball physics
+- [x] **Auto-seed on startup** - Database automatically populated with real historical draws when server starts (April 4, 2026)
 
 ### Pattern Engine (58 Patterns Total!)
 - [x] Patterns 1-52: Original numerology patterns (frequency, gap, family spread, sum range, odd/even, etc.)
