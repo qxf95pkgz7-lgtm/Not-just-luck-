@@ -1050,6 +1050,16 @@ function App() {
                       {person.name.split(' ')[0]}
                     </button>
                   ))}
+                  {/* Clear Button */}
+                  {(fullName || birthday) && (
+                    <button
+                      onClick={() => { setFullName(''); setBirthday(''); }}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30"
+                      data-testid="clear-personalize-btn"
+                    >
+                      ✕ Clear
+                    </button>
+                  )}
                 </div>
               </div>
               <div>
