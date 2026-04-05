@@ -12,6 +12,9 @@ from datetime import datetime, timezone
 from collections import Counter
 import random
 
+# Import Pattern 60: Story Signs
+from pattern_60_story_signs import analyze_story_signs, get_circle
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
@@ -2952,6 +2955,38 @@ async def get_master_prediction(
                 if d_circle and 1 <= d_circle <= 42:
                     scores[d_circle]["score"] += 12
                     scores[d_circle]["reasons"].append(f"🔷 D-circle: {d_pattern_num}↔{d_circle}")
+    
+    # === 60. STORY SIGNS PATTERN (Pattern 60 - The Ultimate!) ===
+    # Analyzes circles, hunger, consecutive sequences, P1+P2 sums,
+    # secret counting, family tracking, position memory, and date codes
+    # This pattern discovered:
+    # - 07/02/2026: 4 consecutive numbers (35-36-37-38) AND 4 consecutive circles (14-15-16-17)!
+    # - Circle warming: When circle appears at position multiple times, actual number comes next
+    # - Hunger pattern: Neighbors appear without the number = number is coming
+    # - Secret counting: value + gap = next value at same position
+    # - Mirror to 42: last_P4 + next_P4 often = 42
+    
+    try:
+        # Analyze story signs from all draws
+        story_result = analyze_story_signs(draws, quarter_size=27)
+        
+        if story_result and story_result.get("scores"):
+            for num, data in story_result["scores"].items():
+                if 1 <= num <= 42 and data.get("score", 0) > 0:
+                    # Apply story sign scores (capped at 30 to balance with other patterns)
+                    story_bonus = min(data["score"], 30)
+                    scores[num]["score"] += story_bonus
+                    # Add reasons (max 3 to avoid clutter)
+                    for reason in data.get("reasons", [])[:3]:
+                        scores[num]["reasons"].append(reason)
+        
+        # Log rare events if found
+        if story_result.get("rare_events"):
+            for event in story_result["rare_events"]:
+                logging.info(f"Story Pattern - Rare Event: {event}")
+                
+    except Exception as e:
+        logging.warning(f"Pattern 60 Story Signs error: {e}")
     
     # === COMPILE FINAL PREDICTIONS ===
     # Filter out locked numbers from candidates
