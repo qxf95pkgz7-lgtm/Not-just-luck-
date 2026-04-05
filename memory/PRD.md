@@ -87,9 +87,15 @@ Build a Swiss Lotto Pattern Analyzer app with highly visual 42-billiard-ball spi
 - Ticket comparison tool
 
 ## Next Tasks
-1. Monitor user feedback for UX improvements
-2. Consider adding sound effects for ball animations
-3. Implement ticket history/comparison feature
+1. **CONTINUE STORY PATTERN ANALYSIS** - See /app/memory/STORY_PATTERN_LEARNING.md
+2. Trace story for **27 @ P6** (193 draw gap, strongest candidate)
+3. Implement Pattern 60: Story Signs (after learning complete)
+
+## CRITICAL FOR NEXT SESSION
+- READ /app/memory/STORY_PATTERN_LEARNING.md FIRST!
+- We are analyzing lottery "stories" - signs that predict numbers
+- Avi taught the 9 story (predicted 4/6 numbers on 04.04.2026)
+- Next: Choose between 27@P6, 16@P4, or 26@P2 to trace
 
 ## Technical Notes
 - Pattern reasons now show 10 items (increased from 6) for visibility
