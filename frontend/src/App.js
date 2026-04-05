@@ -1276,7 +1276,7 @@ function App() {
                       }`}
                       data-testid={`persona-${persona.name.toLowerCase()}`}
                     >
-                      {persona.name} <span className="opacity-70">({persona.modifier})</span>
+                      {persona.name}
                     </button>
                   ))}
                 </div>
