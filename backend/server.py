@@ -3733,8 +3733,10 @@ async def get_sync_schedule():
 
 @api_router.get("/story-generator")
 async def generate_story_predictions(target_date: str = None, num_tickets: int = 8):
-    """Generate lottery predictions using Story Patterns."""
+    """Generate lottery predictions using the COMBINED Story Patterns - ALL STORIES in 8 tickets!"""
     try:
+        from story_pattern_generator import generate_combined_story_tickets, get_date_numbers as story_get_date_numbers
+        
         draws = await db.draws.find({}, {"_id": 0}).to_list(3000)
         if not draws:
             raise HTTPException(status_code=404, detail="No draws found")
@@ -3761,13 +3763,23 @@ async def generate_story_predictions(target_date: str = None, num_tickets: int =
             target = today + timedelta(days=next_draw)
             target_date = target.strftime("%d.%m.%Y")
         
-        tickets = generate_predictions(
+        # Use the NEW combined story ticket generator with ALL patterns!
+        tickets = generate_combined_story_tickets(
             target_date=target_date,
             previous_draws=draw_tuples,
             num_tickets=num_tickets
         )
         
-        date_nums = get_date_numbers(target_date)
+        date_nums = story_get_date_numbers(target_date)
+        
+        # Build story coverage summary
+        story_coverage = {
+            "26 Family": sum(1 for t in tickets if 26 in t.get('numbers', [])),
+            "13 Family": sum(1 for t in tickets if 13 in t.get('numbers', [])),
+            "18-39 Circle": sum(1 for t in tickets if 18 in t.get('numbers', []) or 39 in t.get('numbers', [])),
+            "33-12 Reunion": sum(1 for t in tickets if 33 in t.get('numbers', []) or 12 in t.get('numbers', [])),
+            "7 Ladder": sum(1 for t in tickets if all(n in t.get('numbers', []) for n in [7, 14, 21, 28, 35, 42]))
+        }
         
         return {
             "target_date": target_date,
@@ -3775,7 +3787,17 @@ async def generate_story_predictions(target_date: str = None, num_tickets: int =
             "num_tickets": len(tickets),
             "cost_estimate": f"{len(tickets) * 2.5} CHF",
             "tickets": tickets,
-            "patterns_used": ["DATE DANCE", "HUNGRY REVENGE", "CIRCLE PAIRS", "RC COUNT", "YEAR STORY", "DECADE SPREAD", "13 FAMILY", "WARRIOR TICKET"]
+            "story_coverage": story_coverage,
+            "patterns_used": [
+                "26 FAMILY + 18-39 CIRCLE",
+                "13 FAMILY + 33-12 REUNION", 
+                "18-39 CIRCLE + 33 HUNGRY + GAP",
+                "26 STORY + 7 LADDER",
+                "33 HUNGER + P8 + COLD",
+                "DATE DANCE + 26 + P5 SERIES",
+                "7 LADDER + P1+P6=42",
+                "TRIPLE REUNION (26↔5, 18↔39, 12↔33)"
+            ]
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
