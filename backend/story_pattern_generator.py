@@ -33,6 +33,36 @@ RC_5_PATTERN = [5, 14, 23, 32, 41, 50, 104, 113, 122, 131, 140, 203, 212, 221, 2
 # THE 84 CONSTANT (4 × 21)
 RC_CIRCLE_MULTIPLIER = 84
 
+# CHAPTER CYCLE LENGTH (~302 draws per chapter, ~3 years)
+CHAPTER_CYCLE_LENGTH = 302
+YEARS_PER_CHAPTER = 2.9
+
+
+def get_chapter_info(rc: int) -> Dict:
+    """
+    Determine which chapter we're in and position within chapter.
+    
+    Each chapter = ~302 draws = ~3 years
+    After each rare event, count resets to RC 0 for new chapter.
+    
+    Chapter 1 started: 18.03.2023
+    Chapter 2 expected: 07.02.2026 (RC 302)
+    """
+    chapter = rc // CHAPTER_CYCLE_LENGTH
+    position_in_chapter = rc % CHAPTER_CYCLE_LENGTH
+    
+    # How close are we to next rare event?
+    draws_to_rare = CHAPTER_CYCLE_LENGTH - position_in_chapter
+    
+    return {
+        'total_rc': rc,
+        'chapter': chapter + 1,  # Human-readable (Chapter 1, 2, 3...)
+        'position_in_chapter': position_in_chapter,
+        'draws_to_next_rare_event': draws_to_rare,
+        'is_near_rare_event': draws_to_rare <= 10,
+        'is_rare_event': position_in_chapter >= 300 and get_rc_sum(rc) == 5
+    }
+
 
 def get_rc_circle_value(rc: int) -> Dict:
     """

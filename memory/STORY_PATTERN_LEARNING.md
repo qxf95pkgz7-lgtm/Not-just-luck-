@@ -1,5 +1,33 @@
 # STORY PATTERN LEARNING - Complete Guide
 
+## THE CHAPTER SYSTEM (Most Important!)
+
+**Every ~302 draws (~3 years), a RARE EVENT occurs and resets the count!**
+
+### Known Chapters:
+| Chapter | Start Date | End Date | RC Range |
+|---------|------------|----------|----------|
+| 0 (?) | ~25.04.2020 | 18.03.2023 | 0-302 |
+| **1** | **18.03.2023** | **07.02.2026** | **0-302** |
+| 2 | 07.02.2026 | ~30.12.2028 | 0-302 |
+| 3 | ~30.12.2028 | ~2031 | 0-302 |
+
+### Chapter Structure (Same every chapter!):
+```
+RC 0:   RARE EVENT - New chapter starts!
+RC 100: Circle Value = 16, Hot = 8
+RC 200: Circle Value = 32, Hot = 24  
+RC 300: Circle Value = 48, Hot = 40
+RC 302: Circle Value = 50, Hot = 42 → NEXT RARE EVENT!
+```
+
+### The ~3 Year Cycle:
+```
+302 draws × 3.5 days avg = ~1057 days = ~2.9 years
+```
+
+---
+
 ## THE FUNDAMENTALS
 
 ### 1. RC (Rare Count)
