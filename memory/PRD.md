@@ -12,6 +12,39 @@ EXACTLY the same as the starting draw - the story comes FULL CIRCLE!
 
 ---
 
+## CRITICAL FOR NEXT SESSION
+
+### NEW APIs
+- `/api/story-signs` - Pattern 60: Story Signs analysis
+- `/api/story-generator?target_date=DD.MM.YYYY&num_tickets=8` - Generate tickets using all patterns!
+
+### Key Files
+- `/app/memory/STORY_PATTERN_LEARNING.md` - Complete pattern guide!
+- `/app/memory/Q1_2026_ANALYSIS.md` - Q1 2026 deep analysis
+- `/app/backend/story_pattern_generator.py` - Pattern generator code
+
+### RC (Rare Count)
+- **Starts from 18.03.2023** - 5 numbers from same decade (1-9)
+- Q1 2025 D1 = RC 187
+- Q1 2026 D1 = RC 213
+
+### Data Fixes Applied
+- 10.01.2026: [14, 24, 28, 31, 37, 39] (corrected)
+- 05.04.2025: [1, 4, 5, 18, 29, 36] (corrected)
+
+### Key Patterns Learned
+1. **Date Dance**: D, M, D-M, D×M, D×M+D+M = positions!
+2. **Circle = ±21**: 5↔26, 13↔34, 10↔31
+3. **13 Family**: 13, 10, 21, 23, 31, 34
+4. **Hungry**: Gap of 2 in sequence (20-?-22 = 21 hungry)
+5. **Digit Reversal**: 39→93-84=9 (root!)
+
+### Left Off At
+- Q1 2026: D5 (17.01.2026) - 13 in Replay jail
+- Q1 2025: Analyzed full quarter, found 10-31 partnership, 26 prophecy
+
+---
+
 ## Original Problem Statement
 Build a Swiss Lotto Pattern Analyzer app with highly visual 42-billiard-ball spinning animations for predictions, custom numerology patterns, and probability scores. Additionally, create a brand new mode for EuroMillions (5 main numbers 1-50, 2 stars 1-12).
 

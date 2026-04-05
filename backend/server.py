@@ -13,7 +13,18 @@ from collections import Counter
 import random
 
 # Import Pattern 60: Story Signs
-from pattern_60_story_signs import analyze_story_signs, get_circle
+from pattern_60_story_signs import analyze_story_signs, get_circle as get_circle_60
+
+
+# Import Story Pattern Generator
+from story_pattern_generator import (
+    generate_predictions,
+    analyze_draw,
+    get_date_numbers,
+    find_hungry_numbers,
+    get_circle as get_circle_story,
+    calculate_rc
+)
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -3718,6 +3729,57 @@ async def get_sync_schedule():
         "jobs": jobs,
         "note": "Draws are automatically fetched ~30 minutes after official draw times"
     }
+
+
+@api_router.get("/story-generator")
+async def generate_story_predictions(target_date: str = None, num_tickets: int = 8):
+    """Generate lottery predictions using Story Patterns."""
+    try:
+        draws = await db.draws.find({}, {"_id": 0}).to_list(3000)
+        if not draws:
+            raise HTTPException(status_code=404, detail="No draws found")
+        
+        draw_tuples = []
+        for d in draws:
+            nums = d.get('numbers', [])
+            lucky = d.get('lucky_number', d.get('lucky', 1))
+            replay = d.get('replay_number', d.get('replay', 1))
+            draw_tuples.append((d['date'], nums, lucky, replay))
+        
+        draw_tuples.sort(key=lambda x: datetime.strptime(x[0], "%d.%m.%Y"))
+        
+        if not target_date:
+            from datetime import timedelta
+            today = datetime.now()
+            days_until_wed = (2 - today.weekday()) % 7
+            days_until_sat = (5 - today.weekday()) % 7
+            if days_until_wed == 0:
+                days_until_wed = 7
+            if days_until_sat == 0:
+                days_until_sat = 7
+            next_draw = min(days_until_wed, days_until_sat)
+            target = today + timedelta(days=next_draw)
+            target_date = target.strftime("%d.%m.%Y")
+        
+        tickets = generate_predictions(
+            target_date=target_date,
+            previous_draws=draw_tuples,
+            num_tickets=num_tickets
+        )
+        
+        date_nums = get_date_numbers(target_date)
+        
+        return {
+            "target_date": target_date,
+            "date_analysis": date_nums,
+            "num_tickets": len(tickets),
+            "cost_estimate": f"{len(tickets) * 2.5} CHF",
+            "tickets": tickets,
+            "patterns_used": ["DATE DANCE", "HUNGRY REVENGE", "CIRCLE PAIRS", "RC COUNT", "YEAR STORY", "DECADE SPREAD", "13 FAMILY", "WARRIOR TICKET"]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # Include the router in the main app
 app.include_router(api_router)
