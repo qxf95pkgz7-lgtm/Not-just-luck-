@@ -3583,12 +3583,120 @@ async def sync_lottery_results():
     """
     Manually trigger sync of latest lottery results from external sources
     - EuroMillions: Fetches from free API (euromillions.api.pedromealha.dev)
-    - Swiss Lotto: Scrapes from lottoland.com / swisslos.ch
+    - Swiss Lotto: Scrapes from 6richtige.ch / lottoland.com / swisslos.ch
     """
     stats = await auto_sync_all(db)
     return {
         "message": f"Sync complete! Added {stats['total_new']} new draws",
         "details": stats
+    }
+
+
+class ManualDrawInput(BaseModel):
+    """Input model for manual draw entry"""
+    date: str  # DD.MM.YYYY format
+    numbers: List[int]  # 6 numbers
+    lucky_number: int
+    replay_number: Optional[int] = None
+
+
+@api_router.post("/add-draw")
+async def add_draw_manually(draw: ManualDrawInput):
+    """
+    Manually add a Swiss Lotto draw result.
+    Use this when auto-sync doesn't work or for quick updates.
+    """
+    # Validate date format
+    try:
+        datetime.strptime(draw.date, "%d.%m.%Y")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Date must be in DD.MM.YYYY format")
+    
+    # Validate numbers
+    if len(draw.numbers) != 6:
+        raise HTTPException(status_code=400, detail="Must provide exactly 6 numbers")
+    
+    if not all(1 <= n <= 42 for n in draw.numbers):
+        raise HTTPException(status_code=400, detail="Numbers must be between 1 and 42")
+    
+    if not 1 <= draw.lucky_number <= 6:
+        raise HTTPException(status_code=400, detail="Lucky number must be between 1 and 6")
+    
+    # Check if draw already exists
+    existing = await db.draws.find_one({"date": draw.date})
+    
+    doc = {
+        "date": draw.date,
+        "numbers": sorted(draw.numbers),
+        "lucky_number": draw.lucky_number,
+        "replay_number": draw.replay_number or 1,
+        "source": "manual"
+    }
+    
+    if existing:
+        # Update existing
+        await db.draws.update_one(
+            {"date": draw.date},
+            {"$set": doc}
+        )
+        return {
+            "message": f"Updated draw for {draw.date}",
+            "draw": doc,
+            "action": "updated"
+        }
+    else:
+        # Insert new
+        doc["id"] = str(uuid.uuid4())
+        doc["created_at"] = datetime.now(timezone.utc).isoformat()
+        await db.draws.insert_one(doc)
+        return {
+            "message": f"Added new draw for {draw.date}",
+            "draw": doc,
+            "action": "created"
+        }
+
+
+@api_router.post("/add-draws-bulk")
+async def add_draws_bulk(draws: List[ManualDrawInput]):
+    """
+    Add multiple Swiss Lotto draws at once.
+    Useful for importing historical data from 6richtige.ch
+    """
+    results = {"added": 0, "updated": 0, "errors": []}
+    
+    for draw in draws:
+        try:
+            # Validate
+            datetime.strptime(draw.date, "%d.%m.%Y")
+            if len(draw.numbers) != 6:
+                results["errors"].append(f"{draw.date}: Must have 6 numbers")
+                continue
+            
+            existing = await db.draws.find_one({"date": draw.date})
+            
+            doc = {
+                "date": draw.date,
+                "numbers": sorted(draw.numbers),
+                "lucky_number": draw.lucky_number,
+                "replay_number": draw.replay_number or 1,
+                "source": "manual_bulk"
+            }
+            
+            if existing:
+                await db.draws.update_one({"date": draw.date}, {"$set": doc})
+                results["updated"] += 1
+            else:
+                doc["id"] = str(uuid.uuid4())
+                doc["created_at"] = datetime.now(timezone.utc).isoformat()
+                await db.draws.insert_one(doc)
+                results["added"] += 1
+                
+        except Exception as e:
+            results["errors"].append(f"{draw.date}: {str(e)}")
+    
+    return {
+        "message": f"Bulk import complete: {results['added']} added, {results['updated']} updated",
+        "results": results
     }
 
 @api_router.post("/sync-euromillions")
