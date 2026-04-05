@@ -1454,7 +1454,7 @@ function App() {
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-slate-500">
-                          {new Date(h.created_at).toLocaleDateString()} {new Date(h.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                          {new Date(h.created_at).toLocaleDateString('de-CH')} {new Date(h.created_at).toLocaleTimeString('de-CH', {hour: '2-digit', minute:'2-digit'})}
                         </span>
                         <span className={`font-medium ${lotteryMode === 'swiss' ? 'text-amber-400' : 'text-blue-400'}`}>
                           {h.confidence?.toFixed(0)}%
@@ -1626,7 +1626,7 @@ function App() {
                             </span>
                           </div>
                           <span className="text-slate-500 text-xs">
-                            {new Date(gen.generated_at).toLocaleDateString()}
+                            {new Date(gen.generated_at).toLocaleDateString('de-CH')}
                           </span>
                         </div>
                         
