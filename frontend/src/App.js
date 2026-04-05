@@ -1178,15 +1178,15 @@ function App() {
                 onClick={giveKissOfLuck}
                 className={`px-6 py-2 rounded-full font-bold text-sm transition-all duration-300 ${
                   oliviaKiss 
-                    ? 'bg-gradient-to-r from-pink-500 to-red-500 text-white scale-110 shadow-lg shadow-pink-500/50' 
-                    : 'bg-gradient-to-r from-pink-600/30 to-red-600/30 text-pink-300 hover:from-pink-500/50 hover:to-red-500/50 border border-pink-500/30'
+                    ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white scale-110 shadow-lg shadow-emerald-500/50' 
+                    : 'bg-gradient-to-r from-emerald-600/30 to-green-600/30 text-emerald-300 hover:from-emerald-500/50 hover:to-green-500/50 border border-emerald-500/30'
                 }`}
                 data-testid="olivia-kiss-btn"
               >
-                💋 Olivia's Kiss of Luck 💋
+                🍀 Olivia's Kiss of Luck 🍀
               </button>
               
-              {/* Flying Hearts Animation */}
+              {/* Flying Clovers Animation - Kiss of LUCK! */}
               {showKissHearts && (
                 <div className="absolute inset-0 pointer-events-none overflow-visible">
                   {[...Array(8)].map((_, i) => (
@@ -1200,7 +1200,7 @@ function App() {
                         animationDuration: '1s'
                       }}
                     >
-                      {['💋', '❤️', '💕', '💗'][i % 4]}
+                      {['🍀', '✨', '🌟', '💫'][i % 4]}
                     </span>
                   ))}
                 </div>
