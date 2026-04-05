@@ -1,7 +1,12 @@
 THE 42 TICKETS FROM THE STORY OF 26
 ==================================================
 
-Main Prediction: [13, 26, 27, 30, 31, 38]
+Main Prediction: [13, 26, 27, 30, 31, 38] + Lucky 5
+
+P7 (Lucky) = 5
+- Odd sequence from P6=24 draws: 1 → 3 → 5
+- Circle of 26 = 5
+- Starting draw P7 = 5
 
 All 42 combinations (max 3 circle swaps):
 --------------------------------------------------
