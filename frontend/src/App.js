@@ -699,11 +699,39 @@ function App() {
     setOliviaKiss(true);
     setShowKissHearts(true);
     
-    // Play "Ya man" sound
-    const utterance = new SpeechSynthesisUtterance("Ya man!");
-    utterance.rate = 0.8;
-    utterance.pitch = 0.7;
-    speechSynthesis.speak(utterance);
+    // Play nice female "Ya man!" voice
+    const playYaMan = () => {
+      const utterance = new SpeechSynthesisUtterance("Ya man! Good luck!");
+      utterance.rate = 0.9;  // Slightly slower for warmth
+      utterance.pitch = 1.4; // Higher pitch for female voice
+      utterance.volume = 0.8;
+      
+      // Try to find a female voice
+      const voices = speechSynthesis.getVoices();
+      const femaleVoice = voices.find(v => 
+        v.name.toLowerCase().includes('female') || 
+        v.name.toLowerCase().includes('samantha') ||
+        v.name.toLowerCase().includes('victoria') ||
+        v.name.toLowerCase().includes('karen') ||
+        v.name.toLowerCase().includes('tessa') ||
+        v.name.toLowerCase().includes('fiona') ||
+        v.name.includes('Google UK English Female') ||
+        v.name.includes('Microsoft Zira')
+      ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+      
+      if (femaleVoice) {
+        utterance.voice = femaleVoice;
+      }
+      
+      speechSynthesis.speak(utterance);
+    };
+    
+    // Voices may need to load first
+    if (speechSynthesis.getVoices().length > 0) {
+      playYaMan();
+    } else {
+      speechSynthesis.onvoiceschanged = playYaMan;
+    }
     
     // Reset after animation
     setTimeout(() => {
