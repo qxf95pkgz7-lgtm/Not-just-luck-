@@ -666,6 +666,11 @@ function App() {
       fetchHitStats();
     }
   }, [showHitTracker]);
+  
+  // Fetch last draw on initial load
+  useEffect(() => {
+    fetchLastDraw();
+  }, []);
 
   // Olivia's Kiss of Luck function
   const giveKissOfLuck = () => {
@@ -991,6 +996,62 @@ function App() {
           </div>
         </div>
       </header>
+
+      {/* LAST DRAW DISPLAY - Always Visible */}
+      {lastDraw && (
+        <div className="max-w-2xl mx-auto px-4 mb-4">
+          <div 
+            className="p-3 rounded-xl flex items-center justify-between flex-wrap gap-2"
+            style={{ 
+              background: 'linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(5,150,105,0.1) 100%)',
+              border: '1px solid rgba(16,185,129,0.3)',
+              boxShadow: '0 4px 15px rgba(16,185,129,0.1)'
+            }}
+            data-testid="last-draw-display"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-emerald-400 font-semibold text-sm">📊 Last Draw:</span>
+              <span className="text-slate-300 text-sm font-medium">{lastDraw.date}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                {lastDraw.numbers?.map((n, i) => (
+                  <div 
+                    key={i} 
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+                    style={{
+                      background: `radial-gradient(circle at 30% 30%, ${
+                        n <= 7 ? '#ef4444' : n <= 14 ? '#f97316' : n <= 21 ? '#eab308' : 
+                        n <= 28 ? '#22c55e' : n <= 35 ? '#3b82f6' : '#8b5cf6'
+                      } 0%, ${
+                        n <= 7 ? '#b91c1c' : n <= 14 ? '#c2410c' : n <= 21 ? '#a16207' : 
+                        n <= 28 ? '#15803d' : n <= 35 ? '#1d4ed8' : '#6d28d9'
+                      } 100%)`,
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.3)',
+                      color: 'white',
+                      textShadow: '0 1px 2px rgba(0,0,0,0.5)'
+                    }}
+                  >
+                    {n}
+                  </div>
+                ))}
+              </div>
+              {lastDraw.lucky_number && (
+                <div className="flex items-center gap-1 ml-2 px-2 py-1 rounded-full" style={{ background: 'rgba(251,191,36,0.2)', border: '1px solid rgba(251,191,36,0.4)' }}>
+                  <span className="text-amber-400 text-xs">🍀</span>
+                  <span className="text-amber-400 font-bold text-sm">{lastDraw.lucky_number}</span>
+                </div>
+              )}
+              {lastDraw.replay_number && (
+                <div className="flex items-center gap-1 px-2 py-1 rounded-full" style={{ background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.4)' }}>
+                  <span className="text-purple-400 text-xs">🔄</span>
+                  <span className="text-purple-400 font-bold text-sm">{lastDraw.replay_number}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="max-w-2xl mx-auto px-4">
