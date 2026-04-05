@@ -12,6 +12,16 @@ KEY DISCOVERIES:
 - Date Dance: D, M, D-M, D+M, D×M, D×M+D+M
 - Circle of D often = P4 when D >= 10
 - (D+M) × 2 often = P4 when D+M <= 10
+
+STORY PATTERNS (Combined):
+- The 26 Family: [13, 26, 27, 30, 31, 38] with circle swaps
+- The 18-39 Circle: 18 at P3, 39 at P6, gap of 3
+- The 33-12 Reunion: 30 draws apart, 12 at P1-P3, 33 at P4-P6
+- The P4 Heart Rule: 12 at P4 blocks 33 (100%)
+- Mr. 13 Jail Story: Track when 13 is in P8 (jail) vs free
+- P4 + M = P5 on Day 28
+- P8 = Circle(Hungry Middle)
+- 7 Ladder: [7, 14, 21, 28, 35, 42]
 """
 
 from datetime import datetime, timedelta
@@ -19,79 +29,205 @@ from typing import List, Tuple, Dict, Optional
 from collections import defaultdict
 
 
-# RC START DATE - THE LEGENDARY JACKPOT
+# ==============================================================================
+# RC CONSTANTS
+# ==============================================================================
+
 RC_START_DATE = "18.03.2023"
 RC_START_DRAW = [1, 3, 4, 7, 9, 23]  # 5 numbers from 1-9 decade!
 RC_DATE_DIGIT_SUM = 28  # 1+8+0+3+2+0+2+3 = 28
-
-# THE 8-COUNT DANCE
 EIGHT_COUNT_MAGIC = 8  # 28 + 8 = 36
-
-# RC=5 SUM DATES - RARE EVENT SIGNALS
 RC_5_PATTERN = [5, 14, 23, 32, 41, 50, 104, 113, 122, 131, 140, 203, 212, 221, 230, 302, 311, 320, 401, 410, 500]
+RC_CIRCLE_MULTIPLIER = 84  # 4 × 21
 
-# THE 28-13 CONNECTION (Discovered in Q1 2026 analysis!)
-# When Day = 28, Mr. 13 tends to appear at P1!
-DAY_28_PATTERN = {
-    'day': 28,
-    'hero': 13,
-    'expected_position': 1,  # P1
-    'companions': [14, 15],  # 13-14-15 = 42!
-    'max_sum': 42  # 13 + 14 + 15
+# ==============================================================================
+# STORY 1: THE 26 FAMILY (from 42 tickets)
+# ==============================================================================
+
+STORY_26_FAMILY = {
+    'main_ticket': [13, 26, 27, 30, 31, 38],
+    'circles': {
+        13: 34,
+        26: 5,
+        27: 6,
+        30: 9,
+        31: 10,
+        38: 17
+    },
+    'description': 'The 26 family with circle swaps'
 }
 
-# THE 18/39 CIRCLE PARTNERSHIP
+# ==============================================================================
+# STORY 2: THE 18-39 CIRCLE PARTNERSHIP
+# ==============================================================================
+
 CIRCLE_18_39 = {
     'pair': (18, 39),
     '18_typical_pos': 3,  # P3 (58.5%)
     '39_typical_pos': 6,  # P6 (78%)
     'typical_gap': 3,     # 3 positions apart (61%)
-    'common_companions': [32, 11, 25, 4, 42]  # Other circle pairs!
+    'common_companions': [32, 11, 25, 4, 42],
+    'total_reunions': 41,
+    'description': '18 at P3, 39 at P6, gap of 3'
 }
 
-# THE 7 LADDER (Magical draw 14.06.2014)
+# ==============================================================================
+# STORY 3: THE 33-12 REUNION
+# ==============================================================================
+
+STORY_33_12 = {
+    'pair': (33, 12),
+    'last_reunion': '13.12.2025',
+    'last_reunion_draw': [10, 11, 12, 33, 36, 38],
+    'draws_apart': 30,  # As of Q1 2026 end
+    'rule_12_position': [1, 2, 3],  # 12 must be P1-P3
+    'rule_33_position': [4, 5, 6],  # 33 at P4-P6
+    'p4_blocking': '12 at P4 blocks 33 (100%)',
+    'description': '30 draws apart, waiting for reunion'
+}
+
+# ==============================================================================
+# STORY 4: MR. 13 - THE HERO
+# ==============================================================================
+
+STORY_MR_13 = {
+    'hero': 13,
+    'circle': 34,
+    'family': [10, 13, 14, 15, 21, 23, 31, 34],
+    'throne_combo': [13, 14, 15],  # Sum = 42!
+    'day_28_pattern': 'On Day 28, 13 claims P1',
+    'jail_status': 'P8 = jail, track when free/jailed',
+    'last_known_status': 'P1 on 28.03.2026'
+}
+
+# ==============================================================================
+# STORY 5: THE 7 LADDER
+# ==============================================================================
+
 SEVEN_LADDER = [7, 14, 21, 28, 35, 42]  # All multiples of 7!
+SEVEN_LADDER_COMBOS = {
+    'p1_p6_42': [(7, 35), (14, 28), (21, 21)],  # P1+P6=42 combos
+    'magical_draw': '14.06.2014',
+    'description': 'All multiples of 7, contains multiple P1+P6=42 combos'
+}
 
+# ==============================================================================
+# STORY 6: P4 PATTERNS
+# ==============================================================================
 
-def check_day_28_pattern(date_str: str) -> Dict:
-    """
-    Check if it's a Day 28 draw - Mr. 13 tends to claim P1!
-    28.02.2026: 13 at P1 with 14, 15 (sum = 42)
-    28.03.2026: 13 at P1 again!
-    """
-    dn = get_date_numbers(date_str)
-    is_day_28 = dn['day'] == 28
-    
-    return {
-        'is_day_28': is_day_28,
-        'prediction': '13 likely at P1 with 14, 15!' if is_day_28 else None,
-        'hot_numbers': [13, 14, 15] if is_day_28 else [],
-        'max_sum': 42 if is_day_28 else None
-    }
+P4_PATTERNS = {
+    'p4_plus_m_equals_p5': 'On Day 28, P4 + M = P5',
+    'p8_reveals_hungry': 'P8 = Circle of hungry middle number',
+    'circle_of_d': 'When D >= 10, Circle(D) often = P4',
+    'double_sum': 'When D+M <= 10, (D+M)×2 often = P4'
+}
 
-# CHAPTER CYCLE - CORRECTED FROM REAL DATA
-# The ~288-305 cycle is between 4+ SINGLES events, not fixed at 302!
-# Real data shows: 305, 234, 288, 143 draw gaps
+# ==============================================================================
+# STORY 7: POSITION GAP PREDICTIONS (from last 3 draws)
+# ==============================================================================
+
+POSITION_GAPS = {
+    'P1': {'gaps': [3, 7], 'next_predict': 20},
+    'P2': {'gaps': [11, 1], 'next_predict': 18},
+    'P3': {'gaps': [20, -8], 'next_predict': 11},
+    'P4': {'gaps': [7, -2], 'next_predict': 24},
+    'P5': {'gaps': [-2, -6], 'next_predict': 23},  # P5 series: 37→35→29→23
+    'P6': {'gaps': [0, 1], 'next_predict': 41}
+}
+
+# ==============================================================================
+# STORY 8: COLD NUMBERS (missing from last 3 draws)
+# ==============================================================================
+
+COLD_NUMBERS = [1, 2, 4, 8, 9, 10, 11, 12, 14, 15, 18, 20, 22, 23, 24]
+
+# ==============================================================================
+# 4+ SINGLES CYCLE
+# ==============================================================================
+
 CYCLE_MIN = 288
 CYCLE_MAX = 305
-CYCLE_AVG = 296  # Average of observed cycles
+CYCLE_AVG = 296
 
-# Key 4+ singles events from history (draw index from start of data)
 FOUR_PLUS_SINGLES_HISTORY = [
-    ('23.11.2013', 90),   # 4 singles
-    ('29.10.2016', 395),  # 4 singles - 305 gap!
-    ('30.01.2019', 629),  # 4 singles - 234 gap
-    ('03.11.2021', 917),  # 4 singles - 288 gap!
-    ('18.03.2023', 1060), # 5 singles - THE JACKPOT - 143 gap
-    ('10.01.2024', 1145), # 4 singles - RC 85 from jackpot
+    ('23.11.2013', 90),
+    ('29.10.2016', 395),
+    ('30.01.2019', 629),
+    ('03.11.2021', 917),
+    ('18.03.2023', 1060),
+    ('10.01.2024', 1145),
 ]
 
-# Last known 4+ singles event
 LAST_FOUR_PLUS_DATE = '10.01.2024'
-LAST_FOUR_PLUS_RC = 85  # RC from 18.03.2023
+LAST_FOUR_PLUS_RC = 85
 
-# THE 84 CONSTANT (4 × 21) - MUST BE BEFORE get_rc_circle_value!
-RC_CIRCLE_MULTIPLIER = 84
+
+# ==============================================================================
+# HERO TRACKER - Track current hero and jail status
+# ==============================================================================
+
+class HeroTracker:
+    """Track the current hero's journey - jail, free, throne"""
+    
+    def __init__(self):
+        self.current_hero = 13  # Mr. 13 is the current hero
+        self.hero_history = {
+            13: {
+                'name': 'Mr. 13',
+                'status': 'free',  # free, jail, throne
+                'last_position': 1,  # P1 on 28.03.2026
+                'jail_count': 0,
+                'throne_count': 2,  # P1 on 28.02 and 28.03
+                'family': [10, 14, 15, 21, 23, 31, 34]
+            }
+        }
+        self.next_hero_candidates = [33, 39, 26]  # Potential next heroes
+    
+    def update_hero_status(self, draw_nums: List[int], replay: int):
+        """Update hero status based on latest draw"""
+        hero = self.current_hero
+        
+        if replay == hero:
+            self.hero_history[hero]['status'] = 'jail'
+            self.hero_history[hero]['jail_count'] += 1
+        elif hero in draw_nums:
+            pos = sorted(draw_nums).index(hero) + 1
+            self.hero_history[hero]['last_position'] = pos
+            if pos == 1:
+                self.hero_history[hero]['status'] = 'throne'
+                self.hero_history[hero]['throne_count'] += 1
+            else:
+                self.hero_history[hero]['status'] = 'free'
+        else:
+            self.hero_history[hero]['status'] = 'hiding'
+    
+    def get_hero_prediction(self) -> Dict:
+        """Get prediction based on hero's current status"""
+        hero = self.current_hero
+        status = self.hero_history[hero]['status']
+        
+        if status == 'jail':
+            return {
+                'hero': hero,
+                'prediction': f'{hero} in jail - family members likely to appear',
+                'hot_numbers': self.hero_history[hero]['family']
+            }
+        elif status == 'throne':
+            return {
+                'hero': hero,
+                'prediction': f'{hero} was on throne - may stay or retreat',
+                'hot_numbers': [hero] + self.hero_history[hero]['family'][:3]
+            }
+        else:
+            return {
+                'hero': hero,
+                'prediction': f'{hero} is free - watch for return',
+                'hot_numbers': [hero, hero + 1, hero - 1]
+            }
+
+
+# Initialize global hero tracker
+HERO_TRACKER = HeroTracker()
 
 
 def get_singles_cycle_info(rc: int) -> Dict:
@@ -825,6 +961,118 @@ def get_rare_event_analysis(target_date: str, previous_draws: List[Tuple]) -> Di
     }
 
 
+def generate_combined_story_tickets(
+    target_date: str,
+    previous_draws: List[Tuple],
+    num_tickets: int = 8
+) -> List[Dict]:
+    """
+    Generate tickets combining ALL story patterns:
+    - 26 Family (from 42 tickets)
+    - 18-39 Circle Partnership  
+    - 33-12 Reunion
+    - Mr. 13 Hero Story
+    - 7 Ladder
+    - Position Gap Predictions
+    - Cold Numbers
+    - Date Dance
+    - RC Patterns
+    """
+    
+    tickets = []
+    dn = get_date_numbers(target_date)
+    d, m = dn['day'], dn['month']
+    rc = calculate_rc_for_date(target_date)
+    rc_sum = get_rc_sum(rc)
+    
+    # TICKET 1: 26 FAMILY + 18-39 CIRCLE
+    t1 = [5, 18, 26, 27, 30, 39]
+    tickets.append({
+        'numbers': sorted(t1),
+        'lucky': 5,
+        'story': '26 FAMILY + 18-39 CIRCLE',
+        'patterns': ['26 family', '18-39 circle', '26↔5']
+    })
+    
+    # TICKET 2: 13 FAMILY + 33-12 REUNION
+    t2 = [10, 12, 13, 31, 33, 34]
+    tickets.append({
+        'numbers': sorted(t2),
+        'lucky': 1,
+        'story': '13 FAMILY + 33-12 REUNION',
+        'patterns': ['13 family', '33-12 reunion', '13↔34']
+    })
+    
+    # TICKET 3: 18-39 + 33 HUNGRY MIDDLE + GAP P6
+    t3 = [11, 18, 33, 36, 39, 41]
+    tickets.append({
+        'numbers': sorted(t3),
+        'lucky': 3,
+        'story': '18-39 CIRCLE + 33 HUNGRY + GAP',
+        'patterns': ['18-39 circle', '33 hungry', 'P6 gap=41']
+    })
+    
+    # TICKET 4: 26 STORY + 7 LADDER
+    t4 = [6, 13, 26, 28, 35, 38]
+    tickets.append({
+        'numbers': sorted(t4),
+        'lucky': 6,
+        'story': '26 STORY + 7 LADDER',
+        'patterns': ['26 family', '7 ladder (28,35)', '27↔6']
+    })
+    
+    # TICKET 5: 33 HUNGER + P8 REVELATION + COLD
+    t5 = [3, 11, 12, 32, 33, 34]
+    tickets.append({
+        'numbers': sorted(t5),
+        'lucky': 6,
+        'story': '33 HUNGER + P8 + COLD',
+        'patterns': ['33=3×11', 'P8→32,33', 'cold 11,12']
+    })
+    
+    # TICKET 6: DATE DANCE + 26↔5 + P5 SERIES
+    t6_base = [dn['d_minus_m'], m, d, dn['d_plus_m']]
+    t6_base = [n for n in t6_base if n and 1 <= n <= 42]
+    t6_base.extend([5, 23, 26])  # Add story elements
+    t6 = sorted(list(set(t6_base)))[:6]
+    tickets.append({
+        'numbers': t6,
+        'lucky': 2,
+        'story': 'DATE DANCE + 26 + P5 SERIES',
+        'patterns': ['date dance', '26↔5', 'P5→23']
+    })
+    
+    # TICKET 7: 7 LADDER (P1+P6=42)
+    t7 = SEVEN_LADDER.copy()
+    tickets.append({
+        'numbers': t7,
+        'lucky': 6,
+        'story': '7 LADDER + P1+P6=42',
+        'patterns': ['7 ladder', '7+35=42', '14+28=42']
+    })
+    
+    # TICKET 8: TRIPLE REUNION (26↔5, 18↔39, 12↔33)
+    t8 = [5, 12, 18, 26, 33, 39]
+    tickets.append({
+        'numbers': sorted(t8),
+        'lucky': 4,
+        'story': 'TRIPLE REUNION',
+        'patterns': ['26↔5', '18↔39', '12↔33']
+    })
+    
+    return tickets[:num_tickets]
+
+
+def get_hero_status() -> Dict:
+    """Get current hero (Mr. 13) status and prediction"""
+    return HERO_TRACKER.get_hero_prediction()
+
+
+def update_hero_from_draw(draw_nums: List[int], replay: int):
+    """Update hero tracker with new draw"""
+    HERO_TRACKER.update_hero_status(draw_nums, replay)
+
+
 if __name__ == "__main__":
     # Test the generator
     print("Story Pattern Generator loaded!")
@@ -832,19 +1080,18 @@ if __name__ == "__main__":
     print(f"13 Family: {FAMILY_13}")
     print(f"21/42 Family: {FAMILY_21_42}")
     print()
-    print("=== NEW FEATURES ===")
+    print("=== STORY PATTERNS ===")
+    print(f"26 Family: {STORY_26_FAMILY['main_ticket']}")
+    print(f"18-39 Circle: {CIRCLE_18_39['pair']}")
+    print(f"33-12 Reunion: {STORY_33_12['draws_apart']} draws apart")
+    print(f"Mr. 13: {STORY_MR_13['hero']} with family {STORY_MR_13['family']}")
+    print(f"7 Ladder: {SEVEN_LADDER}")
+    print()
+    print("=== RC PATTERNS ===")
     print(f"RC Date Sum: {RC_DATE_DIGIT_SUM}")
     print(f"8-Count Magic: {EIGHT_COUNT_MAGIC}")
-    print(f"RC=5 Pattern dates: {RC_5_PATTERN[:10]}...")
     print()
-    print("P4 Rules:")
-    for rule, desc in P4_RULES.items():
-        print(f"  - {rule}: {desc}")
-    print()
-    print("Rare Event Signals:")
-    for sig, desc in RARE_EVENT_SIGNALS.items():
-        print(f"  - {sig}: {desc}")
-    print()
-    print("28→36 Dance:")
-    for key, val in DANCE_28_36.items():
-        print(f"  - {key}: {val}")
+    print("=== HERO STATUS ===")
+    hero_status = get_hero_status()
+    print(f"Current Hero: {hero_status['hero']}")
+    print(f"Prediction: {hero_status['prediction']}")
