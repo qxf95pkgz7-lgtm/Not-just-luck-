@@ -90,6 +90,9 @@ FOUR_PLUS_SINGLES_HISTORY = [
 LAST_FOUR_PLUS_DATE = '10.01.2024'
 LAST_FOUR_PLUS_RC = 85  # RC from 18.03.2023
 
+# THE 84 CONSTANT (4 × 21) - MUST BE BEFORE get_rc_circle_value!
+RC_CIRCLE_MULTIPLIER = 84
+
 
 def get_singles_cycle_info(rc: int) -> Dict:
     """
