@@ -3803,6 +3803,161 @@ async def generate_story_predictions(target_date: str = None, num_tickets: int =
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# =============================================================================
+# HIT TRACKER ENDPOINTS - Track Generated Tickets vs Actual Draws
+# =============================================================================
+
+from hit_tracker import HitTracker
+hit_tracker = HitTracker(db)
+
+
+@api_router.get("/last-draw")
+async def get_last_draw():
+    """Get the most recent draw result"""
+    try:
+        last_draw = await hit_tracker.get_last_draw()
+        if not last_draw:
+            return {"error": "No draws found"}
+        return {
+            "date": last_draw.get("date"),
+            "numbers": last_draw.get("numbers", []),
+            "lucky_number": last_draw.get("lucky_number", last_draw.get("lucky")),
+            "replay_number": last_draw.get("replay_number", last_draw.get("replay"))
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/save-generation")
+async def save_generation(target_date: str, tickets: List[dict]):
+    """Save a generation for hit tracking"""
+    try:
+        gen_id = await hit_tracker.save_generation(
+            target_date=target_date,
+            tickets=tickets,
+            generation_type="story"
+        )
+        return {
+            "success": True,
+            "generation_id": gen_id,
+            "message": f"Saved {len(tickets)} tickets for {target_date}"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/story-generator-save")
+async def generate_and_save_story_predictions(target_date: str = None, num_tickets: int = 8):
+    """Generate story predictions AND save them for hit tracking"""
+    try:
+        from story_pattern_generator import generate_combined_story_tickets, get_date_numbers as story_get_date_numbers
+        
+        draws = await db.draws.find({}, {"_id": 0}).to_list(3000)
+        if not draws:
+            raise HTTPException(status_code=404, detail="No draws found")
+        
+        draw_tuples = []
+        for d in draws:
+            nums = d.get('numbers', [])
+            lucky = d.get('lucky_number', d.get('lucky', 1))
+            replay = d.get('replay_number', d.get('replay', 1))
+            draw_tuples.append((d['date'], nums, lucky, replay))
+        
+        draw_tuples.sort(key=lambda x: datetime.strptime(x[0], "%d.%m.%Y"))
+        
+        if not target_date:
+            from datetime import timedelta
+            today = datetime.now()
+            days_until_wed = (2 - today.weekday()) % 7
+            days_until_sat = (5 - today.weekday()) % 7
+            if days_until_wed == 0:
+                days_until_wed = 7
+            if days_until_sat == 0:
+                days_until_sat = 7
+            next_draw = min(days_until_wed, days_until_sat)
+            target = today + timedelta(days=next_draw)
+            target_date = target.strftime("%d.%m.%Y")
+        
+        tickets = generate_combined_story_tickets(
+            target_date=target_date,
+            previous_draws=draw_tuples,
+            num_tickets=num_tickets
+        )
+        
+        # Save for hit tracking
+        gen_id = await hit_tracker.save_generation(
+            target_date=target_date,
+            tickets=tickets,
+            generation_type="story"
+        )
+        
+        date_nums = story_get_date_numbers(target_date)
+        
+        return {
+            "generation_id": gen_id,
+            "saved": True,
+            "target_date": target_date,
+            "date_analysis": date_nums,
+            "num_tickets": len(tickets),
+            "cost_estimate": f"{len(tickets) * 2.5} CHF",
+            "tickets": tickets
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/generation-history")
+async def get_generation_history(limit: int = 50):
+    """Get all saved generations with hit data"""
+    try:
+        generations = await hit_tracker.get_generation_history(limit=limit)
+        return {
+            "count": len(generations),
+            "generations": generations
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/calculate-hits/{generation_id}")
+async def calculate_hits_for_generation(generation_id: str):
+    """Calculate hits for a specific generation"""
+    try:
+        result = await hit_tracker.calculate_hits(generation_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/recalculate-all-hits")
+async def recalculate_all_hits():
+    """Recalculate hits for all pending generations"""
+    try:
+        result = await hit_tracker.recalculate_all_hits()
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/hit-stats")
+async def get_hit_stats():
+    """Get overall hit statistics"""
+    try:
+        stats = await hit_tracker.get_overall_stats()
+        last_draw = await hit_tracker.get_last_draw()
+        
+        return {
+            "last_draw": {
+                "date": last_draw.get("date") if last_draw else None,
+                "numbers": last_draw.get("numbers", []) if last_draw else [],
+                "lucky": last_draw.get("lucky_number", last_draw.get("lucky")) if last_draw else None
+            },
+            "stats": stats
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Include the router in the main app
 app.include_router(api_router)
 

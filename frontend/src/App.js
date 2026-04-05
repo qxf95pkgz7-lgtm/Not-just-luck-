@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import "@/App.css";
 import axios from "axios";
-import { Sparkles, RefreshCw, ChevronDown, ChevronUp, Gift, Star, Globe, History, Trash2 } from "lucide-react";
+import { Sparkles, RefreshCw, ChevronDown, ChevronUp, Gift, Star, Globe, History, Trash2, Target, TrendingUp, CheckCircle2, XCircle, Clock } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -553,6 +553,15 @@ function App() {
   const [historyStats, setHistoryStats] = useState(null);
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncResult, setSyncResult] = useState(null);
+  
+  // Hit Tracker State
+  const [showHitTracker, setShowHitTracker] = useState(false);
+  const [lastDraw, setLastDraw] = useState(null);
+  const [generationHistory, setGenerationHistory] = useState([]);
+  const [hitStats, setHitStats] = useState(null);
+  const [hitTrackerLoading, setHitTrackerLoading] = useState(false);
+  const [storyTickets, setStoryTickets] = useState(null);
+  const [storyLoading, setStoryLoading] = useState(false);
 
   // Sync latest lottery results from external sources
   const syncLatestResults = async () => {
@@ -563,6 +572,8 @@ function App() {
       setSyncResult(res.data);
       // Refresh stats after sync
       fetchStats();
+      // Also refresh last draw
+      fetchLastDraw();
     } catch (e) {
       console.error("Sync error:", e);
       setSyncResult({ error: "Failed to sync results" });
@@ -570,6 +581,91 @@ function App() {
       setSyncLoading(false);
     }
   };
+  
+  // Fetch last draw result
+  const fetchLastDraw = async () => {
+    try {
+      const res = await axios.get(`${API}/last-draw`);
+      setLastDraw(res.data);
+    } catch (e) {
+      console.error("Error fetching last draw:", e);
+    }
+  };
+  
+  // Fetch generation history with hits
+  const fetchGenerationHistory = async () => {
+    setHitTrackerLoading(true);
+    try {
+      const res = await axios.get(`${API}/generation-history?limit=30`);
+      setGenerationHistory(res.data.generations || []);
+    } catch (e) {
+      console.error("Error fetching generation history:", e);
+    } finally {
+      setHitTrackerLoading(false);
+    }
+  };
+  
+  // Fetch overall hit stats
+  const fetchHitStats = async () => {
+    try {
+      const res = await axios.get(`${API}/hit-stats`);
+      setHitStats(res.data);
+    } catch (e) {
+      console.error("Error fetching hit stats:", e);
+    }
+  };
+  
+  // Generate story tickets and save for tracking
+  const generateStoryTickets = async () => {
+    setStoryLoading(true);
+    try {
+      const res = await axios.get(`${API}/story-generator-save`);
+      setStoryTickets(res.data);
+      // Refresh history after generating
+      fetchGenerationHistory();
+      fetchHitStats();
+    } catch (e) {
+      console.error("Error generating story tickets:", e);
+    } finally {
+      setStoryLoading(false);
+    }
+  };
+  
+  // Calculate hits for a specific generation
+  const calculateHits = async (generationId) => {
+    try {
+      const res = await axios.post(`${API}/calculate-hits/${generationId}`);
+      // Refresh history to show updated hits
+      fetchGenerationHistory();
+      fetchHitStats();
+      return res.data;
+    } catch (e) {
+      console.error("Error calculating hits:", e);
+    }
+  };
+  
+  // Recalculate all pending hits
+  const recalculateAllHits = async () => {
+    setHitTrackerLoading(true);
+    try {
+      await axios.post(`${API}/recalculate-all-hits`);
+      fetchGenerationHistory();
+      fetchHitStats();
+    } catch (e) {
+      console.error("Error recalculating hits:", e);
+    } finally {
+      setHitTrackerLoading(false);
+    }
+  };
+  
+  // Load hit tracker data when section is opened
+  useEffect(() => {
+    if (showHitTracker) {
+      fetchLastDraw();
+      fetchGenerationHistory();
+      fetchHitStats();
+    }
+  }, [showHitTracker]);
 
   // Olivia's Kiss of Luck function
   const giveKissOfLuck = () => {
@@ -1384,6 +1480,219 @@ function App() {
                     </div>
                   ))
                 )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* HIT TRACKER SECTION - Story Generator History & Hits */}
+        <div className="lucky-card p-4 mb-4">
+          <button 
+            onClick={() => setShowHitTracker(!showHitTracker)}
+            className="w-full flex items-center justify-between text-left"
+          >
+            <div className="flex items-center gap-2">
+              <Target className="w-5 h-5 text-emerald-400" />
+              <span className="font-semibold text-slate-200">🎯 Hit Tracker</span>
+              <span className="text-xs text-slate-500">(Story Generator History)</span>
+            </div>
+            {showHitTracker ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+          </button>
+          
+          {showHitTracker && (
+            <div className="mt-4 space-y-4">
+              {/* Last Draw Result */}
+              {lastDraw && (
+                <div className="p-3 rounded-lg bg-gradient-to-r from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-emerald-400 font-semibold text-sm">📊 Last Draw Result</span>
+                    <span className="text-slate-400 text-xs">{lastDraw.date}</span>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {lastDraw.numbers?.map((n, i) => (
+                      <Ball key={i} number={n} size="sm" />
+                    ))}
+                    {lastDraw.lucky_number && (
+                      <span className="ml-2 px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 text-sm font-medium">
+                        🍀 {lastDraw.lucky_number}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {/* Stats Overview */}
+              {hitStats?.stats && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="p-2 rounded-lg bg-slate-800/50 border border-slate-700 text-center">
+                    <div className="text-xl font-bold text-amber-400">{hitStats.stats.total_generations}</div>
+                    <div className="text-xs text-slate-500">Generations</div>
+                  </div>
+                  <div className="p-2 rounded-lg bg-slate-800/50 border border-slate-700 text-center">
+                    <div className="text-xl font-bold text-emerald-400">{hitStats.stats.total_number_hits}</div>
+                    <div className="text-xs text-slate-500">Total Hits</div>
+                  </div>
+                  <div className="p-2 rounded-lg bg-slate-800/50 border border-slate-700 text-center">
+                    <div className="text-xl font-bold text-blue-400">{hitStats.stats.best_ever_hits}</div>
+                    <div className="text-xs text-slate-500">Best Ticket</div>
+                  </div>
+                  <div className="p-2 rounded-lg bg-slate-800/50 border border-slate-700 text-center">
+                    <div className="text-xl font-bold text-purple-400">{hitStats.stats.tickets_with_3plus}</div>
+                    <div className="text-xs text-slate-500">3+ Hits</div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Generate Story Tickets Button */}
+              <div className="flex gap-2">
+                <button
+                  onClick={generateStoryTickets}
+                  disabled={storyLoading}
+                  className="flex-1 py-2 px-4 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-semibold text-sm transition-all disabled:opacity-50"
+                >
+                  {storyLoading ? '🔮 Generating...' : '🎻 Generate Story Tickets (8 × 2.50 = 20 CHF)'}
+                </button>
+                <button
+                  onClick={recalculateAllHits}
+                  disabled={hitTrackerLoading}
+                  className="py-2 px-3 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm transition-all disabled:opacity-50"
+                  title="Recalculate all pending hits"
+                >
+                  <RefreshCw className={`w-4 h-4 ${hitTrackerLoading ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+              
+              {/* Latest Generated Tickets */}
+              {storyTickets && (
+                <div className="p-3 rounded-lg bg-gradient-to-r from-amber-500/10 to-amber-600/5 border border-amber-500/20">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-amber-400 font-semibold text-sm">🎻 ALL STORIES COMBINED! 🍀</span>
+                    <span className="text-slate-400 text-xs">Target: {storyTickets.target_date}</span>
+                  </div>
+                  <div className="space-y-2">
+                    {storyTickets.tickets?.map((ticket, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-xs">
+                        <span className="text-slate-500 w-6">T{idx + 1}:</span>
+                        <div className="flex items-center gap-1">
+                          {ticket.numbers?.map((n, i) => (
+                            <Ball key={i} number={n} size="xs" />
+                          ))}
+                        </div>
+                        <span className="text-amber-400">🍀{ticket.lucky}</span>
+                        <span className="text-slate-500 text-[10px] ml-1">{ticket.story}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-2 text-center text-emerald-400 text-xs font-medium">
+                    {storyTickets.cost_estimate} 🎲
+                  </div>
+                </div>
+              )}
+              
+              {/* Generation History */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-slate-300 font-medium text-sm">📜 Generation History</span>
+                  {generationHistory.length > 0 && (
+                    <span className="text-slate-500 text-xs">{generationHistory.length} saved</span>
+                  )}
+                </div>
+                <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
+                  {hitTrackerLoading ? (
+                    <div className="text-center text-slate-500 text-sm py-4">Loading...</div>
+                  ) : generationHistory.length === 0 ? (
+                    <div className="text-center text-slate-500 text-sm py-4">
+                      No generations saved yet. Click "Generate Story Tickets" to start tracking!
+                    </div>
+                  ) : (
+                    generationHistory.map((gen, idx) => (
+                      <div 
+                        key={gen._id || idx}
+                        className={`p-3 rounded-lg border ${
+                          gen.hits_calculated 
+                            ? 'bg-gradient-to-r from-emerald-500/10 to-emerald-600/5 border-emerald-500/20'
+                            : 'bg-gradient-to-r from-slate-500/10 to-slate-600/5 border-slate-500/20'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            {gen.hits_calculated ? (
+                              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                            ) : (
+                              <Clock className="w-4 h-4 text-slate-400" />
+                            )}
+                            <span className="text-slate-400 text-xs">
+                              For: <span className="text-slate-200">{gen.target_date}</span>
+                            </span>
+                          </div>
+                          <span className="text-slate-500 text-xs">
+                            {new Date(gen.generated_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        
+                        {/* Show tickets with hit highlighting */}
+                        <div className="space-y-1">
+                          {gen.tickets?.slice(0, 3).map((ticket, tidx) => {
+                            const hitResult = gen.hit_results?.[tidx];
+                            const hitNumbers = new Set(hitResult?.number_hits || []);
+                            
+                            return (
+                              <div key={tidx} className="flex items-center gap-1 text-xs">
+                                <span className="text-slate-500 w-5">T{tidx + 1}</span>
+                                <div className="flex items-center gap-0.5">
+                                  {ticket.numbers?.map((n, i) => (
+                                    <div 
+                                      key={i} 
+                                      className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold ${
+                                        hitNumbers.has(n) 
+                                          ? 'bg-emerald-500 text-white ring-2 ring-emerald-400' 
+                                          : 'bg-slate-700 text-slate-300'
+                                      }`}
+                                    >
+                                      {n}
+                                    </div>
+                                  ))}
+                                </div>
+                                <span className={`text-[10px] ${hitResult?.lucky_hit ? 'text-emerald-400 font-bold' : 'text-amber-400/50'}`}>
+                                  🍀{ticket.lucky}
+                                </span>
+                                {hitResult && (
+                                  <span className="text-emerald-400 text-[10px] ml-1">
+                                    ({hitResult.hit_count}/6{hitResult.lucky_hit ? ' +L' : ''})
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                          {gen.tickets?.length > 3 && (
+                            <div className="text-slate-500 text-xs">+{gen.tickets.length - 3} more tickets...</div>
+                          )}
+                        </div>
+                        
+                        {/* Hit Summary */}
+                        {gen.hits_calculated && (
+                          <div className="mt-2 pt-2 border-t border-slate-700/50 flex items-center justify-between">
+                            <div className="flex items-center gap-3 text-xs">
+                              <span className="text-emerald-400">✓ {gen.total_hits} hits</span>
+                              <span className="text-amber-400">🍀 {gen.lucky_hits} lucky</span>
+                              <span className="text-blue-400">🏆 Best: {gen.best_ticket_hits}/6</span>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Calculate Hits Button for pending */}
+                        {!gen.hits_calculated && (
+                          <button
+                            onClick={() => calculateHits(gen._id)}
+                            className="mt-2 w-full py-1 px-2 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs transition-all"
+                          >
+                            Calculate Hits
+                          </button>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           )}
