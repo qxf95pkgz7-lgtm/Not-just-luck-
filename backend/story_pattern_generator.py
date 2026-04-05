@@ -30,6 +30,52 @@ EIGHT_COUNT_MAGIC = 8  # 28 + 8 = 36
 # RC=5 SUM DATES - RARE EVENT SIGNALS
 RC_5_PATTERN = [5, 14, 23, 32, 41, 50, 104, 113, 122, 131, 140, 203, 212, 221, 230, 302, 311, 320, 401, 410, 500]
 
+# THE 84 CONSTANT (4 × 21)
+RC_CIRCLE_MULTIPLIER = 84
+
+
+def get_rc_circle_value(rc: int) -> Dict:
+    """
+    Calculate the RC Circle Value.
+    Formula: RC - (floor(RC/100) × 84) = Circle Value
+    Then apply -8 dance for hot number.
+    
+    Example:
+      RC 100: 100 - 84 = 16
+      RC 200: 200 - 168 = 32
+      RC 300: 300 - 252 = 48
+      RC 302: 302 - 252 = 50, 50-8 = 42 (THE MAX!)
+    """
+    n = rc // 100  # How many hundreds
+    subtract = n * RC_CIRCLE_MULTIPLIER
+    circle_value = rc - subtract
+    
+    # The -8 dance gives us a hot number
+    dance_value = circle_value - EIGHT_COUNT_MAGIC
+    if dance_value < 1:
+        dance_value = circle_value + EIGHT_COUNT_MAGIC
+    
+    # Circle partner of the value (within 1-42 lotto range)
+    if circle_value > 21:
+        circle_partner = circle_value - 21
+        while circle_partner > 42:
+            circle_partner -= 21
+    else:
+        circle_partner = circle_value + 21
+    
+    return {
+        'rc': rc,
+        'hundreds': n,
+        'subtracted': subtract,
+        'circle_value': circle_value,
+        'dance_value': dance_value,  # circle_value - 8
+        'circle_partner': circle_partner,
+        'hot_numbers': [
+            n for n in [circle_value, dance_value, circle_partner] 
+            if 1 <= n <= 42
+        ]
+    }
+
 
 def calculate_rc(draw_date: str, all_draws: List) -> int:
     """Calculate RC (Rare Count) from 18.03.2023"""
@@ -488,17 +534,46 @@ def generate_predictions(
         'confidence': 'MEDIUM'
     })
     
-    # TICKET 8: WARRIOR TICKET (top frequent + date)
-    t8_nums = [d, m]
-    for n in top_frequent:
-        if n not in t8_nums and len(t8_nums) < 6:
+    # TICKET 8: MEGA CONVERGENCE (When all signals align!)
+    # Combines: RC Circle, Date Dance, 8-count, RC sum
+    rc_circle = get_rc_circle_value(rc)
+    t8_nums = []
+    
+    # From RC Circle calculation
+    for n in rc_circle['hot_numbers']:
+        if n not in t8_nums and 1 <= n <= 42:
             t8_nums.append(n)
-    t8_nums = sorted(list(set(t8_nums)))[:6]
+    
+    # From Date Dance
+    date_nums = [dn['d_minus_m'], d, m, dn['d_plus_m']]
+    for n in date_nums:
+        if n and n not in t8_nums and 1 <= n <= 42 and len(t8_nums) < 6:
+            t8_nums.append(n)
+    
+    # The 8-count dance completion (36 if 28 was recent)
+    if 36 not in t8_nums and len(t8_nums) < 6:
+        t8_nums.append(36)
+    
+    # D×M + D+M
+    if dn['d_times_plus_sum'] and dn['d_times_plus_sum'] not in t8_nums and len(t8_nums) < 6:
+        t8_nums.append(dn['d_times_plus_sum'])
+    
+    t8_nums = sorted(list(set([n for n in t8_nums if 1 <= n <= 42])))[:6]
+    
+    # Determine confidence based on signal alignment
+    t8_confidence = 'MEDIUM'
+    if is_rare_signal and rc_circle['dance_value'] == 42:
+        t8_confidence = 'MEGA CONVERGENCE!'
+    elif is_rare_signal or rc_circle['dance_value'] in [21, 42]:
+        t8_confidence = 'HIGH'
+    
     tickets.append({
         'numbers': t8_nums,
         'lucky': 6,
-        'story': 'WARRIOR TICKET',
-        'confidence': 'MEDIUM'
+        'story': 'MEGA CONVERGENCE',
+        'confidence': t8_confidence,
+        'rc_circle_value': rc_circle['circle_value'],
+        'rc_dance_value': rc_circle['dance_value']
     })
     
     return tickets[:num_tickets]
