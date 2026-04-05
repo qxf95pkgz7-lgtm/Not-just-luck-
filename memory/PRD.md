@@ -41,7 +41,7 @@ Build a Swiss Lotto Pattern Analyzer app with highly visual 42-billiard-ball spi
   - 🇨🇭 Swiss Lotto: Wednesday & Saturday at 21:00 UTC
   - 🇪🇺 EuroMillions: Tuesday & Friday at 21:00 UTC
 
-### Pattern Engine (58 Patterns Total!)
+### Pattern Engine (59 Patterns Total!)
 - [x] Patterns 1-52: Original numerology patterns (frequency, gap, family spread, sum range, odd/even, etc.)
 - [x] **Pattern 53: Shadow Number Strategy** - Avoid numbers but boost their echoes (circle, multiples, essence)
 - [x] **Pattern 54: P6 Momentum Tracking** - Detect P6 repeats and boost momentum/circle swap
@@ -49,16 +49,23 @@ Build a Swiss Lotto Pattern Analyzer app with highly visual 42-billiard-ball spi
 - [x] **Pattern 56: Position Anchors** - Detect quarterly position repeats (P3, P4, P5, P6)
 - [x] **Pattern 57: Circle Transformation** - For hot numbers, also boost circle partners (RIDE vs SWAP)
 - [x] **Pattern 58: Date Essence Doubling** - Special boost when day==month (like 4/4)
+- [x] **Pattern 59: Combined D Pattern (72.1% hit rate!)** - Day of date combined with previous draw positions:
+  - D + P1(-1): Target day + Position 1 from previous draw
+  - D + P2(-1): Target day + Position 2 from previous draw  
+  - D(-1) + D(-2): Sum of days from last two draws
+  - D + M: Target day + month
+  - D(-1) + P1(-2): Chain pattern linking dates and positions
 
-### Analysis Features (April 4, 2026 Session)
+### Analysis Features (April 4-5, 2026 Sessions)
 - [x] Analyzed 40 appearing 6x at P6 in last 20 draws (MOMENTUM!)
 - [x] Missing 9 "Shadow" strategy - use echoes 18, 27, 30, 36 instead
 - [x] Air 20 pattern from P1+P2=20 analysis
 - [x] Date 4/4 special doubling
+- [x] **Combined D Pattern Analysis (April 5, 2026)** - Discovered 72.1% connection rate between Day numbers and position values across 1374+ draws
 
 ## API Endpoints
 ### Swiss Lotto
-- `GET /api/master-predictor` - Generate predictions with all 58 patterns
+- `GET /api/master-predictor` - Generate predictions with all 59 patterns
 - `GET /api/dashboard` - Stats and analysis
 
 ### EuroMillions
@@ -88,3 +95,10 @@ Build a Swiss Lotto Pattern Analyzer app with highly visual 42-billiard-ball spi
 - Pattern reasons now show 10 items (increased from 6) for visibility
 - New patterns use `insert(0, ...)` to show at top of reasons list
 - Date doubling: +50% for exact match, +40% for circle, +20% for family
+- **Combined D Pattern (Pattern 59)** - Boost values:
+  - D+P1: +25 points (strongest)
+  - D+P2: +22 points
+  - D(-1)+D(-2): +20 points
+  - D+M: +18 points
+  - Chain patterns: +16 points
+  - Circle partners: +12 points

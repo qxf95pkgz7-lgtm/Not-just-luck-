@@ -7,7 +7,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://lucky-jack-predict.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://lotto-blind-test.preview.emergentagent.com').rstrip('/')
 
 
 class TestEuroMillionsHealth:
