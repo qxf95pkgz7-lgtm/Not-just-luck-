@@ -537,12 +537,34 @@ function App() {
   
   // Special personas with unique number modifiers
   // Avi = +1 to 2-3 positions, Olivia = -1 to 2-3 positions, Dathi = +1 to 2-3 positions
-  const [activePersona, setActivePersona] = useState(null);
+  // Avi and Dathi can be selected TOGETHER and will modify DIFFERENT positions
+  const [activePersonas, setActivePersonas] = useState([]);
   const personas = [
-    { name: "Avi", modifier: "+1", description: "Adds +1 to 2-3 random numbers" },
-    { name: "Olivia", modifier: "-1", description: "Subtracts 1 from 2-3 random numbers" },
-    { name: "Dathi", modifier: "+1", description: "Adds +1 to 2-3 random numbers" }
+    { name: "Avi", modifier: "+1" },
+    { name: "Olivia", modifier: "-1" },
+    { name: "Dathi", modifier: "+1" }
   ];
+  
+  // Toggle persona selection (allow multiple for Avi+Dathi)
+  const togglePersona = (personaName) => {
+    setActivePersonas(prev => {
+      if (prev.includes(personaName)) {
+        // Deselect
+        return prev.filter(p => p !== personaName);
+      } else {
+        // If selecting Olivia, clear others (Olivia is exclusive)
+        if (personaName === "Olivia") {
+          return ["Olivia"];
+        }
+        // If Olivia was selected and now selecting Avi or Dathi, replace
+        if (prev.includes("Olivia")) {
+          return [personaName];
+        }
+        // Allow Avi + Dathi together
+        return [...prev, personaName];
+      }
+    });
+  };
   const [numTickets, setNumTickets] = useState(1);
   const [oliviaKiss, setOliviaKiss] = useState(false);
   const [showKissHearts, setShowKissHearts] = useState(false);
@@ -708,42 +730,76 @@ function App() {
 
   const getLockedCount = () => Object.values(lockedPositions).filter(v => v !== "").length;
 
-  // Apply persona modifiers to prediction numbers
-  const applyPersonaModifier = (numbers, persona, maxNum) => {
-    if (!persona) return numbers;
+  // Apply persona modifiers to prediction numbers (supports multiple personas)
+  const applyPersonaModifiers = (numbers, personas, maxNum) => {
+    if (!personas || personas.length === 0) return numbers;
     
     let modified = [...numbers];
+    const allPositions = [...Array(modified.length).keys()];
     
-    // Randomly pick 2-3 positions to modify
-    const numPositionsToModify = Math.random() < 0.5 ? 2 : 3;
-    const positionsToModify = [];
-    const availablePositions = [...Array(modified.length).keys()];
+    // Check if both Avi and Dathi are selected
+    const hasAvi = personas.includes("Avi");
+    const hasDathi = personas.includes("Dathi");
+    const hasOlivia = personas.includes("Olivia");
     
-    for (let i = 0; i < numPositionsToModify && availablePositions.length > 0; i++) {
-      const randomIdx = Math.floor(Math.random() * availablePositions.length);
-      positionsToModify.push(availablePositions[randomIdx]);
-      availablePositions.splice(randomIdx, 1);
-    }
-    
-    if (persona === "Avi") {
-      // Avi adds +1 to 2-3 random positions
-      positionsToModify.forEach(idx => {
+    if (hasAvi && hasDathi) {
+      // BOTH Avi and Dathi selected - they modify DIFFERENT positions
+      // Shuffle all positions
+      const shuffled = [...allPositions].sort(() => Math.random() - 0.5);
+      
+      // Avi gets first 2-3 positions
+      const aviCount = Math.random() < 0.5 ? 2 : 3;
+      const aviPositions = shuffled.slice(0, aviCount);
+      
+      // Dathi gets next 2-3 positions (different from Avi)
+      const dathiCount = Math.random() < 0.5 ? 2 : 3;
+      const remainingPositions = shuffled.slice(aviCount);
+      const dathiPositions = remainingPositions.slice(0, Math.min(dathiCount, remainingPositions.length));
+      
+      // Apply Avi's +1
+      aviPositions.forEach(idx => {
         let newN = modified[idx] + 1;
-        if (newN > maxNum) newN = 1; // wrap around
+        if (newN > maxNum) newN = 1;
         modified[idx] = newN;
       });
-    } else if (persona === "Olivia") {
-      // Olivia subtracts -1 from 2-3 random positions
-      positionsToModify.forEach(idx => {
+      
+      // Apply Dathi's +1 to DIFFERENT positions
+      dathiPositions.forEach(idx => {
+        let newN = modified[idx] + 1;
+        if (newN > maxNum) newN = 1;
+        modified[idx] = newN;
+      });
+    } else if (hasOlivia) {
+      // Olivia alone - subtracts 1 from 2-3 random positions
+      const numPositions = Math.random() < 0.5 ? 2 : 3;
+      const shuffled = [...allPositions].sort(() => Math.random() - 0.5);
+      const positions = shuffled.slice(0, numPositions);
+      
+      positions.forEach(idx => {
         let newN = modified[idx] - 1;
-        if (newN < 1) newN = maxNum; // wrap around
+        if (newN < 1) newN = maxNum;
         modified[idx] = newN;
       });
-    } else if (persona === "Dathi") {
-      // Dathi adds +1 to 2-3 random positions
-      positionsToModify.forEach(idx => {
+    } else if (hasAvi) {
+      // Avi alone - adds 1 to 2-3 random positions
+      const numPositions = Math.random() < 0.5 ? 2 : 3;
+      const shuffled = [...allPositions].sort(() => Math.random() - 0.5);
+      const positions = shuffled.slice(0, numPositions);
+      
+      positions.forEach(idx => {
         let newN = modified[idx] + 1;
-        if (newN > maxNum) newN = 1; // wrap around
+        if (newN > maxNum) newN = 1;
+        modified[idx] = newN;
+      });
+    } else if (hasDathi) {
+      // Dathi alone - adds 1 to 2-3 random positions
+      const numPositions = Math.random() < 0.5 ? 2 : 3;
+      const shuffled = [...allPositions].sort(() => Math.random() - 0.5);
+      const positions = shuffled.slice(0, numPositions);
+      
+      positions.forEach(idx => {
+        let newN = modified[idx] + 1;
+        if (newN > maxNum) newN = 1;
         modified[idx] = newN;
       });
     }
@@ -795,17 +851,17 @@ function App() {
         const mainTicket = res.data.tickets[0];
         const maxNum = 50;
         const transformed = {
-          main_prediction: applyPersonaModifier(mainTicket.numbers, activePersona, maxNum),
+          main_prediction: applyPersonaModifiers(mainTicket.numbers, activePersonas, maxNum),
           stars_prediction: mainTicket.stars,
           average_confidence: Math.round(mainTicket.confidence * 100),
           alternate_numbers: res.data.tickets.length > 1 ? res.data.tickets[1].numbers : [3, 11, 19, 27, 33],
           all_tickets: res.data.tickets.map((t, i) => ({
             ticket_num: i + 1,
-            numbers: applyPersonaModifier(t.numbers, activePersona, maxNum),
+            numbers: applyPersonaModifiers(t.numbers, activePersonas, maxNum),
             stars: t.stars,
             confidence: Math.round(t.confidence * 100)
           })),
-          persona_applied: activePersona
+          persona_applied: activePersonas.join('+') || null
         };
         setPrediction(transformed);
       } else {
@@ -813,8 +869,8 @@ function App() {
         const maxNum = 42;
         const modifiedData = {
           ...res.data,
-          main_prediction: applyPersonaModifier(res.data.main_prediction, activePersona, maxNum),
-          persona_applied: activePersona
+          main_prediction: applyPersonaModifiers(res.data.main_prediction, activePersonas, maxNum),
+          persona_applied: activePersonas.join('+') || null
         };
         setPrediction(modifiedData);
       }
@@ -858,7 +914,7 @@ function App() {
     } finally {
       setLoading(false);
     }
-  }, [birthday, fullName, lockedPositions, numTickets, lotteryMode, activePersona]);
+  }, [birthday, fullName, lockedPositions, numTickets, lotteryMode, activePersonas]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -1202,11 +1258,17 @@ function App() {
                     <button
                       key={idx}
                       onClick={() => {
-                        setActivePersona(activePersona === persona.name ? null : persona.name);
-                        setFullName(persona.name);
+                        togglePersona(persona.name);
+                        // Set full name to selected personas
+                        const newPersonas = activePersonas.includes(persona.name) 
+                          ? activePersonas.filter(p => p !== persona.name)
+                          : (persona.name === "Olivia" ? ["Olivia"] : 
+                             activePersonas.includes("Olivia") ? [persona.name] : 
+                             [...activePersonas, persona.name]);
+                        setFullName(newPersonas.join(' & ') || '');
                       }}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                        activePersona === persona.name 
+                        activePersonas.includes(persona.name)
                           ? lotteryMode === 'swiss' 
                             ? 'bg-amber-500 text-gray-900 ring-2 ring-amber-300' 
                             : 'bg-blue-500 text-white ring-2 ring-blue-300'
