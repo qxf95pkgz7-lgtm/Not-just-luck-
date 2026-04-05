@@ -2999,6 +2999,87 @@ async def get_master_prediction(
     except Exception as e:
         logging.warning(f"Pattern 60 Story Signs error: {e}")
     
+    # === 61. STORY NUMBERS MEGA BOOST (THE AVI PATTERNS!) ===
+    # These are the numbers discovered through deep numerology analysis:
+    # - 13 Family: Mr. 13 the hero, escaped from Replay Jail
+    # - 26 Family: The connector number, circle partner of 5
+    # - 18-39 Circle: The reunion couple, gap of 21
+    # - 33-12 Tragic Love: 30 draws apart, waiting for reunion
+    # - 7 Ladder: 7, 14, 21, 28, 35, 42 - the complete ladder
+    
+    # === 13 FAMILY - MR. 13 THE HERO ===
+    FAMILY_13 = [10, 13, 14, 15, 21, 23, 31, 34]
+    for num in FAMILY_13:
+        scores[num]["score"] += 25
+        scores[num]["reasons"].append(f"🦸 13 FAMILY: Mr. 13's crew")
+    scores[13]["score"] += 35  # Extra boost for the hero himself
+    scores[13]["reasons"].append("🦸 MR. 13: The HERO!")
+    
+    # === 26 FAMILY - THE CONNECTOR ===
+    FAMILY_26 = [5, 13, 26, 27, 30, 31, 38]  # From the 42 tickets
+    for num in FAMILY_26:
+        scores[num]["score"] += 25
+        scores[num]["reasons"].append(f"👨‍👩‍👧‍👦 26 FAMILY: The connector")
+    scores[26]["score"] += 35  # Extra for 26 itself
+    scores[26]["reasons"].append("👨‍👩‍👧‍👦 26: Family head (circle=5)")
+    scores[5]["score"] += 20  # Circle partner
+    scores[5]["reasons"].append("⭕ 26↔5: Circle reunion")
+    
+    # === 18-39 CIRCLE PARTNERSHIP ===
+    scores[18]["score"] += 40
+    scores[18]["reasons"].append("💑 18-39 CIRCLE: Reunion at P3!")
+    scores[39]["score"] += 40
+    scores[39]["reasons"].append("💑 18-39 CIRCLE: Reunion at P6!")
+    # Common companions
+    for num in [32, 11, 25, 4, 42]:
+        scores[num]["score"] += 15
+        scores[num]["reasons"].append("💑 18-39 companions")
+    
+    # === 33-12 TRAGIC LOVE STORY ===
+    scores[33]["score"] += 35
+    scores[33]["reasons"].append("💔 33-12 REUNION: Waiting 30 draws!")
+    scores[12]["score"] += 35
+    scores[12]["reasons"].append("💔 33-12 REUNION: The blocker becomes friend!")
+    # Related numbers
+    for num in [10, 11, 36, 38]:
+        scores[num]["score"] += 12
+        scores[num]["reasons"].append("💔 33-12 neighbors")
+    
+    # === 7 LADDER (P1 + P6 = 42) ===
+    SEVEN_LADDER = [7, 14, 21, 28, 35, 42]
+    for num in SEVEN_LADDER:
+        scores[num]["score"] += 30
+        scores[num]["reasons"].append("🪜 7 LADDER: P1+P6=42!")
+    
+    # === CIRCLE CONSTANT (+/-21) ===
+    # Apply circle awareness to hot numbers
+    if last_draw:
+        for num in last_draw['numbers']:
+            circle_up = num + 21 if num + 21 <= 42 else num + 21 - 42
+            circle_down = num - 21 if num > 21 else num - 21 + 42
+            if 1 <= circle_up <= 42:
+                scores[circle_up]["score"] += 15
+                scores[circle_up]["reasons"].append(f"⭕ Circle of {num}")
+            if 1 <= circle_down <= 42 and circle_down != circle_up:
+                scores[circle_down]["score"] += 15
+                scores[circle_down]["reasons"].append(f"⭕ Circle of {num}")
+    
+    # === DATE DANCE BOOST ===
+    # D, M, D+M, D-M, D*M often appear
+    today = datetime.now()
+    d, m = today.day, today.month
+    date_numbers = [
+        (d, f"📅 Day={d}"),
+        (m, f"📅 Month={m}"),
+        (d + m, f"📅 D+M={d+m}"),
+        (abs(d - m), f"📅 |D-M|={abs(d-m)}"),
+        (d * m, f"📅 D×M={d*m}"),
+    ]
+    for num, reason in date_numbers:
+        if 1 <= num <= 42:
+            scores[num]["score"] += 20
+            scores[num]["reasons"].append(reason)
+    
     # === COMPILE FINAL PREDICTIONS ===
     # Filter out locked numbers from candidates
     locked_nums_set = set(locked_positions.values()) if locked_positions else set()
