@@ -3598,6 +3598,84 @@ async def sync_swisslotto_only():
         "stats": stats
     }
 
+@api_router.get("/story-signs")
+async def get_story_signs_analysis():
+    """
+    Pattern 60: Story Signs - Advanced pattern analysis
+    
+    Analyzes the last quarter (27 draws) to find:
+    - Circle warming patterns (when circle appears, actual number follows)
+    - Hunger patterns (neighbors appear without the number)
+    - Consecutive sequences (rare 4+ in a row)
+    - Secret counting (value + gap = next value at same position)
+    - Mirror to 42 patterns
+    - Date code analysis
+    - Family tracking
+    
+    Returns scores and reasons for each number 1-42.
+    """
+    try:
+        # Get all Swiss Lotto draws
+        draws = await db.draws.find({}, {"_id": 0}).to_list(3000)
+        
+        if not draws:
+            raise HTTPException(status_code=404, detail="No draws found")
+        
+        # Run Pattern 60 analysis
+        result = analyze_story_signs(draws, quarter_size=27)
+        
+        # Sort scores by value
+        sorted_scores = sorted(
+            [(num, data) for num, data in result['scores'].items()],
+            key=lambda x: x[1]['score'],
+            reverse=True
+        )
+        
+        # Format top predictions
+        top_predictions = []
+        for num, data in sorted_scores[:15]:
+            top_predictions.append({
+                "number": num,
+                "score": data['score'],
+                "reasons": data['reasons']
+            })
+        
+        # Check our prediction numbers
+        our_prediction = [13, 26, 27, 30, 31, 38]
+        our_numbers_analysis = []
+        for num in our_prediction:
+            if num in result['scores']:
+                data = result['scores'][num]
+                our_numbers_analysis.append({
+                    "number": num,
+                    "score": data['score'],
+                    "reasons": data['reasons']
+                })
+            else:
+                our_numbers_analysis.append({
+                    "number": num,
+                    "score": 0,
+                    "reasons": []
+                })
+        
+        return {
+            "pattern": "60 - Story Signs",
+            "quarter_analyzed": result['quarter_analyzed'],
+            "rare_events": result['rare_events'],
+            "signs": result['signs'][:20],
+            "top_15_predictions": top_predictions,
+            "our_prediction_analysis": our_numbers_analysis,
+            "prediction": {
+                "numbers": our_prediction,
+                "lucky": 5,
+                "source": "Story of 26 - Full Circle from 19.06.2024"
+            }
+        }
+        
+    except Exception as e:
+        logging.error(f"Story Signs analysis error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/latest-results")
 async def get_latest_external_results():
     """
