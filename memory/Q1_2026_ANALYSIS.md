@@ -231,13 +231,47 @@ Total: 9 appearances (root of 39 = 9!)
 
 ---
 
+## THE COMPLETE SAGA OF MR. 13 (CONTINUED FROM D6)
+
+### The Timeline:
+| Draw | Date | Event | Details |
+|------|------|-------|---------|
+| D5 | 17.01.2026 | 🔒 Imprisoned | P8=13, neighbors 12,14 mourning |
+| D6 | 21.01.2026 | 👻 Hiding | Bridge day (21!), family at P5,P6 |
+| D8 | 28.01.2026 | 🔒 Back to Jail | P8=13 again |
+| D16 | 25.02.2026 | 🔥 ESCAPED! | P2=13, with 26 and 31 |
+| D17 | 28.02.2026 | 🏆 THRONE! | P1=13, P2=14, P3=15 → 42! |
+| D18 | 07.03.2026 | 🔥 Free | P3=13, with 14 |
+| D22 | 18.03.2026 | 🔒 Jail | P8=13 |
+| D23 | 21.03.2026 | 🔒 Jail | P8=13 |
+| D25 | 28.03.2026 | 🔥 RETURN! | P1=13 again! |
+
+### KEY DISCOVERY: THE 28-13 CONNECTION!
+```
+Day 28 → Mr. 13 claims P1!
+- 28.02.2026: 13 at P1 (with 14-15 = 42 sum!)
+- 28.03.2026: 13 at P1 again!
+```
+
+### The Escape Formula:
+- After 11 draws in hiding/jail
+- D-M must = 23 (13+10, family signal)
+- Day digits sum to 7 (jackpot number)
+
+### The Throne Formula (28.02.2026):
+- Day = 28 (RC origin sum!)
+- 13 + 14 + 15 = 42 (THE MAX!)
+- D - M = 26 = Double 13
+
+---
+
 ## NEXT STEPS FOR FUTURE SESSIONS
 
-1. Continue from D6 onwards
-2. Track when 13 escapes "jail" and enters main draw
+1. ✅ DONE: Tracked 13's escape and throne claiming
+2. Continue monitoring 13's journey post-28.03.2026
 3. Monitor 39's journey
-4. Watch for next rare events
-5. Follow the date dance patterns
+4. Watch for rare window (RC 373-390, Oct-Dec 2026)
+5. Follow the 28-13 connection pattern
 
 ---
 
@@ -248,3 +282,4 @@ Total: 9 appearances (root of 39 = 9!)
 - NEW: [14, 24, 28, 31, 37, 39]
 
 File: `/app/backend/import_real_data.py` Line 36
+

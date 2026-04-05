@@ -30,8 +30,32 @@ EIGHT_COUNT_MAGIC = 8  # 28 + 8 = 36
 # RC=5 SUM DATES - RARE EVENT SIGNALS
 RC_5_PATTERN = [5, 14, 23, 32, 41, 50, 104, 113, 122, 131, 140, 203, 212, 221, 230, 302, 311, 320, 401, 410, 500]
 
-# THE 84 CONSTANT (4 × 21)
-RC_CIRCLE_MULTIPLIER = 84
+# THE 28-13 CONNECTION (Discovered in Q1 2026 analysis!)
+# When Day = 28, Mr. 13 tends to appear at P1!
+DAY_28_PATTERN = {
+    'day': 28,
+    'hero': 13,
+    'expected_position': 1,  # P1
+    'companions': [14, 15],  # 13-14-15 = 42!
+    'max_sum': 42  # 13 + 14 + 15
+}
+
+
+def check_day_28_pattern(date_str: str) -> Dict:
+    """
+    Check if it's a Day 28 draw - Mr. 13 tends to claim P1!
+    28.02.2026: 13 at P1 with 14, 15 (sum = 42)
+    28.03.2026: 13 at P1 again!
+    """
+    dn = get_date_numbers(date_str)
+    is_day_28 = dn['day'] == 28
+    
+    return {
+        'is_day_28': is_day_28,
+        'prediction': '13 likely at P1 with 14, 15!' if is_day_28 else None,
+        'hot_numbers': [13, 14, 15] if is_day_28 else [],
+        'max_sum': 42 if is_day_28 else None
+    }
 
 # CHAPTER CYCLE - CORRECTED FROM REAL DATA
 # The ~288-305 cycle is between 4+ SINGLES events, not fixed at 302!
