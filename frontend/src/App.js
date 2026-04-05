@@ -536,12 +536,12 @@ function App() {
   const [lockedPositions, setLockedPositions] = useState({ p1: "", p2: "", p3: "", p4: "", p5: "", p6: "" });
   
   // Special personas with unique number modifiers
-  // Avi = adds a "crazy" wild number, Olivia = +1 modifier, Dathi = +3 modifier
+  // Avi = +1 to 2-3 positions, Olivia = -1 to 2-3 positions, Dathi = +1 to 2-3 positions
   const [activePersona, setActivePersona] = useState(null);
   const personas = [
-    { name: "Avi", modifier: "crazy", description: "Adds wild crazy number" },
-    { name: "Olivia", modifier: "+1", description: "Adds +1 to numbers" },
-    { name: "Dathi", modifier: "+3", description: "Adds +3 to numbers" }
+    { name: "Avi", modifier: "+1", description: "Adds +1 to 2-3 random numbers" },
+    { name: "Olivia", modifier: "-1", description: "Subtracts 1 from 2-3 random numbers" },
+    { name: "Dathi", modifier: "+1", description: "Adds +1 to 2-3 random numbers" }
   ];
   const [numTickets, setNumTickets] = useState(1);
   const [oliviaKiss, setOliviaKiss] = useState(false);
@@ -714,31 +714,37 @@ function App() {
     
     let modified = [...numbers];
     
+    // Randomly pick 2-3 positions to modify
+    const numPositionsToModify = Math.random() < 0.5 ? 2 : 3;
+    const positionsToModify = [];
+    const availablePositions = [...Array(modified.length).keys()];
+    
+    for (let i = 0; i < numPositionsToModify && availablePositions.length > 0; i++) {
+      const randomIdx = Math.floor(Math.random() * availablePositions.length);
+      positionsToModify.push(availablePositions[randomIdx]);
+      availablePositions.splice(randomIdx, 1);
+    }
+    
     if (persona === "Avi") {
-      // Avi adds a "crazy" wild number - pick a number NOT in the prediction
-      const crazyOptions = [];
-      for (let i = 1; i <= maxNum; i++) {
-        if (!modified.includes(i)) crazyOptions.push(i);
-      }
-      // Pick a truly random crazy number and swap it with one position
-      if (crazyOptions.length > 0) {
-        const crazyNum = crazyOptions[Math.floor(Math.random() * crazyOptions.length)];
-        const swapIdx = Math.floor(Math.random() * modified.length);
-        modified[swapIdx] = crazyNum;
-      }
+      // Avi adds +1 to 2-3 random positions
+      positionsToModify.forEach(idx => {
+        let newN = modified[idx] + 1;
+        if (newN > maxNum) newN = 1; // wrap around
+        modified[idx] = newN;
+      });
     } else if (persona === "Olivia") {
-      // Olivia adds +1 to each number (wrap around max)
-      modified = modified.map(n => {
-        let newN = n + 1;
-        if (newN > maxNum) newN = 1;
-        return newN;
+      // Olivia subtracts -1 from 2-3 random positions
+      positionsToModify.forEach(idx => {
+        let newN = modified[idx] - 1;
+        if (newN < 1) newN = maxNum; // wrap around
+        modified[idx] = newN;
       });
     } else if (persona === "Dathi") {
-      // Dathi adds +3 to each number (wrap around max)
-      modified = modified.map(n => {
-        let newN = n + 3;
-        if (newN > maxNum) newN = newN - maxNum;
-        return newN;
+      // Dathi adds +1 to 2-3 random positions
+      positionsToModify.forEach(idx => {
+        let newN = modified[idx] + 1;
+        if (newN > maxNum) newN = 1; // wrap around
+        modified[idx] = newN;
       });
     }
     
