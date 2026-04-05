@@ -1213,17 +1213,11 @@ function App() {
                           : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600'
                       }`}
                       data-testid={`persona-${persona.name.toLowerCase()}`}
-                      title={persona.description}
                     >
                       {persona.name} <span className="opacity-70">({persona.modifier})</span>
                     </button>
                   ))}
                 </div>
-                {activePersona && (
-                  <p className="text-xs text-amber-400 mt-1">
-                    {personas.find(p => p.name === activePersona)?.description}
-                  </p>
-                )}
               </div>
               <div>
                 <label className="text-xs text-slate-400 mb-1 block">Birthday</label>
