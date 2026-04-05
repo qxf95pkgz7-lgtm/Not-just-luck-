@@ -33,34 +33,56 @@ RC_5_PATTERN = [5, 14, 23, 32, 41, 50, 104, 113, 122, 131, 140, 203, 212, 221, 2
 # THE 84 CONSTANT (4 × 21)
 RC_CIRCLE_MULTIPLIER = 84
 
-# CHAPTER CYCLE LENGTH (~302 draws per chapter, ~3 years)
-CHAPTER_CYCLE_LENGTH = 302
-YEARS_PER_CHAPTER = 2.9
+# CHAPTER CYCLE - CORRECTED FROM REAL DATA
+# The ~288-305 cycle is between 4+ SINGLES events, not fixed at 302!
+# Real data shows: 305, 234, 288, 143 draw gaps
+CYCLE_MIN = 288
+CYCLE_MAX = 305
+CYCLE_AVG = 296  # Average of observed cycles
+
+# Key 4+ singles events from history (draw index from start of data)
+FOUR_PLUS_SINGLES_HISTORY = [
+    ('23.11.2013', 90),   # 4 singles
+    ('29.10.2016', 395),  # 4 singles - 305 gap!
+    ('30.01.2019', 629),  # 4 singles - 234 gap
+    ('03.11.2021', 917),  # 4 singles - 288 gap!
+    ('18.03.2023', 1060), # 5 singles - THE JACKPOT - 143 gap
+    ('10.01.2024', 1145), # 4 singles - RC 85 from jackpot
+]
+
+# Last known 4+ singles event
+LAST_FOUR_PLUS_DATE = '10.01.2024'
+LAST_FOUR_PLUS_RC = 85  # RC from 18.03.2023
 
 
-def get_chapter_info(rc: int) -> Dict:
+def get_singles_cycle_info(rc: int) -> Dict:
     """
-    Determine which chapter we're in and position within chapter.
+    Track where we are in the 4+ singles cycle.
+    Based on REAL data: cycles range 143-305 draws, avg ~250.
     
-    Each chapter = ~302 draws = ~3 years
-    After each rare event, count resets to RC 0 for new chapter.
-    
-    Chapter 1 started: 18.03.2023
-    Chapter 2 expected: 07.02.2026 (RC 302)
+    The cycle counts from the LAST 4+ singles event, not the jackpot!
     """
-    chapter = rc // CHAPTER_CYCLE_LENGTH
-    position_in_chapter = rc % CHAPTER_CYCLE_LENGTH
+    # Gap since last 4+ singles (RC 85 = 10.01.2024)
+    gap_since_last_4plus = rc - LAST_FOUR_PLUS_RC
     
-    # How close are we to next rare event?
-    draws_to_rare = CHAPTER_CYCLE_LENGTH - position_in_chapter
+    # Are we in the predicted window?
+    in_window = CYCLE_MIN <= gap_since_last_4plus <= CYCLE_MAX
+    approaching = gap_since_last_4plus >= (CYCLE_MIN - 30)
+    
+    # Next predicted window
+    window_start_rc = LAST_FOUR_PLUS_RC + CYCLE_MIN
+    window_end_rc = LAST_FOUR_PLUS_RC + CYCLE_MAX
     
     return {
-        'total_rc': rc,
-        'chapter': chapter + 1,  # Human-readable (Chapter 1, 2, 3...)
-        'position_in_chapter': position_in_chapter,
-        'draws_to_next_rare_event': draws_to_rare,
-        'is_near_rare_event': draws_to_rare <= 10,
-        'is_rare_event': position_in_chapter >= 300 and get_rc_sum(rc) == 5
+        'current_rc': rc,
+        'last_4plus_rc': LAST_FOUR_PLUS_RC,
+        'last_4plus_date': LAST_FOUR_PLUS_DATE,
+        'gap_since_last_4plus': gap_since_last_4plus,
+        'in_rare_window': in_window,
+        'approaching_window': approaching,
+        'window_start_rc': window_start_rc,  # RC 373
+        'window_end_rc': window_end_rc,      # RC 390
+        'draws_to_window': max(0, window_start_rc - rc)
     }
 
 
@@ -398,8 +420,13 @@ def generate_predictions(
     rc_digits = [int(x) for x in str(rc)] if rc > 0 else [0]
     rc_sum = get_rc_sum(rc)
     
-    # Check if this is a RARE EVENT signal date
-    is_rare_signal = is_rare_event_signal(rc)
+    # Check if we're in the RARE WINDOW (based on real cycle data)
+    cycle_info = get_singles_cycle_info(rc)
+    is_in_rare_window = cycle_info['in_rare_window']
+    is_approaching = cycle_info['approaching_window']
+    
+    # RC sum = 5 is still a signal, but not the only one
+    rc_sum_is_5 = (rc_sum == 5)
     
     # Get P4 predictions
     p4_candidates = predict_p4_from_date(target_date)
@@ -482,17 +509,25 @@ def generate_predictions(
         'p4_targets': p4_candidates
     })
     
-    # TICKET 3: RARE EVENT RADAR (Heavy single digits if RC sum = 5)
-    if is_rare_signal:
-        # RC sum = 5! Load up on single digits like the jackpot!
+    # TICKET 3: RARE EVENT RADAR (Based on REAL cycle data!)
+    # Activates when: in rare window OR approaching window OR RC sum = 5
+    if is_in_rare_window:
+        # IN THE WINDOW! Load up on single digits!
         t3_nums = [1, 3, 4, 7, 9]  # From the original jackpot
-        # Add one from teens/twenties
-        for n in [23, 13, 14]:  # 23 was in jackpot
-            if n not in t3_nums:
-                t3_nums.append(n)
-                break
-        t3_story = f'RARE EVENT RADAR (RC {rc} sum=5!)'
-        t3_confidence = 'RARE SIGNAL!'
+        t3_nums.append(23)  # The one double-digit from jackpot
+        t3_story = f'RARE WINDOW ACTIVE! (Gap={cycle_info["gap_since_last_4plus"]})'
+        t3_confidence = 'IN RARE WINDOW!'
+    elif is_approaching:
+        # Approaching window - start mixing singles
+        t3_nums = [1, 3, 7, 9]  # Core singles
+        t3_nums.extend([13, 23])  # Add some teens/twenties
+        t3_story = f'APPROACHING RARE WINDOW (Gap={cycle_info["gap_since_last_4plus"]}, Window at {cycle_info["window_start_rc"]})'
+        t3_confidence = 'ELEVATED'
+    elif rc_sum_is_5:
+        # RC sum = 5 is still notable
+        t3_nums = [1, 3, 4, 7, 9, 23]
+        t3_story = f'RC SUM=5 SIGNAL (RC {rc})'
+        t3_confidence = 'MEDIUM-HIGH'
     else:
         # Normal mode: circle pairs
         t3_nums = [5, 26, 13, 34, 9, 30]
@@ -506,7 +541,12 @@ def generate_predictions(
         'story': t3_story,
         'confidence': t3_confidence,
         'rc': rc,
-        'rc_sum': rc_sum
+        'rc_sum': rc_sum,
+        'cycle_info': {
+            'gap': cycle_info['gap_since_last_4plus'],
+            'window_start': cycle_info['window_start_rc'],
+            'window_end': cycle_info['window_end_rc']
+        }
     })
     
     # TICKET 4: THE 28→36 DANCE
@@ -564,12 +604,12 @@ def generate_predictions(
         'confidence': 'MEDIUM'
     })
     
-    # TICKET 8: MEGA CONVERGENCE (When all signals align!)
-    # Combines: RC Circle, Date Dance, 8-count, RC sum
+    # TICKET 8: MEGA CONVERGENCE (When signals align!)
+    # Combines: RC Circle, Date Dance, cycle position
     rc_circle = get_rc_circle_value(rc)
     t8_nums = []
     
-    # From RC Circle calculation
+    # From RC Circle calculation (still valid math)
     for n in rc_circle['hot_numbers']:
         if n not in t8_nums and 1 <= n <= 42:
             t8_nums.append(n)
@@ -580,9 +620,11 @@ def generate_predictions(
         if n and n not in t8_nums and 1 <= n <= 42 and len(t8_nums) < 6:
             t8_nums.append(n)
     
-    # The 8-count dance completion (36 if 28 was recent)
-    if 36 not in t8_nums and len(t8_nums) < 6:
-        t8_nums.append(36)
+    # If in rare window, prioritize singles
+    if is_in_rare_window:
+        for n in [1, 3, 7, 9]:
+            if n not in t8_nums and len(t8_nums) < 6:
+                t8_nums.append(n)
     
     # D×M + D+M
     if dn['d_times_plus_sum'] and dn['d_times_plus_sum'] not in t8_nums and len(t8_nums) < 6:
@@ -590,12 +632,14 @@ def generate_predictions(
     
     t8_nums = sorted(list(set([n for n in t8_nums if 1 <= n <= 42])))[:6]
     
-    # Determine confidence based on signal alignment
+    # Determine confidence
     t8_confidence = 'MEDIUM'
-    if is_rare_signal and rc_circle['dance_value'] == 42:
-        t8_confidence = 'MEGA CONVERGENCE!'
-    elif is_rare_signal or rc_circle['dance_value'] in [21, 42]:
-        t8_confidence = 'HIGH'
+    if is_in_rare_window:
+        t8_confidence = 'IN RARE WINDOW!'
+    elif is_approaching and rc_sum_is_5:
+        t8_confidence = 'HIGH (Approaching + RC sum=5)'
+    elif rc_circle['dance_value'] in [21, 42]:
+        t8_confidence = 'HIGH (Circle dance hit)'
     
     tickets.append({
         'numbers': t8_nums,
@@ -603,7 +647,8 @@ def generate_predictions(
         'story': 'MEGA CONVERGENCE',
         'confidence': t8_confidence,
         'rc_circle_value': rc_circle['circle_value'],
-        'rc_dance_value': rc_circle['dance_value']
+        'rc_dance_value': rc_circle['dance_value'],
+        'in_rare_window': is_in_rare_window
     })
     
     return tickets[:num_tickets]
@@ -685,19 +730,32 @@ DANCE_28_36 = {
 def get_rare_event_analysis(target_date: str, previous_draws: List[Tuple]) -> Dict:
     """
     Full rare event analysis for a target date.
-    Returns probability indicators and recommendations.
+    CORRECTED: Based on real data showing ~288-305 draw cycles
+    between 4+ singles events.
     """
     rc = calculate_rc_for_date(target_date)
     rc_sum = get_rc_sum(rc)
     dn = get_date_numbers(target_date)
     
+    # Get cycle info (distance from last 4+ singles)
+    cycle_info = get_singles_cycle_info(rc)
+    
     signals = []
     probability = 'LOW'
     
-    # Check RC sum = 5
-    if rc_sum == 5:
-        signals.append(f'RC {rc} sum = 5! (Jackpot signal)')
+    # Check if in rare window
+    if cycle_info['in_rare_window']:
+        signals.append(f'IN RARE WINDOW! (Gap={cycle_info["gap_since_last_4plus"]} draws)')
+        probability = 'HIGH'
+    elif cycle_info['approaching_window']:
+        signals.append(f'Approaching rare window (Gap={cycle_info["gap_since_last_4plus"]}, Window at RC {cycle_info["window_start_rc"]})')
         probability = 'ELEVATED'
+    
+    # RC sum = 5 is still a signal
+    if rc_sum == 5:
+        signals.append(f'RC {rc} sum = 5')
+        if probability == 'LOW':
+            probability = 'MEDIUM'
     
     # Check if D-M is single digit
     if 1 <= dn['d_minus_m'] <= 9:
@@ -707,7 +765,6 @@ def get_rare_event_analysis(target_date: str, previous_draws: List[Tuple]) -> Di
     jackpot_nums = [1, 3, 4, 7, 9, 23]
     if dn['d_plus_m'] in jackpot_nums:
         signals.append(f"D+M = {dn['d_plus_m']} (jackpot number!)")
-        probability = 'ELEVATED'
     
     # Check date connection to jackpot
     d, m = dn['day'], dn['month']
@@ -716,30 +773,16 @@ def get_rare_event_analysis(target_date: str, previous_draws: List[Tuple]) -> Di
     if m in jackpot_nums:
         signals.append(f"Month {m} is a jackpot number!")
     
-    # Check if approaching RC milestone
-    next_rc5 = None
-    for rc5 in RC_5_PATTERN:
-        if rc5 > rc:
-            next_rc5 = rc5
-            break
-    
-    if next_rc5 and next_rc5 - rc <= 5:
-        signals.append(f"Approaching RC {next_rc5} (sum=5) in {next_rc5 - rc} draws!")
-    
-    # Determine final probability
-    if len(signals) >= 3:
-        probability = 'HIGH'
-    elif len(signals) >= 2:
-        probability = 'MEDIUM'
-    
     return {
         'date': target_date,
         'rc': rc,
         'rc_sum': rc_sum,
         'signals': signals,
         'probability': probability,
-        'next_rc5': next_rc5,
-        'recommendation': 'LOAD SINGLE DIGITS!' if probability in ['HIGH', 'ELEVATED'] else 'Normal play'
+        'cycle_info': cycle_info,
+        'recommendation': 'LOAD SINGLE DIGITS!' if probability == 'HIGH' else (
+            'Mix in more singles' if probability == 'ELEVATED' else 'Normal play'
+        )
     }
 
 

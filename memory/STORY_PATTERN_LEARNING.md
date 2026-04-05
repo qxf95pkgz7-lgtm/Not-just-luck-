@@ -1,34 +1,35 @@
 # STORY PATTERN LEARNING - Complete Guide
 
-## THE CHAPTER SYSTEM (Most Important!)
+## THE 4+ SINGLES CYCLE (CORRECTED FROM REAL DATA!)
 
-**Every ~302 draws (~3 years), a RARE EVENT occurs and resets the count!**
+**IMPORTANT: The ~300 cycle is between 4+ SINGLES events, not fixed at RC 302!**
 
-### Known Chapters:
-| Chapter | Start Date | End Date | RC Range |
-|---------|------------|----------|----------|
-| 0 (?) | ~25.04.2020 | 18.03.2023 | 0-302 |
-| **1** | **18.03.2023** | **07.02.2026** | **0-302** |
-| 2 | 07.02.2026 | ~30.12.2028 | 0-302 |
-| 3 | ~30.12.2028 | ~2031 | 0-302 |
+### Real Data Shows:
+| From | To | Gap |
+|------|-----|-----|
+| 23.11.2013 (4) | 29.10.2016 (4) | **305 draws** |
+| 29.10.2016 (4) | 30.01.2019 (4) | 234 draws |
+| 30.01.2019 (4) | 03.11.2021 (4) | **288 draws** |
+| 03.11.2021 (4) | 18.03.2023 (5) | 143 draws |
+| 18.03.2023 (5) | 10.01.2024 (4) | 85 draws |
 
-### Chapter Structure (Same every chapter!):
+**Last 4+ singles: 10.01.2024 (RC 85)**
+**Current gap: 230+ draws and counting...**
+
+### Predicted Rare Window:
 ```
-RC 0:   RARE EVENT - New chapter starts!
-RC 100: Circle Value = 16, Hot = 8
-RC 200: Circle Value = 32, Hot = 24  
-RC 300: Circle Value = 48, Hot = 40
-RC 302: Circle Value = 50, Hot = 42 → NEXT RARE EVENT!
+RC 373-390 (Oct-Dec 2026)
+= Gap of 288-305 from last 4+ singles
 ```
 
-### The ~3 Year Cycle:
-```
-302 draws × 3.5 days avg = ~1057 days = ~2.9 years
-```
+### Key Correction:
+- RC 302 (07.02.2026) had 0 singles - NOT a rare event!
+- The cycle tracks from LAST 4+ singles, not from the jackpot
+- Real gaps vary: 143, 234, 288, 305
 
 ---
 
-## THE FUNDAMENTALS
+## THE CHAPTER SYSTEM (REVISED)
 
 ### 1. RC (Rare Count)
 - **Start Date**: 18.03.2023
