@@ -40,6 +40,18 @@ DAY_28_PATTERN = {
     'max_sum': 42  # 13 + 14 + 15
 }
 
+# THE 18/39 CIRCLE PARTNERSHIP
+CIRCLE_18_39 = {
+    'pair': (18, 39),
+    '18_typical_pos': 3,  # P3 (58.5%)
+    '39_typical_pos': 6,  # P6 (78%)
+    'typical_gap': 3,     # 3 positions apart (61%)
+    'common_companions': [32, 11, 25, 4, 42]  # Other circle pairs!
+}
+
+# THE 7 LADDER (Magical draw 14.06.2014)
+SEVEN_LADDER = [7, 14, 21, 28, 35, 42]  # All multiples of 7!
+
 
 def check_day_28_pattern(date_str: str) -> Dict:
     """
