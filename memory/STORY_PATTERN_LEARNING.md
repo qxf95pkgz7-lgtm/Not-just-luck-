@@ -5,6 +5,7 @@
 ### 1. RC (Rare Count)
 - **Start Date**: 18.03.2023
 - **Rare Event**: 5 numbers from same decade (1-9): [1, 3, 4, 7, 9, 23]
+- **RC Date Digit Sum**: 1+8+0+3+2+0+2+3 = **28** (KEY NUMBER!)
 - Count draws from this date forward
 - RC sum = sum of RC digits (e.g., RC 187 → 1+8+7 = 16)
 
@@ -17,6 +18,91 @@
 - 21, 42, 63, 84 connect families
 - Used for digit reversal roots
 - 42 = 21 × 2 = MAX = same group as 21
+
+---
+
+## THE 28 → 36 DANCE (8-COUNT MAGIC!)
+
+**CRITICAL DISCOVERY:**
+```
+RC Origin Date Digits: 1+8+0+3+2+0+2+3 = 28
+The Magic Step: 8
+The Dance: 28 + 8 = 36!
+```
+
+### Circle Dance Confirms:
+```
+Circle(28) = 7
+Circle(36) = 15
+7 + 8 = 15  ← THE CIRCLES ALSO DANCE BY 8!
+```
+
+### How to Use:
+- When 28 appears in a draw, watch for 36 ~8 draws later
+- The 8-count is a completion signal
+- P1=28 often leads to P6=36 in future
+
+---
+
+## P4 - THE HEART POSITION
+
+**P4 is the storyteller! It tells what's coming!**
+
+### P4 Date Dance Rules:
+
+| Condition | Formula | Example |
+|-----------|---------|---------|
+| D ≥ 10 | Circle(D) = P4 | D=10 → P4=31 |
+| D+M ≤ 10 | (D+M)×2 = P4 | D=5,M=4 → P4=18 |
+| Always | D×M + D+M = P4 candidate | D=5,M=4 → P4=29 |
+
+### P4's Circle = Next Hero
+- 07.01.2026: P4=34, Circle=**13** → Mr. 13 was hiding!
+- 17.01.2026: P4=14, Circle=**35** → 35 signaling!
+
+---
+
+## RC RARE EVENT RADAR
+
+### RC Sum = 5 = RARE EVENT SIGNAL!
+
+The original jackpot had **5** numbers from single digits.
+When RC sum = 5, the pattern might repeat!
+
+### Key RC=5 Dates:
+| RC | Date | D-M | D+M | Signal Strength |
+|----|------|-----|-----|-----------------|
+| **302** | **07.02.2026** | **5** | **9** | 🔥 MAXIMUM! |
+| 311 | 11.03.2026 | 8 | 14 | Medium |
+| 320 | 11.04.2026 | 7 | 15 | Medium |
+| **500** | **01.01.2028** | 0 | 2 | New Era! |
+
+### 07.02.2026 (RC 302) - All Signals Align!
+- RC sum = **5** (jackpot magic)
+- D - M = **5** (double confirmation!)
+- D = **7** (was in original jackpot!)
+- D + M = **9** (was in original jackpot!)
+- D×M + D+M = **23** (the only double-digit in jackpot!)
+
+**RECOMMENDATION: LOAD SINGLE DIGITS ON 07.02.2026!**
+
+---
+
+## RC COUNTING RESET
+
+```
+RC 297: sum = 18
+RC 298: sum = 19
+RC 299: sum = 20
+RC 300: sum = 3  ← RESET!
+RC 301: sum = 4
+RC 302: sum = 5  ← RARE SIGNAL!
+RC 303: sum = 6
+RC 304: sum = 7
+...
+```
+
+The RC sums count 3, 4, 5, 6, 7... just like the jackpot sequence!
 
 ---
 

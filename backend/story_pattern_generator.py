@@ -4,16 +4,31 @@ STORY PATTERN GENERATOR
 All patterns learned from Avi's numerology teachings.
 
 RC (Rare Count) starts from 18.03.2023 - the 5-in-same-decade rare event.
+
+KEY DISCOVERIES:
+- P4 is the "heart" position - tells the story
+- RC sum = 5 signals potential rare events
+- 28 + 8 = 36 (The RC origin date digits sum = 28, 8-count dance)
+- Date Dance: D, M, D-M, D+M, D×M, D×M+D+M
+- Circle of D often = P4 when D >= 10
+- (D+M) × 2 often = P4 when D+M <= 10
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Tuple, Dict, Optional
 from collections import defaultdict
 
 
-# RC START DATE
+# RC START DATE - THE LEGENDARY JACKPOT
 RC_START_DATE = "18.03.2023"
-RC_START_INDEX = 0  # Will be calculated based on data
+RC_START_DRAW = [1, 3, 4, 7, 9, 23]  # 5 numbers from 1-9 decade!
+RC_DATE_DIGIT_SUM = 28  # 1+8+0+3+2+0+2+3 = 28
+
+# THE 8-COUNT DANCE
+EIGHT_COUNT_MAGIC = 8  # 28 + 8 = 36
+
+# RC=5 SUM DATES - RARE EVENT SIGNALS
+RC_5_PATTERN = [5, 14, 23, 32, 41, 50, 104, 113, 122, 131, 140, 203, 212, 221, 230, 302, 311, 320, 401, 410, 500]
 
 
 def calculate_rc(draw_date: str, all_draws: List) -> int:
@@ -58,6 +73,113 @@ def get_digit_reversal_root(n: int) -> int:
             return result
     
     return n
+
+
+def calculate_rc_for_date(target_date: str) -> int:
+    """
+    Calculate exact RC number for a given date.
+    RC = number of draws since 18.03.2023 (which is RC 0)
+    Swiss Lotto: Wednesday (2) and Saturday (5)
+    """
+    rc_start = datetime.strptime(RC_START_DATE, "%d.%m.%Y")
+    target = datetime.strptime(target_date, "%d.%m.%Y")
+    
+    if target < rc_start:
+        return -1
+    
+    # Count Wed/Sat between dates
+    count = 0
+    current = rc_start
+    while current <= target:
+        if current.weekday() in [2, 5]:  # Wed or Sat
+            count += 1
+        current += timedelta(days=1)
+    
+    return count - 1  # RC 0 is the start date itself
+
+
+def get_rc_sum(rc: int) -> int:
+    """Get sum of RC digits"""
+    if rc < 0:
+        return 0
+    return sum(int(d) for d in str(rc))
+
+
+def is_rare_event_signal(rc: int) -> bool:
+    """Check if RC number signals potential rare event (RC sum = 5)"""
+    return get_rc_sum(rc) == 5
+
+
+def get_eight_count_dance(start_num: int) -> int:
+    """
+    The 8-count dance: from any number, add 8 to find its dance partner.
+    28 + 8 = 36 (RC origin connection)
+    """
+    return start_num + EIGHT_COUNT_MAGIC
+
+
+def predict_p4_from_date(date_str: str) -> List[int]:
+    """
+    Predict P4 candidates based on Date Dance rules:
+    - When D >= 10: Circle(D) = P4
+    - When D+M <= 10: (D+M) × 2 = P4
+    - Always consider: D×M + D+M
+    """
+    dn = get_date_numbers(date_str)
+    d, m = dn['day'], dn['month']
+    
+    p4_candidates = []
+    
+    # Rule 1: Circle of D (when D >= 10)
+    if d >= 10:
+        circle_d = get_circle(d)
+        if 1 <= circle_d <= 42:
+            p4_candidates.append(circle_d)
+    
+    # Rule 2: (D+M) × 2 (when D+M <= 10)
+    if d + m <= 10:
+        double_sum = (d + m) * 2
+        if 1 <= double_sum <= 42:
+            p4_candidates.append(double_sum)
+    
+    # Rule 3: D×M + D+M (always)
+    combo = d * m + d + m
+    if 1 <= combo <= 42:
+        p4_candidates.append(combo)
+    
+    return list(set(p4_candidates))
+
+
+def detect_decade_clustering(nums: List[int]) -> Dict:
+    """
+    Analyze how many numbers from each decade.
+    5+ from 1-9 decade = RARE EVENT!
+    """
+    decades = {
+        '1-9': 0,
+        '10-19': 0,
+        '20-29': 0,
+        '30-39': 0,
+        '40-42': 0
+    }
+    
+    for n in nums:
+        if 1 <= n <= 9:
+            decades['1-9'] += 1
+        elif 10 <= n <= 19:
+            decades['10-19'] += 1
+        elif 20 <= n <= 29:
+            decades['20-29'] += 1
+        elif 30 <= n <= 39:
+            decades['30-39'] += 1
+        elif 40 <= n <= 42:
+            decades['40-42'] += 1
+    
+    return {
+        'distribution': decades,
+        'is_rare': decades['1-9'] >= 5,
+        'single_digit_count': decades['1-9']
+    }
 
 
 def get_date_numbers(date_str: str) -> Dict:
@@ -184,8 +306,9 @@ def generate_predictions(
     4. RC COUNT: RC digits and sum
     5. STORY NUMBERS: Active heroes (13, 31, etc.)
     6. DECADE SPREAD: Coverage across 1-9, 10-19, 20-29, 30-39, 40-42
-    7. YEAR STORY: 20, 25, 26 transitions
-    8. WARRIOR FAMILY: Active frequent numbers
+    7. P4 HUNTERS: Target the heart position
+    8. RARE EVENT RADAR: When RC sum = 5, heavy single digits!
+    9. THE 28→36 DANCE: 8-count magic
     """
     
     tickets = []
@@ -195,10 +318,15 @@ def generate_predictions(
     d, m = dn['day'], dn['month']
     
     # Calculate RC for target date
-    # Estimate: count draws from RC_START to target
-    rc = len(previous_draws)  # Simplified - should calculate properly
-    rc_digits = [int(x) for x in str(rc)]
-    rc_sum = sum(rc_digits)
+    rc = calculate_rc_for_date(target_date)
+    rc_digits = [int(x) for x in str(rc)] if rc > 0 else [0]
+    rc_sum = get_rc_sum(rc)
+    
+    # Check if this is a RARE EVENT signal date
+    is_rare_signal = is_rare_event_signal(rc)
+    
+    # Get P4 predictions
+    p4_candidates = predict_p4_from_date(target_date)
     
     # Find hungry numbers from last 5 draws
     recent_hungry = []
@@ -213,7 +341,16 @@ def generate_predictions(
             num_freq[n] += 1
     top_frequent = sorted(num_freq.keys(), key=lambda x: -num_freq[x])[:10]
     
-    # TICKET 1: DATE DANCE
+    # Track 28 appearances for 8-count dance
+    draws_with_28 = []
+    for i, (date, nums, _, _) in enumerate(previous_draws[-10:]):
+        if 28 in nums:
+            draws_with_28.append((i, date))
+    
+    # If 28 appeared ~8 draws ago, 36 is HOT!
+    thirty_six_is_hot = len(draws_with_28) > 0 and (10 - draws_with_28[-1][0]) >= 7
+    
+    # TICKET 1: DATE DANCE (P1-P3 focus)
     t1_nums = []
     if 1 <= dn['d_minus_m'] <= 42:
         t1_nums.append(dn['d_minus_m'])
@@ -236,7 +373,6 @@ def generate_predictions(
                 t1_nums.append(c)
                 break
         else:
-            # Add from frequent
             for n in top_frequent:
                 if n not in t1_nums:
                     t1_nums.append(n)
@@ -246,91 +382,110 @@ def generate_predictions(
     tickets.append({
         'numbers': t1_nums,
         'lucky': rc_sum if 1 <= rc_sum <= 6 else d % 6 + 1,
-        'story': 'DATE DANCE'
+        'story': 'DATE DANCE',
+        'confidence': 'HIGH'
     })
     
-    # TICKET 2: HUNGRY REVENGE
-    t2_nums = recent_hungry[:6] if len(recent_hungry) >= 6 else recent_hungry + top_frequent[:6-len(recent_hungry)]
+    # TICKET 2: P4 HUNTERS (Target the heart!)
+    t2_nums = p4_candidates.copy()
+    # Add circles of P4 candidates
+    for p4 in p4_candidates:
+        c = get_circle(p4)
+        if c not in t2_nums and 1 <= c <= 42:
+            t2_nums.append(c)
+    # Fill with date dance
+    for n in [d, m, dn['d_minus_m'], dn['d_plus_m']]:
+        if n and 1 <= n <= 42 and n not in t2_nums:
+            t2_nums.append(n)
     t2_nums = sorted(list(set(t2_nums)))[:6]
     tickets.append({
         'numbers': t2_nums,
-        'lucky': 4,
-        'story': 'HUNGRY REVENGE'
+        'lucky': 4,  # P4!
+        'story': 'P4 HUNTERS',
+        'confidence': 'HIGH',
+        'p4_targets': p4_candidates
     })
     
-    # TICKET 3: CIRCLE PAIRS (26/5, 13/34, 9/30)
-    circle_pairs = [(5, 26), (13, 34), (9, 30)]
-    t3_nums = []
-    for a, b in circle_pairs:
-        if len(t3_nums) < 6:
-            t3_nums.append(a)
-        if len(t3_nums) < 6:
-            t3_nums.append(b)
+    # TICKET 3: RARE EVENT RADAR (Heavy single digits if RC sum = 5)
+    if is_rare_signal:
+        # RC sum = 5! Load up on single digits like the jackpot!
+        t3_nums = [1, 3, 4, 7, 9]  # From the original jackpot
+        # Add one from teens/twenties
+        for n in [23, 13, 14]:  # 23 was in jackpot
+            if n not in t3_nums:
+                t3_nums.append(n)
+                break
+        t3_story = f'RARE EVENT RADAR (RC {rc} sum=5!)'
+        t3_confidence = 'RARE SIGNAL!'
+    else:
+        # Normal mode: circle pairs
+        t3_nums = [5, 26, 13, 34, 9, 30]
+        t3_story = 'CIRCLE PAIRS'
+        t3_confidence = 'MEDIUM'
+    
+    t3_nums = sorted(list(set(t3_nums)))[:6]
     tickets.append({
-        'numbers': sorted(t3_nums),
-        'lucky': 6,
-        'story': 'CIRCLE PAIRS'
+        'numbers': t3_nums,
+        'lucky': 5,
+        'story': t3_story,
+        'confidence': t3_confidence,
+        'rc': rc,
+        'rc_sum': rc_sum
     })
     
-    # TICKET 4: RC COUNT
-    t4_nums = rc_digits.copy()
-    t4_nums.append(rc_sum)
-    t4_nums.append(21)  # The bridge
-    for n in top_frequent:
-        if n not in t4_nums and len(t4_nums) < 6:
-            t4_nums.append(n)
-    t4_nums = [n for n in t4_nums if 1 <= n <= 42]
-    t4_nums = sorted(list(set(t4_nums)))[:6]
+    # TICKET 4: THE 28→36 DANCE
+    t4_nums = [28, 36]  # The core dance
+    t4_nums.append(get_circle(28))  # 7
+    t4_nums.append(get_circle(36))  # 15
+    t4_nums.append(EIGHT_COUNT_MAGIC)  # 8
+    # Add RC connection
+    if rc_sum not in t4_nums and 1 <= rc_sum <= 42:
+        t4_nums.append(rc_sum)
+    else:
+        t4_nums.append(RC_DATE_DIGIT_SUM - 21)  # 28-21=7, but we have that
+        t4_nums.append(18)  # RC origin day
+    t4_nums = sorted(list(set([n for n in t4_nums if 1 <= n <= 42])))[:6]
     tickets.append({
         'numbers': t4_nums,
         'lucky': 3,
-        'story': 'RC COUNT'
+        'story': '28→36 DANCE (8-COUNT)',
+        'confidence': 'HIGH' if thirty_six_is_hot else 'MEDIUM',
+        'thirty_six_hot': thirty_six_is_hot
     })
     
-    # TICKET 5: YEAR STORY (20, 25, 26 family)
-    t5_nums = [20, 25, 26]
-    # Add circles
-    for n in [20, 25, 26]:
-        c = get_circle(n)
-        if c not in t5_nums:
-            t5_nums.append(c)
+    # TICKET 5: HUNGRY REVENGE
+    t5_nums = recent_hungry[:6] if len(recent_hungry) >= 6 else recent_hungry + top_frequent[:6-len(recent_hungry)]
     t5_nums = sorted(list(set(t5_nums)))[:6]
     tickets.append({
         'numbers': t5_nums,
-        'lucky': 2,
-        'story': 'YEAR STORY'
+        'lucky': 4,
+        'story': 'HUNGRY REVENGE',
+        'confidence': 'MEDIUM'
     })
     
-    # TICKET 6: DECADE SPREAD (one from each decade)
-    t6_nums = []
-    decades = {
-        0: [1, 2, 3, 4, 5, 6, 7, 8, 9],
-        1: [10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
-        2: [20, 21, 22, 23, 24, 25, 26, 27, 28, 29],
-        3: [30, 31, 32, 33, 34, 35, 36, 37, 38, 39],
-        4: [40, 41, 42]
-    }
-    for dec, nums in decades.items():
-        # Pick most frequent from this decade
-        for n in top_frequent:
-            if n in nums and n not in t6_nums:
-                t6_nums.append(n)
-                break
-        else:
-            t6_nums.append(nums[0])
+    # TICKET 6: RC COUNT
+    t6_nums = rc_digits.copy()
+    t6_nums.append(rc_sum)
+    t6_nums.append(21)  # The bridge
+    for n in top_frequent:
+        if n not in t6_nums and len(t6_nums) < 6:
+            t6_nums.append(n)
+    t6_nums = [n for n in t6_nums if 1 <= n <= 42]
     t6_nums = sorted(list(set(t6_nums)))[:6]
     tickets.append({
         'numbers': t6_nums,
-        'lucky': 1,
-        'story': 'DECADE SPREAD'
+        'lucky': 3,
+        'story': f'RC COUNT (RC={rc})',
+        'confidence': 'MEDIUM'
     })
     
-    # TICKET 7: THE 13 FAMILY (13, 10, 21, 23, 31, 34)
+    # TICKET 7: THE 13 FAMILY
     t7_nums = [13, 10, 21, 23, 31, 34]
     tickets.append({
         'numbers': sorted(t7_nums),
         'lucky': 5,
-        'story': '13 FAMILY'
+        'story': '13 FAMILY',
+        'confidence': 'MEDIUM'
     })
     
     # TICKET 8: WARRIOR TICKET (top frequent + date)
@@ -342,7 +497,8 @@ def generate_predictions(
     tickets.append({
         'numbers': t8_nums,
         'lucky': 6,
-        'story': 'WARRIOR TICKET'
+        'story': 'WARRIOR TICKET',
+        'confidence': 'MEDIUM'
     })
     
     return tickets[:num_tickets]
@@ -396,6 +552,91 @@ MAX_NUMBER = 42
 FAMILY_13 = [13, 10, 21, 23, 31, 34]
 FAMILY_21_42 = [21, 42, 24, 3]
 
+# P4 Rules
+P4_RULES = {
+    'circle_of_d': 'When D >= 10, Circle(D) often = P4',
+    'double_sum': 'When D+M <= 10, (D+M)×2 often = P4',
+    'date_combo': 'D×M + D+M is always a P4 candidate'
+}
+
+# Rare Event Signals
+RARE_EVENT_SIGNALS = {
+    'rc_sum_5': 'RC sum = 5 signals potential rare event',
+    'single_digit_cluster': '5+ numbers from 1-9 decade = RARE',
+    'date_alignment': 'When RC sum matches date = SIGNAL'
+}
+
+# The 28→36 Dance
+DANCE_28_36 = {
+    'origin': 'RC date digit sum = 28 (1+8+0+3+2+0+2+3)',
+    'step': 8,
+    'destination': 36,
+    'circle_28': 7,
+    'circle_36': 15,
+    'circle_dance': '7 + 8 = 15 (circles also dance by 8!)'
+}
+
+
+def get_rare_event_analysis(target_date: str, previous_draws: List[Tuple]) -> Dict:
+    """
+    Full rare event analysis for a target date.
+    Returns probability indicators and recommendations.
+    """
+    rc = calculate_rc_for_date(target_date)
+    rc_sum = get_rc_sum(rc)
+    dn = get_date_numbers(target_date)
+    
+    signals = []
+    probability = 'LOW'
+    
+    # Check RC sum = 5
+    if rc_sum == 5:
+        signals.append(f'RC {rc} sum = 5! (Jackpot signal)')
+        probability = 'ELEVATED'
+    
+    # Check if D-M is single digit
+    if 1 <= dn['d_minus_m'] <= 9:
+        signals.append(f"D-M = {dn['d_minus_m']} (single digit)")
+    
+    # Check if D+M produces jackpot numbers
+    jackpot_nums = [1, 3, 4, 7, 9, 23]
+    if dn['d_plus_m'] in jackpot_nums:
+        signals.append(f"D+M = {dn['d_plus_m']} (jackpot number!)")
+        probability = 'ELEVATED'
+    
+    # Check date connection to jackpot
+    d, m = dn['day'], dn['month']
+    if d in jackpot_nums:
+        signals.append(f"Day {d} is a jackpot number!")
+    if m in jackpot_nums:
+        signals.append(f"Month {m} is a jackpot number!")
+    
+    # Check if approaching RC milestone
+    next_rc5 = None
+    for rc5 in RC_5_PATTERN:
+        if rc5 > rc:
+            next_rc5 = rc5
+            break
+    
+    if next_rc5 and next_rc5 - rc <= 5:
+        signals.append(f"Approaching RC {next_rc5} (sum=5) in {next_rc5 - rc} draws!")
+    
+    # Determine final probability
+    if len(signals) >= 3:
+        probability = 'HIGH'
+    elif len(signals) >= 2:
+        probability = 'MEDIUM'
+    
+    return {
+        'date': target_date,
+        'rc': rc,
+        'rc_sum': rc_sum,
+        'signals': signals,
+        'probability': probability,
+        'next_rc5': next_rc5,
+        'recommendation': 'LOAD SINGLE DIGITS!' if probability in ['HIGH', 'ELEVATED'] else 'Normal play'
+    }
+
 
 if __name__ == "__main__":
     # Test the generator
@@ -403,3 +644,20 @@ if __name__ == "__main__":
     print(f"Circle constant: {CIRCLE_CONSTANT}")
     print(f"13 Family: {FAMILY_13}")
     print(f"21/42 Family: {FAMILY_21_42}")
+    print()
+    print("=== NEW FEATURES ===")
+    print(f"RC Date Sum: {RC_DATE_DIGIT_SUM}")
+    print(f"8-Count Magic: {EIGHT_COUNT_MAGIC}")
+    print(f"RC=5 Pattern dates: {RC_5_PATTERN[:10]}...")
+    print()
+    print("P4 Rules:")
+    for rule, desc in P4_RULES.items():
+        print(f"  - {rule}: {desc}")
+    print()
+    print("Rare Event Signals:")
+    for sig, desc in RARE_EVENT_SIGNALS.items():
+        print(f"  - {sig}: {desc}")
+    print()
+    print("28→36 Dance:")
+    for key, val in DANCE_28_36.items():
+        print(f"  - {key}: {val}")
