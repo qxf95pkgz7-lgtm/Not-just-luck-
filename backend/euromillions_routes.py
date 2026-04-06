@@ -718,7 +718,44 @@ def create_euromillions_router(db):
                 for pos in range(5):
                     if pos not in locked:
                         candidates[pos].extend(reverse_partners)
-                patterns_used.append("Reverse Circle (34.4%)")
+                patterns_used.append("Reverse Circle (9.5%)")
+        
+        # Pattern 8b: UNIVERSE ANNOYING - ±1 Neighbors (17.3% hit rate!) ⭐ NEW
+        # Every 5th ticket, use the ±1 neighbor instead of exact Reverse Circle
+        # When we predict X, universe often gives X+1 or X-1
+        if draws and ticket_index % 5 == 4:  # Every 5th ticket (index 4, 9, 14...)
+            recent_nums = draws[0]["numbers"]
+            annoying_neighbors = []
+            for n in recent_nums:
+                rev_partner = get_reverse_circle_partner(n)
+                # Add ±1 neighbors instead of exact
+                for neighbor in [rev_partner - 1, rev_partner + 1]:
+                    if 1 <= neighbor <= 50 and neighbor not in recent_nums:
+                        annoying_neighbors.append(neighbor)
+            if annoying_neighbors:
+                for pos in range(5):
+                    if pos not in locked:
+                        # Weight heavily - these replace exact reverse circle
+                        candidates[pos].extend(annoying_neighbors * 3)
+                patterns_used.append("Universe Annoying ±1 (17.3%)")
+        
+        # Pattern 8c: DIGIT FAMILY - Same ending digit (32.9% hit rate!)
+        # Predicted 2? Also consider 12, 22, 32, 42
+        if draws and ticket_index % 3 == 2:  # Every 3rd ticket
+            recent_nums = draws[0]["numbers"]
+            digit_family_nums = []
+            for n in recent_nums:
+                rev_partner = get_reverse_circle_partner(n)
+                last_digit = rev_partner % 10
+                # Get all numbers ending in same digit
+                for family_member in range(last_digit, 51, 10):
+                    if family_member >= 1 and family_member != rev_partner and family_member not in recent_nums:
+                        digit_family_nums.append(family_member)
+            if digit_family_nums:
+                for pos in range(5):
+                    if pos not in locked:
+                        candidates[pos].extend(digit_family_nums * 2)
+                patterns_used.append("Digit Family (32.9%)")
         
         # Pattern 9: Full Circle Family
         # Pick a starting number and include its full circle
