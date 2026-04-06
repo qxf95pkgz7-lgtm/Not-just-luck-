@@ -1313,29 +1313,30 @@ def create_euromillions_router(db):
         patterns_used.append("Fibonacci Addends")
         
         # NEW PATTERN 14: RARE EVENT COUNT (RC) - 22.4% combined hit rate!
-        # After a Rare Event (4+ numbers from same gruppe), count the draws
+        # After a Rare Event (4+ numbers from same DECADE), count the draws
         # The count number OR its +25 circle partner often appears
+        # CORRECT DECADES: 1-9, 10-19, 20-29, 30-39, 40-49 (50 is alone)
         if draws:
-            # Find Rare Events (4+ in same gruppe)
-            def get_gruppe_counts(nums):
-                g1 = len([n for n in nums if 1 <= n <= 10])
-                g2 = len([n for n in nums if 11 <= n <= 20])
-                g3 = len([n for n in nums if 21 <= n <= 30])
-                g4 = len([n for n in nums if 31 <= n <= 40])
-                g5 = len([n for n in nums if 41 <= n <= 50])
-                return max(g1, g2, g3, g4, g5), [g1, g2, g3, g4, g5]
+            # Find Rare Events (4+ in same decade)
+            def get_decade_counts(nums):
+                d1 = len([n for n in nums if 1 <= n <= 9])      # Ones (1-9)
+                d2 = len([n for n in nums if 10 <= n <= 19])    # Tens (10-19)
+                d3 = len([n for n in nums if 20 <= n <= 29])    # Twenties (20-29)
+                d4 = len([n for n in nums if 30 <= n <= 39])    # Thirties (30-39)
+                d5 = len([n for n in nums if 40 <= n <= 49])    # Forties (40-49)
+                return max(d1, d2, d3, d4, d5), [d1, d2, d3, d4, d5]
             
             # Scan for last Rare Event
             last_rare_idx = None
             last_rare_outsider = None
             for i, d in enumerate(draws):
-                max_gruppe, gruppe_counts = get_gruppe_counts(d["numbers"])
-                if max_gruppe >= 4:
+                max_decade, decade_counts = get_decade_counts(d["numbers"])
+                if max_decade >= 4:
                     last_rare_idx = i
-                    # Find the outsider (number not in the dominant gruppe)
-                    gruppe_ranges = [(1,10), (11,20), (21,30), (31,40), (41,50)]
-                    dominant_idx = gruppe_counts.index(max_gruppe)
-                    low, high = gruppe_ranges[dominant_idx]
+                    # Find the outsider (number not in the dominant decade)
+                    decade_ranges = [(1,9), (10,19), (20,29), (30,39), (40,49)]
+                    dominant_idx = decade_counts.index(max_decade)
+                    low, high = decade_ranges[dominant_idx]
                     outsiders = [n for n in d["numbers"] if n < low or n > high]
                     if outsiders:
                         last_rare_outsider = outsiders[0]
