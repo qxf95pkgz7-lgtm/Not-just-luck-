@@ -1144,6 +1144,75 @@ def create_euromillions_router(db):
         target_sum = max(star_sums.keys(), key=lambda x: star_sums.get(x, 0)) if star_sums else 13
         patterns_used.append(f"Star Sum Target ({target_sum})")
         
+        # ═══════════════════════════════════════════════════════════════════
+        # NEW STAR PATTERNS FOR VARIETY! 🌟
+        # ═══════════════════════════════════════════════════════════════════
+        
+        # STAR PATTERN A: Quarter Boundary - Star 10 is constant, other star counts!
+        # Q4→Q1: [1,10] → Q1→Q2: [2,10] → Q2→Q3: [3,10]?
+        if draws:
+            prev_stars = sorted(draws[0]["stars"])
+            if 10 in prev_stars:
+                # Star 10 likes to continue at quarter boundaries
+                star_candidates.extend([10] * 3)
+                # The other star might increment
+                other_star = prev_stars[0] if prev_stars[1] == 10 else prev_stars[1]
+                next_star = other_star + 1 if other_star < 12 else 1
+                if 1 <= next_star <= 12:
+                    star_candidates.extend([next_star] * 2)
+                patterns_used.append(f"Star-10 Anchor + {next_star}")
+        
+        # STAR PATTERN B: Star = Family of previous draw's number
+        # E.g., if prev P2=27 (family=9), star 9 might appear
+        if draws:
+            prev_nums = draws[0]["numbers"]
+            for n in prev_nums:
+                fam = sum(int(d) for d in str(n))
+                if 1 <= fam <= 12:
+                    star_candidates.append(fam)
+            patterns_used.append("Star=Family")
+        
+        # STAR PATTERN C: Star appears in numbers!
+        # If star 10 is hot, check if number 10 is also due
+        if draws:
+            prev_stars = sorted(draws[0]["stars"])
+            for s in prev_stars:
+                # Add the star itself (might repeat) and neighboring stars
+                star_candidates.append(s)
+                if s > 1:
+                    star_candidates.append(s - 1)
+                if s < 12:
+                    star_candidates.append(s + 1)
+        
+        # STAR PATTERN D: QC in Stars (Real Numbers!)
+        # At QC 1, star 1 appeared. At QC 5, star 5 appeared, etc.
+        if draws:
+            def parse_d(d):
+                parts = d['date'].split('.')
+                return (int(parts[2]), int(parts[1]), int(parts[0]))
+            
+            latest = draws[0]
+            latest_date = parse_d(latest)
+            year = latest_date[0]
+            month = latest_date[1]
+            
+            if month in [1,2,3]: q_months = [1,2,3]
+            elif month in [4,5,6]: q_months = [4,5,6]
+            elif month in [7,8,9]: q_months = [7,8,9]
+            else: q_months = [10,11,12]
+            
+            q_draws = [d for d in draws if parse_d(d)[0] == year and parse_d(d)[1] in q_months]
+            next_qc = len(q_draws) + 1
+            
+            # If next QC is 1-12, it might appear as a star!
+            if 1 <= next_qc <= 12:
+                star_candidates.extend([next_qc] * 3)
+                patterns_used.append(f"QC={next_qc} Star Candidate")
+        
+        # Add variety by including less common stars based on ticket index
+        variety_stars = [1, 3, 4, 7, 8, 11, 12]  # Less common S1 values
+        star_candidates.append(variety_stars[ticket_index % len(variety_stars)])
+        
         # NEW PATTERN: Gap 6 Trigger → Extreme Star Gaps
         # When previous draw had star gap 6, expect extreme gaps (8-11)
         prev_star_gap = 0
@@ -1833,9 +1902,31 @@ def create_euromillions_router(db):
                 patterns_used.append(f"🎵 +{len(songs_found)-1} more songs")
             position_reasons["Music"] = f"Songs: {', '.join(songs_found[:2])}"
         
-        # Select stars
+        # Select stars - WITH VARIETY BASED ON TICKET INDEX!
         star_scored = Counter(star_candidates)
         final_stars = []
+        
+        # Add variety: different tickets should explore different star combinations
+        # Based on ticket_index, slightly favor different stars
+        variety_boost = {
+            0: [(1, 10), (2, 10), (3, 10)],      # Ticket 0: anchor with 10
+            1: [(2, 3), (3, 4), (4, 5)],          # Ticket 1: small gap pairs
+            2: [(5, 9), (6, 9), (4, 9)],          # Ticket 2: pairs with 9
+            3: [(1, 11), (2, 11), (3, 12)],       # Ticket 3: high S2 pairs
+            4: [(5, 10), (6, 10), (7, 10)],       # Ticket 4: mid-high with 10
+            5: [(3, 7), (4, 8), (5, 7)],          # Ticket 5: medium pairs
+            6: [(2, 12), (1, 12), (3, 11)],       # Ticket 6: extreme pairs
+            7: [(6, 11), (7, 11), (8, 11)],       # Ticket 7: pairs with 11
+            8: [(4, 6), (5, 8), (6, 8)],          # Ticket 8: medium-small pairs
+        }
+        
+        # Get variety pairs for this ticket
+        variety_pairs = variety_boost.get(ticket_index % 9, [(2, 10)])
+        chosen_variety = variety_pairs[ticket_index % len(variety_pairs)]
+        
+        # Boost the variety pair
+        star_scored[chosen_variety[0]] += 5
+        star_scored[chosen_variety[1]] += 5
         
         for _ in range(2):
             selected_star = None
