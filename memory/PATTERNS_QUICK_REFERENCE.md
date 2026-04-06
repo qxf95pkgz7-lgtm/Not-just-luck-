@@ -6,6 +6,37 @@
 
 ---
 
+## ⚠️ NUMBER TRANSFORMATIONS (CRITICAL - CORRECT RULES!) ⚠️
+
+### ✅ VALID OPERATIONS ONLY:
+```
+1. CIRCLE: +25 or -25
+   28 → 3 (28-25)
+   10 → 35 (10+25)
+   17 → 42 (17+25)
+   
+2. REVERSE: Flip digits, then bring into range (subtract 50 if > 50)
+   28 → 82 → 82-50 = 32
+   39 → 93 → 93-50 = 43
+   17 → 71 → 71-50 = 21
+   
+3. LONG DISTANCE (Extended chains):
+   28 → 82 → 32 → 57 → 7 (full circle)
+   10 → 35 → 53 → 3
+   39 → 14 (short), or 39 → 93 → 43 → 18 (long)
+```
+
+### ❌ WRONG - DO NOT USE:
+```
+DIGIT SUM IS NOT A VALID PATTERN!
+28 ≠ 2+8 = 10  ← WRONG!
+39 ≠ 3+9 = 12  ← WRONG!
+
+We do NOT add digits from the same number!
+```
+
+---
+
 ## 🎵 THE MUSIC PATTERNS (IMPLEMENTED IN GENERATOR)
 
 ### Direct Addition Songs (33% of draws have these!)

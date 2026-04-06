@@ -1162,15 +1162,24 @@ def create_euromillions_router(db):
                     star_candidates.extend([next_star] * 2)
                 patterns_used.append(f"Star-10 Anchor + {next_star}")
         
-        # STAR PATTERN B: Star = Family of previous draw's number
-        # E.g., if prev P2=27 (family=9), star 9 might appear
+        # STAR PATTERN B: Star = Circle of previous draw's number (CORRECT!)
+        # E.g., if prev has 27, circle=2, so star 2 might appear
+        # Or if prev has 10, circle=35, reverse=53, in range=3, so star 3!
         if draws:
             prev_nums = draws[0]["numbers"]
             for n in prev_nums:
-                fam = sum(int(d) for d in str(n))
-                if 1 <= fam <= 12:
-                    star_candidates.append(fam)
-            patterns_used.append("Star=Family")
+                # Circle partner
+                circ = n + 25 if n <= 25 else n - 25
+                if 1 <= circ <= 12:
+                    star_candidates.append(circ)
+                # Reversed circle for numbers > 12
+                if n >= 10:
+                    rev = int(str(n)[::-1]) if n >= 10 else n * 10
+                    if rev > 50:
+                        rev = rev - 50
+                    if 1 <= rev <= 12:
+                        star_candidates.append(rev)
+            patterns_used.append("Star=Circle")
         
         # STAR PATTERN C: Star appears in numbers!
         # If star 10 is hot, check if number 10 is also due
