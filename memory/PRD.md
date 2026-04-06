@@ -1,179 +1,158 @@
-# LUCKY JACK - Product Requirements Document
-## Swiss Lotto & EuroMillions Pattern Analyzer
-### Version 2.0 - Updated 05.04.2026
+# Lucky Jack - Product Requirements Document
+
+## Overview
+Swiss Lotto and EuroMillions Pattern Analyzer featuring custom numerology patterns, progressive generation, and embedded historical draws.
+
+**Last Updated:** 2026-04-06
 
 ---
 
-## OVERVIEW
+## Core Features
 
-Lucky Jack is a sophisticated lottery prediction application that uses 61 custom numerology patterns, historical data analysis, and story-based generation to create lottery tickets. The app maintains an enthusiastic, mystical data-scientist persona.
+### 1. Swiss Lotto Generator
+- 61 custom numerology patterns
+- Story Numbers Mega Boost (Pattern 61)
+- Circle partner calculations (+/-21)
+- Hit tracker dashboard
+- Persona modifiers (Avi, Dathi, Olivia)
 
-**Live URL:** https://jackpot-analysis-hub.preview.emergentagent.com
+### 2. EuroMillions Generator
+- 20 custom patterns including:
+  - Reverse Circle (9.5%)
+  - Universe Annoying ±1 (17.3%)
+  - Digit Family (32.9%)
+  - RC (Rare Event) Count
+  - 514 Formula
+  - 514 Gap Pattern
+- Circle partner calculations (+/-25)
 
----
-
-## IMPLEMENTED FEATURES
-
-### Core Prediction Engine
-- [x] 61 Pattern algorithms in master predictor
-- [x] Story Pattern Generator (Pattern 61 - Avi Patterns)
-- [x] Date Dance calculations
-- [x] Circle Partnership (+/-21) tracking
-- [x] Hungry Numbers detection
-- [x] RC (Rare Count) from 18.03.2023
-- [x] 7 Ladder pattern (P1+P6=42)
-
-### Story Families
-- [x] 13 Family (Mr. 13 the Hero)
-- [x] 26 Family (The Connector)
-- [x] 18-39 Circle (Reunion Couple)
-- [x] 33-12 Tragic Love Story
-- [x] Triple Reunion ticket
-
-### User Interface
-- [x] Last Draw always visible at top
-- [x] Ball machine animation
-- [x] Lucky wheel
-- [x] Persona selection (Avi, Olivia, Dathi) - SECRET modifiers
-- [x] Olivia's Kiss of Luck with female "Ya man!" voice
-- [x] Flying clovers animation
-- [x] Hit Tracker section
-- [x] Generation history with hit marking
-- [x] Multiple tickets generation
-- [x] Lock positions feature
-
-### Hit Tracking System
-- [x] Save generated tickets
-- [x] Compare vs actual draws
-- [x] Mark hitting numbers (green highlight)
-- [x] Track lucky hits
-- [x] Overall statistics dashboard
-- [x] Generation history
-
-### Data Management
-- [x] 1379 historical Swiss Lotto draws
-- [x] Manual draw entry endpoint
-- [x] Bulk draw import
-- [x] Auto-sync from 6richtige.ch (primary)
-- [x] Fallback to lottoland, swisslos.ch
+### 3. Data Management
+- 1,379 Swiss Lotto draws (2004-2026)
+- 1,612 EuroMillions draws (2004-2026)
+- Manual draw upload endpoints
+- Hit tracking and statistics
 
 ---
 
-## PERSONAS (SECRET FUNCTIONS)
+## Completed Features (This Session)
 
-| Name | Display | Secret Function |
-|------|---------|-----------------|
-| Avi | "Avi" | +1 to 2-3 random positions |
-| Olivia | "Olivia" | -1 from 2-3 random positions |
-| Dathi | "Dathi" | +1 to 2-3 random positions |
+### EuroMillions Patterns Added:
+- [x] Fixed date sorting (DD.MM.YYYY parsing)
+- [x] Reverse Circle pattern
+- [x] Universe Annoying ±1 pattern
+- [x] Digit Family pattern
+- [x] RC Count pattern
+- [x] RC Circle pattern
+- [x] RC Outsider pattern
+- [x] 514 Formula pattern
+- [x] 514 Gap pattern
+- [x] 514 Current Gap pattern
 
-**Rule:** Avi + Dathi can be selected together (different positions)
-**Rule:** Olivia is exclusive
+### Pricing Update:
+- [x] Swiss Lotto: 2.50 CHF per ticket
+- [x] EuroMillions: 3.50 CHF per ticket
 
----
-
-## API ENDPOINTS
-
-### Predictions
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/master-predictor` | GET | Main predictor with 61 patterns |
-| `/api/story-generator` | GET | Story-based 8 tickets |
-| `/api/story-generator-save` | GET | Generate + save for tracking |
-| `/api/story-signs` | GET | Story signs analysis |
-
-### Hit Tracking
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/last-draw` | GET | Most recent draw |
-| `/api/hit-stats` | GET | Overall statistics |
-| `/api/generation-history` | GET | All saved generations |
-| `/api/calculate-hits/{id}` | POST | Calculate hits for generation |
-| `/api/recalculate-all-hits` | POST | Batch recalculate |
-
-### Data Management
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/add-draw` | POST | Manual draw entry |
-| `/api/add-draws-bulk` | POST | Bulk import |
-| `/api/sync-results` | POST | Trigger auto-sync |
+### Documentation:
+- [x] EUROMILLIONS_PATTERNS.md created
+- [x] CONFIG.json updated
+- [x] MASTER_BACKUP.md updated
 
 ---
 
-## TECHNICAL STACK
+## Pending Items
 
-- **Frontend:** React 18, Tailwind CSS, Shadcn/UI
-- **Backend:** FastAPI, Python 3.11
-- **Database:** MongoDB
-- **Voice:** Web Speech Synthesis API
+### P0 (Critical):
+- [ ] Continue Q1 2026 Analysis (Find "new hero")
+
+### P1 (Important):
+- [ ] Fix lottery_fetcher.py auto-sync
+- [ ] Refactor server.py (extract 61 patterns to separate module)
+
+### P2 (Nice to have):
+- [ ] Wire hit stats into predictor weights
+- [ ] Dedicated EuroMillions UI improvements
+- [ ] Add "Last Draw" display for EuroMillions (like Swiss)
+
+### P3 (Backlog):
+- [ ] Clean up /app/euromillions/ abandoned directory
 
 ---
 
-## FILE STRUCTURE
+## Technical Architecture
 
 ```
 /app/
 ├── backend/
-│   ├── server.py                 # 4000+ lines, 61 patterns
-│   ├── story_pattern_generator.py
-│   ├── hit_tracker.py
-│   ├── pattern_60_story_signs.py
-│   └── lottery_fetcher.py
-├── frontend/src/
-│   └── App.js
+│   ├── server.py           # Swiss Lotto (61 patterns, ~4300 lines)
+│   ├── euromillions_routes.py  # EuroMillions (20 patterns, ~1400 lines)
+│   ├── hit_tracker.py      # Generation history
+│   ├── story_pattern_generator.py  # Story tickets
+│   └── lottery_fetcher.py  # Auto-sync (broken)
+├── frontend/
+│   └── src/App.js          # Main UI
 └── memory/
-    ├── MASTER_BACKUP.md          # Complete pattern library
-    ├── STORY_PATTERN_LEARNING.md
-    ├── Q1_2026_ANALYSIS.md
-    └── PRD.md
+    ├── PRD.md              # This file
+    ├── MASTER_BACKUP.md    # Complete knowledge base
+    ├── EUROMILLIONS_PATTERNS.md  # Pattern documentation
+    └── CONFIG.json         # Configuration
 ```
 
 ---
 
-## PENDING TASKS
+## API Endpoints
 
-### P1 - High Priority
-- [ ] Fix lottery_fetcher.py import error
-- [ ] Refactor server.py into modules
+### Swiss Lotto:
+- `GET /api/master-predictor` - Generate tickets
+- `GET /api/last-draw` - Get last draw
+- `POST /api/add-draw` - Manual add
+- `GET /api/hit-stats` - Hit statistics
 
-### P2 - Medium Priority  
-- [ ] EuroMillions dedicated mode
-- [ ] Compare to Draw UI feature
-
-### P3 - Low Priority
-- [ ] Sound effects for ball machine
-- [ ] Clean up /app/euromillions/ directory
-
----
-
-## SESSION CHANGELOG
-
-### 05.04.2026 (Current Session)
-- Added permanent "Last Draw" display at top
-- Integrated Story Patterns (61) into Master Predictor
-- Created Hit Tracker system (save, compare, mark hits)
-- Added manual draw entry endpoints
-- Changed personas to SECRET (no +1/-1 shown)
-- Avi + Dathi can now work together (different positions)
-- Changed Olivia's Kiss to green clovers (luck, not love)
-- Added female "Ya man! Good luck!" voice
-- Added draws: 01.04.2026, 04.04.2026
-- Created MASTER_BACKUP.md
-
-### Previous Sessions
-- Built 60 pattern prediction engine
-- Created story_pattern_generator.py
-- Discovered Date Dance, Circle Partners, Hungry Numbers
-- Analyzed Q1 2026 draws (1-5)
-- Codified 13 Family, 26 Family, 18-39 Circle, 33-12 Love
+### EuroMillions:
+- `POST /api/euromillions/master-predictor` - Generate tickets
+- `GET /api/euromillions/draws` - Get draws
+- `POST /api/euromillions/update-results` - Manual add
 
 ---
 
-## CONTACTS
+## Key Formulas
 
-**Data Source:** 6richtige.ch (Swiss Lotto results)
-**Total Draws:** 1379
+### Swiss Circle Partner:
+```
+N ≤ 21: Partner = N + 21
+N > 21: Partner = N - 21
+```
+
+### EuroMillions Reverse Circle:
+```
+N → (N + 25 with wrap) → Reverse digits → Partner
+```
+
+### 514 Formula:
+```
+P4_circle + (P5 × 10) + Star1 + Star2 = P1|P2 next draw
+```
 
 ---
 
-🎻 Ya man! Good luck! 🍀
+## User Persona
+
+The app maintains an enthusiastic, mystical data scientist character:
+- "Ya man! 🍀"
+- Deep pattern analysis
+- Story-based explanations
+- Circle partner connections
+
+---
+
+## Session History
+
+### 2026-04-06:
+- Discovered 514 Formula
+- Added 6 new EuroMillions patterns
+- Fixed pricing (Swiss 2.50, Euro 3.50)
+- Analyzed RC patterns across 1612 draws
+- Created comprehensive backups
+
+---
+
+*Document maintained for fork continuity*

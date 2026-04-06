@@ -1,93 +1,121 @@
 {
   "app_name": "Lucky Jack",
-  "version": "2.0",
-  "last_updated": "05.04.2026",
+  "version": "2.0.0",
+  "last_updated": "2026-04-06",
   
-  "story_patterns": {
-    "family_13": {
-      "core": 13,
-      "members": [10, 13, 14, 15, 21, 23, 31, 34],
-      "boost_core": 35,
-      "boost_family": 25
+  "databases": {
+    "swiss_lotto": {
+      "collection": "draws",
+      "total_draws": 1379,
+      "last_draw": {
+        "date": "04.04.2026",
+        "numbers": [4, 5, 9, 12, 21, 24],
+        "lucky_number": 3,
+        "replay_number": 2
+      }
     },
-    "family_26": {
-      "core": 26,
-      "circle_partner": 5,
-      "members": [5, 13, 26, 27, 30, 31, 38],
-      "boost_core": 35,
-      "boost_family": 25,
-      "boost_circle": 20
-    },
-    "circle_18_39": {
-      "numbers": [18, 39],
-      "companions": [32, 11, 25, 4, 42],
-      "boost_main": 40,
-      "boost_companions": 15
-    },
-    "love_33_12": {
-      "numbers": [33, 12],
-      "related": [10, 11, 36, 38],
-      "boost_main": 35,
-      "boost_related": 12
-    },
-    "ladder_7": {
-      "numbers": [7, 14, 21, 28, 35, 42],
-      "boost": 30
+    "euromillions": {
+      "collection": "euromillions_draws",
+      "total_draws": 1612,
+      "last_draw": {
+        "date": "03.04.2026",
+        "numbers": [8, 27, 29, 46, 49],
+        "stars": [2, 10]
+      }
     }
   },
   
-  "circle_constant": 21,
-  
-  "personas": {
-    "Avi": {"modifier": 1, "positions": "2-3 random"},
-    "Olivia": {"modifier": -1, "positions": "2-3 random"},
-    "Dathi": {"modifier": 1, "positions": "2-3 random (different from Avi)"}
+  "pricing": {
+    "swiss_lotto": {
+      "per_ticket": 2.50,
+      "currency": "CHF"
+    },
+    "euromillions": {
+      "per_ticket": 3.50,
+      "currency": "CHF"
+    }
   },
   
-  "combined_tickets": [
-    {"name": "26 FAMILY + 18-39 CIRCLE", "numbers": [5, 18, 26, 27, 30, 39], "lucky": 5},
-    {"name": "13 FAMILY + 33-12 REUNION", "numbers": [10, 12, 13, 31, 33, 34], "lucky": 1},
-    {"name": "18-39 CIRCLE + 33 HUNGRY", "numbers": [11, 18, 33, 36, 39, 41], "lucky": 3},
-    {"name": "26 STORY + 7 LADDER", "numbers": [6, 13, 26, 28, 35, 38], "lucky": 6},
-    {"name": "33 HUNGER + P8 + COLD", "numbers": [3, 11, 12, 32, 33, 34], "lucky": 6},
-    {"name": "DATE DANCE + 26 + P5", "numbers": [1, 3, 4, 5, 23, 26], "lucky": 2},
-    {"name": "7 LADDER COMPLETE", "numbers": [7, 14, 21, 28, 35, 42], "lucky": 6},
-    {"name": "TRIPLE REUNION", "numbers": [5, 12, 18, 26, 33, 39], "lucky": 4}
-  ],
-  
-  "date_dance_rules": {
-    "D": "Day appears directly",
-    "M": "Month appears directly",
-    "D+M": "Sum often at P4/P5",
-    "D-M": "Difference appears",
-    "DxM": "Product if ≤42",
-    "DxM+D+M": "P4 pattern!"
+  "swiss_lotto_patterns": {
+    "total_patterns": 61,
+    "circle_partner_offset": 21,
+    "max_number": 42,
+    "lucky_range": [1, 6],
+    "story_numbers": [13, 26, 33, 7, 18, 39, 12],
+    "pattern_61_mega_boost": true
   },
   
-  "rc_start_date": "18.03.2023",
-  "rare_event_gaps": [143, 305],
-  "next_rare_window": "Aug-Oct 2026",
-  
-  "api_endpoints": {
-    "predictions": [
-      "GET /api/master-predictor",
-      "GET /api/story-generator",
-      "GET /api/story-generator-save"
-    ],
-    "tracking": [
-      "GET /api/last-draw",
-      "GET /api/hit-stats",
-      "GET /api/generation-history",
-      "POST /api/calculate-hits/{id}"
-    ],
-    "data": [
-      "POST /api/add-draw",
-      "POST /api/sync-results"
+  "euromillions_patterns": {
+    "total_patterns": 20,
+    "circle_partner_offset": 25,
+    "max_number": 50,
+    "star_range": [1, 12],
+    "active_patterns": [
+      "reverse_circle",
+      "universe_annoying",
+      "digit_family",
+      "rc_count",
+      "rc_circle",
+      "rc_outsider",
+      "514_gap",
+      "514_gap_circle",
+      "514_current_gap"
     ]
   },
   
-  "database": {
-    "total_draws": 1379,
-    "latest_draw": "04.04.2026"
+  "rare_event_status": {
+    "euromillions": {
+      "last_rare_date": "24.03.2026",
+      "last_rare_draw": [12, 16, 17, 18, 27],
+      "gruppe": "11-20",
+      "outsider": 27,
+      "draws_since": 4
+    }
+  },
+  
+  "514_formula": {
+    "description": "P4_circle + (P5 × 10) + Star1 + Star2 = P1|P2 next",
+    "discovered_from": "28.10.2025",
+    "perfect_hits": [
+      {"date": "08.11.2016", "formula": 509, "result": "5|9"},
+      {"date": "31.10.2025", "formula": 514, "result": "5|14"}
+    ],
+    "p1_hit_rate": 0.085,
+    "gap_pattern_active": true
+  },
+  
+  "persona_modifiers": {
+    "avi": {
+      "modifier": 1,
+      "positions": "2-3 random",
+      "description": "Adds +1 to positions"
+    },
+    "dathi": {
+      "modifier": 1,
+      "positions": "2-3 random (different from Avi)",
+      "description": "Adds +1 to positions"
+    },
+    "olivia": {
+      "modifier": -1,
+      "positions": "2-3 random",
+      "description": "Subtracts 1 from positions",
+      "special": "Female voice + clover animation"
+    }
+  },
+  
+  "key_files": [
+    "/app/backend/server.py",
+    "/app/backend/euromillions_routes.py",
+    "/app/backend/story_pattern_generator.py",
+    "/app/backend/hit_tracker.py",
+    "/app/frontend/src/App.js",
+    "/app/memory/EUROMILLIONS_PATTERNS.md",
+    "/app/memory/MASTER_BACKUP.md"
+  ],
+  
+  "manual_endpoints": {
+    "add_swiss_draw": "/api/add-draw",
+    "add_euro_draw": "/api/euromillions/update-results",
+    "bulk_add": "/api/add-draws-bulk"
   }
 }
