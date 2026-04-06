@@ -965,6 +965,68 @@ def create_euromillions_router(db):
                                 candidates[pos].extend([out_circle] * 2)
                         patterns_used.append(f"RC Outsider ({last_rare_outsider}↔{out_circle})")
         
+        # NEW PATTERN 15: 514 FORMULA GAP PATTERN
+        # Track gaps between P1 hits from the 514 formula
+        # The gap number OR its circle partner often appears in the hit draw!
+        if draws and len(draws) >= 30:
+            # Find recent P1 hits from 514 formula
+            p1_hit_indices = []
+            
+            for idx in range(min(len(draws) - 1, 150)):  # Check last 150 draws
+                prev_d = draws[idx + 1]
+                curr_d = draws[idx]
+                
+                prev_nums = sorted(prev_d['numbers'])
+                prev_stars = sorted(prev_d.get('stars', [1, 2]))
+                
+                if len(prev_nums) >= 5 and len(prev_stars) >= 2:
+                    p4 = prev_nums[3]
+                    p5 = prev_nums[4]
+                    s1 = prev_stars[0]
+                    s2 = prev_stars[1]
+                    
+                    p4_circle = p4 - 25 if p4 > 25 else p4 + 25
+                    formula_result = p4_circle + (p5 * 10) + s1 + s2
+                    
+                    result_str = str(formula_result)
+                    pred_p1 = int(result_str[0]) if result_str else 0
+                    
+                    curr_nums = sorted(curr_d['numbers'])
+                    actual_p1 = curr_nums[0] if curr_nums else 0
+                    
+                    if pred_p1 == actual_p1:
+                        p1_hit_indices.append(idx)
+            
+            # Calculate gap from most recent P1 hit
+            if len(p1_hit_indices) >= 2:
+                last_gap = p1_hit_indices[0] - p1_hit_indices[1] if p1_hit_indices[0] > p1_hit_indices[1] else p1_hit_indices[1] - p1_hit_indices[0]
+                
+                # Current gap (draws since last P1 hit)
+                current_gap = p1_hit_indices[0] + 1 if p1_hit_indices else 0
+                
+                gap_circle = last_gap - 25 if last_gap > 25 else last_gap + 25
+                current_gap_circle = current_gap - 25 if current_gap > 25 else current_gap + 25
+                
+                # Add gap and circle as candidates
+                if 1 <= last_gap <= 50:
+                    for pos in range(5):
+                        if pos not in locked:
+                            candidates[pos].extend([last_gap] * 2)
+                    patterns_used.append(f"514 Gap ({last_gap})")
+                
+                if 1 <= gap_circle <= 50:
+                    for pos in range(5):
+                        if pos not in locked:
+                            candidates[pos].extend([gap_circle] * 2)
+                    patterns_used.append(f"514 Gap Circle ({last_gap}↔{gap_circle})")
+                
+                # Also add current gap (count since last hit)
+                if 1 <= current_gap <= 50 and current_gap != last_gap:
+                    for pos in range(5):
+                        if pos not in locked:
+                            candidates[pos].append(current_gap)
+                    patterns_used.append(f"514 Current Gap ({current_gap})")
+        
         # Build final numbers
         final_numbers = [0] * 5
         used = set()
