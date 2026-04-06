@@ -773,62 +773,54 @@ def create_euromillions_router(db):
             scenario_rotation = ["low", "medium", "high"]
             scenario = scenario_rotation[ticket_index % 3]
         
-        # P1+P2 Constant Sum (from pattern analysis: 13+24=37, 10+27=37)
-        P1_P2_SUM = 37
+        # P1+P2 Consecutive Sum Pattern (from analysis: ~15% hit rate within ±3)
+        # Use PREVIOUS draw's P1+P2 sum as reference, not a fixed value
+        prev_p1p2_sum = 37  # Default fallback
+        if draws:
+            prev_nums = sorted(draws[0]["numbers"])
+            prev_p1p2_sum = prev_nums[0] + prev_nums[1]
         
         # Define P1 options for each scenario with their stories
+        # Now P2 is calculated dynamically from previous draw's sum!
         scenario_configs = {
             "low": {
-                "p1_options": [
-                    (1, "Beginning - P2=36 RC Decade"),
-                    (2, "Pair - P2=35 was P5"),
-                    (3, "Trinity - P2=34 RC Decade"),
-                    (4, "Month April - P2=33 HERO!"),
-                    (5, "Hand - P2=32 RC Decade"),
-                ],
-                "story": "Low Start Story"
+                "p1_range": [1, 2, 3, 4, 5],
+                "story": "Low Start Story - small beginnings"
             },
             "medium": {
-                "p1_options": [
-                    (8, "Hero 8 - P2=29 appeared 03.04"),
-                    (9, "Legend 9 - P2=28 was P3"),
-                    (10, "Proven 10 - P2=27 QC Mirror!"),
-                    (13, "Jailbreaker - P2=24 HERO DATE!"),
-                ],
-                "story": "Medium Start Story"
+                "p1_range": [8, 9, 10, 13],
+                "story": "Medium Start Story - balanced approach"
             },
             "high": {
-                "p1_options": [
-                    (17, "QC12 ref - P2=20 date"),
-                    (24, "Hero 24 - P2=13 Jailbreaker!"),
-                    (27, "Was P2 - P2=10 SWAP!"),
-                ],
-                "story": "High Start Story"
+                "p1_range": [17, 20, 24],
+                "story": "High Start Story - bold entry"
             }
         }
         
         config = scenario_configs.get(scenario, scenario_configs["medium"])
         
-        # Pick P1 from scenario options (rotate within scenario based on ticket_index)
-        p1_options = config["p1_options"]
-        p1_choice = p1_options[(ticket_index // 3) % len(p1_options)]
+        # Pick P1 from scenario options (rotate within scenario)
+        p1_range = config["p1_range"]
+        scenario_p1 = p1_range[(ticket_index // 3) % len(p1_range)]
+        scenario_story = config["story"]
         
-        scenario_p1 = p1_choice[0]
-        scenario_p2 = P1_P2_SUM - scenario_p1
-        scenario_story = p1_choice[1]
+        # Calculate P2 based on previous draw's sum (the pattern!)
+        # But only if it makes sense (P2 > P1)
+        scenario_p2 = prev_p1p2_sum - scenario_p1
         
         # Heavily weight P1 position with scenario value
-        candidates[0].extend([scenario_p1] * 15)  # Very strong weight
+        candidates[0].extend([scenario_p1] * 10)
         
-        # Calculate P2 from constant sum
-        if 1 <= scenario_p2 <= 50:
-            candidates[1].extend([scenario_p2] * 15)  # Very strong weight
+        # Add P2 candidate if it's valid (must be > P1 for sorted order)
+        if scenario_p1 < scenario_p2 <= 50:
+            candidates[1].extend([scenario_p2] * 8)
+            patterns_used.append(f"Scenario {scenario.upper()}: P1={scenario_p1}, target P2={scenario_p2} (prev sum={prev_p1p2_sum})")
+        else:
+            patterns_used.append(f"Scenario {scenario.upper()}: P1={scenario_p1} ({scenario_story})")
         
-        patterns_used.append(f"Scenario {scenario.upper()}: P1={scenario_p1} ({scenario_story})")
-        patterns_used.append(f"P1+P2 Constant Sum ({scenario_p1}+{scenario_p2}={P1_P2_SUM})")
-        
-        position_reasons["P1"] = f"Scenario {scenario}: {scenario_p1} ({scenario_story})"
-        position_reasons["P2"] = f"Constant Sum: {P1_P2_SUM}-{scenario_p1}={scenario_p2}"
+        position_reasons["P1"] = f"Scenario {scenario}: {scenario_p1}"
+        if scenario_p1 < scenario_p2 <= 50:
+            position_reasons["P2"] = f"Prev P1+P2 pattern: {prev_p1p2_sum}-{scenario_p1}={scenario_p2}"
         
         # ═══════════════════════════════════════════════════════════════════
         
@@ -1521,51 +1513,26 @@ def create_euromillions_router(db):
         final_numbers = sorted(final_numbers)
         
         # ═══════════════════════════════════════════════════════════════════
-        # ENFORCE P1+P2 = 37 CONSTRAINT AFTER SORTING 🎯
+        # P1+P2 CONSECUTIVE SUM PATTERN (OBSERVATION, NOT ENFORCEMENT!)
         # ═══════════════════════════════════════════════════════════════════
-        # For a fully sorted ticket where P1+P2=37:
-        # - P1 (smallest) + P2 (second smallest) = 37
-        # - P3, P4, P5 must all be > P2
+        # Track if current ticket's P1+P2 matches the previous draw's P1+P2
+        # This happens ~2% exactly, ~15% within ±3
+        # We ADD candidates based on previous P1+P2, but don't force it
         
         current_p1 = final_numbers[0]
         current_p2 = final_numbers[1]
         current_sum = current_p1 + current_p2
         
-        if current_sum != P1_P2_SUM:
-            # Calculate what P2 should be to achieve sum of 37
-            target_p2 = P1_P2_SUM - current_p1
+        # Check if this matches the previous draw's P1+P2 sum
+        if draws:
+            prev_nums = sorted(draws[0]["numbers"])
+            prev_p1p2_sum = prev_nums[0] + prev_nums[1]
             
-            # P2 must be > P1 and <= 50 for valid sorted order
-            if current_p1 < target_p2 <= 50:
-                # Get all numbers except P1
-                others = final_numbers[1:]
-                
-                # Replace the smallest "other" with target_p2
-                # But we need P3, P4, P5 to all be > target_p2
-                new_others = [target_p2]
-                
-                # Add remaining numbers that are > target_p2
-                for n in others:
-                    if n > target_p2 and n not in new_others:
-                        new_others.append(n)
-                
-                # If we don't have enough numbers > target_p2, generate them
-                while len(new_others) < 4:
-                    # Pick from range (target_p2+1, 51) that's not already used
-                    candidates_above = [x for x in range(target_p2 + 1, 51) 
-                                       if x not in new_others and x != current_p1]
-                    if candidates_above:
-                        new_others.append(rnd.choice(candidates_above))
-                    else:
-                        break  # Shouldn't happen, but safety
-                
-                # Construct final sorted ticket
-                new_others = sorted(new_others)[:4]  # P2, P3, P4, P5
-                final_numbers = [current_p1] + new_others
-                
-                position_reasons["P1"] = f"P1={final_numbers[0]} (pattern selected)"
-                position_reasons["P2"] = f"P2={final_numbers[1]} (P1+P2={final_numbers[0]+final_numbers[1]}=37)"
-                patterns_used.append(f"P1+P2 Enforced ({final_numbers[0]}+{final_numbers[1]}={P1_P2_SUM})")
+            if current_sum == prev_p1p2_sum:
+                patterns_used.append(f"P1+P2 Consecutive Match! ({current_sum}={prev_p1p2_sum})")
+                position_reasons["P1+P2"] = f"Consecutive sum match: {current_p1}+{current_p2}={current_sum}"
+            elif abs(current_sum - prev_p1p2_sum) <= 3:
+                patterns_used.append(f"P1+P2 Near Match ({current_sum} vs prev {prev_p1p2_sum}, diff={abs(current_sum-prev_p1p2_sum)})")
         
         # Select stars
         star_scored = Counter(star_candidates)
