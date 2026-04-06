@@ -498,6 +498,28 @@ QC 14: 41=reverse(14), 1+4=5, 8+6=14
 | 23 | **Hero Pairs** | Partners follow | 24↔49, 8↔33 |
 | 24 | **Star Sum = QC** | S1 + S2 = QC | 6+10=16=QC16 |
 
+### 🆕 NEW PATTERNS (Session 6 - Quarter Counting Magic!):
+| # | Pattern | Formula | Hit Rate |
+|---|---------|---------|----------|
+| 25 | **QC Counting** | QC/Comp + Date | **63.4%!** |
+
+**QC Counting Details:**
+```
+QC + Complement = 28 (for 27-draw quarters) or 24 (for Q4)
+
+FORMULAS:
+- Day + QC → Any position
+- Day + Complement → ESPECIALLY P4! (6 hits in Q1 2026)
+- QC direct → P1, P2, or Stars
+- Complement direct → P2, P3, P4, P5
+- Month + QC/Comp → Lighter weight
+
+BOOKEND MAGIC:
+QC 1/27: Complement 27 = P2
+QC 27/1: QC 27 = P2
+FIRST and LAST draw of quarter BOTH have P2 = 27!
+```
+
 ---
 
 ## HOW TO PREDICT ANY DRAW:

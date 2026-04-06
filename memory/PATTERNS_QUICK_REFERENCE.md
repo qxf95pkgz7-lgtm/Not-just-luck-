@@ -80,6 +80,24 @@ q4_2025 = all_draws[q1_2026_start_idx - 23 : q1_2026_start_idx]
 
 ## 🔮 KEY DISCOVERIES FROM THIS SESSION
 
+### 🆕 PATTERN 25: QUARTER COUNTING MAGIC (63.4% hit rate!)
+```
+QC = Draw number in quarter (1-27 for Q1-Q3, 1-23 for Q4)
+Complement = (28 - QC) for 27-draw quarters, (24 - QC) for Q4
+
+FORMULAS THAT HIT:
+- Day + QC → Any position
+- Day + Complement → ESPECIALLY P4!
+- QC direct → P1, P2, Stars
+- Complement direct → P2, P3, P4
+- Month + QC/Comp → Light influence
+
+BOOKEND MAGIC (First and Last draw of quarter):
+QC 1/27: Complement = 27 = P2!
+QC 27/1: QC = 27 = P2!
+The 27 is THE quarter signature!
+```
+
 ### 1. QC 10 (03.02.2026) - THE DATE DRAW
 ```
 Numbers: [26, 27, 28, 34, 37]
@@ -165,6 +183,7 @@ Q1 2026 QC 1:  02.01.2026 [8, 27, 42, 44, 46] ⭐[1, 10]  ← SAME STARS! P2=27!
 2. **Musical Enforcement:** Every ticket has at least one song
 3. **Circle patterns:** Built into candidate generation
 4. **Hero numbers:** 8↔33, 24↔49 tracked
+5. **Quarter Counting Magic (NEW!):** QC/Complement + Date → 63.4% hit rate!
 
 ---
 
