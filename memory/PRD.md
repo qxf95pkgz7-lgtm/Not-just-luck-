@@ -8,7 +8,7 @@
 
 Lucky Jack is a sophisticated lottery prediction application that uses 61 custom numerology patterns, historical data analysis, and story-based generation to create lottery tickets. The app maintains an enthusiastic, mystical data-scientist persona.
 
-**Live URL:** https://replay-jail-track.preview.emergentagent.com
+**Live URL:** https://jackpot-analysis-hub.preview.emergentagent.com
 
 ---
 

@@ -1421,14 +1421,14 @@ function App() {
           {showMultiTickets && (
             <div className="mt-4">
               <p className="text-xs text-slate-400 mb-3">
-                Generate multiple ticket predictions ranked by confidence. <span className={lotteryMode === 'swiss' ? 'text-amber-400' : 'text-blue-400'}>{lotteryMode === 'swiss' ? '2.50 CHF' : '2.50 CHF'} per ticket</span>
+                Generate multiple ticket predictions ranked by confidence. <span className={lotteryMode === 'swiss' ? 'text-amber-400' : 'text-blue-400'}>{lotteryMode === 'swiss' ? '2.50 CHF' : '3.50 CHF'} per ticket</span>
               </p>
               
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-sm text-slate-300">How many tickets?</span>
                   <span className={`text-xs font-semibold ${lotteryMode === 'swiss' ? 'text-amber-400' : 'text-blue-400'}`}>
-                    Total: {(numTickets * 2.5).toFixed(2)} CHF
+                    Total: {(numTickets * (lotteryMode === 'swiss' ? 2.5 : 3.5)).toFixed(2)} CHF
                   </span>
                 </div>
                 <div className="grid grid-cols-7 gap-1">
@@ -1444,7 +1444,7 @@ function App() {
                     >
                       <span className="font-bold">{n}</span>
                       <span className={`text-[10px] ${numTickets === n ? 'text-emerald-100' : 'text-slate-500'}`}>
-                        {(n * 2.5).toFixed(1)}
+                        {(n * (lotteryMode === 'swiss' ? 2.5 : 3.5)).toFixed(1)}
                       </span>
                     </button>
                   ))}
