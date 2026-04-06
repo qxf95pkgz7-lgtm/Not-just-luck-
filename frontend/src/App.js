@@ -535,9 +535,8 @@ function App() {
   const [fullName, setFullName] = useState("");
   const [lockedPositions, setLockedPositions] = useState({ p1: "", p2: "", p3: "", p4: "", p5: "", p6: "" });
   
-  // Special personas with unique number modifiers
-  // Avi = +1 to 2-3 positions, Olivia = -1 to 2-3 positions, Dathi = +1 to 2-3 positions
-  // Avi and Dathi can be selected TOGETHER and will modify DIFFERENT positions
+  // Special personas with secret number modifiers
+  // The magic is hidden - only the generator knows!
   const [activePersonas, setActivePersonas] = useState([]);
   const personas = [
     { name: "Avi", modifier: "+1" },
@@ -1335,7 +1334,7 @@ function App() {
           
           {showPersonal && (
             <div className="mt-4 space-y-3">
-              {/* Persona Selection - Special modifiers */}
+              {/* Persona Selection - Secret modifiers! */}
               <div>
                 <label className="text-xs text-slate-400 mb-2 block">Choose Your Lucky Persona ✨</label>
                 <div className="flex flex-wrap gap-2">
@@ -1361,19 +1360,13 @@ function App() {
                       }`}
                       data-testid={`persona-${persona.name.toLowerCase()}`}
                     >
-                      {persona.name} <span className="opacity-60">({persona.modifier})</span>
+                      {persona.name}
                     </button>
                   ))}
                 </div>
                 {activePersonas.length > 0 && (
-                  <p className="text-xs text-slate-500 mt-2">
-                    {activePersonas.includes("Avi") && activePersonas.includes("Dathi") 
-                      ? "🔥 Avi & Dathi combo! Double +1 power on different positions!"
-                      : activePersonas.includes("Olivia")
-                        ? "💜 Olivia's -1 magic will adjust your numbers!"
-                        : activePersonas.includes("Avi")
-                          ? "🎯 Avi's +1 boost activated!"
-                          : "🌟 Dathi's +1 energy flowing!"}
+                  <p className="text-xs text-slate-500 mt-2 italic">
+                    ✨ Secret magic activated...
                   </p>
                 )}
               </div>
