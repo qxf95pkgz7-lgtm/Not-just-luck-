@@ -1433,14 +1433,20 @@ def create_euromillions_router(db):
                         star_candidates.extend([s1, s2] * 3)
                 patterns_used.append(f"Star Sum={next_qc}")
         
-        # Build final numbers
+        # Build final numbers - SCENARIO P1/P2 MUST BE INCLUDED!
         final_numbers = [0] * 5
         used = set()
         
+        # First, lock user-specified positions
         for pos, num in locked.items():
             final_numbers[pos] = num
             used.add(num)
             position_reasons[f"P{pos+1}"] = "Locked by user"
+        
+        # CRITICAL: Force scenario P1 into the ticket (it will be sorted later)
+        # We add it to position 0 initially but sorting will place it correctly
+        scenario_p1_included = False
+        scenario_p2_included = False
         
         for pos in range(5):
             if pos in locked:
@@ -1449,6 +1455,7 @@ def create_euromillions_router(db):
             pos_candidates = candidates[pos]
             scored = Counter(pos_candidates)
             
+            # Add some randomness based on ticket index
             for num in rnd.sample(range(1, 51), 5):
                 scored[num] += ticket_index * 0.1
             
@@ -1464,8 +1471,53 @@ def create_euromillions_router(db):
             
             final_numbers[pos] = selected
             used.add(selected)
+            
+            # Track if scenario numbers got included
+            if selected == scenario_p1:
+                scenario_p1_included = True
+            if selected == scenario_p2:
+                scenario_p2_included = True
+            
             position_reasons[f"P{pos+1}"] = f"Pattern consensus (score: {scored.get(selected, 0):.1f})"
         
+        # FORCE scenario P1 if not included - replace lowest scored non-scenario number
+        if not scenario_p1_included and scenario_p1 not in used:
+            # Find the position with lowest score to replace
+            min_pos = 0
+            min_score = float('inf')
+            for pos in range(5):
+                if pos not in locked and final_numbers[pos] != scenario_p2:
+                    score = Counter(candidates[pos]).get(final_numbers[pos], 0)
+                    if score < min_score:
+                        min_score = score
+                        min_pos = pos
+            
+            old_num = final_numbers[min_pos]
+            final_numbers[min_pos] = scenario_p1
+            used.discard(old_num)
+            used.add(scenario_p1)
+            position_reasons[f"P{min_pos+1}"] = f"Scenario {scenario} P1={scenario_p1}"
+        
+        # FORCE scenario P2 if not included
+        if not scenario_p2_included and scenario_p2 not in used and 1 <= scenario_p2 <= 50:
+            # Find another position to replace
+            min_pos = 0
+            min_score = float('inf')
+            for pos in range(5):
+                if pos not in locked and final_numbers[pos] not in [scenario_p1, scenario_p2]:
+                    score = Counter(candidates[pos]).get(final_numbers[pos], 0)
+                    if score < min_score:
+                        min_score = score
+                        min_pos = pos
+            
+            if final_numbers[min_pos] not in [scenario_p1]:
+                old_num = final_numbers[min_pos]
+                final_numbers[min_pos] = scenario_p2
+                used.discard(old_num)
+                used.add(scenario_p2)
+                position_reasons[f"P{min_pos+1}"] = f"Scenario {scenario} P2={scenario_p2}"
+        
+        # Sort for display (EuroMillions requirement)
         final_numbers = sorted(final_numbers)
         
         # Select stars
