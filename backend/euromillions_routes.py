@@ -904,6 +904,67 @@ def create_euromillions_router(db):
                     break
         patterns_used.append("Fibonacci Addends")
         
+        # NEW PATTERN 14: RARE EVENT COUNT (RC) - 22.4% combined hit rate!
+        # After a Rare Event (4+ numbers from same gruppe), count the draws
+        # The count number OR its +25 circle partner often appears
+        if draws:
+            # Find Rare Events (4+ in same gruppe)
+            def get_gruppe_counts(nums):
+                g1 = len([n for n in nums if 1 <= n <= 10])
+                g2 = len([n for n in nums if 11 <= n <= 20])
+                g3 = len([n for n in nums if 21 <= n <= 30])
+                g4 = len([n for n in nums if 31 <= n <= 40])
+                g5 = len([n for n in nums if 41 <= n <= 50])
+                return max(g1, g2, g3, g4, g5), [g1, g2, g3, g4, g5]
+            
+            # Scan for last Rare Event
+            last_rare_idx = None
+            last_rare_outsider = None
+            for i, d in enumerate(draws):
+                max_gruppe, gruppe_counts = get_gruppe_counts(d["numbers"])
+                if max_gruppe >= 4:
+                    last_rare_idx = i
+                    # Find the outsider (number not in the dominant gruppe)
+                    gruppe_ranges = [(1,10), (11,20), (21,30), (31,40), (41,50)]
+                    dominant_idx = gruppe_counts.index(max_gruppe)
+                    low, high = gruppe_ranges[dominant_idx]
+                    outsiders = [n for n in d["numbers"] if n < low or n > high]
+                    if outsiders:
+                        last_rare_outsider = outsiders[0]
+                    break  # Found most recent
+            
+            if last_rare_idx is not None:
+                # Count from last Rare Event
+                count_from_rare = last_rare_idx + 1  # +1 because index 0 = 1 draw ago
+                
+                # The count number (keep 1-50 for EuroMillions)
+                count_num = count_from_rare if count_from_rare <= 50 else ((count_from_rare - 1) % 50) + 1
+                
+                # Circle partner (+25 with wrap)
+                circle_partner = count_num + 25 if count_num <= 25 else count_num - 25
+                
+                # Boost count number and circle partner
+                if 1 <= count_num <= 50:
+                    for pos in range(5):
+                        if pos not in locked:
+                            candidates[pos].extend([count_num] * 3)  # Weight heavily
+                    patterns_used.append(f"RC Count ({count_from_rare})")
+                
+                if 1 <= circle_partner <= 50:
+                    for pos in range(5):
+                        if pos not in locked:
+                            candidates[pos].extend([circle_partner] * 2)
+                    patterns_used.append(f"RC Circle ({count_num}↔{circle_partner})")
+                
+                # Outsider circle partner (key number!)
+                if last_rare_outsider:
+                    out_circle = last_rare_outsider + 25 if last_rare_outsider <= 25 else last_rare_outsider - 25
+                    if 1 <= out_circle <= 50:
+                        for pos in range(5):
+                            if pos not in locked:
+                                candidates[pos].extend([out_circle] * 2)
+                        patterns_used.append(f"RC Outsider ({last_rare_outsider}↔{out_circle})")
+        
         # Build final numbers
         final_numbers = [0] * 5
         used = set()
