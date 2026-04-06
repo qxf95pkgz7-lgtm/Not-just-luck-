@@ -737,6 +737,165 @@ def create_euromillions_router(db):
         total = sum(sums.values())
         return {s: count/total for s, count in sums.items()} if total > 0 else {}
     
+    # ═══════════════════════════════════════════════════════════════════
+    # 🎵 MUSICAL NUMBER GENERATION - THE SONGS! 🎵
+    # ═══════════════════════════════════════════════════════════════════
+    
+    def to_circle(n):
+        """Convert number to its first digit (circle form): 27 → 2, 35 → 3"""
+        if n >= 10:
+            return n // 10
+        return n
+    
+    def find_songs_in_ticket(nums):
+        """Find all musical patterns (songs) in a ticket"""
+        songs = []
+        p1, p2, p3, p4, p5 = nums
+        
+        # Direct addition songs
+        if p1 + p2 == p3:
+            songs.append(f"P1+P2=P3: {p1}+{p2}={p3}")
+        if p1 + p2 == p4:
+            songs.append(f"P1+P2=P4: {p1}+{p2}={p4}")
+        if p1 + p2 == p5:
+            songs.append(f"P1+P2=P5: {p1}+{p2}={p5}")
+        if p2 + p3 == p4:
+            songs.append(f"P2+P3=P4: {p2}+{p3}={p4}")
+        if p2 + p3 == p5:
+            songs.append(f"P2+P3=P5: {p2}+{p3}={p5}")
+        if p3 + p4 == p5:
+            songs.append(f"P3+P4=P5: {p3}+{p4}={p5}")
+        if p1 + p3 == p4:
+            songs.append(f"P1+P3=P4: {p1}+{p3}={p4}")
+        if p1 + p3 == p5:
+            songs.append(f"P1+P3=P5: {p1}+{p3}={p5}")
+        if p1 + p4 == p5:
+            songs.append(f"P1+P4=P5: {p1}+{p4}={p5}")
+        if p2 + p4 == p5:
+            songs.append(f"P2+P4=P5: {p2}+{p4}={p5}")
+        
+        # Circle addition songs (first digit + next = another)
+        if to_circle(p1) + p2 == p3:
+            songs.append(f"circle({p1})={to_circle(p1)}+{p2}={p3}")
+        if to_circle(p2) + p3 == p4:
+            songs.append(f"circle({p2})={to_circle(p2)}+{p3}={p4}")
+        if to_circle(p2) + p3 == p5:
+            songs.append(f"circle({p2})={to_circle(p2)}+{p3}={p5}")
+        if to_circle(p3) + p4 == p5:
+            songs.append(f"circle({p3})={to_circle(p3)}+{p4}={p5}")
+        if to_circle(p1) + p3 == p4:
+            songs.append(f"circle({p1})={to_circle(p1)}+{p3}={p4}")
+        if to_circle(p1) + p4 == p5:
+            songs.append(f"circle({p1})={to_circle(p1)}+{p4}={p5}")
+        if to_circle(p2) + p4 == p5:
+            songs.append(f"circle({p2})={to_circle(p2)}+{p4}={p5}")
+        if to_circle(p1) + p2 == p4:
+            songs.append(f"circle({p1})={to_circle(p1)}+{p2}={p4}")
+        if to_circle(p1) + p2 == p5:
+            songs.append(f"circle({p1})={to_circle(p1)}+{p2}={p5}")
+        
+        return songs
+    
+    def generate_musical_candidates(p1, p2):
+        """Generate P3, P4, P5 candidates that create songs with P1 and P2"""
+        candidates = {2: [], 3: [], 4: []}  # For P3, P4, P5
+        
+        # Direct addition songs
+        # P1 + P2 = P3
+        if p1 + p2 <= 50:
+            candidates[2].extend([p1 + p2] * 5)  # Strong weight for P3
+        
+        # P1 + P2 = P4
+        if p1 + p2 <= 50:
+            candidates[3].extend([p1 + p2] * 3)
+        
+        # P1 + P2 = P5
+        if p1 + p2 <= 50:
+            candidates[4].extend([p1 + p2] * 2)
+        
+        # Circle songs: circle(P1) + P2 = P3
+        c1 = to_circle(p1)
+        if c1 + p2 <= 50 and c1 + p2 > p2:
+            candidates[2].extend([c1 + p2] * 4)
+        
+        # Circle songs: circle(P2) + ? = P4/P5
+        c2 = to_circle(p2)
+        
+        # Generate P3, P4, P5 that work together
+        # If we pick P3, then P2 + P3 could = P4
+        for p3_candidate in range(p2 + 1, 45):
+            # Check if P2 + P3 makes a valid P4
+            if p2 + p3_candidate <= 50:
+                candidates[2].append(p3_candidate)
+                candidates[3].extend([p2 + p3_candidate] * 2)
+            
+            # Check if circle(P2) + P3 makes valid P4/P5
+            if c2 + p3_candidate <= 50 and c2 + p3_candidate > p3_candidate:
+                candidates[3].append(c2 + p3_candidate)
+        
+        # P3 + P4 = P5 patterns
+        for p3_candidate in range(p2 + 1, 40):
+            for p4_candidate in range(p3_candidate + 1, 48):
+                if p3_candidate + p4_candidate <= 50:
+                    candidates[4].append(p3_candidate + p4_candidate)
+        
+        return candidates
+    
+    def make_ticket_musical(nums, max_attempts=20):
+        """Try to adjust a ticket to have at least one song"""
+        p1, p2, p3, p4, p5 = nums
+        
+        # First check if already musical
+        songs = find_songs_in_ticket(nums)
+        if songs:
+            return nums, songs
+        
+        # Try to make it musical by adjusting P5, P4, P3
+        for attempt in range(max_attempts):
+            # Try: P3 + P4 = P5
+            new_p5 = p3 + p4
+            if new_p5 <= 50 and new_p5 > p4 and new_p5 not in [p1, p2, p3, p4]:
+                new_nums = sorted([p1, p2, p3, p4, new_p5])
+                songs = find_songs_in_ticket(new_nums)
+                if songs:
+                    return new_nums, songs
+            
+            # Try: P2 + P3 = P4
+            new_p4 = p2 + p3
+            if new_p4 <= 50 and new_p4 > p3 and new_p4 not in [p1, p2, p3, p5]:
+                new_nums = sorted([p1, p2, p3, new_p4, p5])
+                songs = find_songs_in_ticket(new_nums)
+                if songs:
+                    return new_nums, songs
+            
+            # Try: P1 + P2 = P3
+            new_p3 = p1 + p2
+            if new_p3 <= 50 and new_p3 > p2 and new_p3 not in [p1, p2, p4, p5]:
+                new_nums = sorted([p1, p2, new_p3, p4, p5])
+                songs = find_songs_in_ticket(new_nums)
+                if songs:
+                    return new_nums, songs
+            
+            # Try: circle(P2) + P3 = P4
+            c2 = to_circle(p2)
+            new_p4 = c2 + p3
+            if new_p4 <= 50 and new_p4 > p3 and new_p4 not in [p1, p2, p3, p5]:
+                new_nums = sorted([p1, p2, p3, new_p4, p5])
+                songs = find_songs_in_ticket(new_nums)
+                if songs:
+                    return new_nums, songs
+            
+            # Try: P1 + P4 = P5
+            new_p5 = p1 + p4
+            if new_p5 <= 50 and new_p5 > p4 and new_p5 not in [p1, p2, p3, p4]:
+                new_nums = sorted([p1, p2, p3, p4, new_p5])
+                songs = find_songs_in_ticket(new_nums)
+                if songs:
+                    return new_nums, songs
+        
+        # Return original if can't make musical
+        return nums, []
+    
     async def master_predictor(draws, birthday=None, name=None, locked_positions=None, ticket_index=0, scenario=None):
         """
         Master prediction algorithm for EuroMillions
@@ -1533,6 +1692,24 @@ def create_euromillions_router(db):
                 position_reasons["P1+P2"] = f"Consecutive sum match: {current_p1}+{current_p2}={current_sum}"
             elif abs(current_sum - prev_p1p2_sum) <= 3:
                 patterns_used.append(f"P1+P2 Near Match ({current_sum} vs prev {prev_p1p2_sum}, diff={abs(current_sum-prev_p1p2_sum)})")
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # 🎵 MUSICAL TICKET ENFORCEMENT - THE SONGS! 🎵
+        # ═══════════════════════════════════════════════════════════════════
+        # Every ticket should have at least one "song" - a mathematical harmony
+        # where positions add up (directly or via circle) to create other positions
+        
+        songs_found = find_songs_in_ticket(final_numbers)
+        
+        if not songs_found:
+            # Try to make the ticket musical
+            final_numbers, songs_found = make_ticket_musical(final_numbers)
+        
+        if songs_found:
+            patterns_used.append(f"🎵 Musical: {songs_found[0]}")
+            if len(songs_found) > 1:
+                patterns_used.append(f"🎵 +{len(songs_found)-1} more songs")
+            position_reasons["Music"] = f"Songs: {', '.join(songs_found[:2])}"
         
         # Select stars
         star_scored = Counter(star_candidates)
