@@ -990,42 +990,18 @@ def create_euromillions_router(db):
                 if 0 <= pos_idx < 5 and 1 <= value <= 50:
                     locked[pos_idx] = value
         
-        # Pattern 1: Position Frequency
-        for pos in range(5):
-            if pos not in locked:
-                freq = pattern_position_frequency(draws, pos)
-                top_nums = sorted(freq.keys(), key=lambda x: freq.get(x, 0), reverse=True)[:10]
-                candidates[pos].extend(top_nums)
-        patterns_used.append("Position Frequency")
+        # REMOVED: Position Frequency (hot numbers) - not a valid pattern
+        # REMOVED: Gap Analysis (cold/due numbers) - not a valid pattern
+        # REMOVED: Recent Hot Numbers - not a valid pattern
         
-        # Pattern 2: Gap Analysis
-        gaps = pattern_gap_analysis(draws)
-        due_numbers = sorted(gaps.keys(), key=lambda x: gaps[x], reverse=True)[:15]
-        for pos in range(5):
-            if pos not in locked:
-                candidates[pos].extend(due_numbers[:5])
-        patterns_used.append("Gap Analysis")
-        
-        # Pattern 3: Family Spread
+        # Pattern: Family Spread (decade spread)
         family_nums = [rnd.choice(fam_nums) for fam_nums in FAMILIES.values()]
         for pos in range(5):
             if pos not in locked:
                 candidates[pos].extend(family_nums)
         patterns_used.append("Family Spread")
         
-        # Pattern 4: Recent Hot Numbers
-        recent = draws[:5]
-        recent_hot = Counter()
-        for d in recent:
-            for n in d["numbers"]:
-                recent_hot[n] += 1
-        hot_nums = [n for n, _ in recent_hot.most_common(10)]
-        for pos in range(5):
-            if pos not in locked:
-                candidates[pos].extend(hot_nums[:3])
-        patterns_used.append("Recent Hot Numbers")
-        
-        # Pattern 5: Consecutive Pairs
+        # Pattern: Consecutive Pairs
         consec_rate = pattern_consecutive_pairs(draws)
         if consec_rate > 0.4 and rnd.random() < consec_rate:
             base = rnd.randint(5, 45)
@@ -1132,13 +1108,8 @@ def create_euromillions_router(db):
             patterns_used.append(f"Name Energy ({name})")
         
         # Star patterns
-        star_freq = pattern_star_frequency(draws)
-        top_stars = sorted(star_freq.keys(), key=lambda x: star_freq.get(x, 0), reverse=True)[:6]
-        star_candidates.extend(top_stars)
-        
-        star_gaps = pattern_star_gap_analysis(draws)
-        due_stars = sorted(star_gaps.keys(), key=lambda x: star_gaps[x], reverse=True)[:4]
-        star_candidates.extend(due_stars)
+        # REMOVED: Star frequency (hot stars) - not a valid pattern
+        # REMOVED: Star gap analysis (due stars) - not a valid pattern
         
         star_sums = pattern_star_sum(draws)
         target_sum = max(star_sums.keys(), key=lambda x: star_sums.get(x, 0)) if star_sums else 13
