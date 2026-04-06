@@ -737,8 +737,16 @@ def create_euromillions_router(db):
         total = sum(sums.values())
         return {s: count/total for s, count in sums.items()} if total > 0 else {}
     
-    async def master_predictor(draws, birthday=None, name=None, locked_positions=None, ticket_index=0):
-        """Master prediction algorithm for EuroMillions"""
+    async def master_predictor(draws, birthday=None, name=None, locked_positions=None, ticket_index=0, scenario=None):
+        """
+        Master prediction algorithm for EuroMillions
+        
+        scenario options:
+        - "low": P1 is 1-5 (low start)
+        - "medium": P1 is 6-15 (medium start)  
+        - "high": P1 is 16+ (high start)
+        - None: auto-select based on ticket_index
+        """
         patterns_used = []
         position_reasons = {}
         candidates = {i: [] for i in range(5)}
@@ -752,8 +760,77 @@ def create_euromillions_router(db):
                 "stars": stars,
                 "patterns_used": ["Random (no data)"],
                 "confidence": 0.1,
-                "position_reasons": {}
+                "position_reasons": {},
+                "scenario": "random"
             }
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # SCENARIO-BASED P1/P2 GENERATION - THE THREE STORIES! 🎭
+        # ═══════════════════════════════════════════════════════════════════
+        
+        # Auto-select scenario based on ticket index if not specified
+        if scenario is None:
+            scenario_rotation = ["low", "medium", "high"]
+            scenario = scenario_rotation[ticket_index % 3]
+        
+        # P1+P2 Constant Sum (from pattern analysis: 13+24=37, 10+27=37)
+        P1_P2_SUM = 37
+        
+        # Define P1 options for each scenario with their stories
+        scenario_configs = {
+            "low": {
+                "p1_options": [
+                    (1, "Beginning - P2=36 RC Decade"),
+                    (2, "Pair - P2=35 was P5"),
+                    (3, "Trinity - P2=34 RC Decade"),
+                    (4, "Month April - P2=33 HERO!"),
+                    (5, "Hand - P2=32 RC Decade"),
+                ],
+                "story": "Low Start Story"
+            },
+            "medium": {
+                "p1_options": [
+                    (8, "Hero 8 - P2=29 appeared 03.04"),
+                    (9, "Legend 9 - P2=28 was P3"),
+                    (10, "Proven 10 - P2=27 QC Mirror!"),
+                    (13, "Jailbreaker - P2=24 HERO DATE!"),
+                ],
+                "story": "Medium Start Story"
+            },
+            "high": {
+                "p1_options": [
+                    (17, "QC12 ref - P2=20 date"),
+                    (24, "Hero 24 - P2=13 Jailbreaker!"),
+                    (27, "Was P2 - P2=10 SWAP!"),
+                ],
+                "story": "High Start Story"
+            }
+        }
+        
+        config = scenario_configs.get(scenario, scenario_configs["medium"])
+        
+        # Pick P1 from scenario options (rotate within scenario based on ticket_index)
+        p1_options = config["p1_options"]
+        p1_choice = p1_options[(ticket_index // 3) % len(p1_options)]
+        
+        scenario_p1 = p1_choice[0]
+        scenario_p2 = P1_P2_SUM - scenario_p1
+        scenario_story = p1_choice[1]
+        
+        # Heavily weight P1 position with scenario value
+        candidates[0].extend([scenario_p1] * 15)  # Very strong weight
+        
+        # Calculate P2 from constant sum
+        if 1 <= scenario_p2 <= 50:
+            candidates[1].extend([scenario_p2] * 15)  # Very strong weight
+        
+        patterns_used.append(f"Scenario {scenario.upper()}: P1={scenario_p1} ({scenario_story})")
+        patterns_used.append(f"P1+P2 Constant Sum ({scenario_p1}+{scenario_p2}={P1_P2_SUM})")
+        
+        position_reasons["P1"] = f"Scenario {scenario}: {scenario_p1} ({scenario_story})"
+        position_reasons["P2"] = f"Constant Sum: {P1_P2_SUM}-{scenario_p1}={scenario_p2}"
+        
+        # ═══════════════════════════════════════════════════════════════════
         
         locked = {}
         if locked_positions:
@@ -1419,7 +1496,8 @@ def create_euromillions_router(db):
             "stars": final_stars,
             "patterns_used": patterns_used,
             "confidence": confidence,
-            "position_reasons": position_reasons
+            "position_reasons": position_reasons,
+            "scenario": scenario
         }
     
     @router.get("/health")
@@ -1497,24 +1575,40 @@ def create_euromillions_router(db):
         draws = await get_euromillions_draws()
         
         tickets = []
-        for i in range(min(request.num_tickets, 20)):
-            prediction = await master_predictor(
-                draws=draws,
-                birthday=request.birthday,
-                name=request.name,
-                locked_positions=request.locked_positions,
-                ticket_index=i
-            )
-            tickets.append({
-                "ticket_number": i + 1,
-                "numbers": prediction["numbers"],
-                "stars": prediction["stars"],
-                "patterns_used": prediction["patterns_used"],
-                "confidence": prediction["confidence"],
-                "position_reasons": prediction["position_reasons"],
-            })
+        num_tickets = min(request.num_tickets, 50)  # Allow up to 50 tickets
         
-        tickets.sort(key=lambda x: x["confidence"], reverse=True)
+        # Calculate distribution across scenarios
+        # For N tickets: ~1/3 low, ~1/3 medium, ~1/3 high
+        scenario_counts = {
+            "low": num_tickets // 3,
+            "medium": num_tickets // 3,
+            "high": num_tickets - (num_tickets // 3) * 2
+        }
+        
+        ticket_idx = 0
+        for scenario in ["low", "medium", "high"]:
+            for _ in range(scenario_counts[scenario]):
+                prediction = await master_predictor(
+                    draws=draws,
+                    birthday=request.birthday,
+                    name=request.name,
+                    locked_positions=request.locked_positions,
+                    ticket_index=ticket_idx,
+                    scenario=scenario
+                )
+                tickets.append({
+                    "ticket_number": ticket_idx + 1,
+                    "numbers": prediction["numbers"],
+                    "stars": prediction["stars"],
+                    "patterns_used": prediction["patterns_used"],
+                    "confidence": prediction["confidence"],
+                    "position_reasons": prediction["position_reasons"],
+                    "scenario": prediction.get("scenario", scenario)
+                })
+                ticket_idx += 1
+        
+        # Sort by confidence but keep scenario grouping visible
+        tickets.sort(key=lambda x: (-x["confidence"], x["scenario"]))
         
         price_per_ticket = 2.50
         total_price = len(tickets) * price_per_ticket
