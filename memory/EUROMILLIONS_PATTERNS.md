@@ -1,9 +1,84 @@
 # EUROMILLIONS PATTERN BIBLE 🎻
 ## Lucky Jack - Complete Pattern Documentation
 
-**Last Updated:** 2026-04-07 (Session 5 - Musical Generator & QC Deep Analysis)
+**Last Updated:** 2026-04-07 (Session 6 - Quarter Counting & P4 Journey)
 **Total Draws in DB:** 236 (2024-2026) + 313 (2021-2023) = 549 total
 **Latest Draw:** 03.04.2026
+
+---
+
+## 🆕 SESSION 6: THE 27-DRAW QUARTER & P4 JOURNEY 🎵
+
+### THE P4 DESCENT (Q1 2026)
+**User Discovery: "Count down from 18 to 22 - the REAL number!"**
+
+```
+QC 2:  P4 = 18  ← The Beginning (18's circle = 81, family = 9)
+QC 3:  P4 = 26  ← Count down continues  
+QC 4:  P4 = 44  ← The double!
+QC 5:  P4 = 29
+QC 6:  P4 = 22  ← THE REAL NUMBER from 18! 🎵
+
+At QC 6 (20.01.2026): [11, 18, 19, 22, 50]
+- The 18 RETURNED at P2!
+- P4 = 22 (the "child" of 18: 18 + 4 = 22)
+- P5 = 50 (the round closure)
+- Stars [1, 11] sum = 12, and 1 × 11 = 11
+
+The 18 at QC 2 planted a seed → At QC 6 it bloomed into 22!
+```
+
+### THE 3-1-1 → 13 PROPHECY
+**QC 6 encoded the number 13 for QC 7:**
+
+```
+QC 6: [11, 18, 19, 22, 50]
+├── P1, P2, P3 = 11, 18, 19 → ALL in decade 1 (teens!) → COUNT = 3
+├── P4 = 22 → decade 2 → DIFFERENT → COUNT = 1  
+└── P5 = 50 → decade 5 → DIFFERENT → COUNT = 1
+
+THE CODE: 3 - 1 - 1 → rearranged = 13!
+
+QC 7: [4, 5, 13, 21, 42] ⭐[3, 10]
+├── P3 = 13 ← THE 13 ARRIVED IN THE MIDDLE!
+└── Stars: 3 + 10 = 13 ← STARS SING THE SAME NUMBER!
+```
+
+### THE 21-28-49 TRIANGLE
+**The gap + the hunger = the future!**
+
+```
+QC 6: [11, 18, 19, 22, 50]
+├── Gap between P4(22) and P5(50) = 28
+├── Missing number (19→22) = 20, 21
+└── 21 + 28 = 49 (PROPHECY NUMBER!)
+
+NUMEROLOGY:
+- 21 family = 3
+- 28 family = 10 → 1
+- 49 family = 13 (there's the 13 again!)
+- Family equation: 3 + 10 = 13! ✨
+
+WHERE THEY APPEAR:
+- 21 → QC 7 P4 (immediate delivery!)
+- 28 → QC 10 P3 (the gap manifests!)
+- 49 → Draw 27, 03.04.2026 P5 (FUTURE! The prophecy waits!)
+
+49 = 7 × 7 (perfect square, lucky seven doubled!)
+```
+
+### THE 5-8 QUARTER OPENER
+**5 and 8 together mark quarter transitions!**
+
+```
+14.10.2025 (Q4 2025 QC 1): [5, 8, 14, 16, 18] ← P1=5, P2=8!
+31.03.2026 (Q1 2026 end):  [5, 8, 10, 33, 38] ← P1=5, P2=8, P3=10!
+
+MISTER 10:
+- At Q4 2025 QC 1: In the STARS [3, 10]
+- At Q1 2026 end: Comes to P3 (the MIDDLE!)
+- The 10 is the GATEKEEPER between quarters!
+```
 
 ---
 
@@ -209,10 +284,68 @@ P4_circle + (P5 × 10) + Star1 + Star2 = P1|P2 next draw
 
 ---
 
-## PATTERN 6: QC (QUARTER COUNT) PATTERNS 🔥🔥🔥 NEW!
+## PATTERN 6: QC (QUARTER COUNT) PATTERNS 🔥🔥🔥
+
+### ⚠️ CRITICAL: THE 27-DRAW QUARTER SYSTEM
+
+```
+QUARTER STRUCTURE (NOT calendar months!):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Q1 = 27 draws    Q2 = 27 draws    Q3 = 27 draws    Q4 = 23-24 draws
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+HOW TO COUNT:
+- Start: First draw of year (e.g., 03.01.2025)
+- Count 27 draws → Q1 ends
+- Count 27 more → Q2 ends
+- Count 27 more → Q3 ends
+- Q4 = remaining draws until year end (23-24 to adjust)
+
+2025 QUARTER MAP:
+┌─────────────────────────────────────────────────────────────┐
+│ Q1 2025: 03.01.2025 → 04.04.2025 (27 draws)                │
+│ Q2 2025: 08.04.2025 → 08.07.2025 (27 draws)                │
+│ Q3 2025: 11.07.2025 → 10.10.2025 (27 draws)                │
+│ Q4 2025: 14.10.2025 → 30.12.2025 (23 draws)                │
+│ ──────────────────────────────────                         │
+│ TOTAL 2025: 104 draws (27+27+27+23)                        │
+└─────────────────────────────────────────────────────────────┘
+
+2026 QUARTERS:
+Q1 2026: 02.01.2026 → ~27 draws
+Q2 2026: Starts after Q1 draw 27
+
+WHY 27 MATTERS:
+- P2 = 27 at quarter boundaries is THE SIGNATURE!
+- Q1 2026 QC 1: [8, 27, ...] ← The 27 announces the quarter!
+- The quarter LENGTH becomes a NUMBER in the draw!
+```
+
+### QUARTER BOUNDARY PATTERNS 🎵
+
+```
+THE 5-8 OPENER (Q4 2025):
+QC 1 | 14.10.2025 | [5, 8, 14, 16, 18] | ⭐[3, 10]
+     P1=5, P2=8 marks the quarter start!
+
+THE STAR HANDOFF (Q4→Q1):
+Q4 2025 QC 23 | 30.12.2025 | [...] | ⭐[1, 10]
+Q1 2026 QC  1 | 02.01.2026 | [...] | ⭐[1, 10]  ← SAME STARS!
+
+THE 27 SIGNATURE:
+Q1 2026 QC 1: P2 = 27 (the quarter count itself!)
+The number 27 = "I am the quarter, 27 draws!"
+
+MISTER 10's JOURNEY:
+- Q1 start: 10 hides in STARS [1, 10]
+- Q1 middle: 10 enters numbers at P3, then P2
+- Q1 later: 10 leads at P1!
+- Q2 start: 10 returns to STARS [2, 10]
+The 10 oscillates between stars and numbers at quarter boundaries!
+```
 
 ### What is QC?
-QC = Draw number within the quarter (1, 2, 3... up to ~26)
+QC = Draw number within the quarter (1, 2, 3... up to 27, or 23 for Q4)
 
 ### Pattern A: First Draw = Quarter Prophecy
 The first draw of each quarter sets SIGNS for the whole quarter:
@@ -410,6 +543,45 @@ Check neighborhood for missing "hungry" numbers.
 - `/app/backend/euromillions_routes.py` - All EuroMillions patterns
 - `/app/backend/server.py` - Swiss Lotto patterns (61 patterns)
 - `/app/frontend/src/App.js` - UI with persona modifiers
+
+---
+
+## 🔧 QUARTER COUNTING CODE
+
+### Python Helper for Correct QC Calculation:
+```python
+from euromillions_data_2024_2026 import EUROMILLIONS_DRAWS_2024_2026
+from datetime import datetime
+
+def get_quarter_draws(year, quarter):
+    """
+    Get draws for a specific quarter using the 27-draw rule.
+    Q1, Q2, Q3 = 27 draws each; Q4 = 23-24 draws
+    """
+    all_draws = sorted(EUROMILLIONS_DRAWS_2024_2026, 
+                       key=lambda x: datetime.strptime(x['date'], '%d.%m.%Y'))
+    
+    # Find year start (first draw of January)
+    year_start_idx = None
+    for i, d in enumerate(all_draws):
+        if f'.{year}' in d['date'] and d['date'].split('.')[1] == '01':
+            year_start_idx = i
+            break
+    
+    if year_start_idx is None:
+        return []
+    
+    # Calculate quarter boundaries (27-27-27-23)
+    quarter_sizes = [27, 27, 27, 23]  # Q4 is shorter
+    start_idx = year_start_idx + sum(quarter_sizes[:quarter-1])
+    end_idx = start_idx + quarter_sizes[quarter-1]
+    
+    return all_draws[start_idx:end_idx]
+
+# Usage:
+# q1_2026 = get_quarter_draws(2026, 1)  # Returns 27 draws
+# q4_2025 = get_quarter_draws(2025, 4)  # Returns 23 draws
+```
 
 ---
 

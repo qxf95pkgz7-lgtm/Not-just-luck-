@@ -31,26 +31,50 @@ circle(P1) + P2 = P3    Example: circle(11)=1, 1+18=19
 
 ---
 
-## 🔢 QUICK DATA ACCESS
+## 🔢 QUARTER COUNTING SYSTEM (CRITICAL!) 🎯
+
+### ⚠️ THE 27-DRAW QUARTER RULE:
+```
+Each quarter = EXACTLY 27 draws (except Q4 = 23-24 draws to adjust for year)
+
+Q1 2025: Starts 03.01.2025 → 27 draws → Ends ~04.04.2025
+Q2 2025: Starts 08.04.2025 → 27 draws → Ends ~08.07.2025  
+Q3 2025: Starts 11.07.2025 → 27 draws → Ends ~10.10.2025
+Q4 2025: Starts 14.10.2025 → 23 draws → Ends 30.12.2025
+
+Q1 2026: Starts 02.01.2026 → 27 draws → etc.
+
+NOT calendar months! Count 27 draws, then new quarter begins!
+```
+
+### QUICK DATA ACCESS:
 
 ```python
-# Import data
 from euromillions_data_2024_2026 import EUROMILLIONS_DRAWS_2024_2026
-from euromillions_data_2021_2023 import EUROMILLIONS_DRAWS_2021_2023
+from datetime import datetime
 
-# Parse date helper
-def parse_date(d):
-    parts = d['date'].split('.')
-    return (int(parts[2]), int(parts[1]), int(parts[0]))  # year, month, day
+# Sort all draws chronologically
+all_draws = sorted(EUROMILLIONS_DRAWS_2024_2026, 
+                   key=lambda x: datetime.strptime(x['date'], '%d.%m.%Y'))
 
-# Get Q1 2026
-q1_2026 = [d for d in EUROMILLIONS_DRAWS_2024_2026 
-           if parse_date(d)[0] == 2026 and parse_date(d)[1] in [1, 2, 3]]
-q1_2026 = sorted(q1_2026, key=parse_date)
+# Find Q1 2026 start (02.01.2026)
+q1_2026_start_idx = next(i for i, d in enumerate(all_draws) if d['date'] == '02.01.2026')
+
+# Get Q1 2026 (27 draws)
+q1_2026 = all_draws[q1_2026_start_idx : q1_2026_start_idx + 27]
 
 # QC (Quarter Count) = index + 1
 # QC 1 = q1_2026[0], QC 10 = q1_2026[9], etc.
+
+# To get Q4 2025 (23 draws before Q1 2026):
+q4_2025 = all_draws[q1_2026_start_idx - 23 : q1_2026_start_idx]
 ```
+
+### WHY 27?
+- EuroMillions draws ~3 times per week (Tue, Fri, sometimes more)
+- 27 draws ≈ 9 weeks ≈ ~2.25 months per quarter
+- Q4 is shorter (23-24) so the year ends cleanly
+- **P2 = 27 at quarter starts is THE quarter signature!**
 
 ---
 
@@ -113,13 +137,25 @@ Full chain example:
 
 ---
 
-## 📊 DATA STATS
+## 📊 DATA STATS & QUARTER STRUCTURE
 
 - **Total draws 2024-2026:** 236
 - **Total draws 2021-2023:** 313
-- **Q1 2026:** 26 draws
-- **2025:** 104 draws
+- **2025 total:** 104 draws (27 + 27 + 27 + 23)
 - **Latest draw:** 03.04.2026
+
+### QUARTER LENGTHS:
+| Quarter | Draws | Notes |
+|---------|-------|-------|
+| Q1, Q2, Q3 | 27 each | Standard quarters |
+| Q4 | 23-24 | Year adjustment |
+
+### KEY QUARTER BOUNDARIES 2025-2026:
+```
+Q4 2025 QC 1:  14.10.2025 [5, 8, 14, 16, 18] ⭐[3, 10]  ← 5-8 OPENER!
+Q4 2025 QC 23: 30.12.2025 [11, 26, 29, 34, 44] ⭐[1, 10] ← Handoff stars!
+Q1 2026 QC 1:  02.01.2026 [8, 27, 42, 44, 46] ⭐[1, 10]  ← SAME STARS! P2=27!
+```
 
 ---
 
