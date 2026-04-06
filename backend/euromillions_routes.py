@@ -424,9 +424,18 @@ def create_euromillions_router(db):
     ]
     
     async def get_euromillions_draws():
-        """Get all EuroMillions draws"""
-        cursor = db.euromillions_draws.find({}, {"_id": 0}).sort("date", -1)
-        return await cursor.to_list(length=None)
+        """Get all EuroMillions draws - properly sorted by date"""
+        cursor = db.euromillions_draws.find({}, {"_id": 0})
+        draws = await cursor.to_list(length=None)
+        
+        # Sort properly by parsing DD.MM.YYYY format
+        def parse_date(d):
+            try:
+                return datetime.strptime(d['date'], '%d.%m.%Y')
+            except:
+                return datetime.min
+        
+        return sorted(draws, key=parse_date, reverse=True)
     
     async def seed_euromillions_if_empty():
         """Seed EuroMillions data if collection is empty"""
