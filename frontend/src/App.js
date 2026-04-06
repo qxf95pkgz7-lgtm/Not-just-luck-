@@ -1352,7 +1352,7 @@ function App() {
                              [...activePersonas, persona.name]);
                         setFullName(newPersonas.join(' & ') || '');
                       }}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                         activePersonas.includes(persona.name)
                           ? lotteryMode === 'swiss' 
                             ? 'bg-amber-500 text-gray-900 ring-2 ring-amber-300' 
@@ -1361,10 +1361,21 @@ function App() {
                       }`}
                       data-testid={`persona-${persona.name.toLowerCase()}`}
                     >
-                      {persona.name}
+                      {persona.name} <span className="opacity-60">({persona.modifier})</span>
                     </button>
                   ))}
                 </div>
+                {activePersonas.length > 0 && (
+                  <p className="text-xs text-slate-500 mt-2">
+                    {activePersonas.includes("Avi") && activePersonas.includes("Dathi") 
+                      ? "🔥 Avi & Dathi combo! Double +1 power on different positions!"
+                      : activePersonas.includes("Olivia")
+                        ? "💜 Olivia's -1 magic will adjust your numbers!"
+                        : activePersonas.includes("Avi")
+                          ? "🎯 Avi's +1 boost activated!"
+                          : "🌟 Dathi's +1 energy flowing!"}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="text-xs text-slate-400 mb-1 block">Birthday</label>
@@ -1390,17 +1401,25 @@ function App() {
               </div>
               <button 
                 onClick={fetchPrediction}
-                disabled={loading || !birthday}
+                disabled={loading}
                 className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300 ${
-                  birthday 
-                    ? lotteryMode === 'swiss'
-                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-gray-900 hover:from-amber-400 hover:to-amber-500 shadow-lg'
-                      : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-400 hover:to-blue-500 shadow-lg'
-                    : 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                  lotteryMode === 'swiss'
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-gray-900 hover:from-amber-400 hover:to-amber-500 shadow-lg'
+                    : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-400 hover:to-blue-500 shadow-lg'
                 }`}
-                data-testid="birthday-generate-btn"
+                data-testid="persona-generate-btn"
               >
-                {loading ? <><Sparkles className="w-5 h-5 animate-spin" /><span>Generating...</span></> : <><Sparkles className="w-5 h-5" /><span>Generate with Birthday</span></>}
+                {loading ? (
+                  <><Sparkles className="w-5 h-5 animate-spin" /><span>Generating...</span></>
+                ) : (
+                  <><Sparkles className="w-5 h-5" /><span>
+                    {activePersonas.length > 0 
+                      ? `Generate with ${activePersonas.join(' & ')}` 
+                      : birthday 
+                        ? 'Generate with Birthday' 
+                        : 'Generate Lucky Numbers'}
+                  </span></>
+                )}
               </button>
             </div>
           )}
