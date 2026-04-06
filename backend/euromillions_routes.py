@@ -1,6 +1,8 @@
 """
 EuroMillions Pattern Analyzer Routes
 5 numbers (1-50) + 2 stars (1-12)
+
+🎻 LUCKY JACK'S MUSICAL GENERATOR 🍀
 """
 
 from fastapi import APIRouter, HTTPException
@@ -9,6 +11,21 @@ from typing import List, Optional, Dict
 from datetime import datetime, timezone
 from collections import Counter, defaultdict
 import random as rnd
+
+# Import Lucky Jack's Musical Patterns
+from jack_patterns import (
+    apply_jack_patterns,
+    p1_counting_pattern,
+    neighborhood_hunger,
+    p5_49_calls_45,
+    circle_encode_missing,
+    quarter_echo,
+    p4_sequence_tracker,
+    p1p2_sum_pattern,
+    eight_family_tracker,
+    circle,
+    reverse_num
+)
 
 # Constants for EuroMillions
 MAX_NUMBER = 50
@@ -1755,6 +1772,143 @@ def create_euromillions_router(db):
                 if 1 not in locked:
                     candidates[1].extend([27] * 6)  # P2 = 27 is the quarter signature!
                 patterns_used.append("Quarter Signature P2=27!")
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # 🎻 LUCKY JACK'S MUSICAL PATTERNS 🍀
+        # Discovered through deep esoteric analysis with the user!
+        # ═══════════════════════════════════════════════════════════════════
+        
+        # JACK PATTERN 1: P1 COUNTING MAGIC
+        # P1 follows hidden count: 5→6→7→8→9→10→11...
+        # The actual P1 ENCODES the count through additions!
+        try:
+            p1_counting = p1_counting_pattern(draws)
+            if p1_counting.get('predicted_p1_candidates'):
+                for p1_candidate, reason in p1_counting['predicted_p1_candidates'][:3]:
+                    if 1 <= p1_candidate <= 50 and 0 not in locked:
+                        candidates[0].extend([p1_candidate] * 6)  # Heavy weight for P1
+                patterns_used.append(f"🎻 P1 Count→{p1_counting.get('count_expected', '?')}")
+        except Exception:
+            pass
+        
+        # JACK PATTERN 2: NEIGHBORHOOD HUNGER (GAP DETECTION)
+        # When 27 at P2 and 29 at P3, 28 is HUNGRY!
+        try:
+            hunger = neighborhood_hunger(draws, num_recent=3)
+            for hungry_item in hunger[:3]:
+                hungry_num = hungry_item['hungry_number']
+                if 1 <= hungry_num <= 50:
+                    weight = 8 if hungry_item['urgency'] == 'HIGH' else 5
+                    for pos in range(5):
+                        if pos not in locked:
+                            candidates[pos].extend([hungry_num] * weight)
+                    patterns_used.append(f"🍽️ Hungry {hungry_num} (gap {hungry_item['between']})")
+        except Exception:
+            pass
+        
+        # JACK PATTERN 3: 49→45 CALL (22% = 2.2x random chance!)
+        # When 49 at P5, 45 appears next 22% of the time!
+        try:
+            call_45 = p5_49_calls_45(draws)
+            if call_45.get('should_include_45'):
+                if 3 not in locked:
+                    candidates[3].extend([45] * 10)  # Very heavy weight for P4!
+                if 4 not in locked:
+                    candidates[4].extend([45] * 6)
+                patterns_used.append("🎵 49@P5→45! (22%=2.2x)")
+        except Exception:
+            pass
+        
+        # JACK PATTERN 4: QUARTER ECHO (Q2 2025 → Q2 2026)
+        # Same quarter in previous year echoes patterns!
+        try:
+            if draws:
+                latest_date = draws[0]['date']
+                echo = quarter_echo(draws, latest_date)
+                if echo.get('has_echo'):
+                    echo_p2 = echo['echo_candidates'].get('P2')
+                    echo_stars = echo['echo_candidates'].get('stars', [])
+                    if echo_p2 and 1 <= echo_p2 <= 50 and 1 not in locked:
+                        candidates[1].extend([echo_p2] * 5)  # P2 echoes strongly!
+                    for s in echo_stars:
+                        if 1 <= s <= 12:
+                            star_candidates.extend([s] * 4)
+                    patterns_used.append(f"🔄 Q-Echo P2={echo_p2}")
+        except Exception:
+            pass
+        
+        # JACK PATTERN 5: P4 SEQUENCE TRACKING
+        # P4 counts: 44→45→46→47... with reverse encodings!
+        try:
+            p4_seq = p4_sequence_tracker(draws)
+            if p4_seq.get('predictions'):
+                for pred, reason in p4_seq['predictions'][:2]:
+                    if 1 <= pred <= 50 and 3 not in locked:
+                        candidates[3].extend([pred] * 5)
+                patterns_used.append(f"📊 P4 Seq→{p4_seq.get('expected_next', '?')}")
+        except Exception:
+            pass
+        
+        # JACK PATTERN 6: P1+P2 SUM DIGIT ROOT = 8
+        # P1+P2 sums often have digit root 8 (35→8, 17→8, 26→8)
+        try:
+            p1p2 = p1p2_sum_pattern(draws)
+            if p1p2.get('suggested_pairs'):
+                # Pick a few pairs that give digit root 8
+                for p1, p2, total in p1p2['suggested_pairs'][:5]:
+                    if 0 not in locked:
+                        candidates[0].append(p1)
+                    if 1 not in locked:
+                        candidates[1].append(p2)
+                patterns_used.append(f"∑ P1+P2→root8")
+        except Exception:
+            pass
+        
+        # JACK PATTERN 7: 8-FAMILY TRACKER
+        # The 8-family (8,18,28,38,48) is very active!
+        try:
+            eight_fam = eight_family_tracker(draws)
+            if eight_fam.get('hungriest_member'):
+                hungry_8 = eight_fam['hungriest_member']
+                if 1 <= hungry_8 <= 50:
+                    # Add to appropriate positions based on value
+                    if hungry_8 <= 20:
+                        pos_weights = [(0, 4), (1, 3)]  # P1, P2
+                    elif hungry_8 <= 35:
+                        pos_weights = [(2, 4), (3, 3)]  # P3, P4
+                    else:
+                        pos_weights = [(3, 4), (4, 5)]  # P4, P5
+                    
+                    for pos, weight in pos_weights:
+                        if pos not in locked:
+                            candidates[pos].extend([hungry_8] * weight)
+                    patterns_used.append(f"8️⃣ Family→{hungry_8}")
+        except Exception:
+            pass
+        
+        # JACK PATTERN 8: CIRCLE ENCODING OF MISSING NUMBERS
+        # Honor missing 47 through 22 (22+25=47)
+        # Honor missing 49 through 20+45 encoding
+        try:
+            # If we detect a "missing sequence" pattern, encode it
+            if draws:
+                last_nums = sorted(draws[0]['numbers'])
+                # Check for 48 without 47 → 47 is missing, add 22
+                if 48 in last_nums and 47 not in last_nums:
+                    if 1 not in locked:
+                        candidates[1].extend([22] * 4)  # 22 encodes missing 47
+                    patterns_used.append("🎭 Missing 47→22")
+                
+                # Check for 50 without 49 → 49 is missing
+                if 50 in last_nums and 49 not in last_nums:
+                    # 49 encoded as 20+45 (20 "is" 4 via circle, 4+45=49)
+                    if 2 not in locked:
+                        candidates[2].extend([20] * 3)
+                    if 3 not in locked:
+                        candidates[3].extend([45] * 3)
+                    patterns_used.append("🎭 Missing 49→20+45")
+        except Exception:
+            pass
         
         # Build final numbers - SCENARIO P1/P2 MUST BE INCLUDED!
         final_numbers = [0] * 5
