@@ -905,7 +905,9 @@ function App() {
             ticket_num: i + 1,
             numbers: applyPersonaModifiers(t.numbers, activePersonas, maxNum),
             stars: t.stars,
-            confidence: Math.round(t.confidence * 100)
+            confidence: Math.round(t.confidence * 100),
+            scenario: t.scenario || null,
+            patterns_used: t.patterns_used || []
           })),
           persona_applied: activePersonas.join('+') || null
         };
@@ -1015,7 +1017,9 @@ function App() {
               ticket_num: i + 1,
               numbers: t.numbers,
               stars: t.stars,
-              confidence: Math.round(t.confidence * 100)
+              confidence: Math.round(t.confidence * 100),
+              scenario: t.scenario || null,
+              patterns_used: t.patterns_used || []
             }))
           };
           setPrediction(transformed);
@@ -1537,6 +1541,16 @@ function App() {
                       <span className={`text-xs font-bold w-6 ${idx === 0 ? (lotteryMode === 'swiss' ? 'text-amber-400' : 'text-blue-400') : 'text-slate-500'}`}>
                         #{ticket.ticket_num}
                       </span>
+                      {/* Scenario label for EuroMillions */}
+                      {lotteryMode === 'euro' && ticket.scenario && (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                          ticket.scenario === 'low' ? 'bg-green-500/20 text-green-400' :
+                          ticket.scenario === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                          'bg-purple-500/20 text-purple-400'
+                        }`}>
+                          {ticket.scenario === 'low' ? '📉 Low' : ticket.scenario === 'medium' ? '📊 Mid' : '📈 High'}
+                        </span>
+                      )}
                       <div className="flex gap-1.5 flex-1">
                         {ticket.numbers.map((num, i) => (
                           <Ball key={i} number={num} size="xs" maxNum={maxNum} />
