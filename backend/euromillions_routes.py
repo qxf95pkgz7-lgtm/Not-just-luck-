@@ -1520,6 +1520,53 @@ def create_euromillions_router(db):
         # Sort for display (EuroMillions requirement)
         final_numbers = sorted(final_numbers)
         
+        # ═══════════════════════════════════════════════════════════════════
+        # ENFORCE P1+P2 = 37 CONSTRAINT AFTER SORTING 🎯
+        # ═══════════════════════════════════════════════════════════════════
+        # For a fully sorted ticket where P1+P2=37:
+        # - P1 (smallest) + P2 (second smallest) = 37
+        # - P3, P4, P5 must all be > P2
+        
+        current_p1 = final_numbers[0]
+        current_p2 = final_numbers[1]
+        current_sum = current_p1 + current_p2
+        
+        if current_sum != P1_P2_SUM:
+            # Calculate what P2 should be to achieve sum of 37
+            target_p2 = P1_P2_SUM - current_p1
+            
+            # P2 must be > P1 and <= 50 for valid sorted order
+            if current_p1 < target_p2 <= 50:
+                # Get all numbers except P1
+                others = final_numbers[1:]
+                
+                # Replace the smallest "other" with target_p2
+                # But we need P3, P4, P5 to all be > target_p2
+                new_others = [target_p2]
+                
+                # Add remaining numbers that are > target_p2
+                for n in others:
+                    if n > target_p2 and n not in new_others:
+                        new_others.append(n)
+                
+                # If we don't have enough numbers > target_p2, generate them
+                while len(new_others) < 4:
+                    # Pick from range (target_p2+1, 51) that's not already used
+                    candidates_above = [x for x in range(target_p2 + 1, 51) 
+                                       if x not in new_others and x != current_p1]
+                    if candidates_above:
+                        new_others.append(rnd.choice(candidates_above))
+                    else:
+                        break  # Shouldn't happen, but safety
+                
+                # Construct final sorted ticket
+                new_others = sorted(new_others)[:4]  # P2, P3, P4, P5
+                final_numbers = [current_p1] + new_others
+                
+                position_reasons["P1"] = f"P1={final_numbers[0]} (pattern selected)"
+                position_reasons["P2"] = f"P2={final_numbers[1]} (P1+P2={final_numbers[0]+final_numbers[1]}=37)"
+                patterns_used.append(f"P1+P2 Enforced ({final_numbers[0]}+{final_numbers[1]}={P1_P2_SUM})")
+        
         # Select stars
         star_scored = Counter(star_candidates)
         final_stars = []

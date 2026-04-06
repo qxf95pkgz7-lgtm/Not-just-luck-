@@ -118,7 +118,7 @@ class TestEuroMillionsMasterPredictor:
         """CRITICAL: Verify P1+P2 constant sum (37) is respected in tickets"""
         response = requests.post(
             f"{BASE_URL}/api/euromillions/master-predictor",
-            json={"num_tickets": 9}  # Test multiple tickets
+            json={"num_tickets": 9}  # Test multiple tickets for scenario rotation
         )
         assert response.status_code == 200
         data = response.json()
@@ -154,10 +154,39 @@ class TestEuroMillionsMasterPredictor:
             for v in sum_violations:
                 print(f"  - Ticket {v['ticket']}: P1={v['p1']}, P2={v['p2']}, Sum={v['sum']} (expected {v['expected']}), Scenario={v['scenario']}")
         
-        # Allow some flexibility - at least 50% should match
+        # After fix: expect 100% match rate (allow 90% for edge cases)
         match_rate = len(sum_matches) / len(data["tickets"])
-        assert match_rate >= 0.5, f"P1+P2=37 match rate too low: {match_rate:.1%}"
+        assert match_rate >= 0.9, f"P1+P2=37 match rate too low: {match_rate:.1%}"
         print(f"✓ P1+P2=37 match rate: {match_rate:.1%}")
+    
+    def test_p1_p2_sum_37_with_sorting_verification(self):
+        """Verify tickets are sorted AND P1+P2=37 after sorting"""
+        response = requests.post(
+            f"{BASE_URL}/api/euromillions/master-predictor",
+            json={"num_tickets": 9}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        
+        for ticket in data["tickets"]:
+            numbers = ticket["numbers"]
+            
+            # Verify sorted (ascending order)
+            assert numbers == sorted(numbers), f"Ticket {ticket['ticket_number']} not sorted: {numbers}"
+            
+            # Verify 5 unique numbers
+            assert len(numbers) == 5, f"Ticket {ticket['ticket_number']} doesn't have 5 numbers"
+            assert len(set(numbers)) == 5, f"Ticket {ticket['ticket_number']} has duplicates: {numbers}"
+            
+            # Verify P1+P2=37
+            p1, p2 = numbers[0], numbers[1]
+            assert p1 + p2 == 37, f"Ticket {ticket['ticket_number']}: P1({p1})+P2({p2})={p1+p2}, expected 37"
+            
+            # Verify P3, P4, P5 are all > P2
+            for i, num in enumerate(numbers[2:], start=3):
+                assert num > p2, f"Ticket {ticket['ticket_number']}: P{i}({num}) should be > P2({p2})"
+        
+        print(f"✓ All {len(data['tickets'])} tickets verified: sorted, unique, P1+P2=37, P3/P4/P5 > P2")
     
     def test_scenario_rotation_with_5_tickets(self):
         """Test scenario rotation (low/medium/high) with 5 tickets"""
