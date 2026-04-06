@@ -604,11 +604,30 @@ function App() {
     }
   };
   
-  // Fetch last draw result
+  // Fetch last draw result - based on lottery mode
   const fetchLastDraw = async () => {
     try {
-      const res = await axios.get(`${API}/last-draw`);
-      setLastDraw(res.data);
+      const endpoint = lotteryMode === 'swiss' 
+        ? `${API}/last-draw` 
+        : `${API}/euromillions/draws?limit=1`;
+      const res = await axios.get(endpoint);
+      
+      if (lotteryMode === 'euro') {
+        // Transform EuroMillions response
+        const draws = res.data.draws || res.data;
+        if (draws && draws.length > 0) {
+          const lastEuroDraw = draws[0];
+          setLastDraw({
+            date: lastEuroDraw.date,
+            numbers: lastEuroDraw.numbers,
+            stars: lastEuroDraw.stars,
+            lucky_number: null, // EuroMillions doesn't have lucky number
+            replay_number: null
+          });
+        }
+      } else {
+        setLastDraw(res.data);
+      }
     } catch (e) {
       console.error("Error fetching last draw:", e);
     }
@@ -689,10 +708,10 @@ function App() {
     }
   }, [showHitTracker]);
   
-  // Fetch last draw on initial load
+  // Fetch last draw on initial load and when lottery mode changes
   useEffect(() => {
     fetchLastDraw();
-  }, []);
+  }, [lotteryMode]);
 
   // Olivia's Kiss of Luck function
   const giveKissOfLuck = () => {
@@ -1093,14 +1112,22 @@ function App() {
           <div 
             className="p-3 rounded-xl flex items-center justify-between flex-wrap gap-2"
             style={{ 
-              background: 'linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(5,150,105,0.1) 100%)',
-              border: '1px solid rgba(16,185,129,0.3)',
-              boxShadow: '0 4px 15px rgba(16,185,129,0.1)'
+              background: lotteryMode === 'swiss' 
+                ? 'linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(5,150,105,0.1) 100%)'
+                : 'linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(37,99,235,0.1) 100%)',
+              border: lotteryMode === 'swiss'
+                ? '1px solid rgba(16,185,129,0.3)'
+                : '1px solid rgba(59,130,246,0.3)',
+              boxShadow: lotteryMode === 'swiss'
+                ? '0 4px 15px rgba(16,185,129,0.1)'
+                : '0 4px 15px rgba(59,130,246,0.1)'
             }}
             data-testid="last-draw-display"
           >
             <div className="flex items-center gap-2">
-              <span className="text-emerald-400 font-semibold text-sm">📊 Last Draw:</span>
+              <span className={`font-semibold text-sm ${lotteryMode === 'swiss' ? 'text-emerald-400' : 'text-blue-400'}`}>
+                📊 Last {lotteryMode === 'swiss' ? 'Swiss' : 'Euro'} Draw:
+              </span>
               <span className="text-slate-300 text-sm font-medium">{lastDraw.date}</span>
             </div>
             <div className="flex items-center gap-2">
@@ -1110,13 +1137,21 @@ function App() {
                     key={i} 
                     className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
                     style={{
-                      background: `radial-gradient(circle at 30% 30%, ${
-                        n <= 7 ? '#ef4444' : n <= 14 ? '#f97316' : n <= 21 ? '#eab308' : 
-                        n <= 28 ? '#22c55e' : n <= 35 ? '#3b82f6' : '#8b5cf6'
-                      } 0%, ${
-                        n <= 7 ? '#b91c1c' : n <= 14 ? '#c2410c' : n <= 21 ? '#a16207' : 
-                        n <= 28 ? '#15803d' : n <= 35 ? '#1d4ed8' : '#6d28d9'
-                      } 100%)`,
+                      background: lotteryMode === 'swiss' 
+                        ? `radial-gradient(circle at 30% 30%, ${
+                            n <= 7 ? '#ef4444' : n <= 14 ? '#f97316' : n <= 21 ? '#eab308' : 
+                            n <= 28 ? '#22c55e' : n <= 35 ? '#3b82f6' : '#8b5cf6'
+                          } 0%, ${
+                            n <= 7 ? '#b91c1c' : n <= 14 ? '#c2410c' : n <= 21 ? '#a16207' : 
+                            n <= 28 ? '#15803d' : n <= 35 ? '#1d4ed8' : '#6d28d9'
+                          } 100%)`
+                        : `radial-gradient(circle at 30% 30%, ${
+                            n <= 10 ? '#ef4444' : n <= 20 ? '#f97316' : n <= 30 ? '#eab308' : 
+                            n <= 40 ? '#22c55e' : '#3b82f6'
+                          } 0%, ${
+                            n <= 10 ? '#b91c1c' : n <= 20 ? '#c2410c' : n <= 30 ? '#a16207' : 
+                            n <= 40 ? '#15803d' : '#1d4ed8'
+                          } 100%)`,
                       boxShadow: '0 2px 4px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.3)',
                       color: 'white',
                       textShadow: '0 1px 2px rgba(0,0,0,0.5)'
@@ -1126,16 +1161,38 @@ function App() {
                   </div>
                 ))}
               </div>
-              {lastDraw.lucky_number && (
+              {/* Swiss Lotto lucky number */}
+              {lotteryMode === 'swiss' && lastDraw.lucky_number && (
                 <div className="flex items-center gap-1 ml-2 px-2 py-1 rounded-full" style={{ background: 'rgba(251,191,36,0.2)', border: '1px solid rgba(251,191,36,0.4)' }}>
                   <span className="text-amber-400 text-xs">🍀</span>
                   <span className="text-amber-400 font-bold text-sm">{lastDraw.lucky_number}</span>
                 </div>
               )}
-              {lastDraw.replay_number && (
+              {/* Swiss Lotto replay number */}
+              {lotteryMode === 'swiss' && lastDraw.replay_number && (
                 <div className="flex items-center gap-1 px-2 py-1 rounded-full" style={{ background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.4)' }}>
                   <span className="text-purple-400 text-xs">🔄</span>
                   <span className="text-purple-400 font-bold text-sm">{lastDraw.replay_number}</span>
+                </div>
+              )}
+              {/* EuroMillions stars */}
+              {lotteryMode === 'euro' && lastDraw.stars && (
+                <div className="flex items-center gap-1 ml-2">
+                  {lastDraw.stars.map((s, i) => (
+                    <div 
+                      key={i}
+                      className="w-7 h-7 flex items-center justify-center text-xs font-bold"
+                      style={{
+                        background: 'radial-gradient(circle at 30% 30%, #fbbf24 0%, #d97706 100%)',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.3)',
+                        color: '#1e1b4b',
+                        textShadow: '0 1px 0px rgba(255,255,255,0.3)',
+                        clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)'
+                      }}
+                    >
+                      {s}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
