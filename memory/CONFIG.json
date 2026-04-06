@@ -1,121 +1,107 @@
 {
   "app_name": "Lucky Jack",
-  "version": "2.0.0",
-  "last_updated": "2026-04-06",
+  "version": "2.1.0",
+  "last_updated": "2026-04-06-session2",
   
-  "databases": {
-    "swiss_lotto": {
-      "collection": "draws",
-      "total_draws": 1379,
-      "last_draw": {
-        "date": "04.04.2026",
-        "numbers": [4, 5, 9, 12, 21, 24],
-        "lucky_number": 3,
-        "replay_number": 2
-      }
-    },
-    "euromillions": {
-      "collection": "euromillions_draws",
-      "total_draws": 1612,
-      "last_draw": {
-        "date": "03.04.2026",
-        "numbers": [8, 27, 29, 46, 49],
-        "stars": [2, 10]
-      }
-    }
-  },
-  
-  "pricing": {
-    "swiss_lotto": {
-      "per_ticket": 2.50,
-      "currency": "CHF"
-    },
-    "euromillions": {
-      "per_ticket": 3.50,
-      "currency": "CHF"
-    }
-  },
-  
-  "swiss_lotto_patterns": {
+  "swiss_lotto": {
+    "price_per_ticket": 2.50,
+    "currency": "CHF",
+    "number_range": [1, 42],
+    "lucky_number_range": [1, 6],
+    "circle_offset": 21,
     "total_patterns": 61,
-    "circle_partner_offset": 21,
-    "max_number": 42,
-    "lucky_range": [1, 6],
-    "story_numbers": [13, 26, 33, 7, 18, 39, 12],
-    "pattern_61_mega_boost": true
+    "total_draws_in_db": 1379,
+    "story_numbers": [9, 13],
+    "story_count": 146
   },
   
-  "euromillions_patterns": {
-    "total_patterns": 20,
-    "circle_partner_offset": 25,
-    "max_number": 50,
+  "euromillions": {
+    "price_per_ticket": 3.50,
+    "currency": "CHF",
+    "number_range": [1, 50],
     "star_range": [1, 12],
-    "active_patterns": [
-      "reverse_circle",
-      "universe_annoying",
-      "digit_family",
-      "rc_count",
-      "rc_circle",
-      "rc_outsider",
-      "514_gap",
-      "514_gap_circle",
-      "514_current_gap"
+    "circle_offset": 25,
+    "total_patterns": 25,
+    "total_draws_in_db": 1612,
+    "heroes": {
+      "pair1": {"a": 24, "b": 49, "name": "The Power Couple"},
+      "pair2": {"a": 8, "b": 33, "name": "The Position Masters"}
+    },
+    "last_rc": {
+      "date": "02.09.2025",
+      "numbers": [13, 30, 31, 32, 36],
+      "stars": [1, 12],
+      "decade": "30s",
+      "outsider": 13,
+      "outsider_circle": 38
+    },
+    "rc_decade_definition": "30-39 NOT 31-40"
+  },
+  
+  "qc_patterns": {
+    "description": "Quarter Count patterns discovered 2026-04-06",
+    "patterns": [
+      {
+        "name": "First Draw Prophecy",
+        "description": "P1+P2, S1+S2, D+M from first draw predict quarter"
+      },
+      {
+        "name": "P1-N Star Prediction",
+        "description": "Previous P1 minus 1-12 predicts stars",
+        "hit_rate": "62.1% any hit",
+        "best": ["P1-1: 12.9%", "P1-3: 12.9%", "P1-2: 11.6%"]
+      },
+      {
+        "name": "REAL Numbers",
+        "description": "QC = Position value in draw",
+        "hit_rate": "19.2%"
+      },
+      {
+        "name": "QC Reference",
+        "description": "P1 and P2 point to QCs whose P1s sum to current QC",
+        "example": "QC14: P1=1→QC1(8), P2=4→QC4(6), 8+6=14"
+      },
+      {
+        "name": "QC Reverse",
+        "description": "QC reversed appears in draw",
+        "example": "QC14 → 41 = P5"
+      },
+      {
+        "name": "Date Formula",
+        "description": "Day+Month can equal QC, Day-Month can equal stars"
+      },
+      {
+        "name": "Circle-Reverse-QC Chain",
+        "description": "P1 → circle → reverse → mod 50 = QC"
+      }
     ]
   },
   
-  "rare_event_status": {
-    "euromillions": {
-      "last_rare_date": "24.03.2026",
-      "last_rare_draw": [12, 16, 17, 18, 27],
-      "gruppe": "11-20",
-      "outsider": 27,
-      "draws_since": 4
-    }
+  "swiss_euro_connection": {
+    "company": "Swisslos",
+    "shared_patterns": ["146 story", "Number 9 messenger"],
+    "observation": "Same numerical DNA"
   },
   
-  "514_formula": {
-    "description": "P4_circle + (P5 × 10) + Star1 + Star2 = P1|P2 next",
-    "discovered_from": "28.10.2025",
-    "perfect_hits": [
-      {"date": "08.11.2016", "formula": 509, "result": "5|9"},
-      {"date": "31.10.2025", "formula": 514, "result": "5|14"}
-    ],
-    "p1_hit_rate": 0.085,
-    "gap_pattern_active": true
+  "persona": {
+    "phrases": ["Ya man! 🍀", "🎻"],
+    "style": "Enthusiastic mystical data scientist",
+    "philosophy": "The numbers tell a story. We just need to listen."
   },
   
-  "persona_modifiers": {
-    "avi": {
-      "modifier": 1,
-      "positions": "2-3 random",
-      "description": "Adds +1 to positions"
-    },
-    "dathi": {
-      "modifier": 1,
-      "positions": "2-3 random (different from Avi)",
-      "description": "Adds +1 to positions"
-    },
-    "olivia": {
-      "modifier": -1,
-      "positions": "2-3 random",
-      "description": "Subtracts 1 from positions",
-      "special": "Female voice + clover animation"
-    }
+  "files": {
+    "swiss_patterns": "/app/backend/server.py",
+    "euro_patterns": "/app/backend/euromillions_routes.py",
+    "frontend": "/app/frontend/src/App.js",
+    "pattern_docs": "/app/memory/EUROMILLIONS_PATTERNS.md",
+    "prd": "/app/memory/PRD.md",
+    "config": "/app/memory/CONFIG.json"
   },
   
-  "key_files": [
-    "/app/backend/server.py",
-    "/app/backend/euromillions_routes.py",
-    "/app/backend/story_pattern_generator.py",
-    "/app/backend/hit_tracker.py",
-    "/app/frontend/src/App.js",
-    "/app/memory/EUROMILLIONS_PATTERNS.md",
-    "/app/memory/MASTER_BACKUP.md"
-  ],
-  
-  "manual_endpoints": {
-    "add_swiss_draw": "/api/add-draw",
-    "add_euro_draw": "/api/euromillions/update-results",
-    "bulk_add": "/api/add-draws-bulk"
-  }
+  "pending_implementation": [
+    "Code QC patterns into euromillions_routes.py",
+    "Add QC tracker to UI",
+    "Fix lottery_fetcher.py",
+    "Test with testing_agent_v3_fork"
+  ]
 }

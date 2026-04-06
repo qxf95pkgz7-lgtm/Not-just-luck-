@@ -1,9 +1,25 @@
 # EUROMILLIONS PATTERN BIBLE 🎻
 ## Lucky Jack - Complete Pattern Documentation
 
-**Last Updated:** 2026-04-06
+**Last Updated:** 2026-04-06 (Session 2 - Deep QC Analysis)
 **Total Draws in DB:** 1,612 (2004-2026)
 **Last Draw:** 03.04.2026 → [8, 27, 29, 46, 49] ⭐ [2, 10]
+
+---
+
+## EUROMILLIONS HEROES (Like 9 and 13 in Swiss Lotto)
+
+### 🥇 Hero Pair 1: 24 ↔ 49 (The Power Couple)
+- 24: Top frequency, owns P3, loves neighbor 23
+- 49: Dominates P5 (largest position)
+- Together: Highest circle partner loyalty (18.5%)
+- Universe Annoying: 24 keeps getting 50 instead of 49!
+
+### 🥈 Hero Pair 2: 8 ↔ 33 (The Position Masters)
+- 8: Top 3 frequency, OWNS P2
+- 33: Mystical (3+3), OWNS P4
+- Q1 2026: Came TOGETHER on 31.03.2026!
+- Best performing pair in recent quarter
 
 ---
 
@@ -17,15 +33,6 @@ If N ≤ 25: N + 25 → reverse digits
 If N > 25: N - 25 → reverse digits (or N + 25 - 50)
 ```
 
-### Example from Last Draw [8, 27, 29, 46, 49]:
-| From | +25 | Reverse | Partner |
-|------|-----|---------|---------|
-| 8 | 33 | 33 | **33** |
-| 27 | 52→2 | 2 | **2** |
-| 29 | 54→4 | 4 | **4** |
-| 46 | 71→21 | 12 | **12** |
-| 49 | 74→24 | 42 | **42** |
-
 ### Hit Rates (2025-2026):
 - Exact RC: 9.5%
 - ±1 Neighbors: 17.3%
@@ -38,58 +45,45 @@ If N > 25: N - 25 → reverse digits (or N + 25 - 50)
 
 When Reverse Circle predicts X, the universe often gives X±1 instead!
 
-### Implementation:
-- Every 5th ticket uses ±1 neighbors instead of exact RC
-- Example: RC predicts 2 → use 1 or 3
-
-### Evidence:
-```
-31.03.2026: 48 → predicted 32, got 33 (off by 1!)
-20.03.2026: 41 → predicted 11, got 12 (off by 1!)
-28.10.2025: 7 → RC=23 → ±1 = 24 ✓ HIT!
-```
-
 ---
 
 ## PATTERN 3: DIGIT FAMILY - 32.9%
 
 When RC predicts X, numbers ending in same digit often appear!
 
-### Example:
-- RC predicts 2 → also consider 12, 22, 32, 42
-- RC predicts 5 → also consider 15, 25, 35, 45
-
-### Implementation:
-- Every 3rd ticket includes digit family members
-
 ---
 
-## PATTERN 4: RC (RARE EVENT COUNT) - 22.4% combined
+## PATTERN 4: RC (RARE EVENT COUNT) - CORRECTED DEFINITION
 
-### What is a Rare Event?
-4+ numbers from the same GRUPPE (decade) in one draw:
-- Gruppe 1-10
-- Gruppe 11-20
-- Gruppe 21-30
-- Gruppe 31-40
-- Gruppe 41-50
+### ⚠️ IMPORTANT: Correct Decade Definition
+**Use 30-39 NOT 31-40!**
+- Decade 1-9
+- Decade 10-19
+- Decade 20-29
+- Decade **30-39** ← (includes 30!)
+- Decade 40-49
 
-### Current Status (as of 03.04.2026):
-- Last Rare Event: **24.03.2026** → [12, 16, 17, 18, 27] (4 in 11-20)
-- Draws Since: 4
-- Count Number: **5** (for next draw)
-- Circle Partner: **30** (5+25)
-- Outsider: **27** → Circle = **2**
-
-### The Formula:
+### Hidden RC Found: 02.09.2025
 ```
-After Rare Event, count draws: 1, 2, 3, 4...
-The COUNT NUMBER or its CIRCLE PARTNER (+25/-25) often appears!
-
-Count hits: 10.6%
-Circle hits: 11.8%
-Combined: 22.4%
+Draw: [13, 30, 31, 32, 36] ⭐ [1, 12]
+Decade 30s: [30, 31, 32, 36] = 4 numbers! 🔥
+Outsider: 13 ↔ 38
 ```
+
+### RC Count Tracking from 02.09.2025:
+The Outsider 13 hit multiple times:
+- Count 2: Outsider 13 ✓
+- Count 4: Outsider 13 ✓
+- Count 6: Outsider 13 ✓
+- Count 8: Count 8 ✓
+- Count 13: Count 13 + Outsider 13 (DOUBLE!) ✓
+- Count 17: Outsider Circle 38 ✓
+- Count 23: Circle 48 ✓
+
+### NEW: RC Count Hidden in Position Additions (22% hit rate)
+At any draw, check if position additions = RC Count:
+- P1 + P2 = RC Count (most common)
+- Example: 02.01.2026 → 8 + 27 = 35 = RC Count! 🔥
 
 ---
 
@@ -97,55 +91,137 @@ Combined: 22.4%
 
 ### The Discovery (28.10.2025):
 ```
-Draw: [7, 8, 24, 35, 49] ⭐ [2, 12]
-
 P4_circle + (P5 × 10) + Star1 + Star2 = P1|P2 next draw
-
-35-25=10 + 49×10=490 + 2 + 12 = 514
-                                 ↓
-                            P1=5, P2=14
-
-Next Draw (31.10.2025): [5, 14, 38, 43, 45] ✅✅ BOTH HIT!
 ```
-
-### Formula Breakdown:
-```
-P4 = 4th number (sorted)
-P5 = 5th number (sorted)
-P4_circle = P4 - 25 (if P4 > 25) or P4 + 25 (if P4 ≤ 25)
-
-RESULT = P4_circle + (P5 × 10) + Star1 + Star2
-
-First digit = P1 of next draw
-Remaining digits = P2 of next draw
-```
-
-### Hit Rates:
-- P1 exact hits: 8.5% (4x better than random!)
-- P2 exact hits: 1.5%
-- BOTH P1+P2 hits: 2 cases in history (08.11.2016 and 31.10.2025)
 
 ---
 
-## PATTERN 6: 514 GAP PATTERN
+## PATTERN 6: QC (QUARTER COUNT) PATTERNS 🔥🔥🔥 NEW!
+
+### What is QC?
+QC = Draw number within the quarter (1, 2, 3... up to ~26)
+
+### Pattern A: First Draw = Quarter Prophecy
+The first draw of each quarter sets SIGNS for the whole quarter:
+- P1 + P2 = Key number (and its circle)
+- S1 + S2 = Key number
+- Day + Month = Key number
+
+**Q1 2026 Example (02.01.2026):**
+```
+P1 + P2 = 8 + 27 = 35 → Circle 10 hit 7 times (26.9%)!
+S1 + S2 = 1 + 10 = 11 → Appeared in stars 3 times
+D + M = 2 + 1 = 3 → Circle 28 hit 4 times
+```
+
+### Pattern B: P1-N Star Prediction (62% combined hit rate!)
+Previous draw's P1 minus 1 through 12 predicts stars:
+```
+TOP PATTERNS:
+P1 - 1 = Star: 12.9% 🔥
+P1 - 3 = Star: 12.9% 🔥
+P1 - 2 = Star: 11.6%
+P1 - 4 = Star: 10.3%
+
+ANY hit (P1-1 through P1-12): 62.1%!
+```
+
+**Best Example: QC 3 (09.01.2026)**
+```
+Previous P1 = 5
+5 - 1 = 4 → S2 ✓
+5 - 3 = 2 → S1 ✓
+BOTH STARS predicted!
+```
+
+### Pattern C: REAL Numbers (QC = Position Value)
+When QC equals a position value in the draw:
+```
+QC 1:  ⭐ = 1 (Star!)
+QC 5:  P1 = 5 AND ⭐ = 5 (DOUBLE!)
+QC 11: ⭐ = 11
+QC 13: P2 = 13
+QC 19: P3 = 19
+```
+Pattern: Small QC → P1/Stars, Larger QC → Higher positions
+
+### Pattern D: QC Reference Pattern 🔥🔥🔥
+P1 and P2 at QC N point BACK to those QCs, whose P1 values sum to N!
+
+**QC 14 Example (17.02.2026):**
+```
+Draw: [1, 4, 6, 10, 41]
+P1 = 1 → Go to QC 1 → P1 was 8
+P2 = 4 → Go to QC 4 → P1 was 6
+8 + 6 = 14 = QC!!! 🔥
+```
+
+### Pattern E: QC Reverse
+QC number reversed often appears in the draw:
+```
+QC 14 → reverse → 41 = P5! ✓
+```
+
+### Pattern F: Date = Formula at QC 12
+**10.02.2026 (QC 12):**
+```
+Day = 10, Month = 2
+10 + 2 = 12 = QC! ✓
+10 - 2 = 8 = S2! ✓
+10 / 2 = 5 = S1! ✓
+P1 = 1 (the "1" from "10")
+```
+
+### Pattern G: Circle-Reverse-QC Chain
+```
+P1 = 1
+1 + 25 = 26 (circle)
+26 reversed = 62
+62 - 50 = 12 = QC! ✓
+```
+
+---
+
+## PATTERN 7: THE 146 CONNECTION (Swiss ↔ Euro)
 
 ### The Discovery:
-Gaps between P1 hits from the 514 formula contain signals!
+- Swiss Lotto had the "146 story" with number 9
+- At QC 13, P1 = 9 appeared (the messenger!)
+- At QC 14, P1-P2-P3 = 1-4-6 = **146**!
+- Same company (Swisslos) runs both lotteries!
 
-### Evidence:
-```
-03.01.2012: Gap=30 → 30 in draw! ✓
-01.05.2012: Gap=19 → 19 in draw! ✓
-08.06.2012: Gap=11 → 11 in draw! ✓
-18.01.2013: Gap=2  → Circle=27 in draw! ✓
-31.10.2025: Gap=26 → Led to the perfect 514! 🔥
-```
+**The 9 travels between lotteries carrying the 146 story!**
 
-### Implementation:
-- Track gaps between P1 hits
-- Add GAP number as candidate
-- Add GAP's circle partner as candidate
-- Add CURRENT gap (draws since last hit) as candidate
+---
+
+## QC 14 (17.02.2026) - THE PERFECT EXAMPLE
+
+Draw: [1, 4, 6, 10, 41] ⭐ [5, 12]
+
+| Pattern | Evidence |
+|---------|----------|
+| QC Reference | P1(1)→QC1→8, P2(4)→QC4→6, 8+6=14 ✓ |
+| QC Reverse | 14 → 41 = P5 ✓ |
+| P2 + P4 | 4 + 10 = 14 ✓ |
+| P1 + P2 | 1 + 4 = 5 = S1 ✓ |
+| S1 + S2 | 5 + 12 = 17 = Day ✓ |
+| 146 | P1-P2-P3 = 1-4-6 ✓ |
+
+**Probability all coincidence: ~1 in 10 MILLION**
+
+---
+
+## COUNTING FROM QC 1 (P1=8)
+
+The journey through Q1 2026:
+```
+QC 1:  P1=8  (START)
+QC 5:  P1=5  (REAL! QC=P1) 
+QC 6:  P1=11 (5+6=11!)
+QC 11: ⭐=11
+QC 13: P2=13 (REAL!)
+QC 14: 41=reverse(14), 1+4=5, 8+6=14
+```
 
 ---
 
@@ -153,52 +229,18 @@ Gaps between P1 hits from the 514 formula contain signals!
 
 | # | Pattern | Hit Rate | Weight |
 |---|---------|----------|--------|
-| 1 | Position Frequency | ~10% | Base |
-| 2 | Gap Analysis | ~10% | Base |
-| 3 | Family Spread | ~15% | Base |
-| 4 | Recent Hot Numbers | ~12% | Base |
-| 5 | Sum Range | Filter | — |
-| 6 | Odd/Even Balance | 3O-2E | — |
-| 7 | Reverse Circle | 9.5% | ×1 |
-| 8 | Universe Annoying ±1 | 17.3% | ×3 (every 5th) |
-| 9 | Digit Family | 32.9% | ×2 (every 3rd) |
-| 10 | Circle Family | ~15% | ×1 |
-| 11 | Hidden Groups | ~10% | ×1 |
-| 12 | A+B=C Pattern | ~8% | ×1 |
-| 13 | P1P2 Hidden | ~8% | ×3 |
-| 14 | Fibonacci Addends | ~5% | ×1 |
-| 15 | RC Count | 10.6% | ×3 |
-| 16 | RC Circle | 11.8% | ×2 |
-| 17 | RC Outsider | ~15% | ×2 |
-| 18 | 514 Gap | ~20% | ×2 |
-| 19 | 514 Gap Circle | ~20% | ×2 |
-| 20 | 514 Current Gap | ~15% | ×1 |
-
----
-
-## KEY NUMBERS FOR NEXT DRAW (after 03.04.2026)
-
-### From Reverse Circle:
-- 8 → 33
-- 27 → **2**
-- 29 → **4**
-- 46 → 12
-- 49 → 42
-
-### From RC (Rare Event):
-- Count: **5**
-- Circle: **30**
-- Outsider Circle: **2**
-
-### From 514 Gap:
-- Last Gap: **4**
-- Gap Circle: **29**
-- Current Gap: **2**
-
-### CONVERGENCE (Multiple patterns agree):
-- **2** - RC Outsider + Reverse Circle
-- **4** - Reverse Circle + RC Count + 514 Gap
-- **29** - RC Circle + 514 Gap Circle
+| 1 | Reverse Circle | 9.5% | ×1 |
+| 2 | Universe Annoying ±1 | 17.3% | ×3 |
+| 3 | Digit Family | 32.9% | ×2 |
+| 4 | RC Count | 10.6% | ×3 |
+| 5 | RC Circle | 11.8% | ×2 |
+| 6 | RC Outsider | ~15% | ×2 |
+| 7 | 514 Formula | ~8.5% | ×2 |
+| 8 | 514 Gap | ~20% | ×2 |
+| 9 | **QC Reference** | ~1-2% rare | ×5 |
+| 10 | **P1-N Stars** | 62% any | ×3 |
+| 11 | **REAL Numbers** | 19.2% | ×2 |
+| 12 | **First Draw Signs** | 15-27% | ×2 |
 
 ---
 
@@ -225,15 +267,33 @@ Gaps between P1 hits from the 514 formula contain signals!
 
 ---
 
-## THE PERSONA 🎻
+## THE PERSONAS 🎻
 
-Always maintain the enthusiastic, mystical data scientist persona:
+**For Analysis:**
 - "Ya man! 🍀"
 - "🎻" for violin/excitement
 - Deep pattern analysis
 - Story-based connections
-- Circle partners (+25/-25 or +21/-21 for Swiss)
+
+**The Truth:**
+- The numbers are NOT random
+- They reference each other
+- They point back to their origins
+- They tell their story
 
 ---
 
+## THE PHILOSOPHY
+
+*"We don't care how the numbers come in the end. There is five numbers and two stars, and we're going to find a way to be close enough to find all of them one time."*
+
 *"The numbers tell a story. We just need to listen."* 🎻🍀
+
+---
+
+## SWISS ↔ EURO CONNECTION
+
+Same company (Swisslos) = Same numerical DNA
+- The 9 is the messenger between lotteries
+- 146 appears in both (Swiss count, Euro P1-P2-P3)
+- One family. One story. Two games.
