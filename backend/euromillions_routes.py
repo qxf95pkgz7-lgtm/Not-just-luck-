@@ -46,6 +46,19 @@ def get_reverse_circle_partner(n: int) -> int:
     plus25 = get_circle_partner(n)
     return reverse_mod50(plus25)
 
+def get_three_circle(n: int) -> int:
+    """
+    Get 3-circle partner: n → +25 → +25 → reverse digits
+    Example: 24 → 49 → 74 → 47
+    """
+    c1 = get_circle_partner(n)  # +25
+    c2 = c1 + 25  # +25 again (may be > 50)
+    # Reverse digits of c2
+    c3 = int(str(c2)[::-1])
+    if c3 > 50:
+        c3 = c3 % 50 if c3 % 50 != 0 else 50
+    return c3
+
 def get_full_circle(n: int) -> list:
     """Get all numbers in n's circle: n → +25 → reverse → +25 → reverse..."""
     circle = [n]
@@ -58,6 +71,104 @@ def get_full_circle(n: int) -> list:
         if current not in circle:
             circle.append(current)
     return circle
+
+def get_qc_number(draws: list, target_date: str) -> int:
+    """
+    Get Quarter Count number for a date
+    QC = count of draws in current quarter up to and including target_date
+    """
+    def parse_date(d):
+        parts = d['date'].split('.')
+        return (int(parts[2]), int(parts[1]), int(parts[0]))
+    
+    target_parts = target_date.split('.')
+    target_year = int(target_parts[2])
+    target_month = int(target_parts[1])
+    
+    # Determine quarter months
+    if target_month in [1, 2, 3]:
+        quarter_months = [1, 2, 3]
+    elif target_month in [4, 5, 6]:
+        quarter_months = [4, 5, 6]
+    elif target_month in [7, 8, 9]:
+        quarter_months = [7, 8, 9]
+    else:
+        quarter_months = [10, 11, 12]
+    
+    # Count draws in quarter up to target
+    target_tuple = parse_date({"date": target_date})
+    count = 0
+    for d in draws:
+        dt = parse_date(d)
+        if dt[0] == target_year and dt[1] in quarter_months and dt <= target_tuple:
+            count += 1
+    return count
+
+def get_qc1_prophecy(draws: list, year: int, quarter: int) -> dict:
+    """
+    Get QC1 (first draw of quarter) - the prophecy draw
+    The QC1 date digits form the quarter's prophecy number
+    Example: 02.01.2026 → "12" (0,2,0,1 → 1 and 2)
+    """
+    def parse_date(d):
+        parts = d['date'].split('.')
+        return (int(parts[2]), int(parts[1]), int(parts[0]))
+    
+    quarter_months = {1: [1,2,3], 2: [4,5,6], 3: [7,8,9], 4: [10,11,12]}
+    months = quarter_months.get(quarter, [1,2,3])
+    
+    quarter_draws = [d for d in draws if parse_date(d)[0] == year and parse_date(d)[1] in months]
+    quarter_draws = sorted(quarter_draws, key=parse_date)
+    
+    if not quarter_draws:
+        return None
+    
+    qc1 = quarter_draws[0]
+    day = int(qc1['date'].split('.')[0])
+    month = int(qc1['date'].split('.')[1])
+    
+    # Prophecy number from date digits
+    prophecy = day + month  # e.g., 02.01 → 2+1=3 or concatenate digits
+    
+    return {
+        "draw": qc1,
+        "prophecy_number": prophecy,
+        "day": day,
+        "month": month
+    }
+
+def find_hunger_number(present_nums: list) -> list:
+    """
+    Find hunger numbers - numbers missing between neighbors
+    Example: if 33 and 35/53 present, 43 is hungry (33...43...53)
+    """
+    hungry = []
+    sorted_nums = sorted(present_nums)
+    
+    for n in sorted_nums:
+        # Check for reversed number
+        rev = int(str(n)[::-1]) if n >= 10 else n * 10 + n
+        if rev > 50:
+            rev = rev % 50 if rev % 50 != 0 else 50
+        
+        # Find the gap number between n and its reverse
+        if n < rev:
+            # Numbers ending in same digit between n and rev
+            for gap_candidate in range(n + 10, rev, 10):
+                if 1 <= gap_candidate <= 50 and gap_candidate not in present_nums:
+                    hungry.append(gap_candidate)
+    
+    # Also check neighborhood gaps (e.g., 33 present, 35 present → 43 hungry as midpoint to 53)
+    for n in sorted_nums:
+        if n >= 30:
+            # Check for X3 → (X+1)3 pattern
+            tens = n // 10
+            ones = n % 10
+            next_tens = (tens + 1) * 10 + ones
+            if next_tens <= 50 and next_tens not in present_nums:
+                hungry.append(next_tens)
+    
+    return list(set(hungry))
 
 def get_hidden_groups(nums: list) -> dict:
     """Find hidden groups in numbers - multiples, +10 family, etc."""
@@ -1026,6 +1137,224 @@ def create_euromillions_router(db):
                         if pos not in locked:
                             candidates[pos].append(current_gap)
                     patterns_used.append(f"514 Current Gap ({current_gap})")
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # NEW PATTERNS FROM NUMEROLOGY ANALYSIS SESSION - THE REAL MAGIC! 🎻
+        # ═══════════════════════════════════════════════════════════════════
+        
+        # PATTERN 16: THREE-CIRCLE (24 → 49 → 74 → 47)
+        # The third circle partner via double +25 then reverse
+        if draws:
+            recent_nums = draws[0]["numbers"]
+            for n in recent_nums:
+                three_circ = get_three_circle(n)
+                if 1 <= three_circ <= 50 and three_circ not in recent_nums:
+                    # Weight heavily for P4/P5 positions
+                    candidates[3].extend([three_circ] * 4)  # P4
+                    candidates[4].extend([three_circ] * 4)  # P5
+            patterns_used.append("3-Circle Pattern")
+        
+        # PATTERN 17: P1+P2 CONSTANT SUM
+        # The sum of P1+P2 often stays constant across consecutive draws
+        if len(draws) >= 2:
+            prev_nums = sorted(draws[0]["numbers"])
+            prev2_nums = sorted(draws[1]["numbers"])
+            
+            prev_p1p2_sum = prev_nums[0] + prev_nums[1]
+            prev2_p1p2_sum = prev2_nums[0] + prev2_nums[1]
+            
+            # If sums are close, use same sum for prediction
+            if abs(prev_p1p2_sum - prev2_p1p2_sum) <= 5:
+                target_sum = prev_p1p2_sum
+                # Generate P1/P2 candidates that sum to target
+                for p1 in range(1, min(target_sum, 26)):
+                    p2 = target_sum - p1
+                    if 1 <= p2 <= 50 and p1 < p2:
+                        candidates[0].extend([p1] * 3)
+                        candidates[1].extend([p2] * 3)
+                patterns_used.append(f"P1+P2 Constant ({target_sum})")
+        
+        # PATTERN 18: P4 ADDITION (Previous P4s add together)
+        # P4 = prev_P4 + prev_prev_P4
+        if len(draws) >= 3:
+            p4_list = [sorted(d["numbers"])[3] for d in draws[:3]]
+            predicted_p4 = p4_list[0] + p4_list[1]
+            if predicted_p4 > 50:
+                predicted_p4 = predicted_p4 % 50 if predicted_p4 % 50 != 0 else 50
+            if 1 <= predicted_p4 <= 50:
+                candidates[3].extend([predicted_p4] * 5)  # Weight heavily for P4
+                patterns_used.append(f"P4 Addition ({p4_list[0]}+{p4_list[1]}={predicted_p4})")
+        
+        # PATTERN 19: HUNGER PATTERN (Missing number in neighborhood)
+        # When 33 and 35/53 present, 43 is "hungry"
+        if draws:
+            recent_nums = draws[0]["numbers"]
+            hungry_nums = find_hunger_number(recent_nums)
+            for hungry in hungry_nums[:3]:
+                if 1 <= hungry <= 50:
+                    candidates[3].extend([hungry] * 4)  # P4 position
+                    candidates[4].extend([hungry] * 3)  # P5 position
+            if hungry_nums:
+                patterns_used.append(f"Hunger ({hungry_nums[:3]})")
+        
+        # PATTERN 20: QC MIRROR (QC 16 ↔ QC 12)
+        # Use QC mirror draw as reference
+        if draws and len(draws) >= 20:
+            # Get current QC (approximate from draw count in quarter)
+            def parse_d(d):
+                parts = d['date'].split('.')
+                return (int(parts[2]), int(parts[1]), int(parts[0]))
+            
+            latest = draws[0]
+            latest_date = parse_d(latest)
+            year = latest_date[0]
+            month = latest_date[1]
+            
+            # Determine quarter
+            if month in [1, 2, 3]:
+                q_months = [1, 2, 3]
+            elif month in [4, 5, 6]:
+                q_months = [4, 5, 6]
+            elif month in [7, 8, 9]:
+                q_months = [7, 8, 9]
+            else:
+                q_months = [10, 11, 12]
+            
+            # Get draws in this quarter
+            q_draws = [d for d in draws if parse_d(d)[0] == year and parse_d(d)[1] in q_months]
+            q_draws_sorted = sorted(q_draws, key=parse_d)
+            
+            if q_draws_sorted:
+                current_qc = len(q_draws_sorted)
+                # Mirror: reverse digits of QC
+                mirror_qc = int(str(current_qc)[::-1]) if current_qc >= 10 else current_qc
+                
+                # Find the mirror QC draw
+                if mirror_qc <= len(q_draws_sorted) and mirror_qc != current_qc:
+                    mirror_draw = q_draws_sorted[mirror_qc - 1]
+                    mirror_nums = sorted(mirror_draw["numbers"])
+                    
+                    # Use mirror draw's P2 + date for prediction
+                    mirror_day = int(mirror_draw['date'].split('.')[0])
+                    predicted_p2 = mirror_nums[1] + mirror_day
+                    if predicted_p2 > 50:
+                        predicted_p2 = predicted_p2 % 50 if predicted_p2 % 50 != 0 else 50
+                    
+                    if 1 <= predicted_p2 <= 50:
+                        candidates[1].extend([predicted_p2] * 4)
+                        patterns_used.append(f"QC Mirror ({current_qc}↔{mirror_qc})")
+        
+        # PATTERN 21: DATE MAGIC SIGN
+        # When day + month = QC number, it's a SIGN! Use that draw
+        if draws and len(draws) >= 15:
+            def parse_d(d):
+                parts = d['date'].split('.')
+                return (int(parts[2]), int(parts[1]), int(parts[0]))
+            
+            # Find draws where day + month = position in quarter (date magic)
+            for i, d in enumerate(draws[:20]):
+                day = int(d['date'].split('.')[0])
+                month = int(d['date'].split('.')[1])
+                if day + month == i + 1:  # Date magic sign!
+                    sign_nums = sorted(d["numbers"])
+                    # Use this draw's numbers as reference
+                    for pos in range(5):
+                        if pos not in locked:
+                            candidates[pos].append(sign_nums[pos])
+                    patterns_used.append(f"Date Magic Sign ({d['date']})")
+                    break
+        
+        # PATTERN 22: QC1 PROPHECY NUMBER
+        # The QC1 date forms the quarter's prophecy number (e.g., 02.01 → 12)
+        if draws:
+            def parse_d(d):
+                parts = d['date'].split('.')
+                return (int(parts[2]), int(parts[1]), int(parts[0]))
+            
+            latest = draws[0]
+            latest_date = parse_d(latest)
+            year = latest_date[0]
+            month = latest_date[1]
+            
+            # Determine quarter
+            if month in [1, 2, 3]:
+                q_months = [1, 2, 3]
+            elif month in [4, 5, 6]:
+                q_months = [4, 5, 6]
+            elif month in [7, 8, 9]:
+                q_months = [7, 8, 9]
+            else:
+                q_months = [10, 11, 12]
+            
+            # Get QC1 (first draw of quarter)
+            q_draws = [d for d in draws if parse_d(d)[0] == year and parse_d(d)[1] in q_months]
+            q_draws_sorted = sorted(q_draws, key=parse_d)
+            
+            if q_draws_sorted:
+                qc1 = q_draws_sorted[0]
+                qc1_day = int(qc1['date'].split('.')[0])
+                qc1_month = int(qc1['date'].split('.')[1])
+                prophecy = qc1_day + qc1_month
+                
+                # Use prophecy number for P3 prediction: prev_P3 + prophecy
+                if len(draws) >= 2:
+                    prev_p3 = sorted(draws[0]["numbers"])[2]
+                    predicted_p3 = prev_p3 + prophecy
+                    if predicted_p3 > 50:
+                        predicted_p3 = predicted_p3 % 50 if predicted_p3 % 50 != 0 else 50
+                    if 1 <= predicted_p3 <= 50:
+                        candidates[2].extend([predicted_p3] * 4)
+                        patterns_used.append(f"Prophecy {prophecy} (P3={predicted_p3})")
+        
+        # PATTERN 23: HERO PAIRS (24↔49, 8↔33)
+        # When one hero appears, boost its partner
+        if draws:
+            recent_nums = draws[0]["numbers"]
+            hero_pairs = [(24, 49), (8, 33)]
+            
+            for h1, h2 in hero_pairs:
+                if h1 in recent_nums and h2 not in recent_nums:
+                    for pos in range(5):
+                        if pos not in locked:
+                            candidates[pos].extend([h2] * 3)
+                    patterns_used.append(f"Hero {h1}→{h2}")
+                elif h2 in recent_nums and h1 not in recent_nums:
+                    for pos in range(5):
+                        if pos not in locked:
+                            candidates[pos].extend([h1] * 3)
+                    patterns_used.append(f"Hero {h2}→{h1}")
+        
+        # PATTERN 24: STAR SUM = QC
+        # Stars often sum to the QC number (e.g., 6+10=16 for QC16)
+        if draws:
+            def parse_d(d):
+                parts = d['date'].split('.')
+                return (int(parts[2]), int(parts[1]), int(parts[0]))
+            
+            latest = draws[0]
+            latest_date = parse_d(latest)
+            year = latest_date[0]
+            month = latest_date[1]
+            
+            if month in [1, 2, 3]:
+                q_months = [1, 2, 3]
+            elif month in [4, 5, 6]:
+                q_months = [4, 5, 6]
+            elif month in [7, 8, 9]:
+                q_months = [7, 8, 9]
+            else:
+                q_months = [10, 11, 12]
+            
+            q_draws = [d for d in draws if parse_d(d)[0] == year and parse_d(d)[1] in q_months]
+            next_qc = len(q_draws) + 1
+            
+            # Find star pairs that sum to next QC
+            if 3 <= next_qc <= 23:  # Valid star sum range (1+2=3 to 11+12=23)
+                for s1 in range(1, 13):
+                    s2 = next_qc - s1
+                    if 1 <= s2 <= 12 and s1 < s2:
+                        star_candidates.extend([s1, s2] * 3)
+                patterns_used.append(f"Star Sum={next_qc}")
         
         # Build final numbers
         final_numbers = [0] * 5
