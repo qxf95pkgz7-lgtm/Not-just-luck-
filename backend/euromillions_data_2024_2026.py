@@ -1,10 +1,10 @@
 """
-EuroMillions Historical Draw Data (2024-2026)
-Most recent data extracted from lotto24.ch images
+EuroMillions historical draws 2024-2026
+Auto-updated from euromillions.api.pedromealha.dev
+Last update: 2026-04-06 11:48:08
 """
 
 EUROMILLIONS_DRAWS_2024_2026 = [
-    # === 2024 (January - December) ===
     {"date": "02.01.2024", "numbers": [7, 15, 18, 46, 49], "stars": [10, 12]},
     {"date": "05.01.2024", "numbers": [4, 7, 18, 39, 50], "stars": [3, 8]},
     {"date": "09.01.2024", "numbers": [2, 9, 12, 39, 40], "stars": [1, 3]},
@@ -108,8 +108,8 @@ EUROMILLIONS_DRAWS_2024_2026 = [
     {"date": "17.12.2024", "numbers": [1, 3, 4, 21, 29], "stars": [2, 7]},
     {"date": "20.12.2024", "numbers": [10, 14, 21, 33, 50], "stars": [6, 9]},
     {"date": "24.12.2024", "numbers": [6, 10, 16, 23, 24], "stars": [11, 12]},
-    
-    # === 2025 (January - December) ===
+    {"date": "27.12.2024", "numbers": [12, 22, 27, 33, 45], "stars": [4, 8]},
+    {"date": "31.12.2024", "numbers": [19, 24, 26, 28, 33], "stars": [8, 12]},
     {"date": "03.01.2025", "numbers": [3, 19, 29, 35, 37], "stars": [1, 9]},
     {"date": "07.01.2025", "numbers": [20, 33, 35, 41, 47], "stars": [4, 12]},
     {"date": "10.01.2025", "numbers": [12, 27, 36, 37, 42], "stars": [6, 7]},
@@ -214,8 +214,6 @@ EUROMILLIONS_DRAWS_2024_2026 = [
     {"date": "23.12.2025", "numbers": [8, 26, 27, 29, 44], "stars": [11, 12]},
     {"date": "26.12.2025", "numbers": [12, 22, 32, 36, 48], "stars": [3, 4]},
     {"date": "30.12.2025", "numbers": [11, 26, 29, 34, 44], "stars": [1, 10]},
-    
-    # === 2026 (January - March) ===
     {"date": "02.01.2026", "numbers": [8, 27, 42, 44, 46], "stars": [1, 10]},
     {"date": "06.01.2026", "numbers": [5, 14, 17, 18, 31], "stars": [10, 12]},
     {"date": "09.01.2026", "numbers": [1, 7, 10, 26, 34], "stars": [2, 4]},
@@ -242,6 +240,7 @@ EUROMILLIONS_DRAWS_2024_2026 = [
     {"date": "24.03.2026", "numbers": [12, 16, 17, 18, 27], "stars": [1, 3]},
     {"date": "27.03.2026", "numbers": [4, 10, 43, 44, 48], "stars": [2, 4]},
     {"date": "31.03.2026", "numbers": [5, 8, 10, 33, 38], "stars": [2, 7]},
+    {"date": "03.04.2026", "numbers": [8, 27, 29, 46, 49], "stars": [2, 10]},
 ]
 
 print(f"Total EuroMillions draws (2024-2026): {len(EUROMILLIONS_DRAWS_2024_2026)}")

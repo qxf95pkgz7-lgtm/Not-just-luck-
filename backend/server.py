@@ -3798,6 +3798,24 @@ async def sync_swisslotto_only():
         "stats": stats
     }
 
+@api_router.post("/sync-data-files")
+async def sync_data_files():
+    """
+    Sync the static Python data files with latest from APIs.
+    This updates the source files used by the prediction engine.
+    Use this to get the latest draws without restarting the server.
+    """
+    try:
+        from data_sync import sync_euromillions_data
+        stats = await sync_euromillions_data()
+        return {
+            "message": f"Data file sync complete! Status: {stats['status']}",
+            "euromillions": stats,
+            "note": "Server may need restart for new draws to appear in predictions" if stats.get('new', 0) > 0 else "Data is up to date"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Sync failed: {str(e)}")
+
 @api_router.get("/story-signs")
 async def get_story_signs_analysis():
     """
@@ -4312,4 +4330,18 @@ async def start_scheduler():
     logger.info("📅 Scheduler started - Auto-sync scheduled for:")
     logger.info("   🇨🇭 Swiss Lotto: Wednesday & Saturday at 21:00 UTC")
     logger.info("   🇪🇺 EuroMillions: Tuesday & Friday at 21:00 UTC")
+
+@app.on_event("startup")
+async def sync_data_files_on_startup():
+    """Sync static data files with latest from APIs on startup"""
+    try:
+        from data_sync import startup_sync
+        logger.info("🔄 Starting data file sync on startup...")
+        result = await startup_sync()
+        if result.get("euromillions", {}).get("new", 0) > 0:
+            logger.info(f"✅ Data sync complete: {result['euromillions']['new']} new EuroMillions draws added")
+        else:
+            logger.info("✅ Data files are up to date")
+    except Exception as e:
+        logger.error(f"❌ Data sync failed: {e}")
 
