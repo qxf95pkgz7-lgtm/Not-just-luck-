@@ -632,11 +632,14 @@ function App() {
     }
   };
   
-  // Fetch generation history with hits
+  // Fetch generation history with hits - based on lottery mode
   const fetchGenerationHistory = async () => {
     setHitTrackerLoading(true);
     try {
-      const res = await axios.get(`${API}/generation-history?limit=30`);
+      const endpoint = lotteryMode === 'euro' 
+        ? `${API}/euromillions/generation-history?limit=30`
+        : `${API}/generation-history?limit=30`;
+      const res = await axios.get(endpoint);
       setGenerationHistory(res.data.generations || []);
     } catch (e) {
       console.error("Error fetching generation history:", e);
@@ -645,21 +648,27 @@ function App() {
     }
   };
   
-  // Fetch overall hit stats
+  // Fetch overall hit stats - based on lottery mode
   const fetchHitStats = async () => {
     try {
-      const res = await axios.get(`${API}/hit-stats`);
+      const endpoint = lotteryMode === 'euro'
+        ? `${API}/euromillions/hit-stats`
+        : `${API}/hit-stats`;
+      const res = await axios.get(endpoint);
       setHitStats(res.data);
     } catch (e) {
       console.error("Error fetching hit stats:", e);
     }
   };
   
-  // Generate story tickets and save for tracking
+  // Generate story tickets and save for tracking - based on lottery mode
   const generateStoryTickets = async () => {
     setStoryLoading(true);
     try {
-      const res = await axios.get(`${API}/story-generator-save`);
+      const endpoint = lotteryMode === 'euro'
+        ? `${API}/euromillions/story-generator-save`
+        : `${API}/story-generator-save`;
+      const res = await axios.get(endpoint);
       setStoryTickets(res.data);
       // Refresh history after generating
       fetchGenerationHistory();
@@ -671,10 +680,13 @@ function App() {
     }
   };
   
-  // Calculate hits for a specific generation
+  // Calculate hits for a specific generation - based on lottery mode
   const calculateHits = async (generationId) => {
     try {
-      const res = await axios.post(`${API}/calculate-hits/${generationId}`);
+      const endpoint = lotteryMode === 'euro'
+        ? `${API}/euromillions/calculate-hits/${generationId}`
+        : `${API}/calculate-hits/${generationId}`;
+      const res = await axios.post(endpoint);
       // Refresh history to show updated hits
       fetchGenerationHistory();
       fetchHitStats();
@@ -684,11 +696,14 @@ function App() {
     }
   };
   
-  // Recalculate all pending hits
+  // Recalculate all pending hits - based on lottery mode
   const recalculateAllHits = async () => {
     setHitTrackerLoading(true);
     try {
-      await axios.post(`${API}/recalculate-all-hits`);
+      const endpoint = lotteryMode === 'euro'
+        ? `${API}/euromillions/recalculate-all-hits`
+        : `${API}/recalculate-all-hits`;
+      await axios.post(endpoint);
       fetchGenerationHistory();
       fetchHitStats();
     } catch (e) {
@@ -705,11 +720,18 @@ function App() {
       fetchGenerationHistory();
       fetchHitStats();
     }
-  }, [showHitTracker]);
+  }, [showHitTracker, lotteryMode]);
   
   // Fetch last draw on initial load and when lottery mode changes
   useEffect(() => {
     fetchLastDraw();
+    // Clear story tickets when switching modes
+    setStoryTickets(null);
+    // Refresh generation history for the new mode
+    if (showHitTracker) {
+      fetchGenerationHistory();
+      fetchHitStats();
+    }
   }, [lotteryMode]);
 
   // Olivia's Kiss of Luck function
@@ -1737,16 +1759,27 @@ function App() {
             <div className="mt-4 space-y-4">
               {/* Last Draw Result */}
               {lastDraw && (
-                <div className="p-3 rounded-lg bg-gradient-to-r from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30">
+                <div className={`p-3 rounded-lg bg-gradient-to-r ${
+                  lotteryMode === 'euro' 
+                    ? 'from-blue-500/20 to-blue-600/10 border border-blue-500/30'
+                    : 'from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30'
+                }`}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-emerald-400 font-semibold text-sm">📊 Last Draw Result</span>
+                    <span className={`font-semibold text-sm ${lotteryMode === 'euro' ? 'text-blue-400' : 'text-emerald-400'}`}>
+                      📊 Last {lotteryMode === 'euro' ? 'Euro' : 'Swiss'} Draw
+                    </span>
                     <span className="text-slate-400 text-xs">{lastDraw.date}</span>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     {lastDraw.numbers?.map((n, i) => (
-                      <Ball key={i} number={n} size="sm" />
+                      <Ball key={i} number={n} size="sm" maxNum={lotteryMode === 'euro' ? 50 : 42} />
                     ))}
-                    {lastDraw.lucky_number && (
+                    {lotteryMode === 'euro' && lastDraw.stars && (
+                      <span className="ml-2 px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-sm font-medium">
+                        ⭐ {lastDraw.stars.join(', ')}
+                      </span>
+                    )}
+                    {lotteryMode === 'swiss' && lastDraw.lucky_number && (
                       <span className="ml-2 px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 text-sm font-medium">
                         🍀 {lastDraw.lucky_number}
                       </span>
@@ -1782,9 +1815,13 @@ function App() {
                 <button
                   onClick={generateStoryTickets}
                   disabled={storyLoading}
-                  className="flex-1 py-2 px-4 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-semibold text-sm transition-all disabled:opacity-50"
+                  className={`flex-1 py-2 px-4 rounded-lg bg-gradient-to-r ${
+                    lotteryMode === 'euro' 
+                      ? 'from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600'
+                      : 'from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600'
+                  } text-white font-semibold text-sm transition-all disabled:opacity-50`}
                 >
-                  {storyLoading ? '🔮 Generating...' : '🎻 Generate Story Tickets (8 × 2.50 = 20 CHF)'}
+                  {storyLoading ? '🔮 Generating...' : `🎻 Generate Story Tickets (8 × 2.50 = 20 ${lotteryMode === 'euro' ? 'EUR' : 'CHF'})`}
                 </button>
                 <button
                   onClick={recalculateAllHits}
@@ -1798,9 +1835,15 @@ function App() {
               
               {/* Latest Generated Tickets */}
               {storyTickets && (
-                <div className="p-3 rounded-lg bg-gradient-to-r from-amber-500/10 to-amber-600/5 border border-amber-500/20">
+                <div className={`p-3 rounded-lg bg-gradient-to-r ${
+                  lotteryMode === 'euro'
+                    ? 'from-blue-500/10 to-blue-600/5 border border-blue-500/20'
+                    : 'from-amber-500/10 to-amber-600/5 border border-amber-500/20'
+                }`}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-amber-400 font-semibold text-sm">🎻 ALL STORIES COMBINED! 🍀</span>
+                    <span className={`font-semibold text-sm ${lotteryMode === 'euro' ? 'text-blue-400' : 'text-amber-400'}`}>
+                      🎻 ALL STORIES COMBINED! {lotteryMode === 'euro' ? '⭐' : '🍀'}
+                    </span>
                     <span className="text-slate-400 text-xs">Target: {storyTickets.target_date}</span>
                   </div>
                   <div className="space-y-2">
@@ -1809,10 +1852,14 @@ function App() {
                         <span className="text-slate-500 w-6">T{idx + 1}:</span>
                         <div className="flex items-center gap-1">
                           {ticket.numbers?.map((n, i) => (
-                            <Ball key={i} number={n} size="xs" />
+                            <Ball key={i} number={n} size="xs" maxNum={lotteryMode === 'euro' ? 50 : 42} />
                           ))}
                         </div>
-                        <span className="text-amber-400">🍀{ticket.lucky}</span>
+                        {lotteryMode === 'euro' ? (
+                          <span className="text-yellow-400">⭐{ticket.stars?.join(',')}</span>
+                        ) : (
+                          <span className="text-amber-400">🍀{ticket.lucky}</span>
+                        )}
                         <span className="text-slate-500 text-[10px] ml-1">{ticket.story}</span>
                       </div>
                     ))}
@@ -1869,6 +1916,7 @@ function App() {
                           {gen.tickets?.slice(0, 3).map((ticket, tidx) => {
                             const hitResult = gen.hit_results?.[tidx];
                             const hitNumbers = new Set(hitResult?.number_hits || []);
+                            const hitStars = new Set(hitResult?.star_hits || []);
                             
                             return (
                               <div key={tidx} className="flex items-center gap-1 text-xs">
@@ -1887,12 +1935,18 @@ function App() {
                                     </div>
                                   ))}
                                 </div>
-                                <span className={`text-[10px] ${hitResult?.lucky_hit ? 'text-emerald-400 font-bold' : 'text-amber-400/50'}`}>
-                                  🍀{ticket.lucky}
-                                </span>
+                                {lotteryMode === 'euro' ? (
+                                  <span className={`text-[10px] ${hitResult?.star_hit_count > 0 ? 'text-yellow-400 font-bold' : 'text-yellow-400/50'}`}>
+                                    ⭐{ticket.stars?.join(',')}
+                                  </span>
+                                ) : (
+                                  <span className={`text-[10px] ${hitResult?.lucky_hit ? 'text-emerald-400 font-bold' : 'text-amber-400/50'}`}>
+                                    🍀{ticket.lucky}
+                                  </span>
+                                )}
                                 {hitResult && (
                                   <span className="text-emerald-400 text-[10px] ml-1">
-                                    ({hitResult.hit_count}/6{hitResult.lucky_hit ? ' +L' : ''})
+                                    ({hitResult.hit_count}/{lotteryMode === 'euro' ? '5' : '6'}{lotteryMode === 'euro' ? ` +${hitResult.star_hit_count || 0}⭐` : (hitResult.lucky_hit ? ' +L' : '')})
                                   </span>
                                 )}
                               </div>
@@ -1908,8 +1962,12 @@ function App() {
                           <div className="mt-2 pt-2 border-t border-slate-700/50 flex items-center justify-between">
                             <div className="flex items-center gap-3 text-xs">
                               <span className="text-emerald-400">✓ {gen.total_hits} hits</span>
-                              <span className="text-amber-400">🍀 {gen.lucky_hits} lucky</span>
-                              <span className="text-blue-400">🏆 Best: {gen.best_ticket_hits}/6</span>
+                              {lotteryMode === 'euro' ? (
+                                <span className="text-yellow-400">⭐ {gen.star_hits || 0} stars</span>
+                              ) : (
+                                <span className="text-amber-400">🍀 {gen.lucky_hits} lucky</span>
+                              )}
+                              <span className="text-blue-400">🏆 Best: {gen.best_ticket_hits}/{lotteryMode === 'euro' ? '5' : '6'}</span>
                             </div>
                           </div>
                         )}

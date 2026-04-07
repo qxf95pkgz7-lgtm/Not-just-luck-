@@ -2410,4 +2410,299 @@ def create_euromillions_router(db):
             "total_draws": total
         }
     
+    # =============================================================================
+    # 🎻 EUROMILLIONS STORY GENERATOR & HIT TRACKER 🍀
+    # =============================================================================
+    
+    @router.get("/story-generator-save")
+    async def generate_and_save_euro_story_predictions(target_date: str = None, num_tickets: int = 8):
+        """Generate EuroMillions story predictions AND save them for hit tracking"""
+        from datetime import timedelta
+        from bson import ObjectId
+        
+        await seed_euromillions_if_empty()
+        draws = await get_euromillions_draws()
+        
+        if not draws:
+            raise HTTPException(status_code=404, detail="No EuroMillions draws found")
+        
+        # Calculate next draw date if not provided (Tue & Fri for EuroMillions)
+        if not target_date:
+            today = datetime.now()
+            # EuroMillions draws are Tuesday (1) and Friday (4)
+            days_until_tue = (1 - today.weekday()) % 7
+            days_until_fri = (4 - today.weekday()) % 7
+            if days_until_tue == 0:
+                days_until_tue = 7
+            if days_until_fri == 0:
+                days_until_fri = 7
+            next_draw = min(days_until_tue, days_until_fri)
+            target = today + timedelta(days=next_draw)
+            target_date = target.strftime("%d.%m.%Y")
+        
+        # Generate tickets using the master predictor logic with Jack patterns
+        tickets = []
+        for i in range(num_tickets):
+            scenario = ["low", "medium", "high"][i % 3]
+            prediction = await master_predictor(
+                draws=draws,
+                birthday=None,
+                name=None,
+                locked_positions={},
+                ticket_index=i,
+                scenario=scenario
+            )
+            tickets.append({
+                "ticket_number": i + 1,
+                "numbers": prediction["numbers"],
+                "stars": prediction["stars"],
+                "patterns_used": prediction["patterns_used"],
+                "confidence": prediction["confidence"],
+                "story": ", ".join(prediction["patterns_used"][:2]) if prediction["patterns_used"] else "Musical Pattern"
+            })
+        
+        # Save to euromillions_generations collection for hit tracking
+        generation = {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "target_date": target_date,
+            "generation_type": "euromillions_story",
+            "lottery_type": "euromillions",
+            "tickets": tickets,
+            "hits_calculated": False,
+            "hit_results": None,
+            "total_hits": 0,
+            "star_hits": 0,
+            "best_ticket_hits": 0
+        }
+        
+        result = await db.euromillions_generations.insert_one(generation)
+        gen_id = str(result.inserted_id)
+        
+        return {
+            "generation_id": gen_id,
+            "saved": True,
+            "target_date": target_date,
+            "num_tickets": len(tickets),
+            "cost_estimate": f"{len(tickets) * 2.50:.2f} EUR",
+            "tickets": tickets
+        }
+    
+    @router.get("/generation-history")
+    async def get_euro_generation_history(limit: int = 50):
+        """Get all saved EuroMillions generations with hit data"""
+        generations = await db.euromillions_generations.find(
+            {},
+            {"_id": 1, "generated_at": 1, "target_date": 1, "tickets": 1, 
+             "hits_calculated": 1, "hit_results": 1, "total_hits": 1, 
+             "star_hits": 1, "best_ticket_hits": 1}
+        ).sort("generated_at", -1).limit(limit).to_list(length=limit)
+        
+        # Convert ObjectId to string
+        for gen in generations:
+            gen["_id"] = str(gen["_id"])
+        
+        return {
+            "count": len(generations),
+            "generations": generations
+        }
+    
+    @router.post("/calculate-hits/{generation_id}")
+    async def calculate_euro_hits_for_generation(generation_id: str):
+        """Calculate hits for a specific EuroMillions generation"""
+        from bson import ObjectId
+        
+        try:
+            gen = await db.euromillions_generations.find_one(
+                {"_id": ObjectId(generation_id)}
+            )
+        except Exception:
+            return {"error": "Invalid generation ID"}
+        
+        if not gen:
+            return {"error": "Generation not found"}
+        
+        target_date = gen["target_date"]
+        
+        # Get actual draw for target date
+        actual_draw = await db.euromillions_draws.find_one(
+            {"date": target_date},
+            {"_id": 0}
+        )
+        
+        if not actual_draw:
+            return {
+                "error": f"Draw for {target_date} not yet available",
+                "generation_id": generation_id,
+                "target_date": target_date,
+                "status": "PENDING"
+            }
+        
+        actual_numbers = set(actual_draw.get("numbers", []))
+        actual_stars = set(actual_draw.get("stars", []))
+        
+        hit_results = []
+        total_number_hits = 0
+        total_star_hits = 0
+        best_ticket_hits = 0
+        
+        for i, ticket in enumerate(gen["tickets"]):
+            ticket_numbers = set(ticket.get("numbers", []))
+            ticket_stars = set(ticket.get("stars", []))
+            
+            # Find matching numbers and stars
+            number_hits = ticket_numbers & actual_numbers
+            star_hits = ticket_stars & actual_stars
+            
+            hit_count = len(number_hits)
+            star_hit_count = len(star_hits)
+            total_number_hits += hit_count
+            total_star_hits += star_hit_count
+            
+            if hit_count > best_ticket_hits:
+                best_ticket_hits = hit_count
+            
+            hit_results.append({
+                "ticket_num": i + 1,
+                "number_hits": list(number_hits),
+                "star_hits": list(star_hits),
+                "hit_count": hit_count,
+                "star_hit_count": star_hit_count,
+                "total_score": f"{hit_count}/5 + {star_hit_count}/2"
+            })
+        
+        # Update the generation with hit results
+        await db.euromillions_generations.update_one(
+            {"_id": ObjectId(generation_id)},
+            {"$set": {
+                "hits_calculated": True,
+                "hit_results": hit_results,
+                "total_hits": total_number_hits,
+                "star_hits": total_star_hits,
+                "best_ticket_hits": best_ticket_hits,
+                "actual_draw": {
+                    "numbers": actual_draw.get("numbers", []),
+                    "stars": actual_draw.get("stars", [])
+                }
+            }}
+        )
+        
+        return {
+            "success": True,
+            "generation_id": generation_id,
+            "target_date": target_date,
+            "actual_draw": {
+                "numbers": actual_draw.get("numbers", []),
+                "stars": actual_draw.get("stars", [])
+            },
+            "total_number_hits": total_number_hits,
+            "total_star_hits": total_star_hits,
+            "best_ticket_hits": best_ticket_hits,
+            "hit_results": hit_results
+        }
+    
+    @router.post("/recalculate-all-hits")
+    async def recalculate_all_euro_hits():
+        """Recalculate hits for all pending EuroMillions generations"""
+        from bson import ObjectId
+        
+        pending = await db.euromillions_generations.find(
+            {"hits_calculated": False}
+        ).to_list(length=100)
+        
+        calculated = 0
+        still_pending = 0
+        
+        for gen in pending:
+            gen_id = str(gen["_id"])
+            result = await calculate_euro_hits_for_generation(gen_id)
+            if result.get("success"):
+                calculated += 1
+            else:
+                still_pending += 1
+        
+        return {
+            "calculated": calculated,
+            "still_pending": still_pending,
+            "message": f"Calculated hits for {calculated} generations, {still_pending} still pending"
+        }
+    
+    @router.get("/hit-stats")
+    async def get_euro_hit_stats():
+        """Get overall EuroMillions hit statistics"""
+        # Get all calculated generations
+        gens = await db.euromillions_generations.find(
+            {"hits_calculated": True}
+        ).to_list(length=1000)
+        
+        if not gens:
+            return {
+                "last_draw": None,
+                "stats": {
+                    "total_generations": 0,
+                    "total_number_hits": 0,
+                    "total_star_hits": 0,
+                    "best_ever_hits": 0,
+                    "tickets_with_3plus": 0
+                }
+            }
+        
+        total_number_hits = sum(g.get("total_hits", 0) for g in gens)
+        total_star_hits = sum(g.get("star_hits", 0) for g in gens)
+        best_ever = max(g.get("best_ticket_hits", 0) for g in gens)
+        
+        # Count tickets with 3+ hits
+        tickets_3plus = 0
+        for gen in gens:
+            for result in gen.get("hit_results", []):
+                if result.get("hit_count", 0) >= 3:
+                    tickets_3plus += 1
+        
+        # Get last draw
+        draws = await db.euromillions_draws.find().to_list(length=None)
+        last_draw = None
+        if draws:
+            def parse_date(d):
+                try:
+                    return datetime.strptime(d['date'], '%d.%m.%Y')
+                except:
+                    return datetime.min
+            last_draw = max(draws, key=parse_date)
+        
+        return {
+            "last_draw": {
+                "date": last_draw.get("date") if last_draw else None,
+                "numbers": last_draw.get("numbers", []) if last_draw else [],
+                "stars": last_draw.get("stars", []) if last_draw else []
+            },
+            "stats": {
+                "total_generations": len(gens),
+                "total_number_hits": total_number_hits,
+                "total_star_hits": total_star_hits,
+                "best_ever_hits": best_ever,
+                "tickets_with_3plus": tickets_3plus
+            }
+        }
+    
+    @router.get("/last-draw")
+    async def get_euro_last_draw():
+        """Get the most recent EuroMillions draw result"""
+        draws = await db.euromillions_draws.find().to_list(length=None)
+        
+        if not draws:
+            return {"error": "No draws found"}
+        
+        def parse_date(d):
+            try:
+                return datetime.strptime(d['date'], '%d.%m.%Y')
+            except:
+                return datetime.min
+        
+        last_draw = max(draws, key=parse_date)
+        
+        return {
+            "date": last_draw.get("date"),
+            "numbers": last_draw.get("numbers", []),
+            "stars": last_draw.get("stars", [])
+        }
+    
     return router
