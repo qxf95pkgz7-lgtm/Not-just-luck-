@@ -287,6 +287,9 @@ class EuroMillionsPredictionRequest(BaseModel):
     name: Optional[str] = None
     locked_positions: Optional[Dict[str, int]] = None
     num_tickets: int = 1
+    use_dj_engine: bool = False  # 🎧 Use DJ Pattern Engine
+    target_date: Optional[str] = None  # DD.MM.YYYY for date-based patterns
+    scenario: Optional[str] = None  # "dj" for DJ mode
 
 
 def create_euromillions_router(db):
@@ -2324,7 +2327,46 @@ def create_euromillions_router(db):
         tickets = []
         num_tickets = min(request.num_tickets, 50)  # Allow up to 50 tickets
         
-        # Calculate distribution across scenarios
+        # Check if DJ engine mode is requested
+        use_dj = getattr(request, 'use_dj_engine', False) or getattr(request, 'scenario', None) == 'dj'
+        target_date = getattr(request, 'target_date', None)
+        
+        # 🎧 DJ ENGINE MODE - Use backtested patterns!
+        if use_dj:
+            for ticket_idx in range(num_tickets):
+                prediction = await master_predictor(
+                    draws=draws,
+                    birthday=request.birthday,
+                    name=request.name,
+                    locked_positions=request.locked_positions,
+                    ticket_index=ticket_idx,
+                    scenario="dj",
+                    use_dj_engine=True,
+                    target_date=target_date
+                )
+                tickets.append({
+                    "ticket_number": ticket_idx + 1,
+                    "numbers": prediction["numbers"],
+                    "stars": prediction["stars"],
+                    "patterns_used": prediction["patterns_used"],
+                    "confidence": prediction["confidence"],
+                    "position_reasons": prediction["position_reasons"],
+                    "scenario": "dj"
+                })
+            
+            price_per_ticket = 3.50  # EuroMillions price
+            total_price = len(tickets) * price_per_ticket
+            
+            return {
+                "tickets": tickets,
+                "total_tickets": len(tickets),
+                "price_per_ticket": price_per_ticket,
+                "total_price": total_price,
+                "currency": "CHF",
+                "engine": "DJ Pattern Engine 🎧"
+            }
+        
+        # Calculate distribution across scenarios (original mode)
         # For N tickets: ~1/3 low, ~1/3 medium, ~1/3 high
         scenario_counts = {
             "low": num_tickets // 3,
@@ -2357,7 +2399,7 @@ def create_euromillions_router(db):
         # Sort by confidence but keep scenario grouping visible
         tickets.sort(key=lambda x: (-x["confidence"], x["scenario"]))
         
-        price_per_ticket = 2.50
+        price_per_ticket = 3.50
         total_price = len(tickets) * price_per_ticket
         
         return {
@@ -2365,7 +2407,7 @@ def create_euromillions_router(db):
             "total_tickets": len(tickets),
             "price_per_ticket": price_per_ticket,
             "total_price": total_price,
-            "currency": "EUR"
+            "currency": "CHF"
         }
     
     @router.get("/analyze-ticket")
