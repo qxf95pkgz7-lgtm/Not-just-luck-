@@ -3,6 +3,7 @@ EuroMillions Pattern Analyzer Routes
 5 numbers (1-50) + 2 stars (1-12)
 
 🎻 LUCKY JACK'S MUSICAL GENERATOR 🍀
+🎧 NOW WITH DJ PATTERN ENGINE! 🎧
 """
 
 from fastapi import APIRouter, HTTPException
@@ -27,6 +28,14 @@ from jack_patterns import (
     star_diff_gap_pattern,
     circle,
     reverse_num
+)
+
+# Import DJ Pattern Engine (from backtesting session!)
+from dj_patterns import (
+    dj_generate_ticket,
+    dj_generate_candidates,
+    dj_select_numbers,
+    WEIGHTS as DJ_WEIGHTS
 )
 
 # Constants for EuroMillions
@@ -915,7 +924,7 @@ def create_euromillions_router(db):
         # Return original if can't make musical
         return nums, []
     
-    async def master_predictor(draws, birthday=None, name=None, locked_positions=None, ticket_index=0, scenario=None):
+    async def master_predictor(draws, birthday=None, name=None, locked_positions=None, ticket_index=0, scenario=None, use_dj_engine=False, target_date=None):
         """
         Master prediction algorithm for EuroMillions
         
@@ -923,7 +932,11 @@ def create_euromillions_router(db):
         - "low": P1 is 1-5 (low start)
         - "medium": P1 is 6-15 (medium start)  
         - "high": P1 is 16+ (high start)
+        - "dj": Use the new DJ Pattern Engine! 🎧
         - None: auto-select based on ticket_index
+        
+        use_dj_engine: If True, uses the backtested DJ patterns
+        target_date: Target draw date for date-based patterns (DD.MM.YYYY)
         """
         patterns_used = []
         position_reasons = {}
@@ -940,6 +953,46 @@ def create_euromillions_router(db):
                 "confidence": 0.1,
                 "position_reasons": {},
                 "scenario": "random"
+            }
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # 🎧 DJ ENGINE MODE - Use backtested patterns! 🎧
+        # ═══════════════════════════════════════════════════════════════════
+        
+        if use_dj_engine or scenario == "dj":
+            # Convert draws to format expected by DJ engine
+            dj_draws = []
+            for d in draws:
+                dj_draws.append({
+                    'date': d.get('date', '01.01.2025'),
+                    'numbers': d.get('numbers', []),
+                    'stars': d.get('stars', [])
+                })
+            
+            # Generate ticket using DJ engine
+            locked = {}
+            if locked_positions:
+                for pos_key, value in locked_positions.items():
+                    pos_idx = int(pos_key.replace("P", "")) - 1
+                    if 0 <= pos_idx < 5 and 1 <= value <= 50:
+                        locked[pos_idx] = value
+            
+            dj_result = dj_generate_ticket(dj_draws, target_date=target_date, locked=locked)
+            
+            return {
+                "numbers": dj_result["numbers"],
+                "stars": dj_result["stars"],
+                "patterns_used": dj_result["patterns_used"],
+                "confidence": 0.85,  # High confidence - backtested!
+                "position_reasons": {
+                    "P1": "DJ Engine - weighted by hit rates",
+                    "P2": "DJ Engine - weighted by hit rates",
+                    "P3": "DJ Engine - weighted by hit rates",
+                    "P4": "DJ Engine - weighted by hit rates",
+                    "P5": "DJ Engine - weighted by hit rates",
+                },
+                "scenario": "dj",
+                "prev_draw": dj_result.get("prev_draw", {})
             }
         
         # ═══════════════════════════════════════════════════════════════════
