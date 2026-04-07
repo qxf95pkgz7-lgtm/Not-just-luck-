@@ -23,6 +23,8 @@ from jack_patterns import (
     p4_sequence_tracker,
     p1p2_sum_pattern,
     eight_family_tracker,
+    star_prophecy_pattern,
+    star_diff_gap_pattern,
     circle,
     reverse_num
 )
@@ -1907,6 +1909,98 @@ def create_euromillions_router(db):
                     if 3 not in locked:
                         candidates[3].extend([45] * 3)
                     patterns_used.append("🎭 Missing 49→20+45")
+        except Exception:
+            pass
+        
+        # JACK PATTERN 9: 🌟 STAR PROPHECY - Previous Stars Predict Next Draw! 🌟
+        # 93.6% of draws have connections from previous stars!
+        # The Stars tell the future: circle(S1), circle(S2), S1+S2, ending digits
+        try:
+            star_prophecy = star_prophecy_pattern(draws, track_gaps=True)
+            
+            # circle(S1) is a strong candidate (7.7%)
+            if star_prophecy.get('circle_s1'):
+                c_s1 = star_prophecy['circle_s1']
+                if 1 <= c_s1 <= 50:
+                    for pos in range(5):
+                        if pos not in locked:
+                            candidates[pos].extend([c_s1] * 4)
+                    patterns_used.append(f"🌟 circle(S1)={c_s1}")
+            
+            # circle(S2) is also strong (8.5%)
+            if star_prophecy.get('circle_s2'):
+                c_s2 = star_prophecy['circle_s2']
+                if 1 <= c_s2 <= 50:
+                    for pos in range(5):
+                        if pos not in locked:
+                            candidates[pos].extend([c_s2] * 3)
+                    patterns_used.append(f"🌟 circle(S2)={c_s2}")
+            
+            # S1+S2 sum often appears (14%!)
+            if star_prophecy.get('star_sum'):
+                star_sum = star_prophecy['star_sum']
+                if 1 <= star_sum <= 50:
+                    for pos in range(5):
+                        if pos not in locked:
+                            candidates[pos].extend([star_sum] * 4)
+                    patterns_used.append(f"🌟 S1+S2={star_sum}")
+            
+            # Numbers ending in S1 are favored (10-12% per position)
+            prev_s1 = star_prophecy.get('prev_stars', [2, 10])[0]
+            if prev_s1 <= 9:
+                ending_s1 = [n for n in range(prev_s1, 51, 10) if 1 <= n <= 50]
+                for num in ending_s1[:3]:  # Top 3 candidates
+                    for pos in range(5):
+                        if pos not in locked:
+                            candidates[pos].extend([num] * 2)
+                patterns_used.append(f"🌟 ends in S1={prev_s1}")
+            
+            # Star repeat suggestions for star selection
+            for star, reason, weight in star_prophecy.get('star_candidates', [])[:4]:
+                if 1 <= star <= 12:
+                    star_candidates.extend([star] * weight)
+            
+            # Boost very overdue patterns!
+            for pattern_name, since, avg, factor in star_prophecy.get('due_patterns', [])[:2]:
+                if factor > 1.5:  # Very overdue
+                    if pattern_name == 'circle_s2' and star_prophecy.get('circle_s2'):
+                        c_s2 = star_prophecy['circle_s2']
+                        if 1 <= c_s2 <= 50:
+                            for pos in range(5):
+                                if pos not in locked:
+                                    candidates[pos].extend([c_s2] * 6)  # Heavy boost!
+                            patterns_used.append(f"🔥 OVERDUE circle(S2)={c_s2} ({factor:.1f}x)")
+                    
+                    if pattern_name == 's2_appears':
+                        prev_s2 = star_prophecy.get('prev_stars', [2, 10])[1]
+                        if 1 <= prev_s2 <= 50:
+                            for pos in range(5):
+                                if pos not in locked:
+                                    candidates[pos].extend([prev_s2] * 5)
+                            patterns_used.append(f"🔥 OVERDUE S2={prev_s2} ({factor:.1f}x)")
+        except Exception:
+            pass
+        
+        # JACK PATTERN 10: STAR DIFF → POSITION GAP
+        # The gap between stars often equals a gap between positions in next draw
+        try:
+            if draws:
+                prev_stars = sorted(draws[0].get('stars', [2, 10]))
+                star_diff = prev_stars[1] - prev_stars[0]
+                
+                # Suggest number pairs with this gap
+                # Particularly for P2-P1, P3-P2, P4-P3
+                for base in range(1, 43):
+                    partner = base + star_diff
+                    if partner <= 50:
+                        # Light weighting across positions
+                        if 0 not in locked:
+                            candidates[0].append(base)
+                        if 1 not in locked:
+                            candidates[1].append(partner)
+                        break  # Just add one pair
+                
+                patterns_used.append(f"🌟 Gap={star_diff}")
         except Exception:
             pass
         
