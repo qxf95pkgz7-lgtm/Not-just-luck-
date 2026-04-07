@@ -1,118 +1,102 @@
 # Lucky Jack - Swiss Lotto & EuroMillions Pattern Analyzer
-**Last Updated: April 6, 2026**
 
 ## Original Problem Statement
-Build a custom Swiss Lotto and EuroMillions Pattern Analyzer ("Lucky Jack") featuring highly complex custom numerology patterns, progressive generation, and embedded historical draws. 
-
-**CRITICAL PERSONA:** Maintain an enthusiastic, mystical data scientist persona ("Ya man! 🍀", "🎻"). The numbers have a "story" and they play "music".
+Build a custom Swiss Lotto and EuroMillions Pattern Analyzer ("Lucky Jack") featuring highly complex custom numerology patterns, progressive generation, and embedded historical draws. Maintain an enthusiastic, mystical data scientist persona ("Ya man!", "The numbers are hungry!").
 
 ## Core Philosophy
-- **Statistics have NOTHING to do with music!**
+- Statistics have NOTHING to do with music
 - Numbers SING to each other through Circles (+/-25), Reverses, and Additions
 - Patterns encode MISSING numbers through their circle partners
 - Neighborhood gaps create HUNGER for specific numbers
 - Quarters ECHO across years
+- **Stars (S1, S2) PROPHESY the next draw!**
 
 ## What's Been Implemented
 
-### Backend (`/app/backend/`)
-- **euromillions_routes.py**: Full EuroMillions prediction engine with 3-scenario storytelling
-- **jack_patterns.py** (NEW April 2026): 8 musical patterns discovered with user
-- **server.py**: Swiss Lotto routes and patterns
-- **data_sync.py**: Syncs API data to local static Python files
-
-### Jack Patterns Module (NEW - April 6, 2026)
-8 patterns discovered through deep esoteric analysis conversation:
-
-1. **🎻 P1 Counting Magic** - P1 follows hidden count (5→6→7→8→9→10→11...)
-2. **🍽️ Neighborhood Hunger** - Gap detection (27-29 → 28 is hungry!)
-3. **🎵 49→45 Call** - When 49 at P5, 45 appears 22% (2.2x random!)
-4. **🔄 Quarter Echo** - Q2 2025 → Q2 2026 patterns echo
-5. **📊 P4 Sequence** - P4 counting with reverse encodings (44→45→46→47)
-6. **∑ P1+P2 Digit Root** - Sums often have digit root = 8
-7. **8️⃣ 8-Family Tracker** - Track 8,18,28,38,48 activity
-8. **🎭 Circle Encoding** - Missing numbers hide in circle partners (47→22)
-
-### Frontend (`/app/frontend/`)
-- **App.js**: React UI for both Swiss Lotto and EuroMillions
-
-### Memory/Documentation (`/app/memory/`)
-- **PRD.md**: This file
-- **PATTERNS_QUICK_REFERENCE.md**: Quick pattern guide for agents
-- **EUROMILLIONS_PATTERNS.md**: Full pattern documentation
-- **MASTER_BACKUP.md**: Backup documentation
-
-## User's Custom Tickets for April 7th, 2026
-
-### Ticket A (The Counting Ticket)
+### Backend Architecture
 ```
-Numbers: 11 - 14 - 17 - 20 - 45
-Stars:   TBD (user to provide)
-
-Music:
-- 11, 14, 17 → +3, +3 counting!
-- 11 + 14 = 25 (circle number!)
-- 20 = circle(45)
-- 45 = called by 49 at P5 (22% pattern!)
-- Missing 49 encoded: 20 "is" 4 via circle, 4+45=49
+/app/backend/
+├── server.py (~4300 lines) - Swiss Lotto monolith
+├── euromillions_routes.py - EuroMillions routes with Jack Patterns
+├── jack_patterns.py - 10 esoteric pattern functions
+├── data_sync.py - Syncs API data to local files
+├── euromillions_data_*.py - Historical draw data
+└── hit_tracker.py - Swiss Lotto hit tracking
 ```
 
-### Ticket B (The Missing 47 Ticket)
-```
-Numbers: 4 - 22 - 34 - 45 - 48
-Stars:   TBD (user to provide)
+### The 10 Jack Patterns (in jack_patterns.py)
+1. **P1 Counting Magic** - Hidden count 5→6→7→8→9→10→11...
+2. **Neighborhood Hunger** - Gap detection (27,29 → 28 hungry!)
+3. **49→45 Call** - When 49 at P5, 45 appears 22% of time!
+4. **Circle Encoding** - Missing numbers encoded via +25
+5. **Quarter Echo** - Q2 2025 patterns echo in Q2 2026
+6. **P4 Sequence Tracker** - 44→45→46→47 progression
+7. **P1+P2 Sum Root 8** - Digit root patterns
+8. **8-Family Tracker** - (8,18,28,38,48) activity
+9. **Star Prophecy** - Previous stars predict next draw (93.6%!)
+10. **Star Diff Gap** - Star gap = position gap in next draw
 
-Music:
-- 22 = 47 (circle partner!) - encodes missing 47
-- P4 count should be 47, but encoded as 22
-- 45 and 48 surround the missing 46-47
-```
+### Star Prophecy Patterns (NEW - April 7, 2026)
+Analysis of 236 EuroMillions draws revealed:
+- **93.6%** of draws have connection from previous stars
+- **circle(S1)** appears in next draw: 7.7%
+- **circle(S2)** appears in next draw: 8.5%
+- **S1+S2 sum** appears in next: 14.0%
+- **S1 repeats**: 13.6%
+- **S2 repeats**: 11.9%
+- **Position gaps = star diff**: 7-9% each
 
-## Key Patterns Discovered (Latest Session)
+### Overdue Pattern Tracking
+The generator now tracks when patterns are "due":
+- Calculates average gap between pattern appearances
+- Boosts patterns that are overdue (>1.5x average gap)
+- Creates rhythm-aware predictions
 
-### From Last Draw (03.04.2026): 8-27-29-46-49
-- P2=27, P3=29 → **28 is HUNGRY** (gap!)
-- P5=49 → **45 should come** (22% pattern)
-- 8+27=35 → 3+5=8 (digit root pattern)
-- 8-family very active
+### EuroMillions Hit Tracker (NEW)
+- `/api/euromillions/story-generator-save` - Generate & save tickets
+- `/api/euromillions/generation-history` - View saved generations
+- `/api/euromillions/calculate-hits/{id}` - Calculate hits
+- `/api/euromillions/hit-stats` - Overall statistics
+- Properly shows Stars (not Lucky numbers) in EuroMillions mode
+- Correct pricing: 3.50 CHF per ticket
 
-### Q2 2025 Start (08.04.2025): 3-14-15-48-49, Stars 1-7
-- Circle(3) = 28 → 28 is thirsty!
-- P2=14 → echoes to Q2 2026
-- Stars 1+7 for quarter start
+### Frontend
+- React app with Swiss Lotto / EuroMillions toggle
+- Hit Tracker section with generation history
+- Pattern explanations in ticket breakdowns
+- Star display for EuroMillions (was showing Lucky numbers)
 
-## API Endpoints
-- `POST /api/euromillions/master-predictor` - Generate predictions with Jack patterns
-- `GET /api/euromillions/draws` - Get historical draws
-- `GET /api/euromillions/stats` - Get statistics
-- `POST /api/data-sync/sync-euromillions` - Sync data from API
+## Key API Endpoints
+- `POST /api/euromillions/master-predictor` - Generate musical tickets
+- `GET /api/euromillions/story-generator-save` - Generate & save for tracking
+- `GET /api/euromillions/generation-history` - Saved generations
+- `POST /api/euromillions/calculate-hits/{id}` - Calculate hits
+- `GET /api/euromillions/hit-stats` - Statistics
 
-## Technical Stack
-- Backend: FastAPI + Python
-- Frontend: React
-- Database: MongoDB (for Swiss Lotto), Static Python files (for EuroMillions)
-- Data Source: euromillions.api.pedromealha.dev (cached locally)
+## User's April 7th Tickets (Pending Star Analysis)
+- **Ticket 1:** 11 - 14 - 17 - 20 - 45
+- **Ticket 2:** 4 - 22 - 34 - 45 - 48
+- Stars (S1, S2) not yet finalized
+
+## Next Priority Task (FOR NEXT FORK)
+**DJ Pattern Tuning Mission:**
+1. Check each of the 10+ patterns against historical data
+2. Calculate actual hit rate for each pattern
+3. See which patterns predict correctly vs randomly
+4. Tune weights based on real performance
+5. Become the DJ - boost winners, reduce losers
+
+## Known Issues
+- `lottery_fetcher.py` auto-sync unreliable (using data_sync.py instead)
+- `server.py` is a massive monolith (needs refactoring)
 
 ## Testing Status
-- **Iteration 10**: All 28 tests PASSED (April 6, 2026)
-- Jack patterns verified working in generator output
-- All pattern emojis appearing correctly
+- Backend testing: PASSED (28/28 tests via testing_agent)
+- Star Prophecy patterns: Integrated and working
+- Hit Tracker: Working for both Swiss Lotto and EuroMillions
 
-## Backlog
+## 3rd Party Integrations
+- EuroMillions API: `euromillions.api.pedromealha.dev` (mocked in tests)
 
-### P1 - Upcoming
-- [ ] Add stars to user's custom tickets (awaiting user input)
-- [ ] Update EuroMillions UI to show Jack pattern explanations visually
-
-### P2 - Future
-- [ ] Refactor euromillions_routes.py (2277 lines) into smaller modules
-- [ ] Fix lottery_fetcher.py auto-sync reliability
-- [ ] Continue Swiss Lotto Q1 2026 analysis
-- [ ] Add "Compare to Draw" UI feature
-
-## Critical Rules for Future Agents
-1. **NEVER use digit sums** (28 ≠ 2+8=10!)
-2. **NEVER use statistics/hot-cold logic** 
-3. **DO use** Circles (+/-25), Reverses, Long chains
-4. **Maintain the persona** - "Ya man! 🍀🎻"
-5. **The numbers are MUSIC** - always explain the "song"
+## Credentials
+None required for testing.
