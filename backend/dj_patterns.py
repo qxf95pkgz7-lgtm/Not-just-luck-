@@ -301,6 +301,65 @@ def pattern_date_in_draw(target_date: str) -> int:
         pass
     return None
 
+def pattern_date_digits(target_date: str) -> List[int]:
+    """
+    NEW! Date digits appear separately - 16.09 → [1, 6, 9]
+    The date SPLITS into its digits!
+    """
+    try:
+        day = int(target_date.split('.')[0])
+        month = int(target_date.split('.')[1])
+        
+        digits = set()
+        # Day digits
+        for d in str(day):
+            if d != '0':
+                digits.add(int(d))
+        # Month digits  
+        for d in str(month):
+            if d != '0':
+                digits.add(int(d))
+        
+        # Also add the day itself if <= 31
+        if 1 <= day <= 31:
+            digits.add(day)
+        
+        # Create candidates: digit, digit+10, digit+20, etc.
+        candidates = []
+        for digit in digits:
+            if 1 <= digit <= 9:
+                candidates.extend([digit + i*10 for i in range(5) if digit + i*10 <= 50])
+            elif digit <= 50:
+                candidates.append(digit)
+        
+        return list(set(candidates))
+    except:
+        return []
+
+def pattern_date_digit_stars(target_date: str) -> List[int]:
+    """Date digits can appear in stars too!"""
+    try:
+        day = int(target_date.split('.')[0])
+        month = int(target_date.split('.')[1])
+        
+        star_candidates = []
+        for d in str(day):
+            if d != '0' and 1 <= int(d) <= 12:
+                star_candidates.append(int(d))
+        for d in str(month):
+            if d != '0' and 1 <= int(d) <= 12:
+                star_candidates.append(int(d))
+        
+        # Also day and month if they're valid stars
+        if 1 <= day <= 12:
+            star_candidates.append(day)
+        if 1 <= month <= 12:
+            star_candidates.append(month)
+            
+        return list(set(star_candidates))
+    except:
+        return []
+
 def pattern_p1_alarm(draws: List[Dict]) -> bool:
     """
     Check if P1 is counting up (3→4→5)
@@ -483,7 +542,24 @@ def dj_generate_candidates(draws: List[Dict], target_date: str = None) -> Dict:
             # And P3 with normal weight
             candidates[2].extend([day_num] * WEIGHTS["date_in_draw"])
             patterns_used.append(f"📅 DATE DAY = {day_num} (MEGA BOOST at P1!)")
-            patterns_used.append(f"🎹 Date day: {day_num}")
+        
+        # NEW! DATE DIGITS - The date SPLITS into digits!
+        date_digits = pattern_date_digits(target_date)
+        if date_digits:
+            for digit_num in date_digits:
+                # Heavy weight for date digits
+                candidates[0].extend([digit_num] * 10)  # P1 loves digits
+                candidates[1].extend([digit_num] * 8)   # P2 too
+                for pos in range(2, 5):
+                    candidates[pos].extend([digit_num] * 5)
+            patterns_used.append(f"📅 DATE DIGITS: {sorted(set([d for d in date_digits if d <= 9]))} → families!")
+        
+        # NEW! DATE DIGITS IN STARS!
+        date_stars = pattern_date_digit_stars(target_date)
+        if date_stars:
+            for s in date_stars:
+                star_candidates.extend([s] * 8)  # Boost date digits in stars!
+            patterns_used.append(f"⭐ DATE STARS: {date_stars}")
     
     # ═══════════════════════════════════════════════════════════════════
     # RARE BUT PRESENT (<12%) - Subtle notes 🎹
