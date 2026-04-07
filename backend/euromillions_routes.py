@@ -1927,13 +1927,14 @@ def create_euromillions_router(db):
                             candidates[pos].extend([c_s1] * 4)
                     patterns_used.append(f"🌟 circle(S1)={c_s1}")
             
-            # circle(S2) is also strong (8.5%)
+            # circle(S2) is also strong (8.5%) - but lighter weight for variety
             if star_prophecy.get('circle_s2'):
                 c_s2 = star_prophecy['circle_s2']
                 if 1 <= c_s2 <= 50:
-                    for pos in range(5):
+                    # Only add to P4, P5 with moderate weight
+                    for pos in [3, 4]:
                         if pos not in locked:
-                            candidates[pos].extend([c_s2] * 3)
+                            candidates[pos].extend([c_s2] * 2)
                     patterns_used.append(f"🌟 circle(S2)={c_s2}")
             
             # S1+S2 sum often appears (14%!)
@@ -1945,39 +1946,47 @@ def create_euromillions_router(db):
                             candidates[pos].extend([star_sum] * 4)
                     patterns_used.append(f"🌟 S1+S2={star_sum}")
             
-            # Numbers ending in S1 are favored (10-12% per position)
+            # Numbers ending in S1 - use sparingly for variety
             prev_s1 = star_prophecy.get('prev_stars', [2, 10])[0]
             if prev_s1 <= 9:
                 ending_s1 = [n for n in range(prev_s1, 51, 10) if 1 <= n <= 50]
-                for num in ending_s1[:3]:  # Top 3 candidates
-                    for pos in range(5):
-                        if pos not in locked:
-                            candidates[pos].extend([num] * 2)
-                patterns_used.append(f"🌟 ends in S1={prev_s1}")
+                # Only add to P2, P3 with light weight, and vary by ticket
+                if ticket_index % 2 == 0:  # Every other ticket
+                    for num in ending_s1[1:3]:  # Skip the smallest, take 2
+                        if 1 not in locked:
+                            candidates[1].append(num)
+                        if 2 not in locked:
+                            candidates[2].append(num)
+                    patterns_used.append(f"🌟 ends in S1={prev_s1}")
             
             # Star repeat suggestions for star selection
             for star, reason, weight in star_prophecy.get('star_candidates', [])[:4]:
                 if 1 <= star <= 12:
                     star_candidates.extend([star] * weight)
             
-            # Boost very overdue patterns!
+            # Boost very overdue patterns - but with controlled weighting for variety!
             for pattern_name, since, avg, factor in star_prophecy.get('due_patterns', [])[:2]:
                 if factor > 1.5:  # Very overdue
                     if pattern_name == 'circle_s2' and star_prophecy.get('circle_s2'):
                         c_s2 = star_prophecy['circle_s2']
                         if 1 <= c_s2 <= 50:
-                            for pos in range(5):
-                                if pos not in locked:
-                                    candidates[pos].extend([c_s2] * 6)  # Heavy boost!
-                            patterns_used.append(f"🔥 OVERDUE circle(S2)={c_s2} ({factor:.1f}x)")
+                            # Only boost for P3, P4, P5 positions (not every position!)
+                            # And use ticket_index to vary which tickets get the boost
+                            if ticket_index % 3 != 2:  # 2 out of 3 tickets get boost
+                                for pos in [2, 3, 4]:  # P3, P4, P5
+                                    if pos not in locked:
+                                        candidates[pos].extend([c_s2] * 3)
+                                patterns_used.append(f"🔥 OVERDUE circle(S2)={c_s2} ({factor:.1f}x)")
                     
                     if pattern_name == 's2_appears':
                         prev_s2 = star_prophecy.get('prev_stars', [2, 10])[1]
                         if 1 <= prev_s2 <= 50:
-                            for pos in range(5):
-                                if pos not in locked:
-                                    candidates[pos].extend([prev_s2] * 5)
-                            patterns_used.append(f"🔥 OVERDUE S2={prev_s2} ({factor:.1f}x)")
+                            # Only some tickets, and only certain positions
+                            if ticket_index % 4 == 0:  # 1 in 4 tickets
+                                for pos in [0, 1]:  # P1, P2
+                                    if pos not in locked:
+                                        candidates[pos].extend([prev_s2] * 2)
+                                patterns_used.append(f"🔥 OVERDUE S2={prev_s2} ({factor:.1f}x)")
         except Exception:
             pass
         
