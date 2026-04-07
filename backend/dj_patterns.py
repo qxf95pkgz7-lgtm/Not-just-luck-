@@ -87,11 +87,12 @@ WEIGHTS = {
     "circle_partner": 2,         # 9.3%
     "reverse_logic": 2,          # 10.1%
     "p3_hunger": 2,              # 9.3%
-    "date_in_draw": 2,           # 13.1%
+    "date_in_draw": 10,          # 13.1% - BOOSTED! Date is important!
     
     # SPECIAL
     "p1_alarm_consecutive": 6,   # When P1 counts up
     "hidden_sum_p5": 4,          # Hidden numbers sum to P5
+    "date_in_p1": 15,            # NEW! Day should appear at P1!
 }
 
 
@@ -471,12 +472,17 @@ def dj_generate_candidates(draws: List[Dict], target_date: str = None) -> Dict:
         candidates[pos].extend([circ_p2] * WEIGHTS["circle_p2"])
     patterns_used.append(f"🎹 Circle(P2={prev_nums[1]})={circ_p2}")
     
-    # Date in Draw - 13.1%
+    # Date in Draw - 13.1% - NOW MEGA BOOSTED!
     if target_date:
         day_num = pattern_date_in_draw(target_date)
-        if day_num:
-            candidates[0].extend([day_num] * WEIGHTS["date_in_draw"])
-            candidates[1].extend([day_num] * WEIGHTS["date_in_draw"])
+        if day_num and 1 <= day_num <= 31:
+            # MEGA weight at P1 - the date LOVES P1!
+            candidates[0].extend([day_num] * WEIGHTS["date_in_p1"] * 3)  # Triple boost!
+            # Also add to P2 with good weight
+            candidates[1].extend([day_num] * WEIGHTS["date_in_draw"] * 2)
+            # And P3 with normal weight
+            candidates[2].extend([day_num] * WEIGHTS["date_in_draw"])
+            patterns_used.append(f"📅 DATE DAY = {day_num} (MEGA BOOST at P1!)")
             patterns_used.append(f"🎹 Date day: {day_num}")
     
     # ═══════════════════════════════════════════════════════════════════
@@ -552,19 +558,34 @@ def dj_generate_candidates(draws: List[Dict], target_date: str = None) -> Dict:
     }
 
 
-def dj_select_numbers(candidates: Dict, star_candidates: List[int], locked: Dict = None) -> Dict:
+def dj_select_numbers(candidates: Dict, star_candidates: List[int], locked: Dict = None, date_day: int = None) -> Dict:
     """
     🎧 Select final numbers from weighted candidates
+    date_day: If provided, has 30% chance to force this number at P1
     """
     locked = locked or {}
     
     selected = []
     used = set()
     
+    # Special: 30% chance to force date_day at P1
+    if date_day and 1 <= date_day <= 31 and 0 not in locked:
+        if rnd.random() < 0.30:  # 30% chance
+            selected.append(date_day)
+            used.add(date_day)
+        else:
+            selected.append(None)  # Placeholder, will be filled below
+    
     # Select for each position
     for pos in range(5):
+        if pos < len(selected) and selected[pos] is not None:
+            continue  # Already selected (date forced)
+            
         if pos in locked:
-            selected.append(locked[pos])
+            if pos < len(selected):
+                selected[pos] = locked[pos]
+            else:
+                selected.append(locked[pos])
             used.add(locked[pos])
         else:
             # Get candidates for this position, filter used
@@ -578,7 +599,10 @@ def dj_select_numbers(candidates: Dict, star_candidates: List[int], locked: Dict
                 available = [n for n in range(1, 51) if n not in used]
                 choice = rnd.choice(available)
             
-            selected.append(choice)
+            if pos < len(selected):
+                selected[pos] = choice
+            else:
+                selected.append(choice)
             used.add(choice)
     
     # Select stars
@@ -606,7 +630,16 @@ def dj_generate_ticket(draws: List[Dict], target_date: str = None, locked: Dict 
     🎧 Generate a single ticket using the DJ engine
     """
     result = dj_generate_candidates(draws, target_date)
-    selection = dj_select_numbers(result["candidates"], result["star_candidates"], locked)
+    
+    # Extract date day for special P1 handling
+    date_day = None
+    if target_date:
+        try:
+            date_day = int(target_date.split('.')[0])
+        except:
+            pass
+    
+    selection = dj_select_numbers(result["candidates"], result["star_candidates"], locked, date_day)
     
     return {
         "numbers": selection["numbers"],
