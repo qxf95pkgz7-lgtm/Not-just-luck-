@@ -1821,7 +1821,7 @@ function App() {
                       : 'from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600'
                   } text-white font-semibold text-sm transition-all disabled:opacity-50`}
                 >
-                  {storyLoading ? '🔮 Generating...' : `🎻 Generate Story Tickets (8 × 2.50 = 20 ${lotteryMode === 'euro' ? 'EUR' : 'CHF'})`}
+                  {storyLoading ? '🔮 Generating...' : `🎻 Generate Story Tickets (8 × ${lotteryMode === 'euro' ? '3.50' : '2.50'} = ${lotteryMode === 'euro' ? '28' : '20'} CHF)`}
                 </button>
                 <button
                   onClick={recalculateAllHits}

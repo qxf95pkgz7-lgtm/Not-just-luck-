@@ -2483,7 +2483,7 @@ def create_euromillions_router(db):
             "saved": True,
             "target_date": target_date,
             "num_tickets": len(tickets),
-            "cost_estimate": f"{len(tickets) * 2.50:.2f} EUR",
+            "cost_estimate": f"{len(tickets) * 3.50:.2f} CHF",
             "tickets": tickets
         }
     
