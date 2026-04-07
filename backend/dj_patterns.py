@@ -256,6 +256,127 @@ def pattern_day_sum(date1: str, date2: str) -> int:
         pass
     return None
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# NEW! DEEP DATE PATTERNS - The date cooperates! 📅
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def pattern_circle_date(target_date: str) -> Dict:
+    """
+    Circle of day and month ± 1
+    16.09 → circle(16)=41 ±1, circle(9)=34 ±1
+    """
+    try:
+        day = int(target_date.split('.')[0])
+        month = int(target_date.split('.')[1])
+        
+        candidates = []
+        
+        # Circle of day ± 1
+        circle_day = day + 25 if day <= 25 else day - 25
+        for offset in [-1, 0, 1]:
+            val = circle_day + offset
+            if 1 <= val <= 50:
+                candidates.append(val)
+        
+        # Circle of month ± 1
+        circle_month = month + 25
+        for offset in [-1, 0, 1]:
+            val = circle_month + offset
+            if 1 <= val <= 50:
+                candidates.append(val)
+        
+        return {
+            "candidates": candidates,
+            "circle_day": circle_day,
+            "circle_month": circle_month
+        }
+    except:
+        return {"candidates": [], "circle_day": 0, "circle_month": 0}
+
+def pattern_date_sum(target_date: str) -> List[int]:
+    """
+    Day + Month sum and its derivatives
+    16.09 → 16+9=25, circle(25)=50
+    """
+    try:
+        day = int(target_date.split('.')[0])
+        month = int(target_date.split('.')[1])
+        
+        candidates = []
+        
+        # Day + Month
+        date_sum = day + month
+        if 1 <= date_sum <= 50:
+            candidates.append(date_sum)
+        
+        # Circle of sum
+        circle_sum = date_sum + 25 if date_sum <= 25 else date_sum - 25
+        if 1 <= circle_sum <= 50:
+            candidates.append(circle_sum)
+        
+        # Day - Month (absolute)
+        diff = abs(day - month)
+        if 1 <= diff <= 50:
+            candidates.append(diff)
+        
+        # Day × Month digit sum (if reasonable)
+        product = day * month
+        if product <= 50:
+            candidates.append(product)
+        elif product <= 99:
+            # Digit sum
+            digit_sum = sum(int(d) for d in str(product))
+            if 1 <= digit_sum <= 50:
+                candidates.append(digit_sum)
+        
+        return list(set(candidates))
+    except:
+        return []
+
+def pattern_serial_45(target_date: str) -> int:
+    """
+    The 45 connection - day + month derivatives
+    When digits sum to 9 (month), 45 is calling!
+    """
+    try:
+        day = int(target_date.split('.')[0])
+        month = int(target_date.split('.')[1])
+        
+        # 45 special: 4+5=9
+        if month == 9:
+            return 45
+        
+        # Or if day digits sum to 9
+        if sum(int(d) for d in str(day)) == 9:
+            return 45
+            
+        return None
+    except:
+        return None
+
+def pattern_star_times_month(target_date: str, prev_stars: List[int]) -> List[int]:
+    """
+    Star × Month = hidden number
+    Star 5 × Month 9 = 45
+    """
+    try:
+        month = int(target_date.split('.')[1])
+        
+        candidates = []
+        for star in prev_stars:
+            product = star * month
+            if 1 <= product <= 50:
+                candidates.append(product)
+            # Also digit sum of product
+            elif product <= 99:
+                digit_sum = sum(int(d) for d in str(product))
+                if 1 <= digit_sum <= 50:
+                    candidates.append(digit_sum)
+        
+        return candidates
+    except:
+        return []
+
 def pattern_circle_partner(n: int) -> int:
     """Circle +25 partner - 9.3%"""
     return circle(n)
@@ -560,6 +681,41 @@ def dj_generate_candidates(draws: List[Dict], target_date: str = None) -> Dict:
             for s in date_stars:
                 star_candidates.extend([s] * 8)  # Boost date digits in stars!
             patterns_used.append(f"⭐ DATE STARS: {date_stars}")
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # NEW! DEEP DATE PATTERNS - The date cooperates! 📅
+        # ═══════════════════════════════════════════════════════════════════
+        
+        # Circle of Day and Month ± 1
+        circle_date_result = pattern_circle_date(target_date)
+        circle_candidates = circle_date_result["candidates"]
+        if circle_candidates:
+            for pos in range(3, 5):  # P4, P5 love circle dates
+                candidates[pos].extend(circle_candidates * 8)
+            for pos in range(0, 3):  # P1-P3 also get some
+                candidates[pos].extend(circle_candidates * 4)
+            patterns_used.append(f"⭕ CIRCLE(day)={circle_date_result['circle_day']}±1, CIRCLE(month)={circle_date_result['circle_month']}±1")
+        
+        # Day + Month sum and derivatives
+        date_sum_candidates = pattern_date_sum(target_date)
+        if date_sum_candidates:
+            for pos in range(5):
+                candidates[pos].extend(date_sum_candidates * 6)
+            patterns_used.append(f"📅 DATE SUM: {date_sum_candidates}")
+        
+        # The 45 connection (when month=9 or digits sum to 9)
+        serial_45 = pattern_serial_45(target_date)
+        if serial_45:
+            candidates[3].extend([45] * 10)  # P4
+            candidates[4].extend([45] * 10)  # P5
+            patterns_used.append(f"🔢 SERIAL 45 (month=9 connection!)")
+        
+        # Star × Month = hidden number
+        star_month_nums = pattern_star_times_month(target_date, prev_stars)
+        if star_month_nums:
+            for pos in range(2, 5):  # P3-P5
+                candidates[pos].extend(star_month_nums * 6)
+            patterns_used.append(f"⭐×📅 Star × Month: {star_month_nums}")
     
     # ═══════════════════════════════════════════════════════════════════
     # RARE BUT PRESENT (<12%) - Subtle notes 🎹
