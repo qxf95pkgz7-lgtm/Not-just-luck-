@@ -158,6 +158,29 @@ def pattern_date_chameleon(day: int, month: int) -> Dict:
             candidates['stars'].append((day_minus_month, 51.7, f"day-month = {day_minus_month}"))
     
     # ═══════════════════════════════════════════════════════════════════════
+    # WAY 5b: D+M FAMILY - The consecutive dance! (10.7%, 9.8%, 9.6%)
+    # D+M, 1+D+M, 2+D+M all hit around 10%!
+    # ═══════════════════════════════════════════════════════════════════════
+    dm = day + month
+    candidates['targets']['dm_family'] = f"{dm}, {dm+1}, {dm+2}"
+    
+    # 1 + D+M (10.7% - HIGHEST!)
+    if 1 <= dm + 1 <= 50:
+        candidates['numbers'].append((dm + 1, 55.0, f"1+D+M = 1+{dm} = {dm+1} (10.7%)"))
+    
+    # 2 + D+M (9.6%)
+    if 1 <= dm + 2 <= 50:
+        candidates['numbers'].append((dm + 2, 50.0, f"2+D+M = 2+{dm} = {dm+2} (9.6%)"))
+    
+    # D+M + 10 (9.3%)
+    if 1 <= dm + 10 <= 50:
+        candidates['numbers'].append((dm + 10, 48.0, f"D+M+10 = {dm}+10 = {dm+10} (9.3%)"))
+    
+    # D+M + 25 / circle(D+M) (8.0%)
+    if 1 <= dm + 25 <= 50:
+        candidates['numbers'].append((dm + 25, 45.0, f"circle(D+M) = {dm}+25 = {dm+25} (8.0%)"))
+    
+    # ═══════════════════════════════════════════════════════════════════════
     # WAY 6: Reverse(Day) + Month (45.9%)
     # ═══════════════════════════════════════════════════════════════════════
     rev_day = reverse_num(day)
@@ -276,6 +299,43 @@ def pattern_before_connections(prev_numbers: List[int], prev_stars: List[int]) -
         star_plus25 = ps + 25
         if 1 <= star_plus25 <= 50:
             candidates['numbers'].append((star_plus25, 15.0, f"prev star {ps}+25 = {star_plus25}"))
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # P(x) + small number (1-5) = common pattern!
+    # Very frequent: add 1, 2, 3, 4, or 5 to previous numbers
+    # ═══════════════════════════════════════════════════════════════════════
+    for pn in prev_numbers:
+        for small in [1, 2, 3, 4, 5]:
+            target = pn + small
+            if 1 <= target <= 50:
+                # Weight decreases as the small number increases
+                weight = 15.0 - (small * 2)  # 13, 11, 9, 7, 5
+                candidates['numbers'].append((target, weight, f"prev {pn}+{small} = {target}"))
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # P(x) + larger numbers (8, 10) - catches numbers like 34, 50
+    # ═══════════════════════════════════════════════════════════════════════
+    for pn in prev_numbers:
+        for add in [8, 10]:
+            target = pn + add
+            if 1 <= target <= 50:
+                candidates['numbers'].append((target, 10.0, f"prev {pn}+{add} = {target}"))
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # Last digit + 25 (digit from prev number → circle)
+    # Example: 39 → digit 9 → 9+25=34
+    # ═══════════════════════════════════════════════════════════════════════
+    for pn in prev_numbers:
+        last_digit = pn % 10
+        if last_digit > 0:
+            target = last_digit + 25
+            if 1 <= target <= 50:
+                candidates['numbers'].append((target, 12.0, f"digit({pn})={last_digit} +25 = {target}"))
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # Double circle (25 + 25 = 50) - special number!
+    # ═══════════════════════════════════════════════════════════════════════
+    candidates['numbers'].append((50, 8.0, "double circle 25+25=50"))
     
     # ═══════════════════════════════════════════════════════════════════════
     # Previous numbers that ECHO (same number appears again)
