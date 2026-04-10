@@ -1332,6 +1332,53 @@ def dj_generate_candidates(draws: List[Dict], target_date: str = None) -> Dict:
     # S2 Repeat - 17.1%
     star_candidates.extend([prev_stars[1]] * WEIGHTS["s2_repeat"])
     
+    # ═══════════════════════════════════════════════════════════════════
+    # 🔥 NEW STAR PATTERNS (September 2025 Session) 🔥
+    # ═══════════════════════════════════════════════════════════════════
+    
+    # |S2-S1| → Star (17.4% hit rate!) 🔥🔥
+    s_diff_result = pattern_star_diff_to_star(prev_draw)
+    if s_diff_result['candidate']:
+        star_candidates.extend([s_diff_result['candidate']] * 6)  # Heavy weight
+        patterns_used.append(s_diff_result['explanation'])
+    
+    # S1 × 2 → Star (16.1%) and S1+S2 → Star (8.7%) 🔥
+    s_times_result = pattern_star_times_2(prev_draw)
+    for cand, weight, reason in s_times_result.get('candidates', []):
+        if 1 <= cand <= 12:
+            star_candidates.extend([cand] * (weight // 10))
+    for exp in s_times_result.get('explanations', []):
+        patterns_used.append(exp)
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # 🔥 NEW NUMBER PATTERNS (September 2025 Session) 🔥
+    # ═══════════════════════════════════════════════════════════════════
+    
+    # P4+P5 first digit → Number (12.8%) 🔥
+    p4p5_result = pattern_p4_p5_digit(prev_draw)
+    if p4p5_result.get('candidate'):
+        c = p4p5_result['candidate']
+        for pos in range(5):
+            candidates[pos].extend([c] * 5)
+        patterns_used.append(p4p5_result['explanation'])
+    
+    # Month × 2 → Number (10.7%) 🔥
+    if target_date:
+        m2_result = pattern_month_times_2(target_date)
+        if m2_result.get('candidate'):
+            c = m2_result['candidate']
+            for pos in range(5):
+                candidates[pos].extend([c] * 4)
+            patterns_used.append(m2_result['explanation'])
+        
+        # Day ÷ 2 → Number (8.3%) 🔥
+        d2_result = pattern_day_div_2(target_date)
+        if d2_result.get('candidate'):
+            c = d2_result['candidate']
+            for pos in range(5):
+                candidates[pos].extend([c] * 4)
+            patterns_used.append(d2_result['explanation'])
+    
     # Stars from date
     if target_date:
         try:
@@ -1717,6 +1764,114 @@ def pattern_p2_chain_22_28_15_40_29() -> Dict:
         'circle_twins': [(15, 40), (40, 15)],
         'explanation': "🎵 The Chain: 22↔28↔15↔40↔29"
     }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 🎧 NEW PATTERNS FROM BACKTEST - September 2025 Session 🎻
+# Star Multiplication, P4+P5 Digit, Month×2, Day÷2
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def pattern_star_diff_to_star(prev_draw: Dict) -> Dict:
+    """
+    ⭐ STAR DIFF → NEXT STAR (17.4% hit rate!) 🔥🔥
+    |S2 - S1| becomes a star in the next draw.
+    """
+    prev_stars = sorted(prev_draw['stars'])
+    s_diff = abs(prev_stars[1] - prev_stars[0])
+    
+    if 1 <= s_diff <= 12:
+        return {
+            'candidate': s_diff,
+            'weight': 60,  # High weight - 17.4%!
+            'explanation': f"⭐ |S2-S1|: |{prev_stars[1]}-{prev_stars[0]}|={s_diff} → Star (17.4%)"
+        }
+    return {'candidate': None, 'weight': 0, 'explanation': ''}
+
+
+def pattern_star_times_2(prev_draw: Dict) -> Dict:
+    """
+    ⭐ S1 × 2 → NEXT STAR (16.1% hit rate!) 🔥🔥
+    S1 doubled becomes a star in the next draw.
+    Example: S1=6 → 6×2=12 → Star 12 appears!
+    """
+    prev_stars = sorted(prev_draw['stars'])
+    s1_x2 = prev_stars[0] * 2
+    
+    candidates = []
+    explanations = []
+    
+    if 1 <= s1_x2 <= 12:
+        candidates.append((s1_x2, 55, f"S1×2: {prev_stars[0]}×2={s1_x2}"))
+        explanations.append(f"⭐ S1×2: {prev_stars[0]}×2={s1_x2} → Star (16.1%)")
+    
+    # Also add S1+S2 → Star (8.7%)
+    s_sum = prev_stars[0] + prev_stars[1]
+    if 1 <= s_sum <= 12:
+        candidates.append((s_sum, 40, f"S1+S2: {prev_stars[0]}+{prev_stars[1]}={s_sum}"))
+        explanations.append(f"⭐ S1+S2: {prev_stars[0]}+{prev_stars[1]}={s_sum} → Star (8.7%)")
+    
+    return {
+        'candidates': candidates,
+        'explanations': explanations
+    }
+
+
+def pattern_p4_p5_digit(prev_draw: Dict) -> Dict:
+    """
+    🎵 P4+P5 FIRST DIGIT → NEXT NUMBER (12.8% hit rate!) 🔥
+    The first digit of (P4 + P5) appears in the next draw.
+    Example: P4=35, P5=40 → 35+40=75 → first digit 7 appears!
+    """
+    prev_nums = sorted(prev_draw['numbers'])
+    p4, p5 = prev_nums[3], prev_nums[4]
+    
+    p4_p5_sum = p4 + p5
+    first_digit = int(str(p4_p5_sum)[0])
+    
+    if 1 <= first_digit <= 50:
+        return {
+            'candidate': first_digit,
+            'weight': 50,  # Good weight - 12.8%!
+            'explanation': f"🎵 P4+P5: {p4}+{p5}={p4_p5_sum} → digit {first_digit} (12.8%)"
+        }
+    return {'candidate': None, 'weight': 0, 'explanation': ''}
+
+
+def pattern_month_times_2(target_date: str) -> Dict:
+    """
+    🎵 MONTH × 2 → NEXT NUMBER (10.7% hit rate!) 🔥
+    The month doubled appears in the draw.
+    Example: April (4) → 4×2=8 → 8 appears!
+    """
+    month = int(target_date.split('.')[1])
+    m_x2 = month * 2
+    
+    if 1 <= m_x2 <= 50:
+        return {
+            'candidate': m_x2,
+            'weight': 45,
+            'explanation': f"🎵 M×2: {month}×2={m_x2} (10.7%)"
+        }
+    return {'candidate': None, 'weight': 0, 'explanation': ''}
+
+
+def pattern_day_div_2(target_date: str) -> Dict:
+    """
+    🎵 DAY ÷ 2 → NEXT NUMBER (8.3% hit rate!) 🔥
+    Even days divided by 2 appear in the draw.
+    Example: Day 24 → 24÷2=12 → 12 appears!
+    """
+    day = int(target_date.split('.')[0])
+    
+    if day % 2 == 0:  # Only even days
+        d_div = day // 2
+        if 1 <= d_div <= 50:
+            return {
+                'candidate': d_div,
+                'weight': 40,
+                'explanation': f"🎵 D÷2: {day}÷2={d_div} (8.3%)"
+            }
+    return {'candidate': None, 'weight': 0, 'explanation': ''}
 
 
 def pattern_p1_king(target_date: str, prev_draw: Dict, prev2_draw: Dict = None) -> Dict:
