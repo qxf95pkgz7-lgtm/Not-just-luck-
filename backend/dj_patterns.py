@@ -481,6 +481,272 @@ def pattern_date_digit_stars(target_date: str) -> List[int]:
     except:
         return []
 
+def pattern_deep_date_expansion(target_date: str) -> Dict:
+    """
+    🎧 THE DEEP DATE EXPANSION PATTERN! 🎧
+    
+    User's esoteric formula discovered April 2026:
+    - Day 7 → 70 (expand single digit by ×10!)
+    - Month 4 → 4 (raw) OR 29 (circle: 4+25)
+    - 70 + 4 = 74 → reverse=47, circle(74-50)=24, or 74-25=49
+    - 70 + 29 = 99 → 9-Family (9,19,29,39,49) OR 99-50=49
+    
+    On April 7th draw: 11-14-19-36-49 → 19 and 49 both HIT via this pattern!
+    """
+    try:
+        day = int(target_date.split('.')[0])
+        month = int(target_date.split('.')[1])
+        
+        candidates = []
+        explanations = []
+        
+        # Step 1: Expand day to tens (7 → 70)
+        expanded_day = day * 10  # 7 → 70
+        
+        # Step 2: Month raw and circled
+        month_raw = month  # 4
+        month_circle = month + 25 if month <= 25 else month - 25  # 4 → 29
+        
+        # ═══════════════════════════════════════════════════════════════
+        # Pattern A: expanded_day + month_raw = X
+        # 70 + 4 = 74
+        sum_a = expanded_day + month_raw
+        explanations.append(f"D×10+M = {expanded_day}+{month_raw} = {sum_a}")
+        
+        # Derivatives of sum_a:
+        # - If 1-50, direct candidate
+        if 1 <= sum_a <= 50:
+            candidates.append(sum_a)
+        # - If > 50, subtract 50 (circle down)
+        if sum_a > 50:
+            circled_a = sum_a - 50  # 74 - 50 = 24
+            if 1 <= circled_a <= 50:
+                candidates.append(circled_a)
+                explanations.append(f"{sum_a}-50 = {circled_a}")
+            # Also try -25 (circle logic)
+            circled_a2 = sum_a - 25  # 74 - 25 = 49
+            if 1 <= circled_a2 <= 50:
+                candidates.append(circled_a2)
+                explanations.append(f"{sum_a}-25 = {circled_a2}")
+        
+        # Reverse of sum_a (74 → 47)
+        if sum_a >= 10:
+            reversed_a = int(str(sum_a)[::-1])
+            if reversed_a > 50:
+                reversed_a = reversed_a - 50 if reversed_a <= 100 else reversed_a % 50
+            if 1 <= reversed_a <= 50:
+                candidates.append(reversed_a)
+                explanations.append(f"reverse({sum_a}) = {reversed_a}")
+        
+        # ═══════════════════════════════════════════════════════════════
+        # Pattern B: expanded_day + month_circle = Y
+        # 70 + 29 = 99
+        sum_b = expanded_day + month_circle
+        explanations.append(f"D×10+circle(M) = {expanded_day}+{month_circle} = {sum_b}")
+        
+        # Derivatives of sum_b:
+        # - If 1-50, direct
+        if 1 <= sum_b <= 50:
+            candidates.append(sum_b)
+        # - If > 50, subtract 50
+        if sum_b > 50:
+            circled_b = sum_b - 50  # 99 - 50 = 49
+            if 1 <= circled_b <= 50:
+                candidates.append(circled_b)
+                explanations.append(f"{sum_b}-50 = {circled_b}")
+        
+        # 99 → "9 Family" search!
+        if sum_b >= 90 and sum_b <= 99:
+            # Last digit is the family
+            family_base = sum_b % 10  # 99 → 9
+            if family_base == 0:
+                family_base = 10
+            family = [family_base + i*10 for i in range(5) if family_base + i*10 <= 50]
+            candidates.extend(family)
+            explanations.append(f"{sum_b} → {family_base}-Family: {family}")
+        
+        # Reverse of sum_b
+        if sum_b >= 10:
+            reversed_b = int(str(sum_b)[::-1])
+            if reversed_b > 50:
+                reversed_b = reversed_b - 50 if reversed_b <= 100 else reversed_b % 50
+            if 1 <= reversed_b <= 50 and reversed_b not in candidates:
+                candidates.append(reversed_b)
+                explanations.append(f"reverse({sum_b}) = {reversed_b}")
+        
+        return {
+            "candidates": list(set(candidates)),
+            "explanations": explanations,
+            "expanded_day": expanded_day,
+            "month_raw": month_raw,
+            "month_circle": month_circle,
+            "sum_a": sum_a,
+            "sum_b": sum_b
+        }
+    except:
+        return {"candidates": [], "explanations": [], "expanded_day": 0, "month_raw": 0, "month_circle": 0, "sum_a": 0, "sum_b": 0}
+
+
+def pattern_sequence_hunger(draws: List[Dict], window: int = 4) -> List[int]:
+    """
+    🎧 SEQUENCE HUNGER TRACKER 🎧
+    
+    When part of a consecutive sequence appears across recent draws,
+    the MISSING pieces are "hungry" and want to appear!
+    
+    Example: 22 and 24 appeared → 23 is HUNGRY!
+    Example: 16, 17, 18 appeared → 19 is NEXT in sequence!
+    """
+    if not draws or len(draws) < 2:
+        return []
+    
+    # Collect all numbers from recent draws (flattened)
+    recent_nums = set()
+    for d in draws[:window]:
+        recent_nums.update(d['numbers'])
+    
+    hungry = []
+    
+    # Find gaps of 1 (direct hunger)
+    sorted_recent = sorted(recent_nums)
+    for i in range(len(sorted_recent) - 1):
+        gap = sorted_recent[i + 1] - sorted_recent[i]
+        if gap == 2:  # Missing one number between
+            missing = sorted_recent[i] + 1
+            if 1 <= missing <= 50:
+                hungry.append(missing)
+    
+    # Find sequence continuations
+    # If 16, 17, 18 present → 19 is the continuation
+    for n in sorted_recent:
+        # Check if n-1 and n-2 are present (counting UP)
+        if (n - 1) in recent_nums and (n - 2) in recent_nums:
+            next_in_seq = n + 1
+            if 1 <= next_in_seq <= 50 and next_in_seq not in recent_nums:
+                hungry.append(next_in_seq)
+        # Check if n+1 and n+2 are present (counting DOWN)
+        if (n + 1) in recent_nums and (n + 2) in recent_nums:
+            prev_in_seq = n - 1
+            if 1 <= prev_in_seq <= 50 and prev_in_seq not in recent_nums:
+                hungry.append(prev_in_seq)
+    
+    return list(set(hungry))
+
+
+def pattern_p3_counting_echo(draws: List[Dict]) -> Dict:
+    """
+    🎧 P3 COUNTING PATTERN 🎧
+    
+    P3 has been observed counting: 16→17→18→19
+    Track what P3 is doing and predict its next step!
+    
+    Also detects hidden counting via math:
+    29 - 10 = 19 (hidden 19 in the position)
+    """
+    if len(draws) < 3:
+        return {"next_p3": None, "trend": None, "confidence": 0}
+    
+    # Get P3 values from recent draws
+    p3_values = []
+    for d in draws[:5]:
+        nums = sorted(d['numbers'])
+        if len(nums) >= 3:
+            p3_values.append(nums[2])
+    
+    if len(p3_values) < 3:
+        return {"next_p3": None, "trend": None, "confidence": 0}
+    
+    # Check for counting pattern
+    diffs = [p3_values[i] - p3_values[i+1] for i in range(len(p3_values)-1)]
+    
+    # All +1 or all -1?
+    if all(d == -1 for d in diffs[:3]):  # Counting UP (older → newer)
+        next_p3 = p3_values[0] + 1
+        trend = "UP"
+        confidence = 0.8
+    elif all(d == 1 for d in diffs[:3]):  # Counting DOWN
+        next_p3 = p3_values[0] - 1
+        trend = "DOWN"
+        confidence = 0.8
+    elif all(d == 0 for d in diffs[:2]):  # Repeating
+        next_p3 = p3_values[0]
+        trend = "REPEAT"
+        confidence = 0.5
+    else:
+        # No clear pattern, but return the average neighborhood
+        next_p3 = p3_values[0]
+        trend = "UNCLEAR"
+        confidence = 0.3
+    
+    return {
+        "next_p3": next_p3 if 1 <= next_p3 <= 50 else None,
+        "trend": trend,
+        "confidence": confidence,
+        "recent_p3s": p3_values[:5]
+    }
+
+
+def pattern_group_shift(draws: List[Dict], window: int = 4) -> List[int]:
+    """
+    🎧 GROUP SHIFT TRACKING 🎧
+    
+    Numbers shift in groups: +10, +20, +30 cohorts.
+    If 12-18 appeared, watch for 22-28 (+10) or 42-48 (+30).
+    
+    Example from user: "The numbers shift in groups!"
+    """
+    if not draws or len(draws) < 2:
+        return []
+    
+    candidates = []
+    
+    # Get numbers from the draw BEFORE the most recent
+    # (because we're predicting what comes AFTER current)
+    prev_nums = set(draws[0]['numbers']) if draws else set()
+    
+    # For each number, calculate its +10, +20, +30 shifts
+    for n in prev_nums:
+        for shift in [10, 20, 30]:
+            shifted = n + shift
+            if 1 <= shifted <= 50 and shifted not in prev_nums:
+                candidates.append(shifted)
+            # Also consider negative shifts
+            shifted_neg = n - shift
+            if 1 <= shifted_neg <= 50 and shifted_neg not in prev_nums:
+                candidates.append(shifted_neg)
+    
+    return list(set(candidates))
+
+
+def pattern_reverse_dance(draws: List[Dict]) -> List[int]:
+    """
+    🎧 REVERSE DANCE PATTERN 🎧
+    
+    Numbers dance with their reverses!
+    72 → 27, 47 echoes from 74, etc.
+    
+    When X appears, reverse(X) is calling!
+    """
+    if not draws:
+        return []
+    
+    candidates = []
+    prev_nums = draws[0]['numbers']
+    
+    for n in prev_nums:
+        if n >= 10:
+            rev = int(str(n)[::-1])
+            # Handle > 50 cases
+            if rev > 50:
+                rev = rev - 50 if rev <= 100 else rev % 50
+                if rev == 0:
+                    rev = 50
+            if 1 <= rev <= 50 and rev not in prev_nums:
+                candidates.append(rev)
+    
+    return candidates
+
+
 def pattern_p1_alarm(draws: List[Dict]) -> bool:
     """
     Check if P1 is counting up (3→4→5)
@@ -716,6 +982,60 @@ def dj_generate_candidates(draws: List[Dict], target_date: str = None) -> Dict:
             for pos in range(2, 5):  # P3-P5
                 candidates[pos].extend(star_month_nums * 6)
             patterns_used.append(f"⭐×📅 Star × Month: {star_month_nums}")
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # 🎧 DEEP DATE EXPANSION - User's April 2026 Discovery! 🎧
+        # D×10 + M/circle(M) = X → reverse/circle derivatives
+        # ═══════════════════════════════════════════════════════════════════
+        deep_date_result = pattern_deep_date_expansion(target_date)
+        deep_candidates = deep_date_result.get("candidates", [])
+        if deep_candidates:
+            # Heavy weight - this pattern hit 19 AND 49 on April 7th!
+            for pos in range(5):
+                candidates[pos].extend(deep_candidates * 12)
+            patterns_used.append(f"🎧 DEEP DATE: D×10+M/circle(M) → {deep_candidates[:5]}")
+            for exp in deep_date_result.get("explanations", [])[:3]:
+                patterns_used.append(f"   ↳ {exp}")
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # 🎧 NEW ESOTERIC PATTERNS - The Deep Music! 🎧
+    # ═══════════════════════════════════════════════════════════════════
+    
+    # Sequence Hunger Tracker - Missing numbers from consecutive sequences
+    hungry_sequences = pattern_sequence_hunger(draws, window=4)
+    if hungry_sequences:
+        for h in hungry_sequences:
+            for pos in range(5):
+                candidates[pos].extend([h] * 10)  # High weight - hungry numbers want to appear!
+        patterns_used.append(f"🍽️ SEQUENCE HUNGER: {hungry_sequences[:5]}")
+    
+    # P3 Counting Echo - P3 has been counting!
+    p3_echo = pattern_p3_counting_echo(draws)
+    if p3_echo.get("next_p3") and p3_echo.get("confidence", 0) >= 0.5:
+        next_p3 = p3_echo["next_p3"]
+        candidates[2].extend([next_p3] * 15)  # Strong weight at P3
+        # Also add ±1 neighbors
+        if next_p3 > 1:
+            candidates[2].extend([next_p3 - 1] * 5)
+        if next_p3 < 50:
+            candidates[2].extend([next_p3 + 1] * 5)
+        patterns_used.append(f"📈 P3 COUNTING: trend={p3_echo['trend']}, next≈{next_p3}")
+    
+    # Group Shift Tracking - Numbers shift in +10/+20/+30 cohorts
+    shifted_nums = pattern_group_shift(draws, window=4)
+    if shifted_nums:
+        for s in shifted_nums[:10]:  # Top 10 shift candidates
+            for pos in range(5):
+                candidates[pos].extend([s] * 4)
+        patterns_used.append(f"↔️ GROUP SHIFT: {shifted_nums[:5]}")
+    
+    # Reverse Dance - Numbers dance with their reverses
+    reverse_dancers = pattern_reverse_dance(draws)
+    if reverse_dancers:
+        for r in reverse_dancers:
+            for pos in range(5):
+                candidates[pos].extend([r] * 6)
+        patterns_used.append(f"🔄 REVERSE DANCE: {reverse_dancers}")
     
     # ═══════════════════════════════════════════════════════════════════
     # RARE BUT PRESENT (<12%) - Subtle notes 🎹
