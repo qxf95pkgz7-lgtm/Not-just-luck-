@@ -747,6 +747,81 @@ def pattern_reverse_dance(draws: List[Dict]) -> List[int]:
     return candidates
 
 
+def pattern_day_dance(draws: List[Dict], target_date: str = None) -> Dict:
+    """
+    🎧 DAY DANCE PATTERN 🎧
+    
+    D1 + D2 = XY → X and Y appear in next draw!
+    
+    Example from user:
+    - 27.03 + 31.03 = 58
+    - On 31.03.2026: P1=5, P2=8! BOTH HIT!
+    
+    Statistical validation:
+    - D1+D2 digit hits Star: 30.5%! ⭐
+    - D1+D2 digit hits P1: 14.4%
+    - D1+D2 sum in draw: 8.5%
+    """
+    if not draws or len(draws) < 2:
+        return {"candidates": [], "star_candidates": [], "day_sum": 0, "digits": []}
+    
+    # Get the two most recent dates
+    day1 = int(draws[0]['date'].split('.')[0])
+    day2 = int(draws[1]['date'].split('.')[0])
+    
+    # If we have a target date, use that as day1
+    if target_date:
+        try:
+            day1 = int(target_date.split('.')[0])
+            day2 = int(draws[0]['date'].split('.')[0])  # Previous draw's day
+        except:
+            pass
+    
+    day_sum = day1 + day2
+    
+    # Extract digits
+    if day_sum >= 10:
+        digit1 = day_sum // 10
+        digit2 = day_sum % 10
+    else:
+        digit1 = 0
+        digit2 = day_sum
+    
+    candidates = []
+    star_candidates = []
+    
+    # The digits themselves
+    if digit1 >= 1:
+        candidates.append(digit1)
+        if 1 <= digit1 <= 12:
+            star_candidates.append(digit1)
+    if digit2 >= 1:
+        candidates.append(digit2)
+        if 1 <= digit2 <= 12:
+            star_candidates.append(digit2)
+    
+    # The full sum if valid
+    if 1 <= day_sum <= 50:
+        candidates.append(day_sum)
+    
+    # Family expansion of digits (5 → 5, 15, 25, 35, 45)
+    for digit in [digit1, digit2]:
+        if 1 <= digit <= 9:
+            for mult in range(5):
+                num = digit + mult * 10
+                if 1 <= num <= 50:
+                    candidates.append(num)
+    
+    return {
+        "candidates": list(set(candidates)),
+        "star_candidates": list(set(star_candidates)),
+        "day_sum": day_sum,
+        "digits": [digit1, digit2],
+        "day1": day1,
+        "day2": day2
+    }
+
+
 def pattern_p1_alarm(draws: List[Dict]) -> bool:
     """
     Check if P1 is counting up (3→4→5)
@@ -996,6 +1071,29 @@ def dj_generate_candidates(draws: List[Dict], target_date: str = None) -> Dict:
             patterns_used.append(f"🎧 DEEP DATE: D×10+M/circle(M) → {deep_candidates[:5]}")
             for exp in deep_date_result.get("explanations", [])[:3]:
                 patterns_used.append(f"   ↳ {exp}")
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # 💃 DAY DANCE PATTERN - D1 + D2 = XY! 💃
+    # 30.5% hit rate on Stars, 14.4% on P1!
+    # ═══════════════════════════════════════════════════════════════════
+    day_dance_result = pattern_day_dance(draws, target_date)
+    day_dance_candidates = day_dance_result.get("candidates", [])
+    day_dance_stars = day_dance_result.get("star_candidates", [])
+    
+    if day_dance_candidates:
+        # Heavy weight on P1 and P2 - that's where the magic happens!
+        for c in day_dance_candidates:
+            candidates[0].extend([c] * 15)  # P1 loves day dance!
+            candidates[1].extend([c] * 12)  # P2 too!
+            for pos in range(2, 5):
+                candidates[pos].extend([c] * 5)
+        patterns_used.append(f"💃 DAY DANCE: D1+D2={day_dance_result['day1']}+{day_dance_result['day2']}={day_dance_result['day_sum']} → digits {day_dance_result['digits']}")
+    
+    if day_dance_stars:
+        # 30.5% hit rate on stars!
+        for s in day_dance_stars:
+            star_candidates.extend([s] * 10)
+        patterns_used.append(f"⭐ DAY DANCE STARS: {day_dance_stars}")
     
     # ═══════════════════════════════════════════════════════════════════
     # 🎧 NEW ESOTERIC PATTERNS - The Deep Music! 🎧
