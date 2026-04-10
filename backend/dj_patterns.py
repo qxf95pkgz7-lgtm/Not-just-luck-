@@ -1279,6 +1279,147 @@ def dj_generate_candidates(draws: List[Dict], target_date: str = None) -> Dict:
     }
 
 
+def pattern_p2_prince(target_date: str, prev_draw: Dict, prev2_draw: Dict = None) -> Dict:
+    """
+    👑 P2 PRINCE PATTERN - The music that predicts P2! 👑
+    
+    TOP P2 GENERATORS (backtested hit rates):
+    1. prev P2 + 1 = P2 (6.0%)
+    2. prev P3 last digit + 10 = P2 (6.0%)
+    3. Day direct = P2 (4.7%)
+    4. prev P2 + Day digit = P2 (4.7%)
+    5. Day - Month = P2 (4.2%)
+    6. D1+D2 last digit family = P2 (4.0%)
+    7. prev P2 echo = P2 (4.0%)
+    8. prev S2 + prev P1 = P2 (4.0%)
+    
+    P2 typically ranges from 8-25 (average ~18)
+    """
+    candidates = []
+    explanations = []
+    
+    # Parse dates
+    day = int(target_date.split('.')[0])
+    month = int(target_date.split('.')[1])
+    
+    prev_nums = sorted(prev_draw['numbers'])
+    prev_p1, prev_p2, prev_p3 = prev_nums[0], prev_nums[1], prev_nums[2]
+    prev_stars = sorted(prev_draw['stars'])
+    prev_s1, prev_s2 = prev_stars[0], prev_stars[1]
+    
+    prev_day = int(prev_draw['date'].split('.')[0])
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # 🥇 #1: PREV P2 + 1 (6.0% hit rate!)
+    # ═══════════════════════════════════════════════════════════════════════
+    p2_plus1 = prev_p2 + 1
+    if 5 <= p2_plus1 <= 35:  # P2 range
+        candidates.append((p2_plus1, 50, f"P2+1: {prev_p2}+1={p2_plus1}"))
+        explanations.append(f"👑 P2+1: {prev_p2}+1={p2_plus1} (6.0%)")
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # 🥇 #2: PREV P3 LAST DIGIT + 10 (6.0% hit rate!)
+    # ═══════════════════════════════════════════════════════════════════════
+    p3_last = prev_p3 % 10
+    if p3_last > 0:
+        p3_family_10 = p3_last + 10
+        p3_family_20 = p3_last + 20
+        if 5 <= p3_family_10 <= 35:
+            candidates.append((p3_family_10, 50, f"P3 last+10: {prev_p3}→{p3_last}+10={p3_family_10}"))
+        if 5 <= p3_family_20 <= 35:
+            candidates.append((p3_family_20, 45, f"P3 last+20: {prev_p3}→{p3_last}+20={p3_family_20}"))
+        explanations.append(f"👑 P3 digit: {prev_p3}→{p3_last} +10/20 (6.0%)")
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # 🥉 #3: DAY DIRECT (4.7% hit rate!)
+    # ═══════════════════════════════════════════════════════════════════════
+    if 5 <= day <= 31:
+        candidates.append((day, 40, f"Day direct: {day}"))
+        explanations.append(f"👑 Day direct: {day} (4.7%)")
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # #4: PREV P2 + DAY DIGIT (4.7% hit rate!)
+    # ═══════════════════════════════════════════════════════════════════════
+    day_digit = int(str(day)[0])
+    p2_day_digit = prev_p2 + day_digit
+    if 5 <= p2_day_digit <= 35:
+        candidates.append((p2_day_digit, 40, f"P2+digit(D): {prev_p2}+{day_digit}={p2_day_digit}"))
+        explanations.append(f"👑 P2+digit: {prev_p2}+{day_digit}={p2_day_digit} (4.7%)")
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # #5: DAY - MONTH (4.2% hit rate!)
+    # ═══════════════════════════════════════════════════════════════════════
+    if day > month:
+        dm_diff = day - month
+        if 5 <= dm_diff <= 35:
+            candidates.append((dm_diff, 38, f"D-M: {day}-{month}={dm_diff}"))
+            explanations.append(f"👑 D-M: {day}-{month}={dm_diff} (4.2%)")
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # #6: D1+D2 LAST DIGIT FAMILY (4.0% hit rate!)
+    # ═══════════════════════════════════════════════════════════════════════
+    d_sum = day + prev_day
+    d_last = d_sum % 10
+    if d_last > 0:
+        d_family_10 = d_last + 10
+        d_family_20 = d_last + 20
+        if 5 <= d_family_10 <= 35:
+            candidates.append((d_family_10, 35, f"D1+D2 last+10: {d_sum}→{d_last}+10={d_family_10}"))
+        if 5 <= d_family_20 <= 35:
+            candidates.append((d_family_20, 32, f"D1+D2 last+20: {d_sum}→{d_last}+20={d_family_20}"))
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # #7: PREV P2 ECHO (4.0% hit rate!)
+    # ═══════════════════════════════════════════════════════════════════════
+    if 5 <= prev_p2 <= 35:
+        candidates.append((prev_p2, 35, f"P2 echo: {prev_p2}"))
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # #8: PREV S2 + PREV P1 (4.0% hit rate!)
+    # ═══════════════════════════════════════════════════════════════════════
+    s2_p1 = prev_s2 + prev_p1
+    if 5 <= s2_p1 <= 35:
+        candidates.append((s2_p1, 35, f"S2+P1: {prev_s2}+{prev_p1}={s2_p1}"))
+        explanations.append(f"👑 S2+P1: {prev_s2}+{prev_p1}={s2_p1} (4.0%)")
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # #9: PREV P2 - 1 (3.4% hit rate!)
+    # ═══════════════════════════════════════════════════════════════════════
+    p2_minus1 = prev_p2 - 1
+    if 5 <= p2_minus1 <= 35:
+        candidates.append((p2_minus1, 30, f"P2-1: {prev_p2}-1={p2_minus1}"))
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # #10: DAY + PREV P1 (3.4% hit rate!)
+    # ═══════════════════════════════════════════════════════════════════════
+    day_p1 = day + prev_p1
+    if 5 <= day_p1 <= 35:
+        candidates.append((day_p1, 30, f"Day+P1: {day}+{prev_p1}={day_p1}"))
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # #11: MONTH + PREV P2 (3.4% hit rate!)
+    # ═══════════════════════════════════════════════════════════════════════
+    month_p2 = month + prev_p2
+    if 5 <= month_p2 <= 35:
+        candidates.append((month_p2, 30, f"M+P2: {month}+{prev_p2}={month_p2}"))
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # #12: (S1+S2) + DAY DIGIT (3.4% hit rate!)
+    # ═══════════════════════════════════════════════════════════════════════
+    s_sum_day = prev_s1 + prev_s2 + day_digit
+    if 5 <= s_sum_day <= 35:
+        candidates.append((s_sum_day, 28, f"(S1+S2)+digit: {prev_s1}+{prev_s2}+{day_digit}={s_sum_day}"))
+    
+    # Determine top P2 candidate
+    top_p2 = p2_plus1 if 5 <= p2_plus1 <= 35 else (p3_family_10 if p3_last > 0 and 5 <= p3_family_10 <= 35 else day)
+    
+    return {
+        'candidates': candidates,
+        'explanations': explanations,
+        'top_p2': top_p2
+    }
+
+
 def pattern_p1_king(target_date: str, prev_draw: Dict, prev2_draw: Dict = None) -> Dict:
     """
     👑 P1 KING PATTERN - The music that predicts P1! 👑
@@ -1392,15 +1533,18 @@ def pattern_p1_king(target_date: str, prev_draw: Dict, prev2_draw: Dict = None) 
     }
 
 
-def dj_select_numbers(candidates: Dict, star_candidates: List[int], locked: Dict = None, date_day: int = None, p1_king_candidates: List = None) -> Dict:
+def dj_select_numbers(candidates: Dict, star_candidates: List[int], locked: Dict = None, date_day: int = None, p1_king_candidates: List = None, p2_prince_candidates: List = None) -> Dict:
     """
     🎧 Select final numbers from weighted candidates
     👑 P1 KING: Uses special P1 prediction patterns!
+    👑 P2 PRINCE: Uses special P2 prediction patterns!
     date_day: If provided, has 30% chance to force this number at P1
     p1_king_candidates: Special P1 candidates from pattern_p1_king
+    p2_prince_candidates: Special P2 candidates from pattern_p2_prince
     """
     locked = locked or {}
     p1_king_candidates = p1_king_candidates or []
+    p2_prince_candidates = p2_prince_candidates or []
     
     selected = []
     used = set()
@@ -1432,11 +1576,36 @@ def dj_select_numbers(candidates: Dict, star_candidates: List[int], locked: Dict
             used.add(date_day)
         else:
             selected.append(None)
+    else:
+        selected.append(None)
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # 👑 P2 PRINCE SELECTION - The music predicts P2!
+    # ═══════════════════════════════════════════════════════════════════════
+    if 1 not in locked and p2_prince_candidates:
+        # Build weighted pool from P2 Prince candidates
+        p2_pool = []
+        for num, weight, reason in p2_prince_candidates:
+            if 5 <= num <= 35 and num not in used:  # P2 typical range
+                p2_pool.extend([num] * weight)
+        
+        if p2_pool:
+            # 55% chance to use P2 Prince prediction
+            if rnd.random() < 0.55:
+                p2_choice = rnd.choice(p2_pool)
+                selected.append(p2_choice)
+                used.add(p2_choice)
+            else:
+                selected.append(None)  # Will be filled from regular candidates
+        else:
+            selected.append(None)
+    else:
+        selected.append(None)
     
     # Select for each position
     for pos in range(5):
         if pos < len(selected) and selected[pos] is not None:
-            continue  # Already selected (P1 King or date forced)
+            continue  # Already selected (P1 King or P2 Prince)
             
         if pos in locked:
             if pos < len(selected):
@@ -1485,24 +1654,33 @@ def dj_select_numbers(candidates: Dict, star_candidates: List[int], locked: Dict
 def dj_generate_ticket(draws: List[Dict], target_date: str = None, locked: Dict = None) -> Dict:
     """
     🎧 Generate a single ticket using the DJ engine
-    👑 Now with P1 KING pattern for better P1 prediction!
+    👑 Now with P1 KING and P2 PRINCE patterns!
     """
     result = dj_generate_candidates(draws, target_date)
     
-    # Extract date day for special P1 handling
+    # Extract date day for special handling
     date_day = None
     p1_king_result = None
+    p2_prince_result = None
     p1_king_candidates = []
+    p2_prince_candidates = []
     
     if target_date and draws:
         try:
             date_day = int(target_date.split('.')[0])
+            
             # 👑 P1 KING - Get special P1 predictions!
             p1_king_result = pattern_p1_king(target_date, draws[0], draws[1] if len(draws) > 1 else None)
             p1_king_candidates = p1_king_result.get('candidates', [])
             
-            # Add P1 King explanations to patterns
+            # 👑 P2 PRINCE - Get special P2 predictions!
+            p2_prince_result = pattern_p2_prince(target_date, draws[0], draws[1] if len(draws) > 1 else None)
+            p2_prince_candidates = p2_prince_result.get('candidates', [])
+            
+            # Add P1 King and P2 Prince explanations to patterns
             for exp in p1_king_result.get('explanations', []):
+                result["patterns"].insert(0, exp)
+            for exp in p2_prince_result.get('explanations', []):
                 result["patterns"].insert(0, exp)
         except:
             pass
@@ -1512,7 +1690,8 @@ def dj_generate_ticket(draws: List[Dict], target_date: str = None, locked: Dict 
         result["star_candidates"], 
         locked, 
         date_day,
-        p1_king_candidates
+        p1_king_candidates,
+        p2_prince_candidates
     )
     
     return {
@@ -1520,6 +1699,7 @@ def dj_generate_ticket(draws: List[Dict], target_date: str = None, locked: Dict 
         "stars": selection["stars"],
         "patterns_used": result["patterns"],
         "p1_king": p1_king_result,
+        "p2_prince": p2_prince_result,
         "prev_draw": {
             "numbers": result["prev_nums"],
             "stars": result["prev_stars"]
