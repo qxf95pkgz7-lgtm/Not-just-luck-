@@ -1207,6 +1207,83 @@ def dj_generate_candidates(draws: List[Dict], target_date: str = None) -> Dict:
         patterns_used.append(f"🔄 REVERSE DANCE: {reverse_dancers}")
     
     # ═══════════════════════════════════════════════════════════════════
+    # 🎵 NEW DJ SESSION PATTERNS - April 2026 Discoveries! 🎵
+    # P1-1, P2-6, Circle P3, Twin Bridges, Chain Patterns
+    # ═══════════════════════════════════════════════════════════════════
+    
+    # P1-1 Pattern (8.5% hit rate!)
+    p1m1_result = pattern_p1_minus_1(prev_draw)
+    if p1m1_result['candidate']:
+        c = p1m1_result['candidate']
+        w = p1m1_result['weight']
+        for pos in range(5):
+            candidates[pos].extend([c] * (w // 10))
+        patterns_used.append(p1m1_result['explanation'])
+    
+    # P2-6 Pattern (8.1% hit rate!)
+    p2m6_result = pattern_p2_minus_6(prev_draw)
+    if p2m6_result['candidate']:
+        c = p2m6_result['candidate']
+        w = p2m6_result['weight']
+        for pos in range(5):
+            candidates[pos].extend([c] * (w // 10))
+        patterns_used.append(p2m6_result['explanation'])
+    
+    # Circle P3 Pattern (10.2% hit rate!)
+    cp3_result = pattern_circle_p3(prev_draw)
+    if cp3_result['candidate']:
+        c = cp3_result['candidate']
+        ds = cp3_result['digit_sum']
+        w = cp3_result['weight']
+        for pos in range(5):
+            candidates[pos].extend([c] * (w // 10))
+            if 1 <= ds <= 50:
+                candidates[pos].extend([ds] * 4)  # Digit sum also good
+        patterns_used.append(cp3_result['explanation'])
+    
+    # Twin Bridges Pattern (up to 22.4% for ±2 twins!)
+    twins_result = pattern_twin_bridges(prev_draw)
+    for num, weight, reason in twins_result['candidates']:
+        if 1 <= num <= 50:
+            for pos in range(5):
+                candidates[pos].extend([num] * (weight // 10))
+    for exp in twins_result['explanations'][:3]:
+        patterns_used.append(exp)
+    
+    # Consecutive Trio → Minus Digit Pattern (50% when trio found!)
+    trio_result = pattern_consecutive_trio_minus_digit(prev_draw)
+    if trio_result['prediction']:
+        pred = trio_result['prediction']
+        w = trio_result['weight']
+        # Heavy weight - this is a powerful pattern!
+        for pos in range(5):
+            candidates[pos].extend([pred] * (w // 5))
+        patterns_used.append(trio_result['explanation'])
+    
+    # Circle Bridge 35 Pattern (multiple predictions!)
+    if prev2_draw:
+        bridge_result = pattern_circle_bridge_35(prev_draw, prev2_draw)
+        for num, weight, reason in bridge_result['candidates']:
+            if 1 <= num <= 50:
+                for pos in range(5):
+                    candidates[pos].extend([num] * (weight // 10))
+        for exp in bridge_result['explanations'][:2]:
+            patterns_used.append(exp)
+    
+    # The Chain: 22-28-15-40-29 (static chain numbers call each other)
+    chain_result = pattern_p2_chain_22_28_15_40_29()
+    chain_nums = chain_result['chain']
+    # If any chain number is in previous draw, boost the others
+    for num in prev_nums:
+        if num in chain_nums:
+            for c in chain_nums:
+                if c != num and 1 <= c <= 50:
+                    for pos in range(5):
+                        candidates[pos].extend([c] * 3)
+            patterns_used.append(f"🔗 CHAIN ACTIVE: {num} calls {[c for c in chain_nums if c != num]}")
+            break
+    
+    # ═══════════════════════════════════════════════════════════════════
     # RARE BUT PRESENT (<12%) - Subtle notes 🎹
     # ═══════════════════════════════════════════════════════════════════
     
@@ -1417,6 +1494,228 @@ def pattern_p2_prince(target_date: str, prev_draw: Dict, prev2_draw: Dict = None
         'candidates': candidates,
         'explanations': explanations,
         'top_p2': top_p2
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 🎧 NEW PATTERNS FROM THE DJ SESSION - April 2026 🎻
+# P1-1, P2-6, Circle P3, Twin Bridges, Chain Patterns
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def pattern_p1_minus_1(prev_draw: Dict) -> Dict:
+    """
+    🎵 P1-1 PATTERN - 8.5% hit rate!
+    Previous P1 minus 1 appears in next draw.
+    """
+    prev_nums = sorted(prev_draw['numbers'])
+    p1 = prev_nums[0]
+    p1_minus_1 = p1 - 1
+    
+    if 1 <= p1_minus_1 <= 50:
+        return {
+            'candidate': p1_minus_1,
+            'weight': 40,
+            'explanation': f"🎵 P1-1: {p1}-1={p1_minus_1} (8.5%)"
+        }
+    return {'candidate': None, 'weight': 0, 'explanation': ''}
+
+
+def pattern_p2_minus_6(prev_draw: Dict) -> Dict:
+    """
+    🎵 P2-6 PATTERN - 8.1% hit rate!
+    Previous P2 minus 6 appears in next draw.
+    Example: 24.03 P2=16 → 16-6=10 → 10 appears on 27.03!
+    """
+    prev_nums = sorted(prev_draw['numbers'])
+    p2 = prev_nums[1]
+    p2_minus_6 = p2 - 6
+    
+    if 1 <= p2_minus_6 <= 50:
+        return {
+            'candidate': p2_minus_6,
+            'weight': 40,
+            'explanation': f"🎵 P2-6: {p2}-6={p2_minus_6} (8.1%)"
+        }
+    return {'candidate': None, 'weight': 0, 'explanation': ''}
+
+
+def pattern_circle_p3(prev_draw: Dict) -> Dict:
+    """
+    🎵 CIRCLE P3 PATTERN - 10.2% hit rate!
+    Circle of P3 appears in next draw.
+    """
+    prev_nums = sorted(prev_draw['numbers'])
+    p3 = prev_nums[2]
+    circle_p3 = p3 + 25 if p3 <= 25 else p3 - 25
+    
+    # Also get digit sum of circle
+    digit_sum = sum(int(d) for d in str(circle_p3))
+    
+    return {
+        'candidate': circle_p3,
+        'digit_sum': digit_sum,
+        'weight': 45,
+        'explanation': f"🎵 circle(P3): circle({p3})={circle_p3}, digits={digit_sum} (10.2%)"
+    }
+
+
+def pattern_twin_bridges(prev_draw: Dict) -> Dict:
+    """
+    🎵 TWIN BRIDGE PATTERNS 🎵
+    
+    Discovered pairs that call each other:
+    - 12 ↔ 13: consecutive twins (7.4%)
+    - 26 ↔ 31: +5 twins (13.9%)
+    - 22 ↔ 28: +6 twins (8.6%)
+    - 15 ↔ 40: CIRCLE TWINS! circle(15)=40 (2.4%)
+    - 14 ↔ 16: ±2 twins (22.4%)
+    """
+    prev_nums = sorted(prev_draw['numbers'])
+    candidates = []
+    explanations = []
+    
+    # Define twin pairs and their weights
+    twin_pairs = {
+        12: [(13, 35, "+1 twin")],
+        13: [(12, 35, "-1 twin")],
+        26: [(31, 50, "+5 twin")],
+        31: [(26, 50, "-5 twin")],
+        22: [(28, 40, "+6 twin")],
+        28: [(22, 40, "-6 twin")],
+        15: [(40, 30, "circle twin")],
+        40: [(15, 30, "circle twin")],
+    }
+    
+    # ±2 twins for any P2 (22.4% hit rate!)
+    p2 = prev_nums[1]
+    if p2 + 2 <= 50:
+        candidates.append((p2 + 2, 55, f"P2+2 twin: {p2}+2={p2+2}"))
+    if p2 - 2 >= 1:
+        candidates.append((p2 - 2, 55, f"P2-2 twin: {p2}-2={p2-2}"))
+    explanations.append(f"🎵 ±2 Twin: P2={p2} → {p2-2}, {p2+2} (22.4%)")
+    
+    # Check if any twin pairs are in previous draw
+    for num in prev_nums:
+        if num in twin_pairs:
+            for twin, weight, desc in twin_pairs[num]:
+                candidates.append((twin, weight, f"{num}→{twin} ({desc})"))
+                explanations.append(f"🎵 Twin Bridge: {num}→{twin} ({desc})")
+    
+    return {
+        'candidates': candidates,
+        'explanations': explanations
+    }
+
+
+def pattern_consecutive_trio_minus_digit(prev_draw: Dict) -> Dict:
+    """
+    🔥 CONSECUTIVE TRIO → MINUS DIGIT PATTERN 🔥
+    
+    When 3 consecutive numbers appear (16-17-18):
+    - 16-6=10, 17-7=10, 18-8=10 → ALL = 10!
+    - That 10 appears in next draw!
+    
+    50% hit rate when trio found!
+    """
+    prev_nums = sorted(prev_draw['numbers'])
+    
+    # Find consecutive trio
+    for i in range(len(prev_nums) - 2):
+        if prev_nums[i+1] == prev_nums[i] + 1 and prev_nums[i+2] == prev_nums[i] + 2:
+            trio = (prev_nums[i], prev_nums[i+1], prev_nums[i+2])
+            
+            # Calculate minus-digit value
+            # 16-6=10, 17-7=10, 18-8=10 → all point to same!
+            first = trio[0]
+            minus_digit = first - (first % 10) if first >= 10 else first
+            if minus_digit == 0:
+                minus_digit = 10
+            
+            return {
+                'trio': trio,
+                'prediction': minus_digit,
+                'weight': 60,
+                'explanation': f"🔥 TRIO {trio} → all minus digit = {minus_digit} (50%!)"
+            }
+    
+    return {'trio': None, 'prediction': None, 'weight': 0, 'explanation': ''}
+
+
+def pattern_circle_bridge_35(prev_draw: Dict, prev2_draw: Dict = None) -> Dict:
+    """
+    🔥 THE 35 CIRCLE BRIDGE PATTERN 🔥
+    
+    When 10 appears:
+    - circle(10) = 35 (THE MASTER KEY!)
+    - 35 - 27 = 8 (8 appears next!)
+    - 35 - 8 = 27 (27 appears after!)
+    - 3 + 5 = 8 (digit sum also works!)
+    
+    The 35 PREDICTS MULTIPLE draws ahead!
+    """
+    prev_nums = sorted(prev_draw['numbers'])
+    candidates = []
+    explanations = []
+    
+    for num in prev_nums:
+        circle_num = num + 25 if num <= 25 else num - 25
+        
+        # If circle is around 35 range
+        if 30 <= circle_num <= 40:
+            # Digit sum
+            digit_sum = sum(int(d) for d in str(circle_num))
+            if 1 <= digit_sum <= 50:
+                candidates.append((digit_sum, 45, f"circle({num})={circle_num} → digits={digit_sum}"))
+            
+            # Minus 27 (the traveler)
+            minus_27 = circle_num - 27
+            if 1 <= minus_27 <= 50:
+                candidates.append((minus_27, 40, f"circle({num})={circle_num} - 27 = {minus_27}"))
+            
+            # Minus 25 (circle back)
+            minus_25 = circle_num - 25
+            if 1 <= minus_25 <= 50:
+                candidates.append((minus_25, 35, f"circle({num})={circle_num} - 25 = {minus_25}"))
+            
+            explanations.append(f"🔥 Circle Bridge: {num}→{circle_num} (Master Key!)")
+    
+    # Special case: if prev P2 and this creates a chain
+    prev_p2 = prev_nums[1]
+    if prev2_draw:
+        prev2_nums = sorted(prev2_draw['numbers'])
+        prev2_p2 = prev2_nums[1]
+        
+        # Check if we can do: circle(prev2_P2) - prev_P2 = next candidate
+        circle_prev2_p2 = prev2_p2 + 25 if prev2_p2 <= 25 else prev2_p2 - 25
+        chain_pred = abs(circle_prev2_p2 - prev_p2)
+        if 1 <= chain_pred <= 50:
+            candidates.append((chain_pred, 35, f"Chain: circle({prev2_p2})-{prev_p2}={chain_pred}"))
+    
+    return {
+        'candidates': candidates,
+        'explanations': explanations
+    }
+
+
+def pattern_p2_chain_22_28_15_40_29() -> Dict:
+    """
+    🎵 THE CHAIN: 22 → 28 → 15 → 40 → 29 🎵
+    
+    Discovered chain pattern:
+    - 22 + 6 = 28 ✅
+    - 28 - 13 = 15 ✅
+    - 15 + 25 = 40 (CIRCLE!) ✅
+    - 40 - 11 = 29 ✅
+    
+    15 and 40 are CIRCLE TWINS!
+    """
+    # This is a static chain - these numbers call each other
+    chain = [22, 28, 15, 40, 29]
+    
+    return {
+        'chain': chain,
+        'circle_twins': [(15, 40), (40, 15)],
+        'explanation': "🎵 The Chain: 22↔28↔15↔40↔29"
     }
 
 
