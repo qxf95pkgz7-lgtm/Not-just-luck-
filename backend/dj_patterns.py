@@ -1326,11 +1326,13 @@ def dj_generate_candidates(draws: List[Dict], target_date: str = None) -> Dict:
     # STAR CANDIDATES
     # ═══════════════════════════════════════════════════════════════════
     
-    # S1 Repeat - 16.8%
-    star_candidates.extend([prev_stars[0]] * WEIGHTS["s1_repeat"])
+    # S1 Repeat - 16.8% 🔥 BOOSTED!
+    star_candidates.extend([prev_stars[0]] * 6)  # Was WEIGHTS["s1_repeat"], now boosted
+    patterns_used.append(f"⭐ S1 ECHO: {prev_stars[0]} (16.8%)")
     
-    # S2 Repeat - 17.1%
-    star_candidates.extend([prev_stars[1]] * WEIGHTS["s2_repeat"])
+    # S2 Repeat - 18.1% 🔥🔥 STRONGEST STAR PATTERN!
+    star_candidates.extend([prev_stars[1]] * 7)  # Was WEIGHTS["s2_repeat"], now boosted more
+    patterns_used.append(f"⭐ S2 ECHO: {prev_stars[1]} (18.1%)")
     
     # ═══════════════════════════════════════════════════════════════════
     # 🔥 NEW STAR PATTERNS (September 2025 Session) 🔥
@@ -1393,6 +1395,53 @@ def dj_generate_candidates(draws: List[Dict], target_date: str = None) -> Dict:
     # Add variety
     for s in range(1, 13):
         star_candidates.append(s)  # Base variety
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # 🔥 TUNED PATTERNS - May 2025 Session (09.05.2025 Analysis) 🔥
+    # P2 Family, P5 Echo, P4 Family, P3+1, Day=Star
+    # ═══════════════════════════════════════════════════════════════════
+    
+    # P2 MINUS FAMILY (P2-3, P2-4, P2-5) - 8-9% each!
+    p2_family = pattern_p2_minus_family(prev_draw)
+    for num, weight, reason in p2_family.get('candidates', []):
+        if 1 <= num <= 50:
+            for pos in range(5):
+                candidates[pos].extend([num] * (weight // 10))
+    for exp in p2_family.get('explanations', []):
+        patterns_used.append(exp)
+    
+    # P5 ECHO & P5-1 (14.8% and 11.4%) - STRONG!
+    p5_result = pattern_p5_echo_and_minus(prev_draw)
+    for num, weight, reason in p5_result.get('candidates', []):
+        if 1 <= num <= 50:
+            for pos in range(5):
+                candidates[pos].extend([num] * (weight // 10))
+    for exp in p5_result.get('explanations', []):
+        patterns_used.append(exp)
+    
+    # P4 ECHO & FAMILY (P4-1, P4+1) - 8-10%!
+    p4_result = pattern_p4_echo_and_family(prev_draw)
+    for num, weight, reason in p4_result.get('candidates', []):
+        if 1 <= num <= 50:
+            for pos in range(5):
+                candidates[pos].extend([num] * (weight // 10))
+    for exp in p4_result.get('explanations', []):
+        patterns_used.append(exp)
+    
+    # P3 + 1 (9.4%)
+    p3_p1_result = pattern_p3_plus_1(prev_draw)
+    if p3_p1_result.get('candidate'):
+        c = p3_p1_result['candidate']
+        for pos in range(5):
+            candidates[pos].extend([c] * 4)
+        patterns_used.append(p3_p1_result['explanation'])
+    
+    # Day = Star (17.2%) - VERY STRONG for stars!
+    if target_date:
+        day_star_result = pattern_day_equals_star(target_date)
+        if day_star_result.get('candidate'):
+            star_candidates.extend([day_star_result['candidate']] * 6)
+            patterns_used.append(day_star_result['explanation'])
     
     return {
         "candidates": candidates,
@@ -1871,6 +1920,147 @@ def pattern_day_div_2(target_date: str) -> Dict:
                 'weight': 40,
                 'explanation': f"🎵 D÷2: {day}÷2={d_div} (8.3%)"
             }
+    return {'candidate': None, 'weight': 0, 'explanation': ''}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 🎧 TUNED PATTERNS - May 2025 Session (09.05.2025 Analysis) 🎻
+# P2-5, P5 Echo, P4-1, P5-1, Day=Star, P3+1
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def pattern_p2_minus_family(prev_draw: Dict) -> Dict:
+    """
+    🎵 P2 MINUS FAMILY (P2-3, P2-4, P2-5) - 8-9% hit rate each! 🔥
+    Previous P2 minus 3/4/5 appears in next draw.
+    We already have P2-6 (8.1%), now adding the family!
+    """
+    prev_nums = sorted(prev_draw['numbers'])
+    p2 = prev_nums[1]
+    
+    candidates = []
+    explanations = []
+    
+    # P2 - 5 (8.1%)
+    p2_m5 = p2 - 5
+    if 1 <= p2_m5 <= 50:
+        candidates.append((p2_m5, 40, f"P2-5: {p2}-5={p2_m5}"))
+    
+    # P2 - 4 (9.4%)
+    p2_m4 = p2 - 4
+    if 1 <= p2_m4 <= 50:
+        candidates.append((p2_m4, 42, f"P2-4: {p2}-4={p2_m4}"))
+    
+    # P2 - 3 (8.1%)
+    p2_m3 = p2 - 3
+    if 1 <= p2_m3 <= 50:
+        candidates.append((p2_m3, 40, f"P2-3: {p2}-3={p2_m3}"))
+    
+    if candidates:
+        explanations.append(f"🎵 P2 Family: {p2}-3={p2_m3}, -4={p2_m4}, -5={p2_m5}")
+    
+    return {
+        'candidates': candidates,
+        'explanations': explanations
+    }
+
+
+def pattern_p5_echo_and_minus(prev_draw: Dict) -> Dict:
+    """
+    🔥 P5 ECHO & P5-1 PATTERN 🔥
+    P5 ECHO: 14.8% hit rate! (Previous P5 appears again!)
+    P5 - 1: 11.4% hit rate! (P5 minus 1 appears!)
+    
+    Example: P5=48 → 48 echoes OR 47 appears!
+    """
+    prev_nums = sorted(prev_draw['numbers'])
+    p5 = prev_nums[4]
+    
+    candidates = []
+    explanations = []
+    
+    # P5 ECHO (14.8%) - STRONG!
+    candidates.append((p5, 55, f"P5 ECHO: {p5}"))
+    explanations.append(f"🔥 P5 ECHO: {p5} (14.8%)")
+    
+    # P5 - 1 (11.4%)
+    p5_m1 = p5 - 1
+    if 1 <= p5_m1 <= 50:
+        candidates.append((p5_m1, 48, f"P5-1: {p5}-1={p5_m1}"))
+        explanations.append(f"🔥 P5-1: {p5}-1={p5_m1} (11.4%)")
+    
+    return {
+        'candidates': candidates,
+        'explanations': explanations
+    }
+
+
+def pattern_p4_echo_and_family(prev_draw: Dict) -> Dict:
+    """
+    🎵 P4 ECHO & FAMILY (P4-1, P4+1) 🎵
+    P4 ECHO: 8.1% hit rate!
+    P4 - 1: 10.7% hit rate!
+    P4 + 1: 8.1% hit rate!
+    """
+    prev_nums = sorted(prev_draw['numbers'])
+    p4 = prev_nums[3]
+    
+    candidates = []
+    explanations = []
+    
+    # P4 ECHO (8.1%)
+    candidates.append((p4, 40, f"P4 ECHO: {p4}"))
+    
+    # P4 - 1 (10.7%) - Stronger!
+    p4_m1 = p4 - 1
+    if 1 <= p4_m1 <= 50:
+        candidates.append((p4_m1, 45, f"P4-1: {p4}-1={p4_m1}"))
+    
+    # P4 + 1 (8.1%)
+    p4_p1 = p4 + 1
+    if 1 <= p4_p1 <= 50:
+        candidates.append((p4_p1, 40, f"P4+1: {p4}+1={p4_p1}"))
+    
+    explanations.append(f"🎵 P4 Family: {p4} echo, {p4_m1}, {p4_p1}")
+    
+    return {
+        'candidates': candidates,
+        'explanations': explanations
+    }
+
+
+def pattern_p3_plus_1(prev_draw: Dict) -> Dict:
+    """
+    🎵 P3 + 1 PATTERN (9.4% hit rate!) 🔥
+    Previous P3 plus 1 appears in next draw.
+    Example: P3=24 → 25 appears!
+    """
+    prev_nums = sorted(prev_draw['numbers'])
+    p3 = prev_nums[2]
+    p3_p1 = p3 + 1
+    
+    if 1 <= p3_p1 <= 50:
+        return {
+            'candidate': p3_p1,
+            'weight': 42,
+            'explanation': f"🎵 P3+1: {p3}+1={p3_p1} (9.4%)"
+        }
+    return {'candidate': None, 'weight': 0, 'explanation': ''}
+
+
+def pattern_day_equals_star(target_date: str) -> Dict:
+    """
+    ⭐ DAY = STAR PATTERN (17.2% hit rate!) 🔥🔥
+    When Day ≤ 12, the day number becomes a star!
+    Example: Day 9 → Star 9 appears!
+    """
+    day = int(target_date.split('.')[0])
+    
+    if 1 <= day <= 12:
+        return {
+            'candidate': day,
+            'weight': 60,  # High weight - 17.2%!
+            'explanation': f"⭐ Day=Star: Day {day} → Star {day} (17.2%)"
+        }
     return {'candidate': None, 'weight': 0, 'explanation': ''}
 
 
