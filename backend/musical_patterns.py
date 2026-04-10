@@ -403,7 +403,100 @@ def pattern_chain_14_15_40(prev_numbers: List[int]) -> Dict:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# PATTERN 6: OVERDUE NUMBERS (Gap Hunger!)
+# PATTERN 6: REAL NUMBERS - Quarter Start Pattern!
+# P(x) + days_between = appears in next draw (11% hit rate over 4 years!)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def is_quarter_start(day: int, month: int) -> bool:
+    """Check if this is the first 10 days of a quarter"""
+    quarter_start_months = [1, 4, 7, 10]  # Jan, Apr, Jul, Oct
+    return month in quarter_start_months and day <= 10
+
+
+def pattern_real_numbers(prev_draw: Dict, target_date: str, days_to_next: int = None) -> Dict:
+    """
+    🎯 REAL NUMBERS - The numbers that travel through quarter starts!
+    
+    On first week of quarter (Jan/Apr/Jul/Oct 1-10):
+    REAL_NUMBER = P(x) + days_until_next_draw
+    
+    Priority weights (based on 4 years data, 17 hits):
+    - P2 + days → 🔥 HIGH (8 hits, 47% of all) - THE KING!
+    - P4 + days → ⚡ MEDIUM (4 hits, 24%)
+    - P5 + days → ⚡ MEDIUM (3 hits, 18%)
+    - P1/P3 + days → 📊 LOW (1 hit each, 6%)
+    
+    Day differences:
+    - +3 days → 65% of hits
+    - +4 days → 35% of hits
+    """
+    candidates = {
+        'numbers': [],
+        'stars': [],
+        'is_quarter_start': False,
+        'explanations': []
+    }
+    
+    # Parse target date
+    try:
+        parts = target_date.split('.')
+        day = int(parts[0])
+        month = int(parts[1])
+    except:
+        return candidates
+    
+    # Check if previous draw was from quarter start
+    try:
+        prev_parts = prev_draw['date'].split('.')
+        prev_day = int(prev_parts[0])
+        prev_month = int(prev_parts[1])
+    except:
+        return candidates
+    
+    if not is_quarter_start(prev_day, prev_month):
+        return candidates
+    
+    candidates['is_quarter_start'] = True
+    candidates['explanations'].append(f"🎯 REAL NUMBERS ACTIVE! Prev draw {prev_draw['date']} is quarter-start")
+    
+    prev_numbers = prev_draw['numbers']
+    
+    # Position weights based on 4 years of data
+    # P2 = 8 hits (47%), P4 = 4 hits (24%), P5 = 3 hits (18%), P1/P3 = 1 hit each
+    position_weights = {
+        0: 6.0,   # P1 - LOW
+        1: 47.0,  # P2 - THE KING! 🔥
+        2: 6.0,   # P3 - LOW
+        3: 24.0,  # P4 - MEDIUM
+        4: 18.0   # P5 - MEDIUM
+    }
+    
+    # Day differences to try (3 days = 65%, 4 days = 35%)
+    day_diffs = [3, 4] if days_to_next is None else [days_to_next]
+    
+    for day_diff in day_diffs:
+        day_weight_multiplier = 1.3 if day_diff == 3 else 0.7  # +3 days more common
+        
+        for pos, num in enumerate(prev_numbers):
+            target = num + day_diff
+            
+            if 1 <= target <= 50:
+                weight = position_weights[pos] * day_weight_multiplier
+                reason = f"REAL: P{pos+1}={num} +{day_diff}d = {target}"
+                
+                if pos == 1:  # P2 - The King
+                    reason += " 🔥 (P2 King!)"
+                elif pos in [3, 4]:  # P4, P5
+                    reason += " ⚡"
+                
+                candidates['numbers'].append((target, weight, reason))
+                candidates['explanations'].append(f"   P{pos+1}={num} + {day_diff} = {target}")
+    
+    return candidates
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PATTERN 7: OVERDUE NUMBERS (Gap Hunger!)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def pattern_overdue(draws: List[Dict], threshold: int = 10) -> List[Tuple[int, int]]:
