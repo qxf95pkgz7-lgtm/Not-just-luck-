@@ -1985,6 +1985,32 @@ function App() {
                     ))
                   )}
                 </div>
+                
+                {/* BIG CHECK BUTTON AT BOTTOM */}
+                {generationHistory.some(g => !g.hits_calculated) && (
+                  <button
+                    onClick={recalculateAllHits}
+                    disabled={hitTrackerLoading}
+                    className={`w-full mt-4 py-3 px-4 rounded-lg font-bold text-lg transition-all disabled:opacity-50 ${
+                      lotteryMode === 'euro'
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white'
+                        : 'bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white'
+                    }`}
+                    data-testid="check-all-hits-btn"
+                  >
+                    {hitTrackerLoading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <RefreshCw className="w-5 h-5 animate-spin" />
+                        Checking...
+                      </span>
+                    ) : (
+                      <span className="flex items-center justify-center gap-2">
+                        <CheckCircle2 className="w-5 h-5" />
+                        ✅ CHECK ALL PENDING HITS
+                      </span>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
           )}
