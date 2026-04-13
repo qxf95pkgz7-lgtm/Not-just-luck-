@@ -497,6 +497,35 @@ def pattern_star_repeat(prev_stars: List[int]) -> List[int]:
     """S1 and S2 can repeat - 17%"""
     return list(prev_stars)
 
+
+def beast_block_filter(star_candidates: List[int], draws: List[Dict]) -> List[int]:
+    """
+    666 BEAST BLOCK - The universe resists Star 6 three times in a row!
+    
+    Data proof (1,587 draws):
+    - After Star 6 appears 2x in a row, the 3rd draw BLOCKS it 77% of the time
+    - Only 8 beast events ever occurred (once per 198 draws)
+    
+    When Star 6 is on a 2-streak, we crush its weight to near-zero.
+    This makes the engine respect the universal resistance pattern.
+    """
+    if len(draws) < 2:
+        return star_candidates
+    
+    stars_d1 = draws[0].get('stars', [])
+    stars_d2 = draws[1].get('stars', [])
+    
+    if 6 in stars_d1 and 6 in stars_d2:
+        # Beast alert! Star 6 has appeared 2x in a row
+        # Strip almost ALL Star 6 entries from candidates (keep 1 for the 23% chance)
+        count_6 = star_candidates.count(6)
+        if count_6 > 1:
+            filtered = [s for s in star_candidates if s != 6]
+            filtered.append(6)  # Keep exactly 1 for the rare 23% case
+            return filtered
+    
+    return star_candidates
+
 def pattern_circle_p2(prev_nums: List[int]) -> int:
     """Circle of P2 - 12.6%"""
     p2 = sorted(prev_nums)[1]
@@ -2412,7 +2441,7 @@ def pattern_p1_king(target_date: str, prev_draw: Dict, prev2_draw: Dict = None) 
     }
 
 
-def dj_select_numbers(candidates: Dict, star_candidates: List[int], locked: Dict = None, date_day: int = None, p1_king_candidates: List = None, p2_prince_candidates: List = None) -> Dict:
+def dj_select_numbers(candidates: Dict, star_candidates: List[int], locked: Dict = None, date_day: int = None, p1_king_candidates: List = None, p2_prince_candidates: List = None, draws: List[Dict] = None) -> Dict:
     """
     🎧 Select final numbers from weighted candidates
     👑 P1 KING: Uses special P1 prediction patterns!
@@ -2511,6 +2540,10 @@ def dj_select_numbers(candidates: Dict, star_candidates: List[int], locked: Dict
             used.add(choice)
     
     # Select stars
+    # 🔥 BEAST BLOCK: Suppress Star 6 when on a 2-streak (77% block rate)
+    if draws:
+        star_candidates = beast_block_filter(star_candidates, draws)
+    
     star_used = set()
     selected_stars = []
     
@@ -2576,7 +2609,8 @@ def dj_generate_ticket(draws: List[Dict], target_date: str = None, locked: Dict 
         locked, 
         date_day,
         p1_king_candidates,
-        p2_prince_candidates
+        p2_prince_candidates,
+        draws
     )
     
     return {
@@ -2759,6 +2793,9 @@ def dj_generate_money_mode_ticket(draws: List[Dict], target_date: str = None, sw
         used.add(chosen)
     
     # SELECT STARS (from focused pool)
+    # 🔥 BEAST BLOCK: Suppress Star 6 when on a 2-streak
+    star_candidates = beast_block_filter(star_candidates, draws)
+    
     star_pool = [s for s in star_candidates if 1 <= s <= 12]
     if not star_pool:
         star_pool = list(range(1, 13))

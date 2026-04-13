@@ -2217,6 +2217,10 @@ def create_euromillions_router(db):
                 patterns_used.append(f"🎵 +{len(songs_found)-1} more songs")
             position_reasons["Music"] = f"Songs: {', '.join(songs_found[:2])}"
         
+        # 🔥 BEAST BLOCK: Suppress Star 6 when on a 2-streak (77% block rate)
+        from dj_patterns import beast_block_filter
+        star_candidates = beast_block_filter(star_candidates, draws)
+        
         # Select stars - WITH VARIETY BASED ON TICKET INDEX!
         star_scored = Counter(star_candidates)
         final_stars = []
