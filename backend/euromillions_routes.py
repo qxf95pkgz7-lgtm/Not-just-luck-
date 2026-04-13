@@ -972,6 +972,26 @@ def create_euromillions_router(db):
                     'stars': d.get('stars', [])
                 })
             
+            # 🍀 FETCH SWISS DRAWS FOR CROSS-LOTTERY PATTERNS! 🍀
+            try:
+                # Fetch ALL Swiss draws and sort by date to get the most recent
+                swiss_cursor = db.draws.find({})
+                swiss_draws_raw = await swiss_cursor.to_list(length=2000)
+                # Sort by date properly
+                from datetime import datetime as dt
+                def parse_swiss_date(d):
+                    try:
+                        return dt.strptime(d['date'], '%d.%m.%Y')
+                    except:
+                        return dt.min
+                swiss_draws = sorted(swiss_draws_raw, key=parse_swiss_date, reverse=True)[:10]
+                # Attach Swiss draws to the function for cross-lottery patterns
+                dj_generate_ticket.swiss_draws = swiss_draws
+                dj_generate_candidates.swiss_draws = swiss_draws
+            except Exception as e:
+                dj_generate_ticket.swiss_draws = []
+                dj_generate_candidates.swiss_draws = []
+            
             # Generate ticket using DJ engine
             locked = {}
             if locked_positions:
@@ -980,7 +1000,7 @@ def create_euromillions_router(db):
                     if 0 <= pos_idx < 5 and 1 <= value <= 50:
                         locked[pos_idx] = value
             
-            dj_result = dj_generate_ticket(dj_draws, target_date=target_date, locked=locked)
+            dj_result = dj_generate_ticket(dj_draws, target_date=target_date, locked=locked, swiss_draws=swiss_draws)
             
             return {
                 "numbers": dj_result["numbers"],
@@ -2324,6 +2344,22 @@ def create_euromillions_router(db):
         await seed_euromillions_if_empty()
         draws = await get_euromillions_draws()
         
+        # 🍀 FETCH SWISS DRAWS FOR CROSS-LOTTERY PATTERNS! 🍀
+        swiss_draws = []
+        try:
+            # Fetch ALL Swiss draws and sort by date to get the most recent
+            swiss_cursor = db.draws.find({})
+            swiss_draws_raw = await swiss_cursor.to_list(length=2000)
+            from datetime import datetime as dt
+            def parse_swiss_date(d):
+                try:
+                    return dt.strptime(d['date'], '%d.%m.%Y')
+                except:
+                    return dt.min
+            swiss_draws = sorted(swiss_draws_raw, key=parse_swiss_date, reverse=True)[:10]
+        except:
+            swiss_draws = []
+        
         tickets = []
         num_tickets = min(request.num_tickets, 50)
         target_date = getattr(request, 'target_date', None)
@@ -2348,7 +2384,7 @@ def create_euromillions_router(db):
                         locked[pos_idx] = value
             
             # Generate using DJ Engine - THE CORE!
-            dj_result = dj_generate_ticket(dj_draws, target_date=target_date, locked=locked)
+            dj_result = dj_generate_ticket(dj_draws, target_date=target_date, locked=locked, swiss_draws=swiss_draws)
             
             tickets.append({
                 "ticket_number": ticket_idx + 1,

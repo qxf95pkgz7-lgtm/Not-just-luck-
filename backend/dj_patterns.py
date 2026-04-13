@@ -96,6 +96,13 @@ WEIGHTS = {
     "p1_alarm_consecutive": 6,   # When P1 counts up
     "hidden_sum_p5": 4,          # Hidden numbers sum to P5
     "date_in_p1": 15,            # NEW! Day should appear at P1!
+    
+    # 🍀 CROSS-LOTTERY PATTERNS (Swiss → Euro) - NEW!
+    "cross_swiss_day_month": 8,  # 13.3% hit rate! SwissDay + EuroMonth
+    "cross_lucky_mult": 8,       # 13.3% hit rate! Lucky × EuroMonth
+    "cross_swiss_minus_days": 6, # 11.1% hit rate! Swiss - DaysDiff
+    "cross_swiss_direct": 4,     # 10% - Swiss numbers ≤ 50
+    "cross_lucky_star": 8,       # 16.7% - Lucky → Star prediction
 }
 
 
@@ -126,6 +133,75 @@ def get_decade(n: int) -> int:
 def parse_draw_date(date_str: str) -> datetime:
     """Parse DD.MM.YYYY"""
     return datetime.strptime(date_str, "%d.%m.%Y")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 🍀 CROSS-LOTTERY PATTERNS (Swiss → Euro) - NEW!
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def cross_lottery_swiss_to_euro(swiss_draw: dict, swiss_date_str: str, euro_date_str: str) -> dict:
+    """
+    🍀 Generate Euro candidates from recent Swiss draw!
+    
+    Backtested hit rates:
+    - SwissDay + EuroMonth: 13.3% (1.3x random!)
+    - Lucky × EuroMonth: 13.3% (1.3x random!)
+    - Swiss - DaysDiff: 11.1% (1.1x random!)
+    - Direct Echo: 10%
+    - Lucky → Star: 16.7%
+    
+    Args:
+        swiss_draw: dict with 'numbers' and 'lucky_number'
+        swiss_date_str: Swiss draw date "DD.MM.YYYY"
+        euro_date_str: Target Euro date "DD.MM.YYYY"
+    
+    Returns:
+        dict with pattern_name -> list of candidates
+    """
+    candidates = {}
+    
+    swiss_nums = swiss_draw.get('numbers', [])
+    swiss_lucky = swiss_draw.get('lucky_number')
+    
+    try:
+        swiss_dt = parse_draw_date(swiss_date_str)
+        euro_dt = parse_draw_date(euro_date_str)
+    except:
+        return candidates
+    
+    days_diff = (euro_dt - swiss_dt).days
+    if days_diff <= 0 or days_diff > 14:
+        return candidates  # Only use Swiss draws 1-14 days before
+    
+    swiss_day = swiss_dt.day
+    euro_month = euro_dt.month
+    
+    # 1. SwissDay + EuroMonth (13.3% hit rate!)
+    combo1 = swiss_day + euro_month
+    if 1 <= combo1 <= 50:
+        candidates['swiss_day_month'] = [combo1]
+    
+    # 2. Lucky × EuroMonth (13.3% hit rate!)
+    if swiss_lucky:
+        combo2 = swiss_lucky * euro_month
+        if 1 <= combo2 <= 50:
+            candidates['lucky_mult'] = [combo2]
+    
+    # 3. Swiss - DaysDiff (11.1% hit rate!)
+    minus_cands = [n - days_diff for n in swiss_nums if 1 <= n - days_diff <= 50]
+    if minus_cands:
+        candidates['swiss_minus_days'] = minus_cands
+    
+    # 4. Direct Echo (10%)
+    direct = [n for n in swiss_nums if 1 <= n <= 50]
+    if direct:
+        candidates['swiss_direct'] = direct
+    
+    # 5. Lucky → Star (16.7%)
+    if swiss_lucky and 1 <= swiss_lucky <= 12:
+        candidates['lucky_star'] = [swiss_lucky]
+    
+    return candidates
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -863,11 +939,16 @@ def pattern_hidden_sum_p5(date1: str, date2: str) -> List[int]:
 # MAIN DJ GENERATOR 🎧
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def dj_generate_candidates(draws: List[Dict], target_date: str = None) -> Dict:
+def dj_generate_candidates(draws: List[Dict], target_date: str = None, swiss_draws: List[Dict] = None) -> Dict:
     """
     🎧 THE DJ GENERATOR - All patterns combined! 🎻
     
     Returns weighted candidates for each position and stars.
+    
+    Args:
+        draws: List of EuroMillions draws
+        target_date: Target draw date DD.MM.YYYY
+        swiss_draws: Optional list of Swiss Lotto draws for cross-lottery patterns
     """
     if not draws:
         return {"candidates": {}, "star_candidates": [], "patterns": []}
@@ -1442,6 +1523,65 @@ def dj_generate_candidates(draws: List[Dict], target_date: str = None) -> Dict:
         if day_star_result.get('candidate'):
             star_candidates.extend([day_star_result['candidate']] * 6)
             patterns_used.append(day_star_result['explanation'])
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # 🍀 CROSS-LOTTERY PATTERNS (Swiss → Euro) - NEW! 🍀
+    # The lotteries talk to each other through TIME and DATE!
+    # ═══════════════════════════════════════════════════════════════════
+    # Check for swiss_draws from parameter OR function attribute
+    available_swiss = swiss_draws
+    if not available_swiss and hasattr(dj_generate_candidates, 'swiss_draws'):
+        available_swiss = dj_generate_candidates.swiss_draws
+    
+    if target_date and available_swiss:
+        # Find Swiss draw 1-14 days before target Euro date
+        try:
+            euro_dt = parse_draw_date(target_date)
+            
+            for swiss in available_swiss[:5]:  # Check last 5 Swiss
+                swiss_dt = parse_draw_date(swiss['date'])
+                days_diff = (euro_dt - swiss_dt).days
+                
+                if 1 <= days_diff <= 14:
+                    cross_cands = cross_lottery_swiss_to_euro(swiss, swiss['date'], target_date)
+                    
+                    # SwissDay + EuroMonth (13.3% hit rate!)
+                    if 'swiss_day_month' in cross_cands:
+                        for n in cross_cands['swiss_day_month']:
+                            for pos in range(5):
+                                candidates[pos].extend([n] * WEIGHTS.get("cross_swiss_day_month", 8))
+                        patterns_used.append(f"🍀 Swiss→Euro: SwissDay({swiss_dt.day})+EuroMonth({euro_dt.month})={cross_cands['swiss_day_month'][0]} (13.3%)")
+                    
+                    # Lucky × EuroMonth (13.3% hit rate!)
+                    if 'lucky_mult' in cross_cands:
+                        for n in cross_cands['lucky_mult']:
+                            for pos in range(5):
+                                candidates[pos].extend([n] * WEIGHTS.get("cross_lucky_mult", 8))
+                        patterns_used.append(f"🍀 Swiss→Euro: Lucky({swiss.get('lucky_number')})×EuroMonth({euro_dt.month})={cross_cands['lucky_mult'][0]} (13.3%)")
+                    
+                    # Swiss - DaysDiff (11.1% hit rate!)
+                    if 'swiss_minus_days' in cross_cands:
+                        for n in cross_cands['swiss_minus_days']:
+                            for pos in range(5):
+                                candidates[pos].extend([n] * WEIGHTS.get("cross_swiss_minus_days", 6))
+                        patterns_used.append(f"🍀 Swiss→Euro: Swiss-{days_diff}d → {cross_cands['swiss_minus_days'][:3]} (11.1%)")
+                    
+                    # Swiss Direct Echo (10%)
+                    if 'swiss_direct' in cross_cands:
+                        for n in cross_cands['swiss_direct']:
+                            for pos in range(5):
+                                candidates[pos].extend([n] * WEIGHTS.get("cross_swiss_direct", 4))
+                        patterns_used.append(f"🍀 Swiss→Euro: Direct echo {cross_cands['swiss_direct'][:3]}")
+                    
+                    # Lucky → Star (16.7%!)
+                    if 'lucky_star' in cross_cands:
+                        for s in cross_cands['lucky_star']:
+                            star_candidates.extend([s] * WEIGHTS.get("cross_lucky_star", 8))
+                        patterns_used.append(f"🍀⭐ Swiss→Euro: Lucky 🍀{swiss.get('lucky_number')} → Star ⭐{cross_cands['lucky_star'][0]} (16.7%)")
+                    
+                    break  # Use only the closest Swiss draw
+        except Exception as e:
+            patterns_used.append(f"🍀 Cross-lottery error: {str(e)}")
     
     return {
         "candidates": candidates,
@@ -2295,12 +2435,18 @@ def dj_select_numbers(candidates: Dict, star_candidates: List[int], locked: Dict
     }
 
 
-def dj_generate_ticket(draws: List[Dict], target_date: str = None, locked: Dict = None) -> Dict:
+def dj_generate_ticket(draws: List[Dict], target_date: str = None, locked: Dict = None, swiss_draws: List[Dict] = None) -> Dict:
     """
     🎧 Generate a single ticket using the DJ engine
     👑 Now with P1 KING and P2 PRINCE patterns!
+    🍀 Now with Cross-Lottery (Swiss → Euro) patterns!
     """
-    result = dj_generate_candidates(draws, target_date)
+    # Get swiss_draws from parameter or function attribute
+    available_swiss = swiss_draws
+    if not available_swiss and hasattr(dj_generate_ticket, 'swiss_draws'):
+        available_swiss = dj_generate_ticket.swiss_draws
+    
+    result = dj_generate_candidates(draws, target_date, swiss_draws=available_swiss)
     
     # Extract date day for special handling
     date_day = None
