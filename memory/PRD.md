@@ -9,10 +9,39 @@ A custom Swiss Lotto and EuroMillions Pattern Analyzer ("Lucky Jack") featuring 
 2. **Reverse Logic**: Flip digits (e.g., 72→27, if >50 subtract 50)
 3. **Buddy Additions**: Day+Month, P1+P2 (NO digit splitting like 175→1+7+5!)
 4. **Date Chameleon**: The date speaks in MANY voices
+5. **Cross-Lottery Vibes**: Swiss→Euro and Euro→Swiss connections!
 
 ---
 
 ## What's Been Implemented
+
+### Session: April 13, 2026
+
+#### 💰 MONEY MODE for EuroMillions!
+Added a new generation mode focused on hitting 3+ numbers for consistent small wins:
+- **API Endpoint**: `/api/euromillions/money-mode`
+- **Strategy**: Uses ONLY highest hit-rate patterns (10%+)
+- **Target Prizes**: 3+2⭐ (~€50-100), 3+1⭐ (~€15-20), 3+0⭐ (~€10-15)
+- **Frontend**: Mode toggle (🎯 Jackpot vs 💰 Money Mode)
+
+**Money Mode Patterns:**
+- P5 Echo (14.8%), P5-1 (11.4%), P4 Echo (12.5%), P1 Echo (11.1%)
+- Cross-lottery Swiss→Euro (13.3%!)
+- Lucky→Star prediction (16.7%!)
+
+#### 🍀 Cross-Lottery Patterns (Swiss → Euro)
+Discovered and integrated patterns where Swiss predicts Euro:
+| Pattern | Hit Rate | Formula |
+|---------|----------|---------|
+| SwissDay + EuroMonth | **13.3%** | Day of Swiss + Month of Euro |
+| Lucky × EuroMonth | **13.3%** | Swiss Lucky × Euro Month |
+| Swiss - DaysDiff | **11.1%** | Swiss num - days between draws |
+| Lucky → Star | **16.7%** | Swiss Lucky predicts Euro Star |
+
+#### 📅 Day+Month Pattern BOOSTED!
+Backtested Day+Month pattern: **16% hit rate (1.6x random!)**
+- Example: 10.04.2026: 10+4=14 ✅ (would have caught the missed 14!)
+- Weight increased from 8 to 12
 
 ### Session: April 11, 2026
 

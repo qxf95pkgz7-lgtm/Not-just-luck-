@@ -565,6 +565,7 @@ function App() {
     });
   };
   const [numTickets, setNumTickets] = useState(1);
+  const [generationMode, setGenerationMode] = useState('jackpot'); // 'jackpot' or 'money'
   const [oliviaKiss, setOliviaKiss] = useState(false);
   const [showKissHearts, setShowKissHearts] = useState(false);
   const [updateLoading, setUpdateLoading] = useState(false);
@@ -886,7 +887,17 @@ function App() {
       setLoading(true);
       setWheelSpinning(false);
       
-      const apiBase = lotteryMode === 'swiss' ? `${API}/master-predictor` : `${API}/euromillions/master-predictor`;
+      // Select API endpoint based on lottery mode AND generation mode
+      let apiBase;
+      if (lotteryMode === 'swiss') {
+        apiBase = `${API}/master-predictor`;
+      } else {
+        // EuroMillions: jackpot (master-predictor) or money mode
+        apiBase = generationMode === 'money' 
+          ? `${API}/euromillions/money-mode`
+          : `${API}/euromillions/master-predictor`;
+      }
+      
       let url = apiBase;
       const params = [];
       if (birthday) params.push(`birthday=${encodeURIComponent(birthday)}`);
@@ -910,7 +921,8 @@ function App() {
             birthday: birthday || null,
             name: fullName || null,
             locked_positions: Object.fromEntries(Object.entries(lockedPositions).filter(([k,v]) => v !== "" && (k !== 'p6' || lotteryMode === 'swiss')).map(([k,v]) => [k, parseInt(v)])),
-            num_tickets: numTickets
+            num_tickets: numTickets,
+            target_date: null // Will auto-calculate next draw
           })
         : await axios.get(url);
       
@@ -984,7 +996,7 @@ function App() {
     } finally {
       setLoading(false);
     }
-  }, [birthday, fullName, lockedPositions, numTickets, lotteryMode, activePersonas]);
+  }, [birthday, fullName, lockedPositions, numTickets, lotteryMode, activePersonas, generationMode]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -1546,6 +1558,50 @@ function App() {
                 </div>
               </div>
               
+              {/* 💰 GENERATION MODE TOGGLE - EuroMillions only */}
+              {lotteryMode === 'euro' && (
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-sm text-slate-300">Generation Mode</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => setGenerationMode('jackpot')}
+                      className={`flex flex-col items-center px-3 py-2.5 rounded-lg transition-all ${
+                        generationMode === 'jackpot'
+                          ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/25'
+                          : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'
+                      }`}
+                      data-testid="jackpot-mode-btn"
+                    >
+                      <span className="text-lg">🎯</span>
+                      <span className="font-bold text-sm">Jackpot</span>
+                      <span className="text-[10px] opacity-75">All 5 + 2⭐</span>
+                    </button>
+                    <button
+                      onClick={() => setGenerationMode('money')}
+                      className={`flex flex-col items-center px-3 py-2.5 rounded-lg transition-all ${
+                        generationMode === 'money'
+                          ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/25'
+                          : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'
+                      }`}
+                      data-testid="money-mode-btn"
+                    >
+                      <span className="text-lg">💰</span>
+                      <span className="font-bold text-sm">Money Mode</span>
+                      <span className="text-[10px] opacity-75">3+ hits focus</span>
+                    </button>
+                  </div>
+                  {generationMode === 'money' && (
+                    <div className="mt-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                      <p className="text-xs text-amber-400 text-center">
+                        💰 Focus on consistent small wins: 3+2⭐ (~€50-100), 3+1⭐ (~€15-20)
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+              
               {/* Display all tickets */}
               {prediction?.all_tickets && prediction.all_tickets.length > 1 && (
                 <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
@@ -1592,11 +1648,20 @@ function App() {
               <button 
                 onClick={fetchPrediction}
                 disabled={loading}
-                className="mt-4 w-full py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-400 hover:to-emerald-500 shadow-lg disabled:opacity-50"
+                className={`mt-4 w-full py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300 shadow-lg disabled:opacity-50 ${
+                  lotteryMode === 'euro' && generationMode === 'money'
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-400 hover:to-amber-500'
+                    : 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-400 hover:to-emerald-500'
+                }`}
                 data-testid="generate-tickets-btn"
               >
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                {loading ? 'Generating...' : `🎫 Generate ${numTickets} Ticket${numTickets > 1 ? 's' : ''}`}
+                {loading 
+                  ? 'Generating...' 
+                  : lotteryMode === 'euro' && generationMode === 'money'
+                    ? `💰 Generate ${numTickets} Money Mode Ticket${numTickets > 1 ? 's' : ''}`
+                    : `🎫 Generate ${numTickets} Ticket${numTickets > 1 ? 's' : ''}`
+                }
               </button>
             </div>
           )}

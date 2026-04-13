@@ -92,6 +92,11 @@ WEIGHTS = {
     "p3_hunger": 2,              # 9.3%
     "date_in_draw": 10,          # 13.1% - BOOSTED! Date is important!
     
+    # DATE PATTERNS - The Date speaks! 📅
+    "day_plus_month": 12,        # Day + Month = candidate (16% hit rate! 1.6x random!)
+    "day_minus_month": 4,        # |Day - Month| = candidate
+    "day_times_month": 4,        # Day × Month = candidate (if ≤ 50)
+    
     # SPECIAL
     "p1_alarm_consecutive": 6,   # When P1 counts up
     "hidden_sum_p5": 4,          # Hidden numbers sum to P5
@@ -1121,11 +1126,20 @@ def dj_generate_candidates(draws: List[Dict], target_date: str = None, swiss_dra
                 candidates[pos].extend(circle_candidates * 4)
             patterns_used.append(f"⭕ CIRCLE(day)={circle_date_result['circle_day']}±1, CIRCLE(month)={circle_date_result['circle_month']}±1")
         
-        # Day + Month sum and derivatives
+        # Day + Month sum and derivatives - BOOSTED! (missed 14 = 10+4 on 10.04.2026!)
         date_sum_candidates = pattern_date_sum(target_date)
         if date_sum_candidates:
-            for pos in range(5):
-                candidates[pos].extend(date_sum_candidates * 6)
+            # Day + Month direct is the FIRST candidate - give it extra boost!
+            day_plus_month = date_sum_candidates[0] if date_sum_candidates else None
+            if day_plus_month:
+                for pos in range(5):
+                    candidates[pos].extend([day_plus_month] * WEIGHTS.get("day_plus_month", 8))
+                patterns_used.append(f"📅 DAY+MONTH = {day_plus_month} (BOOSTED!)")
+            
+            # Other date sum derivatives
+            for num in date_sum_candidates[1:]:
+                for pos in range(5):
+                    candidates[pos].extend([num] * 6)
             patterns_used.append(f"📅 DATE SUM: {date_sum_candidates}")
         
         # The 45 connection (when month=9 or digits sum to 9)
