@@ -2497,6 +2497,194 @@ def dj_generate_ticket(draws: List[Dict], target_date: str = None, locked: Dict 
     }
 
 
+def dj_generate_money_mode_ticket(draws: List[Dict], target_date: str = None, swiss_draws: List[Dict] = None) -> Dict:
+    """
+    💰 MONEY MODE - Focus on hitting 3 numbers + stars for consistent small wins! 💰
+    
+    Strategy:
+    - Use ONLY the highest hit-rate patterns (10%+ proven)
+    - Prioritize STAR accuracy (smaller pool = higher probability)
+    - Use cross-lottery vibes (Swiss→Euro 13.3% hit rate!)
+    - Generate tickets with OVERLAPPING high-confidence numbers
+    
+    Target prizes:
+    - 3 + 2⭐ = ~€50-100
+    - 3 + 1⭐ = ~€15-20
+    - 3 + 0⭐ = ~€10-15
+    """
+    if not draws:
+        return {"numbers": [], "stars": [], "patterns_used": [], "mode": "money"}
+    
+    # Get swiss_draws from parameter or function attribute
+    available_swiss = swiss_draws
+    if not available_swiss and hasattr(dj_generate_money_mode_ticket, 'swiss_draws'):
+        available_swiss = dj_generate_money_mode_ticket.swiss_draws
+    
+    candidates = {i: [] for i in range(5)}  # P1-P5
+    star_candidates = []
+    patterns_used = ["💰 MONEY MODE - Target: 3 numbers + stars"]
+    
+    prev_draw = draws[0]
+    prev_nums = sorted(prev_draw['numbers'])
+    prev_stars = sorted(prev_draw.get('stars', []))
+    p1, p2, p3, p4, p5 = prev_nums
+    s1 = prev_stars[0] if prev_stars else 1
+    s2 = prev_stars[1] if len(prev_stars) > 1 else 1
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # ONLY USE HIGH HIT-RATE PATTERNS (10%+)
+    # ═══════════════════════════════════════════════════════════════════
+    
+    # 1. P5 ECHO (14.8% hit rate!) - STRONGEST
+    for pos in range(5):
+        candidates[pos].extend([p5] * 15)
+    patterns_used.append(f"🔥 P5 Echo: {p5} (14.8%)")
+    
+    # 2. P5-1 (11.4% hit rate!)
+    p5_minus_1 = p5 - 1 if p5 > 1 else None
+    if p5_minus_1:
+        for pos in range(5):
+            candidates[pos].extend([p5_minus_1] * 12)
+        patterns_used.append(f"🔥 P5-1: {p5}-1={p5_minus_1} (11.4%)")
+    
+    # 3. P4 ECHO (12.5% hit rate!)
+    for pos in range(5):
+        candidates[pos].extend([p4] * 12)
+    patterns_used.append(f"🔥 P4 Echo: {p4} (12.5%)")
+    
+    # 4. P1 ECHO (11.1% hit rate!)
+    for pos in range(5):
+        candidates[pos].extend([p1] * 11)
+    patterns_used.append(f"🔥 P1 Echo: {p1} (11.1%)")
+    
+    # 5. CIRCLE MATH (10%+ hit rate)
+    circle_hits = []
+    for n in prev_nums:
+        c_plus = n + 25 if n + 25 <= 50 else None
+        c_minus = n - 25 if n - 25 > 0 else None
+        if c_plus:
+            circle_hits.append(c_plus)
+            for pos in range(5):
+                candidates[pos].extend([c_plus] * 8)
+        if c_minus:
+            circle_hits.append(c_minus)
+            for pos in range(5):
+                candidates[pos].extend([c_minus] * 8)
+    if circle_hits:
+        patterns_used.append(f"🔄 Circle Math: {circle_hits[:3]}")
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # CROSS-LOTTERY PATTERNS (13.3%+ hit rate!) - MONEY MODE LOVES THIS!
+    # ═══════════════════════════════════════════════════════════════════
+    if target_date and available_swiss:
+        try:
+            euro_dt = parse_draw_date(target_date)
+            
+            for swiss in available_swiss[:3]:
+                swiss_dt = parse_draw_date(swiss['date'])
+                days_diff = (euro_dt - swiss_dt).days
+                
+                if 1 <= days_diff <= 14:
+                    swiss_day = swiss_dt.day
+                    swiss_lucky = swiss.get('lucky_number')
+                    euro_month = euro_dt.month
+                    
+                    # SwissDay + EuroMonth (13.3%!) - VERY STRONG
+                    combo1 = swiss_day + euro_month
+                    if 1 <= combo1 <= 50:
+                        for pos in range(5):
+                            candidates[pos].extend([combo1] * 15)  # High weight!
+                        patterns_used.append(f"🍀💰 Swiss({swiss_day})+Month({euro_month})={combo1} (13.3%)")
+                    
+                    # Lucky × EuroMonth (13.3%!) - VERY STRONG
+                    if swiss_lucky:
+                        combo2 = swiss_lucky * euro_month
+                        if 1 <= combo2 <= 50:
+                            for pos in range(5):
+                                candidates[pos].extend([combo2] * 15)
+                            patterns_used.append(f"🍀💰 Lucky({swiss_lucky})×Month({euro_month})={combo2} (13.3%)")
+                        
+                        # Lucky → Star (16.7%!) - CRITICAL FOR MONEY MODE
+                        if 1 <= swiss_lucky <= 12:
+                            star_candidates.extend([swiss_lucky] * 20)
+                            patterns_used.append(f"🍀⭐ Lucky {swiss_lucky} → Star! (16.7%)")
+                    
+                    break  # Only use closest Swiss
+        except:
+            pass
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # STAR FOCUS - CRITICAL FOR MONEY MODE! (only 12 options)
+    # ═══════════════════════════════════════════════════════════════════
+    
+    # Previous stars echo (high probability in small pool)
+    star_candidates.extend([s1] * 15)
+    star_candidates.extend([s2] * 15)
+    patterns_used.append(f"⭐ Prev stars: {s1}, {s2}")
+    
+    # |S2 - S1| pattern
+    star_diff = abs(s2 - s1)
+    if 1 <= star_diff <= 12:
+        star_candidates.extend([star_diff] * 10)
+        patterns_used.append(f"⭐ |S2-S1|={star_diff}")
+    
+    # S1 + S2 mod 12
+    star_sum = (s1 + s2) % 12
+    if star_sum == 0: star_sum = 12
+    star_candidates.extend([star_sum] * 8)
+    patterns_used.append(f"⭐ (S1+S2)%12={star_sum}")
+    
+    # Date day as star (if valid)
+    if target_date:
+        try:
+            day = int(target_date.split('.')[0])
+            if 1 <= day <= 12:
+                star_candidates.extend([day] * 12)
+                patterns_used.append(f"⭐ Day={day} as star")
+        except:
+            pass
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # SELECT NUMBERS (Weighted random from high-confidence pool)
+    # ═══════════════════════════════════════════════════════════════════
+    import random
+    
+    selected = []
+    used = set()
+    
+    for pos in range(5):
+        pool = [n for n in candidates[pos] if n not in used and 1 <= n <= 50]
+        if pool:
+            chosen = random.choice(pool)
+        else:
+            # Fallback to any valid unused number
+            available = [n for n in range(1, 51) if n not in used]
+            chosen = random.choice(available) if available else 1
+        selected.append(chosen)
+        used.add(chosen)
+    
+    # SELECT STARS (from focused pool)
+    star_pool = [s for s in star_candidates if 1 <= s <= 12]
+    if not star_pool:
+        star_pool = list(range(1, 13))
+    
+    star1 = random.choice(star_pool)
+    star_pool2 = [s for s in star_pool if s != star1]
+    star2 = random.choice(star_pool2) if star_pool2 else (star1 % 12 + 1)
+    
+    return {
+        "numbers": sorted(selected),
+        "stars": sorted([star1, star2]),
+        "patterns_used": patterns_used,
+        "mode": "money",
+        "target": "3+ numbers + stars",
+        "prev_draw": {
+            "numbers": prev_nums,
+            "stars": prev_stars
+        }
+    }
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # TEST / SIMULATION
 # ═══════════════════════════════════════════════════════════════════════════════

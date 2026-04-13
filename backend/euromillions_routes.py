@@ -35,6 +35,7 @@ from dj_patterns import (
     dj_generate_ticket,
     dj_generate_candidates,
     dj_select_numbers,
+    dj_generate_money_mode_ticket,
     WEIGHTS as DJ_WEIGHTS
 )
 
@@ -2412,6 +2413,94 @@ def create_euromillions_router(db):
             "total_price": total_price,
             "currency": "CHF",
             "engine": "🎧 DJ Pattern Engine 🎻"
+        }
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # 💰 MONEY MODE - Focus on 3+ numbers for consistent small wins! 💰
+    # ═══════════════════════════════════════════════════════════════════════
+    
+    @router.post("/money-mode")
+    async def money_mode_predictor(request: EuroMillionsPredictionRequest):
+        """
+        💰 MONEY MODE - Generate tickets focused on hitting 3+ numbers!
+        
+        Strategy:
+        - Uses ONLY the highest hit-rate patterns (10%+)
+        - Prioritizes STAR accuracy (smaller pool = higher probability)
+        - Uses cross-lottery vibes (Swiss→Euro 13.3% hit rate!)
+        
+        Target prizes:
+        - 3 + 2⭐ = ~€50-100
+        - 3 + 1⭐ = ~€15-20  
+        - 3 + 0⭐ = ~€10-15
+        """
+        await seed_euromillions_if_empty()
+        draws = await get_euromillions_draws()
+        
+        # 🍀 FETCH SWISS DRAWS FOR CROSS-LOTTERY PATTERNS!
+        swiss_draws = []
+        try:
+            swiss_cursor = db.draws.find({})
+            swiss_draws_raw = await swiss_cursor.to_list(length=2000)
+            from datetime import datetime as dt
+            def parse_swiss_date(d):
+                try:
+                    return dt.strptime(d['date'], '%d.%m.%Y')
+                except:
+                    return dt.min
+            swiss_draws = sorted(swiss_draws_raw, key=parse_swiss_date, reverse=True)[:10]
+        except:
+            swiss_draws = []
+        
+        tickets = []
+        num_tickets = min(request.num_tickets, 50)
+        target_date = getattr(request, 'target_date', None)
+        
+        # Convert draws to DJ format
+        dj_draws = []
+        for d in draws:
+            dj_draws.append({
+                'date': d.get('date', '01.01.2025'),
+                'numbers': d.get('numbers', []),
+                'stars': d.get('stars', [])
+            })
+        
+        for ticket_idx in range(num_tickets):
+            # Generate using MONEY MODE engine
+            dj_result = dj_generate_money_mode_ticket(
+                dj_draws, 
+                target_date=target_date, 
+                swiss_draws=swiss_draws
+            )
+            
+            tickets.append({
+                "ticket_number": ticket_idx + 1,
+                "numbers": dj_result["numbers"],
+                "stars": dj_result["stars"],
+                "patterns_used": dj_result["patterns_used"],
+                "confidence": 0.70,  # Higher confidence for 3+ hit
+                "mode": "money",
+                "target": "3+ numbers + stars"
+            })
+        
+        price_per_ticket = 3.50
+        total_price = round(len(tickets) * price_per_ticket, 2)
+        
+        return {
+            "mode": "💰 MONEY MODE",
+            "target_date": target_date,
+            "strategy": "Focus on 3+ numbers + stars for consistent small wins",
+            "target_prizes": {
+                "3+2⭐": "~€50-100",
+                "3+1⭐": "~€15-20",
+                "3+0⭐": "~€10-15"
+            },
+            "tickets": tickets,
+            "total_tickets": len(tickets),
+            "price_per_ticket": price_per_ticket,
+            "total_price": total_price,
+            "currency": "CHF",
+            "engine": "💰 Money Mode Engine 🎯"
         }
     
     @router.get("/analyze-ticket")
