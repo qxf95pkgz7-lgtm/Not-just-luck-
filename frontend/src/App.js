@@ -864,37 +864,52 @@ function App() {
       }));
     }
     
-    // Play nice female "Mwah!" voice
-    const playYaMan = () => {
-      const utterance = new SpeechSynthesisUtterance(circleUsed ? "Mwah! Circle magic baby!" : "Mwah! Good luck baby!");
-      utterance.rate = 0.9;
-      utterance.pitch = 1.4;
-      utterance.volume = 0.8;
-      
-      const voices = speechSynthesis.getVoices();
-      const femaleVoice = voices.find(v => 
-        v.name.toLowerCase().includes('female') || 
-        v.name.toLowerCase().includes('samantha') ||
-        v.name.toLowerCase().includes('victoria') ||
-        v.name.toLowerCase().includes('karen') ||
-        v.name.toLowerCase().includes('tessa') ||
-        v.name.toLowerCase().includes('fiona') ||
-        v.name.includes('Google UK English Female') ||
-        v.name.includes('Microsoft Zira')
-      ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
-      
-      if (femaleVoice) {
-        utterance.voice = femaleVoice;
+    // Play casino coins falling sound using Web Audio API
+    const playCoinSound = () => {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Create multiple coin drop sounds in sequence
+        for (let i = 0; i < 8; i++) {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          
+          // High metallic coin sound
+          osc.frequency.setValueAtTime(2000 + Math.random() * 3000, audioCtx.currentTime + i * 0.08);
+          osc.frequency.exponentialRampToValueAtTime(800 + Math.random() * 500, audioCtx.currentTime + i * 0.08 + 0.05);
+          osc.type = 'square';
+          
+          gain.gain.setValueAtTime(0.15, audioCtx.currentTime + i * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.08 + 0.12);
+          
+          osc.start(audioCtx.currentTime + i * 0.08);
+          osc.stop(audioCtx.currentTime + i * 0.08 + 0.12);
+        }
+        
+        // Final jackpot chime
+        setTimeout(() => {
+          const osc2 = audioCtx.createOscillator();
+          const gain2 = audioCtx.createGain();
+          osc2.connect(gain2);
+          gain2.connect(audioCtx.destination);
+          osc2.frequency.setValueAtTime(1200, audioCtx.currentTime);
+          osc2.frequency.setValueAtTime(1600, audioCtx.currentTime + 0.1);
+          osc2.frequency.setValueAtTime(2000, audioCtx.currentTime + 0.2);
+          osc2.type = 'sine';
+          gain2.gain.setValueAtTime(0.2, audioCtx.currentTime);
+          gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+          osc2.start(audioCtx.currentTime);
+          osc2.stop(audioCtx.currentTime + 0.4);
+        }, 700);
+      } catch (e) {
+        // Fallback: no sound
       }
-      
-      speechSynthesis.speak(utterance);
     };
     
-    if (speechSynthesis.getVoices().length > 0) {
-      playYaMan();
-    } else {
-      speechSynthesis.onvoiceschanged = playYaMan;
-    }
+    playCoinSound();
     
     setTimeout(() => {
       setOliviaKiss(false);
@@ -1450,29 +1465,29 @@ function App() {
                   !prediction
                     ? 'bg-slate-700/30 text-slate-500 cursor-not-allowed'
                     : oliviaKiss 
-                      ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white scale-110 shadow-lg shadow-pink-500/50' 
-                      : 'bg-gradient-to-r from-pink-600/30 to-rose-600/30 text-pink-300 hover:from-pink-500/50 hover:to-rose-500/50 border border-pink-500/30'
+                      ? 'bg-gradient-to-r from-yellow-500 to-amber-500 text-white scale-110 shadow-lg shadow-yellow-500/50' 
+                      : 'bg-gradient-to-r from-yellow-600/30 to-amber-600/30 text-yellow-300 hover:from-yellow-500/50 hover:to-amber-500/50 border border-yellow-500/30'
                 }`}
                 data-testid="olivia-kiss-btn"
               >
                 🍀 Olivia's Kiss 🍀
               </button>
               
-              {/* Flying Hearts Animation */}
+              {/* Flying Coins Animation */}
               {showKissHearts && (
                 <div className="absolute inset-0 pointer-events-none overflow-visible">
-                  {[...Array(8)].map((_, i) => (
+                  {[...Array(12)].map((_, i) => (
                     <span
                       key={i}
-                      className="absolute text-2xl animate-ping"
+                      className="absolute text-xl"
                       style={{
-                        left: `${20 + Math.random() * 60}%`,
-                        top: `${Math.random() * 100}%`,
-                        animationDelay: `${i * 0.1}s`,
-                        animationDuration: '1s'
+                        left: `${10 + Math.random() * 80}%`,
+                        top: `-20%`,
+                        animation: `fall ${0.6 + Math.random() * 0.8}s ease-in forwards`,
+                        animationDelay: `${i * 0.07}s`,
                       }}
                     >
-                      {['🍀', '💕', '✨', '💫'][i % 4]}
+                      {['🪙', '💰', '🪙', '💵'][i % 4]}
                     </span>
                   ))}
                 </div>
@@ -1481,9 +1496,9 @@ function App() {
             
             {/* Show Kiss Transformation */}
             {prediction?.kissed && prediction?.kissedFrom && prediction?.kissedTo && (
-              <div className="mt-2 p-2 rounded-lg bg-pink-500/10 border border-pink-500/30">
-                <p className="text-xs text-pink-300 text-center">
-                  🍀 Kissed: {prediction.kissedFrom.join(', ')} → <span className="font-bold text-pink-200">{prediction.kissedTo.join(', ')}</span>
+              <div className="mt-2 p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+                <p className="text-xs text-yellow-300 text-center">
+                  🍀 Kissed: {prediction.kissedFrom.join(', ')} → <span className="font-bold text-yellow-200">{prediction.kissedTo.join(', ')}</span>
                   {prediction.circleUsed && <span className="ml-1 text-amber-300">(🔄 +Circle)</span>}
                 </p>
               </div>
