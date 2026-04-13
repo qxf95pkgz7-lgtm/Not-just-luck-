@@ -1264,19 +1264,48 @@ function App() {
             )}
           </div>
           
-          {/* Status */}
+          {/* Status / Mode Selection */}
           <div className="text-center mt-6 mb-4">
             {!loading && !prediction && (
               <p className="text-slate-400 text-sm">Press the button to generate your lucky numbers</p>
             )}
             {prediction && !loading && (
-              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm border ${
-                lotteryMode === 'swiss' 
-                  ? 'bg-gradient-to-r from-emerald-900/30 to-emerald-800/30 border-emerald-500/20' 
-                  : 'bg-gradient-to-r from-blue-900/30 to-blue-800/30 border-blue-500/20'
-              }`}>
-                <span className={lotteryMode === 'swiss' ? 'text-emerald-400' : 'text-blue-400'}>✓</span>
-                <span className={`font-medium ${lotteryMode === 'swiss' ? 'text-emerald-300' : 'text-blue-300'}`}>Numbers generated</span>
+              <div className="flex flex-col items-center gap-3">
+                {/* Mode Toggle Buttons */}
+                {lotteryMode === 'euro' && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { setGenerationMode('money'); fetchPrediction(); }}
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${
+                        generationMode === 'money'
+                          ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/30 scale-105'
+                          : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700 border border-slate-600/50'
+                      }`}
+                      data-testid="quick-money-mode-btn"
+                    >
+                      <span className="text-lg">💰</span>
+                      <span>Money Mode</span>
+                    </button>
+                    <button
+                      onClick={() => { setGenerationMode('jackpot'); fetchPrediction(); }}
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${
+                        generationMode === 'jackpot'
+                          ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105'
+                          : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700 border border-slate-600/50'
+                      }`}
+                      data-testid="quick-dreaming-mode-btn"
+                    >
+                      <span className="text-lg">🌟</span>
+                      <span>Dreaming Mode</span>
+                    </button>
+                  </div>
+                )}
+                {lotteryMode === 'swiss' && (
+                  <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm border bg-gradient-to-r from-emerald-900/30 to-emerald-800/30 border-emerald-500/20`}>
+                    <span className="text-emerald-400">✓</span>
+                    <span className="font-medium text-emerald-300">Numbers generated</span>
+                  </div>
+                )}
               </div>
             )}
           </div>
