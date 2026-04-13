@@ -736,6 +736,7 @@ function App() {
   }, [lotteryMode]);
 
   // Olivia's Kiss of Luck function - MIXES DIGITS from P1, P2, P3!
+  // Falls back to Circle Math (±25) when mixing isn't possible
   const giveKissOfLuck = () => {
     if (!prediction || !prediction.numbers || prediction.numbers.length < 3) return;
     
@@ -750,58 +751,103 @@ function App() {
     // Extract all digits from P1, P2, P3
     const allDigits = [...String(p1), ...String(p2), ...String(p3)].map(d => parseInt(d));
     
-    // Create new "kissed" numbers by mixing digits
-    const createKissedNumber = (digits, maxNum) => {
-      // Shuffle and try to create valid number
-      const shuffled = [...digits].sort(() => Math.random() - 0.5);
-      
-      // Try different combinations
-      for (let i = 0; i < shuffled.length; i++) {
-        for (let j = 0; j < shuffled.length; j++) {
-          if (i !== j) {
-            const num = parseInt(`${shuffled[i]}${shuffled[j]}`);
-            if (num >= 1 && num <= maxNum) return num;
-          }
-        }
-        // Single digit
-        if (shuffled[i] >= 1 && shuffled[i] <= maxNum) return shuffled[i];
-      }
-      return shuffled[0] || 1;
-    };
-    
-    // Generate 3 new "kissed" numbers
     const maxNum = lotteryMode === 'swiss' ? 42 : 50;
     const kissedNumbers = [];
     const usedNums = new Set(prediction.numbers);
     
-    for (let attempt = 0; attempt < 3; attempt++) {
-      let newNum;
-      let tries = 0;
-      do {
-        // Shuffle digits and create number
-        const shuffled = [...allDigits].sort(() => Math.random() - 0.5);
-        if (shuffled.length >= 2 && Math.random() > 0.3) {
-          // Two digit number
-          newNum = parseInt(`${shuffled[0]}${shuffled[1]}`);
-        } else {
-          // Single digit or other combo
-          newNum = shuffled[0] * 10 + (shuffled[1] || 0);
+    // Try to create numbers by mixing digits
+    const tryMixDigits = () => {
+      const results = [];
+      for (let attempt = 0; attempt < 3; attempt++) {
+        let newNum = null;
+        let tries = 0;
+        
+        while (tries < 30 && newNum === null) {
+          // Shuffle digits
+          const shuffled = [...allDigits].sort(() => Math.random() - 0.5);
+          
+          // Try different combinations
+          const candidates = [];
+          
+          // Two digit combinations
+          for (let i = 0; i < shuffled.length; i++) {
+            for (let j = 0; j < shuffled.length; j++) {
+              if (i !== j) {
+                const num = shuffled[i] * 10 + shuffled[j];
+                if (num >= 1 && num <= maxNum) candidates.push(num);
+              }
+            }
+          }
+          
+          // Single digits
+          for (const d of shuffled) {
+            if (d >= 1 && d <= maxNum) candidates.push(d);
+          }
+          
+          // Pick a valid one
+          const validCandidates = candidates.filter(n => 
+            !usedNums.has(n) && !results.includes(n)
+          );
+          
+          if (validCandidates.length > 0) {
+            newNum = validCandidates[Math.floor(Math.random() * validCandidates.length)];
+          }
+          tries++;
         }
-        tries++;
-      } while ((usedNums.has(newNum) || newNum < 1 || newNum > maxNum || kissedNumbers.includes(newNum)) && tries < 20);
-      
-      if (newNum >= 1 && newNum <= maxNum && !usedNums.has(newNum) && !kissedNumbers.includes(newNum)) {
-        kissedNumbers.push(newNum);
-        usedNums.add(newNum);
+        
+        if (newNum !== null) {
+          results.push(newNum);
+          usedNums.add(newNum);
+        }
+      }
+      return results;
+    };
+    
+    // Circle Math fallback: n + 25 or n - 25
+    const circleNumber = (n) => {
+      const plus = n + 25;
+      const minus = n - 25;
+      const candidates = [];
+      if (plus <= maxNum && !usedNums.has(plus)) candidates.push(plus);
+      if (minus >= 1 && !usedNums.has(minus)) candidates.push(minus);
+      if (candidates.length > 0) {
+        return candidates[Math.floor(Math.random() * candidates.length)];
+      }
+      return null;
+    };
+    
+    // Try mixing first
+    let mixedNums = tryMixDigits();
+    
+    // If we couldn't get 3 numbers from mixing, use Circle Math for remaining
+    const originalNums = [p1, p2, p3];
+    let circleUsed = false;
+    
+    while (mixedNums.length < 3) {
+      const sourceNum = originalNums[mixedNums.length];
+      const circled = circleNumber(sourceNum);
+      if (circled !== null) {
+        mixedNums.push(circled);
+        usedNums.add(circled);
+        circleUsed = true;
+      } else {
+        // Last resort: find any unused number
+        for (let n = 1; n <= maxNum; n++) {
+          if (!usedNums.has(n)) {
+            mixedNums.push(n);
+            usedNums.add(n);
+            break;
+          }
+        }
       }
     }
     
     // Update prediction with kissed P1, P2, P3
-    if (kissedNumbers.length >= 3) {
+    if (mixedNums.length >= 3) {
       const newNumbers = [...prediction.numbers];
-      newNumbers[0] = kissedNumbers[0];
-      newNumbers[1] = kissedNumbers[1];
-      newNumbers[2] = kissedNumbers[2];
+      newNumbers[0] = mixedNums[0];
+      newNumbers[1] = mixedNums[1];
+      newNumbers[2] = mixedNums[2];
       
       // Sort to maintain order
       newNumbers.sort((a, b) => a - b);
@@ -812,13 +858,14 @@ function App() {
         kissed: true,
         originalNumbers: prev.originalNumbers || prev.numbers,
         kissedFrom: [p1, p2, p3],
-        kissedTo: kissedNumbers
+        kissedTo: mixedNums,
+        circleUsed: circleUsed
       }));
     }
     
-    // Play nice female "Ya man!" voice
+    // Play nice female "Mwah!" voice
     const playYaMan = () => {
-      const utterance = new SpeechSynthesisUtterance("Mwah! Good luck baby!");
+      const utterance = new SpeechSynthesisUtterance(circleUsed ? "Mwah! Circle magic baby!" : "Mwah! Good luck baby!");
       utterance.rate = 0.9;
       utterance.pitch = 1.4;
       utterance.volume = 0.8;
@@ -1436,6 +1483,7 @@ function App() {
               <div className="mt-2 p-2 rounded-lg bg-pink-500/10 border border-pink-500/30">
                 <p className="text-xs text-pink-300 text-center">
                   💋 Kissed: {prediction.kissedFrom.join(', ')} → <span className="font-bold text-pink-200">{prediction.kissedTo.join(', ')}</span>
+                  {prediction.circleUsed && <span className="ml-1 text-amber-300">(🔄 +Circle)</span>}
                 </p>
               </div>
             )}
