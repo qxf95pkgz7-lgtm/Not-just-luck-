@@ -738,22 +738,23 @@ function App() {
   // Olivia's Kiss of Luck function - MIXES DIGITS from P1, P2, P3!
   // Falls back to Circle Math (±25) when mixing isn't possible
   const giveKissOfLuck = () => {
-    if (!prediction || !prediction.numbers || prediction.numbers.length < 3) return;
+    const nums = prediction?.main_prediction;
+    if (!prediction || !nums || nums.length < 3) return;
     
     setOliviaKiss(true);
     setShowKissHearts(true);
     
     // Get first 3 numbers (P1, P2, P3)
-    const p1 = prediction.numbers[0];
-    const p2 = prediction.numbers[1];
-    const p3 = prediction.numbers[2];
+    const p1 = nums[0];
+    const p2 = nums[1];
+    const p3 = nums[2];
     
     // Extract all digits from P1, P2, P3
     const allDigits = [...String(p1), ...String(p2), ...String(p3)].map(d => parseInt(d));
     
     const maxNum = lotteryMode === 'swiss' ? 42 : 50;
     const kissedNumbers = [];
-    const usedNums = new Set(prediction.numbers);
+    const usedNums = new Set(nums);
     
     // Try to create numbers by mixing digits
     const tryMixDigits = () => {
@@ -844,7 +845,7 @@ function App() {
     
     // Update prediction with kissed P1, P2, P3
     if (mixedNums.length >= 3) {
-      const newNumbers = [...prediction.numbers];
+      const newNumbers = [...nums];
       newNumbers[0] = mixedNums[0];
       newNumbers[1] = mixedNums[1];
       newNumbers[2] = mixedNums[2];
@@ -854,9 +855,9 @@ function App() {
       
       setPrediction(prev => ({
         ...prev,
-        numbers: newNumbers,
+        main_prediction: newNumbers,
         kissed: true,
-        originalNumbers: prev.originalNumbers || prev.numbers,
+        originalNumbers: prev.originalNumbers || prev.main_prediction,
         kissedFrom: [p1, p2, p3],
         kissedTo: mixedNums,
         circleUsed: circleUsed
