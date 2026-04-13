@@ -2103,20 +2103,24 @@ function App() {
                     <span className="text-slate-500 text-xs">{generationHistory.length} saved</span>
                   )}
                 </div>
-                <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
+                <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
                   {hitTrackerLoading ? (
                     <div className="text-center text-slate-500 text-sm py-4">Loading...</div>
                   ) : generationHistory.length === 0 ? (
                     <div className="text-center text-slate-500 text-sm py-4">
-                      No generations saved yet. Click "Generate Story Tickets" to start tracking!
+                      No generations saved yet. Generate numbers to start tracking!
                     </div>
                   ) : (
-                    generationHistory.map((gen, idx) => (
+                    generationHistory.map((gen, idx) => {
+                      const modeLabel = gen.mode === 'money' ? '💰' : gen.mode === 'dreaming' ? '🌟' : '🎻';
+                      return (
                       <div 
                         key={gen._id || idx}
                         className={`p-3 rounded-lg border ${
                           gen.hits_calculated 
-                            ? 'bg-gradient-to-r from-emerald-500/10 to-emerald-600/5 border-emerald-500/20'
+                            ? gen.best_ticket_hits >= 2
+                              ? 'bg-gradient-to-r from-emerald-500/20 to-emerald-600/10 border-emerald-400/40'
+                              : 'bg-gradient-to-r from-emerald-500/10 to-emerald-600/5 border-emerald-500/20'
                             : 'bg-gradient-to-r from-slate-500/10 to-slate-600/5 border-slate-500/20'
                         }`}
                       >
@@ -2128,11 +2132,11 @@ function App() {
                               <Clock className="w-4 h-4 text-slate-400" />
                             )}
                             <span className="text-slate-400 text-xs">
-                              For: <span className="text-slate-200">{gen.target_date}</span>
+                              {modeLabel} For: <span className="text-slate-200 font-semibold">{gen.target_date}</span>
                             </span>
                           </div>
                           <span className="text-slate-500 text-xs">
-                            {new Date(gen.generated_at).toLocaleDateString('de-CH')}
+                            {gen.tickets?.length || 0} tickets
                           </span>
                         </div>
                         
@@ -2207,7 +2211,7 @@ function App() {
                           </button>
                         )}
                       </div>
-                    ))
+                    );})
                   )}
                 </div>
                 

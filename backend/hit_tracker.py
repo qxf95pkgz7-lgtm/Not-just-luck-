@@ -146,21 +146,59 @@ class HitTracker:
         limit: int = 50,
         include_hits: bool = True
     ) -> List[Dict]:
-        """Get all saved generations with optional hit data"""
+        """Get saved generations sorted by target_date.
         
-        cursor = self.generations_collection.find(
+        RULES:
+        - Sorted by target_date descending (newest draw first)
+        - Show last 10 generations for recent dates
+        - Older dates: only show if best_ticket_hits >= 2
+        """
+        
+        all_gens = await self.generations_collection.find(
             {},
             {"_id": 1, "generated_at": 1, "target_date": 1, "generation_type": 1,
              "tickets": 1, "hits_calculated": 1, "hit_results": 1,
              "total_hits": 1, "lucky_hits": 1, "best_ticket_hits": 1, "actual_draw": 1}
-        ).sort("generated_at", -1).limit(limit)
+        ).to_list(length=500)
         
-        generations = []
-        async for gen in cursor:
+        for gen in all_gens:
             gen["_id"] = str(gen["_id"])
-            generations.append(gen)
         
-        return generations
+        # Sort by target_date descending
+        def parse_target_date(g):
+            try:
+                return datetime.strptime(g.get('target_date', '01.01.2000'), '%d.%m.%Y')
+            except:
+                return datetime.min
+        
+        all_gens.sort(key=parse_target_date, reverse=True)
+        
+        # Group by target_date
+        from collections import OrderedDict
+        by_date = OrderedDict()
+        for gen in all_gens:
+            td = gen.get('target_date', 'unknown')
+            if td not in by_date:
+                by_date[td] = []
+            by_date[td].append(gen)
+        
+        # Build result: last 10 for recent, 2+ hits for older
+        result = []
+        dates_seen = 0
+        
+        for target_date, gens_for_date in by_date.items():
+            dates_seen += 1
+            
+            if dates_seen <= 3:
+                for g in gens_for_date:
+                    if len(result) < 10:
+                        result.append(g)
+            else:
+                for g in gens_for_date:
+                    if g.get('hits_calculated') and g.get('best_ticket_hits', 0) >= 2:
+                        result.append(g)
+        
+        return result
     
     async def get_last_draw(self) -> Optional[Dict]:
         """Get the most recent draw"""

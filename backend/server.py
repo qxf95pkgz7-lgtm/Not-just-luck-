@@ -3441,6 +3441,34 @@ async def get_master_prediction(
         }
         await db.prediction_history.insert_one(history_doc)
     
+    # === ALSO SAVE TO HIT TRACKER (generations collection) ===
+    try:
+        from datetime import timedelta
+        today = datetime.now()
+        days_until_wed = (2 - today.weekday()) % 7
+        days_until_sat = (5 - today.weekday()) % 7
+        if days_until_wed == 0: days_until_wed = 7
+        if days_until_sat == 0: days_until_sat = 7
+        next_draw = min(days_until_wed, days_until_sat)
+        target = today + timedelta(days=next_draw)
+        target_date_str = target.strftime("%d.%m.%Y")
+        
+        tracker_tickets = []
+        for ticket in tickets_to_save:
+            tracker_tickets.append({
+                "numbers": ticket.get("numbers", []),
+                "lucky": lucky_prediction,
+                "story": "master-predictor",
+            })
+        
+        await hit_tracker.save_generation(
+            target_date=target_date_str,
+            tickets=tracker_tickets,
+            generation_type="master-predictor"
+        )
+    except Exception:
+        pass  # Don't fail the prediction if tracker save fails
+    
     return result
 
 
@@ -3589,6 +3617,33 @@ async def get_swiss_money_mode(
     
     price_per_ticket = 2.50
     total_price = round(len(all_tickets) * price_per_ticket, 2)
+    
+    # Auto-save to hit tracker
+    try:
+        from datetime import timedelta
+        days_until_wed = (2 - today.weekday()) % 7
+        days_until_sat = (5 - today.weekday()) % 7
+        if days_until_wed == 0: days_until_wed = 7
+        if days_until_sat == 0: days_until_sat = 7
+        next_draw = min(days_until_wed, days_until_sat)
+        target = today + timedelta(days=next_draw)
+        target_date_str = target.strftime("%d.%m.%Y")
+        
+        tracker_tickets = []
+        for t in all_tickets:
+            tracker_tickets.append({
+                "numbers": t.get("numbers", []),
+                "lucky": t.get("lucky_number", 1),
+                "story": "money-mode",
+            })
+        
+        await hit_tracker.save_generation(
+            target_date=target_date_str,
+            tickets=tracker_tickets,
+            generation_type="money-mode"
+        )
+    except Exception:
+        pass
     
     return {
         "mode": "💰 MONEY MODE",

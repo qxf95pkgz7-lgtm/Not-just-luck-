@@ -2406,6 +2406,12 @@ def create_euromillions_router(db):
         price_per_ticket = 3.50
         total_price = len(tickets) * price_per_ticket
         
+        # Auto-save to hit tracker
+        try:
+            await _save_to_tracker(tickets, target_date, mode="dreaming")
+        except Exception:
+            pass  # Don't fail the prediction if save fails
+        
         return {
             "tickets": tickets,
             "total_tickets": len(tickets),
@@ -2414,6 +2420,40 @@ def create_euromillions_router(db):
             "currency": "CHF",
             "engine": "🎧 DJ Pattern Engine 🎻"
         }
+    
+    # Helper: auto-save generated tickets to hit tracker
+    async def _save_to_tracker(tickets_data, target_date, mode="dreaming"):
+        """Save generated tickets to euromillions_generations for hit tracking"""
+        from datetime import datetime as dt, timedelta
+        
+        # Calculate next draw date if not provided
+        if not target_date:
+            today = dt.now()
+            days_until_tue = (1 - today.weekday()) % 7
+            days_until_fri = (4 - today.weekday()) % 7
+            if days_until_tue == 0: days_until_tue = 7
+            if days_until_fri == 0: days_until_fri = 7
+            next_draw = min(days_until_tue, days_until_fri)
+            target = today + timedelta(days=next_draw)
+            target_date = target.strftime("%d.%m.%Y")
+        
+        generation = {
+            "generated_at": dt.now().isoformat(),
+            "target_date": target_date,
+            "mode": mode,
+            "tickets": [{
+                "numbers": t.get("numbers", []),
+                "stars": t.get("stars", []),
+                "story": t.get("scenario", mode),
+            } for t in tickets_data],
+            "hits_calculated": False,
+            "hit_results": [],
+            "total_hits": 0,
+            "star_hits": 0,
+            "best_ticket_hits": 0,
+        }
+        
+        await db.euromillions_generations.insert_one(generation)
     
     # ═══════════════════════════════════════════════════════════════════════
     # 💰 MONEY MODE - Focus on 3+ numbers for consistent small wins! 💰
@@ -2485,6 +2525,12 @@ def create_euromillions_router(db):
         
         price_per_ticket = 3.50
         total_price = round(len(tickets) * price_per_ticket, 2)
+        
+        # Auto-save to hit tracker
+        try:
+            await _save_to_tracker(tickets, target_date, mode="money")
+        except Exception:
+            pass
         
         return {
             "mode": "💰 MONEY MODE",
@@ -2780,21 +2826,63 @@ def create_euromillions_router(db):
     
     @router.get("/generation-history")
     async def get_euro_generation_history(limit: int = 50):
-        """Get all saved EuroMillions generations with hit data"""
-        generations = await db.euromillions_generations.find(
+        """Get saved EuroMillions generations with hit data.
+        
+        RULES:
+        - Sorted by target_date descending (newest draw first)
+        - Show last 10 generations for current/recent dates
+        - For older dates: only show if 2+ hits
+        """
+        all_gens = await db.euromillions_generations.find(
             {},
             {"_id": 1, "generated_at": 1, "target_date": 1, "tickets": 1, 
              "hits_calculated": 1, "hit_results": 1, "total_hits": 1, 
-             "star_hits": 1, "best_ticket_hits": 1}
-        ).sort("generated_at", -1).limit(limit).to_list(length=limit)
+             "star_hits": 1, "best_ticket_hits": 1, "mode": 1}
+        ).to_list(length=500)
         
-        # Convert ObjectId to string
-        for gen in generations:
+        # Convert ObjectId and parse dates for proper sorting
+        for gen in all_gens:
             gen["_id"] = str(gen["_id"])
         
+        # Sort by target_date descending (DD.MM.YYYY → proper date sort)
+        def parse_target_date(g):
+            try:
+                return datetime.strptime(g.get('target_date', '01.01.2000'), '%d.%m.%Y')
+            except:
+                return datetime.min
+        
+        all_gens.sort(key=parse_target_date, reverse=True)
+        
+        # Group by target_date
+        from collections import OrderedDict
+        by_date = OrderedDict()
+        for gen in all_gens:
+            td = gen.get('target_date', 'unknown')
+            if td not in by_date:
+                by_date[td] = []
+            by_date[td].append(gen)
+        
+        # Build result: last 10 generations + older only if 2+ hits
+        result = []
+        dates_seen = 0
+        
+        for target_date, gens_for_date in by_date.items():
+            dates_seen += 1
+            
+            if dates_seen <= 3:
+                # Recent dates: show all generations (up to 10 total)
+                for g in gens_for_date:
+                    if len(result) < 10:
+                        result.append(g)
+            else:
+                # Older dates: only show if best_ticket_hits >= 2
+                for g in gens_for_date:
+                    if g.get('hits_calculated') and g.get('best_ticket_hits', 0) >= 2:
+                        result.append(g)
+        
         return {
-            "count": len(generations),
-            "generations": generations
+            "count": len(result),
+            "generations": result
         }
     
     @router.post("/calculate-hits/{generation_id}")
