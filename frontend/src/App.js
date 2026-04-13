@@ -1454,7 +1454,7 @@ function App() {
                 }`}
                 data-testid="olivia-kiss-btn"
               >
-                💋 Olivia's Kiss 💋
+                🍀 Olivia's Kiss 🍀
               </button>
               
               {/* Flying Hearts Animation */}
@@ -1471,7 +1471,7 @@ function App() {
                         animationDuration: '1s'
                       }}
                     >
-                      {['💋', '💕', '✨', '💫'][i % 4]}
+                      {['🍀', '💕', '✨', '💫'][i % 4]}
                     </span>
                   ))}
                 </div>
@@ -1482,7 +1482,7 @@ function App() {
             {prediction?.kissed && prediction?.kissedFrom && prediction?.kissedTo && (
               <div className="mt-2 p-2 rounded-lg bg-pink-500/10 border border-pink-500/30">
                 <p className="text-xs text-pink-300 text-center">
-                  💋 Kissed: {prediction.kissedFrom.join(', ')} → <span className="font-bold text-pink-200">{prediction.kissedTo.join(', ')}</span>
+                  🍀 Kissed: {prediction.kissedFrom.join(', ')} → <span className="font-bold text-pink-200">{prediction.kissedTo.join(', ')}</span>
                   {prediction.circleUsed && <span className="ml-1 text-amber-300">(🔄 +Circle)</span>}
                 </p>
               </div>
