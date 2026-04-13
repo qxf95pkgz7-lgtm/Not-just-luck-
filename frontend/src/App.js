@@ -735,19 +735,94 @@ function App() {
     }
   }, [lotteryMode]);
 
-  // Olivia's Kiss of Luck function
+  // Olivia's Kiss of Luck function - MIXES DIGITS from P1, P2, P3!
   const giveKissOfLuck = () => {
+    if (!prediction || !prediction.numbers || prediction.numbers.length < 3) return;
+    
     setOliviaKiss(true);
     setShowKissHearts(true);
     
+    // Get first 3 numbers (P1, P2, P3)
+    const p1 = prediction.numbers[0];
+    const p2 = prediction.numbers[1];
+    const p3 = prediction.numbers[2];
+    
+    // Extract all digits from P1, P2, P3
+    const allDigits = [...String(p1), ...String(p2), ...String(p3)].map(d => parseInt(d));
+    
+    // Create new "kissed" numbers by mixing digits
+    const createKissedNumber = (digits, maxNum) => {
+      // Shuffle and try to create valid number
+      const shuffled = [...digits].sort(() => Math.random() - 0.5);
+      
+      // Try different combinations
+      for (let i = 0; i < shuffled.length; i++) {
+        for (let j = 0; j < shuffled.length; j++) {
+          if (i !== j) {
+            const num = parseInt(`${shuffled[i]}${shuffled[j]}`);
+            if (num >= 1 && num <= maxNum) return num;
+          }
+        }
+        // Single digit
+        if (shuffled[i] >= 1 && shuffled[i] <= maxNum) return shuffled[i];
+      }
+      return shuffled[0] || 1;
+    };
+    
+    // Generate 3 new "kissed" numbers
+    const maxNum = lotteryMode === 'swiss' ? 42 : 50;
+    const kissedNumbers = [];
+    const usedNums = new Set(prediction.numbers);
+    
+    for (let attempt = 0; attempt < 3; attempt++) {
+      let newNum;
+      let tries = 0;
+      do {
+        // Shuffle digits and create number
+        const shuffled = [...allDigits].sort(() => Math.random() - 0.5);
+        if (shuffled.length >= 2 && Math.random() > 0.3) {
+          // Two digit number
+          newNum = parseInt(`${shuffled[0]}${shuffled[1]}`);
+        } else {
+          // Single digit or other combo
+          newNum = shuffled[0] * 10 + (shuffled[1] || 0);
+        }
+        tries++;
+      } while ((usedNums.has(newNum) || newNum < 1 || newNum > maxNum || kissedNumbers.includes(newNum)) && tries < 20);
+      
+      if (newNum >= 1 && newNum <= maxNum && !usedNums.has(newNum) && !kissedNumbers.includes(newNum)) {
+        kissedNumbers.push(newNum);
+        usedNums.add(newNum);
+      }
+    }
+    
+    // Update prediction with kissed P1, P2, P3
+    if (kissedNumbers.length >= 3) {
+      const newNumbers = [...prediction.numbers];
+      newNumbers[0] = kissedNumbers[0];
+      newNumbers[1] = kissedNumbers[1];
+      newNumbers[2] = kissedNumbers[2];
+      
+      // Sort to maintain order
+      newNumbers.sort((a, b) => a - b);
+      
+      setPrediction(prev => ({
+        ...prev,
+        numbers: newNumbers,
+        kissed: true,
+        originalNumbers: prev.originalNumbers || prev.numbers,
+        kissedFrom: [p1, p2, p3],
+        kissedTo: kissedNumbers
+      }));
+    }
+    
     // Play nice female "Ya man!" voice
     const playYaMan = () => {
-      const utterance = new SpeechSynthesisUtterance("Ya man! Good luck!");
-      utterance.rate = 0.9;  // Slightly slower for warmth
-      utterance.pitch = 1.4; // Higher pitch for female voice
+      const utterance = new SpeechSynthesisUtterance("Mwah! Good luck baby!");
+      utterance.rate = 0.9;
+      utterance.pitch = 1.4;
       utterance.volume = 0.8;
       
-      // Try to find a female voice
       const voices = speechSynthesis.getVoices();
       const femaleVoice = voices.find(v => 
         v.name.toLowerCase().includes('female') || 
@@ -767,14 +842,12 @@ function App() {
       speechSynthesis.speak(utterance);
     };
     
-    // Voices may need to load first
     if (speechSynthesis.getVoices().length > 0) {
       playYaMan();
     } else {
       speechSynthesis.onvoiceschanged = playYaMan;
     }
     
-    // Reset after animation
     setTimeout(() => {
       setOliviaKiss(false);
     }, 1500);
@@ -1324,17 +1397,20 @@ function App() {
             <div className="relative inline-block">
               <button
                 onClick={giveKissOfLuck}
+                disabled={!prediction}
                 className={`px-6 py-2 rounded-full font-bold text-sm transition-all duration-300 ${
-                  oliviaKiss 
-                    ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white scale-110 shadow-lg shadow-emerald-500/50' 
-                    : 'bg-gradient-to-r from-emerald-600/30 to-green-600/30 text-emerald-300 hover:from-emerald-500/50 hover:to-green-500/50 border border-emerald-500/30'
+                  !prediction
+                    ? 'bg-slate-700/30 text-slate-500 cursor-not-allowed'
+                    : oliviaKiss 
+                      ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white scale-110 shadow-lg shadow-pink-500/50' 
+                      : 'bg-gradient-to-r from-pink-600/30 to-rose-600/30 text-pink-300 hover:from-pink-500/50 hover:to-rose-500/50 border border-pink-500/30'
                 }`}
                 data-testid="olivia-kiss-btn"
               >
-                🍀 Olivia's Kiss of Luck 🍀
+                💋 Olivia's Kiss 💋
               </button>
               
-              {/* Flying Clovers Animation - Kiss of LUCK! */}
+              {/* Flying Hearts Animation */}
               {showKissHearts && (
                 <div className="absolute inset-0 pointer-events-none overflow-visible">
                   {[...Array(8)].map((_, i) => (
@@ -1348,12 +1424,21 @@ function App() {
                         animationDuration: '1s'
                       }}
                     >
-                      {['🍀', '✨', '🌟', '💫'][i % 4]}
+                      {['💋', '💕', '✨', '💫'][i % 4]}
                     </span>
                   ))}
                 </div>
               )}
             </div>
+            
+            {/* Show Kiss Transformation */}
+            {prediction?.kissed && prediction?.kissedFrom && prediction?.kissedTo && (
+              <div className="mt-2 p-2 rounded-lg bg-pink-500/10 border border-pink-500/30">
+                <p className="text-xs text-pink-300 text-center">
+                  💋 Kissed: {prediction.kissedFrom.join(', ')} → <span className="font-bold text-pink-200">{prediction.kissedTo.join(', ')}</span>
+                </p>
+              </div>
+            )}
             
             {/* Sync Latest Results Button */}
             <button
