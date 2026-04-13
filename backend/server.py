@@ -3883,7 +3883,7 @@ async def sync_lottery_results():
     """
     Manually trigger sync of latest lottery results from external sources
     - EuroMillions: Fetches from free API (euromillions.api.pedromealha.dev)
-    - Swiss Lotto: Scrapes from 6richtige.ch / lottoland.com / swisslos.ch
+    - Swiss Lotto: Scrapes from lottolyzer.com (primary) / lotteryextreme.com (fallback)
     """
     stats = await auto_sync_all(db)
     return {

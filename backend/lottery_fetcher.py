@@ -1,7 +1,11 @@
 """
 Auto-fetch lottery results from external sources
-- Swiss Lotto: Scrapes from 6richtige.ch (most reliable), swisslos.ch backup (Wed & Sat draws)
+- Swiss Lotto: Scrapes from lottolyzer.com (primary, structured tables), lotteryextreme.com (fallback)
 - EuroMillions: Uses free API from pedromealha.dev (Tue & Fri draws)
+
+PERMANENT FIX: Old scrapers (6richtige.ch, lottoland, swisslos.ch) all broke due to
+JS rendering / recaptcha / structure changes. Replaced with lottolyzer.com which returns
+clean HTML tables with date, numbers, and lucky number columns.
 """
 
 import httpx
@@ -18,9 +22,9 @@ logger = logging.getLogger(__name__)
 # EuroMillions API (free, reliable)
 EUROMILLIONS_API = "https://euromillions.api.pedromealha.dev"
 
-# Swiss Lotto sources
-SIXRICHTIGE_URL = "https://www.6richtige.ch"  # Primary - most reliable
-SWISSLOS_URL = "https://www.swisslos.ch/en/swisslotto/information/winning-numbers/winning-numbers.html"
+# Swiss Lotto sources (ordered by reliability)
+LOTTOLYZER_URL = "https://en.lottolyzer.com/history/switzerland/swiss-lotto/page/1/per-page/50/summary-view"
+LOTTERYEXTREME_URL = "https://www.lotteryextreme.com/swiss-lotto/"
 
 
 async def fetch_euromillions_latest(limit: int = 10) -> List[Dict]:
@@ -38,29 +42,25 @@ async def fetch_euromillions_latest(limit: int = 10) -> List[Dict]:
             response.raise_for_status()
             data = response.json()
             
-            # Get the most recent draws (API returns oldest first, so reverse)
             draws = data if isinstance(data, list) else data.get("draws", [])
-            draws = list(reversed(draws))  # Most recent first
+            draws = list(reversed(draws))
             
             for draw in draws[:limit]:
-                # API format: {"date": "Fri, 13 Feb 2004 00:00:00 GMT", "numbers": ["16","29",...], "stars": ["7","9"]}
                 date_str = draw.get("date", "")
                 numbers = draw.get("numbers", [])
                 stars = draw.get("stars", [])
                 
                 if date_str and numbers:
-                    # Convert date from "Fri, 13 Feb 2004 00:00:00 GMT" to DD.MM.YYYY
                     try:
                         dt = datetime.strptime(date_str, "%a, %d %b %Y %H:%M:%S %Z")
                         formatted_date = dt.strftime("%d.%m.%Y")
-                    except:
+                    except Exception:
                         try:
                             dt = datetime.strptime(date_str, "%Y-%m-%d")
                             formatted_date = dt.strftime("%d.%m.%Y")
-                        except:
+                        except Exception:
                             formatted_date = date_str
                     
-                    # Convert string numbers to int
                     nums = sorted([int(n) for n in numbers])
                     star_nums = sorted([int(s) for s in stars]) if stars else []
                     
@@ -78,194 +78,147 @@ async def fetch_euromillions_latest(limit: int = 10) -> List[Dict]:
     return results
 
 
-async def fetch_swisslotto_from_6richtige(limit: int = 20) -> List[Dict]:
+async def fetch_swisslotto_from_lottolyzer(limit: int = 50) -> List[Dict]:
     """
-    Scrape latest Swiss Lotto results from 6richtige.ch
-    This is the most reliable source for Swiss Lotto results.
-    Returns list of draws with date, numbers, lucky_number, replay_number
+    PRIMARY SOURCE: Scrape Swiss Lotto results from lottolyzer.com
+    Returns clean structured data: date (DD.MM.YYYY), 6 numbers, lucky number.
+    Table format: Draw | Date | Winning No. | Lucky No. | ...
     """
     results = []
     try:
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
             response = await client.get(
-                SIXRICHTIGE_URL,
+                LOTTOLYZER_URL,
                 headers={
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-                    "Accept-Language": "en-US,en;q=0.5"
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
                 }
             )
             response.raise_for_status()
             
             soup = BeautifulSoup(response.text, 'html.parser')
+            table = soup.find('table')
             
-            # 6richtige.ch uses a table structure
-            # Find all table rows with draw data
-            tables = soup.find_all('table')
+            if not table:
+                logger.warning("Lottolyzer: No table found on page")
+                return results
             
-            for table in tables:
-                rows = table.find_all('tr')
-                for row in rows:
-                    cells = row.find_all('td')
-                    if len(cells) >= 8:  # Day, Date, 6 numbers, lucky, replay
-                        try:
-                            # Extract date (format: DD.MM.YYYY)
-                            date_cell = cells[1].get_text(strip=True)
-                            
-                            # Validate date format
-                            if not re.match(r'\d{2}\.\d{2}\.\d{4}', date_cell):
-                                continue
-                            
-                            # Extract 6 main numbers (cells 2-7)
-                            numbers = []
-                            for i in range(2, 8):
-                                num_text = cells[i].get_text(strip=True)
-                                if num_text.isdigit():
-                                    numbers.append(int(num_text))
-                            
-                            if len(numbers) != 6:
-                                continue
-                            
-                            # Extract lucky number (cell 8)
-                            lucky_text = cells[8].get_text(strip=True) if len(cells) > 8 else "1"
-                            lucky = int(lucky_text) if lucky_text.isdigit() else 1
-                            
-                            # Extract replay number (cell 9)
-                            replay_text = cells[9].get_text(strip=True) if len(cells) > 9 else "1"
-                            replay = int(replay_text) if replay_text.isdigit() else 1
-                            
-                            results.append({
-                                "date": date_cell,
-                                "numbers": sorted(numbers),
-                                "lucky_number": lucky,
-                                "replay_number": replay
-                            })
-                            
-                            if len(results) >= limit:
-                                break
-                        except Exception as e:
-                            logger.debug(f"Error parsing row: {e}")
-                            continue
+            rows = table.find_all('tr')
+            
+            for row in rows[2:]:  # Skip 2 header rows
+                cells = row.find_all('td')
+                if len(cells) < 4:
+                    continue
                 
-                if results:
-                    break  # Found data, stop searching tables
+                try:
+                    texts = [c.get_text(strip=True) for c in cells]
+                    date_str = texts[0]      # DD.MM.YYYY
+                    numbers_str = texts[2]    # "1,6,8,14,22,34"
+                    lucky_str = texts[3]      # "1"
+                    
+                    if not re.match(r'\d{2}\.\d{2}\.\d{4}', date_str):
+                        continue
+                    if ',' not in numbers_str:
+                        continue
+                    
+                    nums = sorted([int(n.strip()) for n in numbers_str.split(',')])
+                    if len(nums) != 6:
+                        continue
+                    if not all(1 <= n <= 42 for n in nums):
+                        continue
+                    
+                    lucky = int(lucky_str) if lucky_str.isdigit() else 1
+                    
+                    results.append({
+                        "date": date_str,
+                        "numbers": nums,
+                        "lucky_number": lucky,
+                        "replay_number": 1
+                    })
+                    
+                    if len(results) >= limit:
+                        break
+                except Exception as e:
+                    logger.debug(f"Lottolyzer: Error parsing row: {e}")
+                    continue
             
-            logger.info(f"Fetched {len(results)} Swiss Lotto draws from 6richtige.ch")
+            logger.info(f"Fetched {len(results)} Swiss Lotto draws from lottolyzer.com")
             
     except Exception as e:
-        logger.error(f"Error fetching from 6richtige.ch: {e}")
+        logger.error(f"Error fetching from lottolyzer.com: {e}")
     
     return results
 
 
-async def fetch_swisslotto_latest(limit: int = 10) -> List[Dict]:
+async def fetch_swisslotto_from_lotteryextreme() -> List[Dict]:
     """
-    Scrape latest Swiss Lotto results from swisslos.ch
-    Returns list of draws with date, numbers, lucky_number, replay_number
+    FALLBACK SOURCE: Parse latest Swiss Lotto from lotteryextreme.com
+    The page has displayball UL elements and embedded text with draw data.
     """
     results = []
     try:
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
             response = await client.get(
-                SWISSLOS_URL,
+                LOTTERYEXTREME_URL,
                 headers={
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
                 }
             )
             response.raise_for_status()
             
             soup = BeautifulSoup(response.text, 'html.parser')
             
-            # Find draw containers - swisslos uses specific class patterns
-            # Look for the winning numbers sections
-            draw_sections = soup.find_all('div', class_=re.compile(r'winning-numbers|draw-result|result-item'))
+            # Find the first displayball UL (latest Swiss Lotto draw)
+            ball_lists = soup.find_all('ul', class_='displayball')
             
-            if not draw_sections:
-                # Try alternative parsing - look for number balls
-                ball_containers = soup.find_all('div', class_=re.compile(r'ball|number'))
-                logger.info(f"Found {len(ball_containers)} ball containers")
-            
-            # Also try to find via JavaScript data or JSON embedded in page
-            scripts = soup.find_all('script')
-            for script in scripts:
-                if script.string and 'winningNumbers' in str(script.string):
-                    # Try to extract JSON data
-                    text = script.string
-                    # Look for patterns like numbers: [1,2,3,4,5,6]
-                    number_match = re.search(r'numbers["\s:]+\[([0-9,\s]+)\]', text)
-                    if number_match:
-                        nums = [int(n.strip()) for n in number_match.group(1).split(',')]
-                        logger.info(f"Found numbers in script: {nums}")
-            
-            # If direct scraping fails, try the API endpoint that the page uses
-            api_url = "https://www.swisslos.ch/api/lotto/winning-numbers"
-            try:
-                api_response = await client.get(api_url)
-                if api_response.status_code == 200:
-                    api_data = api_response.json()
-                    logger.info(f"Got data from swisslos API: {api_data}")
-            except:
-                pass
+            if ball_lists:
+                # First displayball has the main 6 numbers + lucky
+                first_ball = ball_lists[0]
+                lis = first_ball.find_all('li')
+                all_nums = []
+                for li in lis:
+                    txt = li.get_text(strip=True)
+                    if txt.isdigit():
+                        all_nums.append(int(txt))
                 
-            logger.info(f"Scraped {len(results)} Swiss Lotto draws")
-            
-    except Exception as e:
-        logger.error(f"Error fetching Swiss Lotto: {e}")
-    
-    return results
-
-
-async def fetch_swisslotto_from_lottoland() -> List[Dict]:
-    """
-    Alternative: Fetch Swiss Lotto from lottoland.com which has cleaner structure
-    """
-    results = []
-    try:
-        url = "https://www.lottoland.com/en/swisslotto/results-winning-numbers"
-        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
-            response = await client.get(
-                url,
-                headers={
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-                }
-            )
-            response.raise_for_status()
-            
-            soup = BeautifulSoup(response.text, 'html.parser')
-            
-            # Lottoland typically shows results in structured divs
-            # Look for result rows
-            result_rows = soup.find_all('div', class_=re.compile(r'result|draw|winning'))
-            
-            for row in result_rows[:10]:
-                # Try to extract date and numbers
-                date_elem = row.find(class_=re.compile(r'date'))
-                number_elems = row.find_all(class_=re.compile(r'ball|number'))
-                
-                if date_elem and number_elems:
-                    date_text = date_elem.get_text(strip=True)
-                    numbers = []
-                    for elem in number_elems:
-                        try:
-                            num = int(elem.get_text(strip=True))
-                            if 1 <= num <= 42:
-                                numbers.append(num)
-                        except:
-                            pass
+                if len(all_nums) >= 6:
+                    main_nums = sorted(all_nums[:6])
+                    lucky = all_nums[6] if len(all_nums) > 6 else 1
                     
-                    if len(numbers) >= 6:
-                        results.append({
-                            "date": date_text,
-                            "numbers": sorted(numbers[:6]),
-                            "lucky_number": numbers[6] if len(numbers) > 6 else 1,
-                            "replay_number": numbers[7] if len(numbers) > 7 else 1
-                        })
+                    # Extract date from page text
+                    page_text = soup.get_text()
+                    date_match = re.search(
+                        r'(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+(\d{1,2})(?:st|nd|rd|th)\s+'
+                        r'(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})',
+                        page_text
+                    )
+                    
+                    if date_match:
+                        day = int(date_match.group(1))
+                        month_name = date_match.group(2)
+                        year = int(date_match.group(3))
+                        month_num = {
+                            'January': 1, 'February': 2, 'March': 3, 'April': 4,
+                            'May': 5, 'June': 6, 'July': 7, 'August': 8,
+                            'September': 9, 'October': 10, 'November': 11, 'December': 12
+                        }.get(month_name, 1)
+                        date_str = f"{day:02d}.{month_num:02d}.{year}"
+                    else:
+                        # Try DD.MM.YYYY pattern directly
+                        dm = re.search(r'(\d{2}\.\d{2}\.\d{4})', page_text)
+                        date_str = dm.group(1) if dm else datetime.now().strftime("%d.%m.%Y")
+                    
+                    results.append({
+                        "date": date_str,
+                        "numbers": main_nums,
+                        "lucky_number": lucky,
+                        "replay_number": 1
+                    })
             
-            logger.info(f"Fetched {len(results)} Swiss Lotto draws from lottoland")
+            logger.info(f"Fetched {len(results)} Swiss Lotto draws from lotteryextreme.com")
             
     except Exception as e:
-        logger.error(f"Error fetching from lottoland: {e}")
+        logger.error(f"Error fetching from lotteryextreme.com: {e}")
     
     return results
 
@@ -308,42 +261,34 @@ async def sync_euromillions_to_db(db, limit: int = 20) -> Dict:
     return stats
 
 
-async def sync_swisslotto_to_db(db, limit: int = 20) -> Dict:
+async def sync_swisslotto_to_db(db, limit: int = 50) -> Dict:
     """
-    Fetch latest Swiss Lotto and add new draws to database
-    Uses 6richtige.ch as primary source (most reliable)
-    Returns stats about what was added
+    Fetch latest Swiss Lotto and add new draws to database.
+    Uses lottolyzer.com as primary (50 draws, clean tables).
+    Falls back to lotteryextreme.com (latest draw only).
     """
     stats = {"fetched": 0, "new": 0, "existing": 0, "errors": 0, "source": "none"}
     
     try:
-        # Try 6richtige.ch FIRST (most reliable source)
-        draws = await fetch_swisslotto_from_6richtige(limit)
+        # PRIMARY: lottolyzer.com (structured table, up to 50 draws)
+        draws = await fetch_swisslotto_from_lottolyzer(limit)
         if draws:
-            stats["source"] = "6richtige.ch"
+            stats["source"] = "lottolyzer.com"
         
         if not draws:
-            # Fallback to lottoland
-            draws = await fetch_swisslotto_from_lottoland()
+            # FALLBACK: lotteryextreme.com (latest draw)
+            draws = await fetch_swisslotto_from_lotteryextreme()
             if draws:
-                stats["source"] = "lottoland"
-        
-        if not draws:
-            # Last resort: swisslos.ch
-            draws = await fetch_swisslotto_latest(limit)
-            if draws:
-                stats["source"] = "swisslos.ch"
+                stats["source"] = "lotteryextreme.com"
         
         stats["fetched"] = len(draws)
         
         for draw in draws:
-            # Check if this draw already exists
             existing = await db.draws.find_one({"date": draw["date"]})
             
             if existing:
                 stats["existing"] += 1
             else:
-                # Add new draw
                 doc = {
                     "id": str(uuid.uuid4()),
                     "date": draw["date"],
