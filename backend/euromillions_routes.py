@@ -997,7 +997,7 @@ def create_euromillions_router(db):
             locked = {}
             if locked_positions:
                 for pos_key, value in locked_positions.items():
-                    pos_idx = int(pos_key.replace("P", "")) - 1
+                    pos_idx = int(pos_key.upper().replace("P", "")) - 1
                     if 0 <= pos_idx < 5 and 1 <= value <= 50:
                         locked[pos_idx] = value
             
@@ -1082,7 +1082,7 @@ def create_euromillions_router(db):
         locked = {}
         if locked_positions:
             for pos_key, value in locked_positions.items():
-                pos_idx = int(pos_key.replace("P", "")) - 1
+                pos_idx = int(pos_key.upper().replace("P", "")) - 1
                 if 0 <= pos_idx < 5 and 1 <= value <= 50:
                     locked[pos_idx] = value
         
@@ -2384,7 +2384,7 @@ def create_euromillions_router(db):
             locked = {}
             if request.locked_positions:
                 for pos_key, value in request.locked_positions.items():
-                    pos_idx = int(pos_key.replace("P", "")) - 1
+                    pos_idx = int(pos_key.upper().replace("P", "")) - 1
                     if 0 <= pos_idx < 5 and 1 <= value <= 50:
                         locked[pos_idx] = value
             
@@ -2510,11 +2510,20 @@ def create_euromillions_router(db):
             })
         
         for ticket_idx in range(num_tickets):
+            # Handle locked positions for money mode
+            locked = {}
+            if request.locked_positions:
+                for pos_key, value in request.locked_positions.items():
+                    pos_idx = int(pos_key.upper().replace("P", "")) - 1
+                    if 0 <= pos_idx < 5 and 1 <= value <= 50:
+                        locked[pos_idx] = value
+            
             # Generate using MONEY MODE engine
             dj_result = dj_generate_money_mode_ticket(
                 dj_draws, 
                 target_date=target_date, 
-                swiss_draws=swiss_draws
+                swiss_draws=swiss_draws,
+                locked=locked
             )
             
             tickets.append({

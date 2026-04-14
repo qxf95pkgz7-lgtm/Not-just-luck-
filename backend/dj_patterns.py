@@ -2455,7 +2455,7 @@ def dj_select_numbers(candidates: Dict, star_candidates: List[int], locked: Dict
     p2_prince_candidates = p2_prince_candidates or []
     
     selected = []
-    used = set()
+    used = set(locked.values())  # Pre-populate used with ALL locked values to prevent duplicates
     
     # ═══════════════════════════════════════════════════════════════════════
     # 👑 P1 KING SELECTION - The music predicts P1!
@@ -2626,7 +2626,7 @@ def dj_generate_ticket(draws: List[Dict], target_date: str = None, locked: Dict 
     }
 
 
-def dj_generate_money_mode_ticket(draws: List[Dict], target_date: str = None, swiss_draws: List[Dict] = None) -> Dict:
+def dj_generate_money_mode_ticket(draws: List[Dict], target_date: str = None, swiss_draws: List[Dict] = None, locked: Dict = None) -> Dict:
     """
     💰 MONEY MODE - Focus on hitting 3 numbers + stars for consistent small wins! 💰
     
@@ -2777,20 +2777,24 @@ def dj_generate_money_mode_ticket(draws: List[Dict], target_date: str = None, sw
     # SELECT NUMBERS (Weighted random from high-confidence pool)
     # ═══════════════════════════════════════════════════════════════════
     import random
+    locked = locked or {}
     
     selected = []
-    used = set()
+    used = set(locked.values())  # Pre-populate used with ALL locked values to prevent duplicates
     
     for pos in range(5):
-        pool = [n for n in candidates[pos] if n not in used and 1 <= n <= 50]
-        if pool:
-            chosen = random.choice(pool)
+        if pos in locked:
+            selected.append(locked[pos])
+            used.add(locked[pos])
         else:
-            # Fallback to any valid unused number
-            available = [n for n in range(1, 51) if n not in used]
-            chosen = random.choice(available) if available else 1
-        selected.append(chosen)
-        used.add(chosen)
+            pool = [n for n in candidates[pos] if n not in used and 1 <= n <= 50]
+            if pool:
+                chosen = random.choice(pool)
+            else:
+                available = [n for n in range(1, 51) if n not in used]
+                chosen = random.choice(available) if available else 1
+            selected.append(chosen)
+            used.add(chosen)
     
     # SELECT STARS (from focused pool)
     # 🔥 BEAST BLOCK: Suppress Star 6 when on a 2-streak

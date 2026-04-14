@@ -115,3 +115,5 @@ A custom Swiss Lotto and EuroMillions Pattern Analyzer ("Lucky Jack") featuring 
 - Sleeper Engine: Integrated
 - Olivia's Kiss: Fixed + Casino Coins
 - Update/Sync: FIXED (lottolyzer.com primary, was broken with old scrapers)
+- Lock Positions: FIXED (EuroMillions was broken due to case mismatch p1 vs P1)
+- Beast Block: Active (Star 6 suppressed after 2-streak, 77% block rate)
