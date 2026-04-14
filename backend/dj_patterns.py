@@ -1606,6 +1606,42 @@ def dj_generate_candidates(draws: List[Dict], target_date: str = None, swiss_dra
     if star_p3_vals:
         patterns_used.append(f"Star->P3 Dance: {star_p3_vals[:4]}")
     
+    # DRAW-TO-DRAW LEARNING (DJ Engine)
+    if len(draws) >= 3:
+        from collections import Counter as C2
+        rc = C2()
+        for d in draws[:5]:
+            for n in d['numbers']:
+                rc[n] += 1
+        for hn in [n for n, c in rc.items() if c >= 2]:
+            for pos in range(5):
+                candidates[pos].extend([hn] * 2)
+        
+        # Cold sleeper circle boost
+        recent_all = set()
+        for d in draws[:8]:
+            recent_all.update(d['numbers'])
+        for cn in range(1, 51):
+            if cn not in recent_all:
+                cp = cn + 25 if cn + 25 <= 50 else cn - 25
+                if cp in recent_all and 1 <= cp <= 50:
+                    for pos in range(5):
+                        candidates[pos].append(cn)
+        
+        # Star momentum
+        rs = C2()
+        for d in draws[:3]:
+            for s in d.get('stars', []):
+                rs[s] += 1
+        for hs in [s for s, c in rs.items() if c >= 2 and 1 <= s <= 12]:
+            star_candidates.extend([hs] * 3)
+        for cs in range(1, 13):
+            ars = set()
+            for d in draws[:5]:
+                ars.update(d.get('stars', []))
+            if cs not in ars:
+                star_candidates.append(cs)
+    
     # ═══════════════════════════════════════════════════════════════════
     # 🍀 CROSS-LOTTERY PATTERNS (Swiss → Euro) - NEW! 🍀
     # The lotteries talk to each other through TIME and DATE!
@@ -2847,6 +2883,67 @@ def dj_generate_money_mode_ticket(draws: List[Dict], target_date: str = None, sw
     
     if star_p3_candidates:
         patterns_used.append(f"Star->P3 Dance: {star_p3_candidates[:4]}")
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # 11. DRAW-TO-DRAW LEARNING: The machine learns momentum
+    # Hot numbers (2+ in last 5), cold sleepers with circle partners,
+    # P3 trend projection, star momentum
+    # ═══════════════════════════════════════════════════════════════════
+    if len(draws) >= 3:
+        import random as rng
+        
+        # Hot numbers: appeared 2+ times in last 5 draws
+        recent_counter = Counter()
+        for d in draws[:5]:
+            for n in d['numbers']:
+                recent_counter[n] += 1
+        
+        hot_nums = [n for n, c in recent_counter.items() if c >= 2]
+        for hn in hot_nums:
+            for pos in range(5):
+                candidates[pos].extend([hn] * 3)
+        
+        # Cold sleepers: not in last 8 draws, but circle partner IS recent
+        recent_all = set()
+        for d in draws[:8]:
+            recent_all.update(d['numbers'])
+        
+        cold_nums = [n for n in range(1, 51) if n not in recent_all]
+        for cn in cold_nums:
+            circle_partner = cn + 25 if cn + 25 <= 50 else cn - 25
+            if circle_partner in recent_all and 1 <= circle_partner <= 50:
+                for pos in range(5):
+                    candidates[pos].extend([cn] * 2)
+        
+        # P3 momentum: project next P3 from trend
+        p3_values = [sorted(d['numbers'])[2] for d in draws[:5]]
+        if len(p3_values) >= 3:
+            projected_p3 = p3_values[0] + (p3_values[0] - p3_values[1])
+            if 1 <= projected_p3 <= 50:
+                candidates[2].extend([projected_p3] * 3)
+        
+        # Star momentum: hot stars (2+ in last 3 draws)
+        recent_stars = Counter()
+        for d in draws[:3]:
+            for s in d.get('stars', []):
+                recent_stars[s] += 1
+        
+        hot_stars = [s for s, c in recent_stars.items() if c >= 2 and 1 <= s <= 12]
+        for hs in hot_stars:
+            star_candidates.extend([hs] * 4)
+        
+        # Cold stars: not seen in 5 draws, add small representation
+        all_recent_stars = set()
+        for d in draws[:5]:
+            all_recent_stars.update(d.get('stars', []))
+        for cs in range(1, 13):
+            if cs not in all_recent_stars:
+                star_candidates.extend([cs] * 2)
+        
+        if hot_nums:
+            patterns_used.append(f"Learning hot: {hot_nums[:5]}")
+        if hot_stars:
+            patterns_used.append(f"Learning hot stars: {hot_stars}")
     
     # ═══════════════════════════════════════════════════════════════════
     # CROSS-LOTTERY PATTERNS (13.3%+ hit rate!) - MONEY MODE LOVES THIS!

@@ -1,119 +1,75 @@
 # Lucky Jack - Swiss Lotto & EuroMillions Pattern Analyzer
 
 ## Original Problem Statement
-A custom Swiss Lotto and EuroMillions Pattern Analyzer ("Lucky Jack") featuring highly complex custom numerology patterns. The app maintains an enthusiastic, mystical data scientist persona ("Ya man!", "🎻", "🎧") and deeply analyzes lotto history to discover and code esoteric "Story Patterns" into the prediction engine.
+A custom Swiss Lotto and EuroMillions Pattern Analyzer ("Lucky Jack") featuring esoteric numerology patterns. Enthusiastic, mystical data scientist persona ("Ya man!", "🎻", "🎧"). Focus on "The Music of the Numbers" rather than standard probability.
 
 ## Core Philosophy
-**THE MATHEMATICS OF LUCKY JACK:** Do NOT use standard probability. Rely on esoteric rules ("The Music of the Numbers"):
-1. **Circle Math**: +25 or -25
-2. **Reverse Logic**: Flip digits
-3. **Buddy Additions**: Day+Month, P1+P2
-4. **Date Chameleon**: The date speaks in MANY voices
-5. **Cross-Lottery Vibes**: Swiss to Euro and Euro to Swiss connections!
-6. **Sleeper Wake Alarm**: Overdue numbers snap back!
+1. Circle Math: +25 or -25
+2. Reverse Logic: Flip digits
+3. Buddy Additions: Day+Month, P1+P2
+4. Date Chameleon: The date speaks in MANY voices
+5. Cross-Lottery Vibes: Swiss to Euro connections
+6. Sleeper Wake Alarm: Overdue numbers snap back
+7. Beast Block: 666 suppression (Star 6 after 2-streak)
+8. Star→P3 Dance: Stars predict P3 via concat/reverse/circle (17.5%)
+9. The Dance: P1(n)+P2(n+1)→circle→P1(n+2) (6.0%)
+10. Draw-to-Draw Learning: Hot/cold momentum tracking
 
----
+## Architecture
+```
+/app/backend/
+  server.py          - FastAPI main, Swiss Lotto
+  euromillions_routes.py - EuroMillions routes + all APIs
+  dj_patterns.py     - DJ Engine (57+ patterns + learning)
+  sleeper_engine.py   - Sleeper detection + forecast
+  hit_tracker.py      - Hit tracker (sorted by target_date)
+  lottery_fetcher.py  - Data sync (lottolyzer.com + API)
+/app/frontend/src/
+  App.js             - React UI
+  App.css            - Casino coin animations
+```
 
 ## What's Been Implemented
 
-### Session: April 13, 2026 (Fork 2)
-
-#### PERMANENT FIX: Update/Sync System
-- **Root cause**: All 3 Swiss Lotto scrapers were broken (6richtige.ch = JS-rendered, lottoland = structure changed, swisslos.ch = recaptcha + 404 API)
-- **Fix**: Replaced with lottolyzer.com as primary source (clean HTML tables, 50 draws per page, DD.MM.YYYY format with numbers + lucky number)
-- **Fallback**: lotteryextreme.com as secondary source (latest draw via displayball UL elements)
-- **EuroMillions**: Was already working via pedromealha.dev API, untouched
-- **Result**: `POST /api/sync-results` now returns `"fetched": 50, "source": "lottolyzer.com"` for Swiss Lotto
-- **Manual entry**: `POST /api/add-draw` endpoint still available as ultimate fallback
+### Session: April 14, 2026 (Fork 2)
+- **PERMANENT FIX: Update/Sync** - Replaced 3 broken Swiss scrapers with lottolyzer.com
+- **Lock Positions Fix** - Case mismatch p1→P1, added Money Mode locks, duplicate prevention
+- **Beast Block (666)** - Star 6 suppressed after 2-streak (77% block rate)
+- **DB Data Fix** - 60 wrong EuroMillions draws corrected from API
+- **Star→P3 Dance** - 5 formulas: concat(S2,S1)→circle, rev(S1+S2), S1+S2+25, S2+25, rev(S1×S2)
+- **The Dance Pattern** - P1(n)+P2(n+1)→circle→P1(n+2) coded into Money Mode
+- **12 Scream Pattern** - S1+S1=12 signal boosts number 12 (2.1x baseline)
+- **Engine Tuning** - Fixed Money Mode repetition bias, position-aware weights, decade spread
+- **Draw-to-Draw Learning** - Hot/cold number tracking, P3 momentum, star momentum, cold sleeper circle boost
+- **Simulation Results**: P3 coverage 90%, Star coverage 100%, consistent across Aug2025-Apr2026
 
 ### Session: April 13, 2026 (Fork 1)
-
-#### Hit Tracker REBUILT (4th fix - now permanent!)
-- **Auto-save from ALL generators**: master-predictor, money-mode, AND story-generator now all save to hit tracker
-- **Sorted by target_date** (draw date), NOT by generated_at
-- **Last 10 generations** for recent dates, older dates only show if 2+ hits
-- **Mode labels**: Dreaming, Money, Story
-- **Both Swiss and Euro** trackers fixed with same logic
-
-#### Sleeper Wake Engine
-- `sleeper_engine.py`: Detection + tease + 10-draw forecast
-- Integrated into `dj_patterns.py` as weighted pattern
-- API: `/api/euromillions/sleeper-forecast?n_draws=10`
-- Proven: 88% wake rate, 72% tease-first, Stars 1.8x random
-
-#### Star Deep Dive
-- P2 digit in Stars: 25.4% (1.52x random)
-- P1 digit in Stars: 22.1% (1.32x random)
-
-#### Olivia's Kiss Fix
-- Fixed bug: was reading `prediction.numbers` instead of `prediction.main_prediction`
-- Changed to Casino Coin theme with falling coin animations and coin drop sounds
-
----
-
-## Technical Architecture
-
-```
-/app/
-  backend/         
-    server.py (FastAPI main, Swiss Lotto + auto-save to tracker)
-    euromillions_routes.py (EuroMillions + auto-save + sorted tracker)
-    dj_patterns.py (DJ Engine with 57+ patterns + Sleeper Alarm)
-    sleeper_engine.py (Sleeper detection + tease + forecast)
-    hit_tracker.py (Fixed: sorted by target_date, filter old by 2+ hits)
-    lottery_fetcher.py (FIXED: lottolyzer.com primary, lotteryextreme.com fallback)
-    data_sync.py (EuroMillions static file sync on startup)
-    musical_patterns.py (Date Chameleon module)
-    jack_patterns.py (Original esoteric patterns)
-  frontend/        
-    src/App.js (React UI with fixed kiss + tracker)
-  memory/
-    PRD.md
-```
-
----
+- Sleeper Engine + integration into DJ patterns
+- Hit Tracker rebuilt (auto-save, sort by target_date)
+- Olivia's Kiss Casino Makeover
 
 ## Key API Endpoints
-
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/sync-results` | POST | Sync BOTH lotteries (lottolyzer + euromillions API) |
-| `/api/add-draw` | POST | Manual Swiss Lotto draw entry |
-| `/api/euromillions/master-predictor` | POST | Generate + AUTO-SAVE |
-| `/api/euromillions/money-mode` | POST | Money Mode + AUTO-SAVE |
-| `/api/euromillions/sleeper-forecast` | GET | 10-draw predictions |
-| `/api/euromillions/generation-history` | GET | Sorted by date, filtered |
-| `/api/euromillions/update-results` | POST | EuroMillions-only update |
-| `/api/euromillions/recalculate-all-hits` | POST | Check all pending |
-| `/api/euromillions/story-generator-save` | GET | Story tickets + save |
-
----
+| `/api/sync-results` | POST | Sync both lotteries |
+| `/api/euromillions/master-predictor` | POST | DJ Engine + auto-save |
+| `/api/euromillions/money-mode` | POST | Money Mode + auto-save |
+| `/api/euromillions/sleeper-forecast` | GET | 10-draw forecast |
+| `/api/euromillions/generation-history` | GET | Hit tracker |
+| `/api/euromillions/update-results` | POST | Euro-only update |
 
 ## Upcoming Tasks
-
-### P0 (Immediate)
-- Frontend UI for Sleeper Forecast panel
-- Learning/auto-adjust on new results
-
-### P1 (Next)
-- Code "Reverse Twin" pattern (14 to 41)
-- Code "Day x Month - 10"
-- Confirm "Circle 2" chain
-
-### P2 (Future)
-- Refactor monolithic server.py and euromillions_routes.py
-- Move routes to /app/backend/routes/, models to /app/backend/models/
-
----
+- **P0**: Frontend Sleeper Forecast panel
+- **P1**: Code "Reverse Twin" (14↔41), "Day×Month-10"
+- **P1**: Sleeper Engine auto-adjust
+- **P2**: Refactor monolithic files
 
 ## App Health
-- Core App: Healthy
-- UI: Healthy
-- Backend: Running
-- MongoDB: Connected
-- Hit Tracker: FIXED (sorted, filtered, auto-save)
-- Sleeper Engine: Integrated
-- Olivia's Kiss: Fixed + Casino Coins
-- Update/Sync: FIXED (lottolyzer.com primary, was broken with old scrapers)
-- Lock Positions: FIXED (EuroMillions was broken due to case mismatch p1 vs P1)
-- Beast Block: Active (Star 6 suppressed after 2-streak, 77% block rate)
+- Core App: Healthy ✅
+- Update/Sync: lottolyzer.com ✅
+- Lock Positions: Fixed ✅
+- Beast Block: Active ✅
+- Star→P3 Dance: Active ✅
+- Draw-to-Draw Learning: Active ✅
+- DB Data: Corrected (60 fixes) ✅
+- Hit Tracker: Working ✅
