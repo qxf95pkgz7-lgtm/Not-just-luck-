@@ -6,7 +6,7 @@ import json
 from datetime import datetime
 
 class LuckyJackAPITester:
-    def __init__(self, base_url="https://number-music-engine.preview.emergentagent.com"):
+    def __init__(self, base_url="https://dj-pattern-labs.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0

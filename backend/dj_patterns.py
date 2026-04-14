@@ -1606,6 +1606,31 @@ def dj_generate_candidates(draws: List[Dict], target_date: str = None, swiss_dra
     if star_p3_vals:
         patterns_used.append(f"Star->P3 Dance: {star_p3_vals[:4]}")
     
+    # ═══════════════════════════════════════════════════════════════════
+    # REVERSE TWIN GENERATOR (P1 pattern - new!)
+    # If N appeared, reverse(N) is calling!
+    # ═══════════════════════════════════════════════════════════════════
+    rev_twin_result = pattern_reverse_twin(prev_draw)
+    for num, weight, reason in rev_twin_result.get('candidates', []):
+        if 1 <= num <= 50:
+            for pos in range(5):
+                candidates[pos].extend([num] * (weight // 10))
+    for exp in rev_twin_result.get('explanations', [])[:3]:
+        patterns_used.append(exp)
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # DAY x MONTH - 10 (P1 pattern - new!)
+    # Esoteric formula: Day * Month - 10 = candidate
+    # ═══════════════════════════════════════════════════════════════════
+    if target_date:
+        dm10_result = pattern_day_times_month_minus_10(target_date)
+        for num, weight, reason in dm10_result.get('candidates', []):
+            if 1 <= num <= 50:
+                for pos in range(5):
+                    candidates[pos].extend([num] * (weight // 10))
+        for exp in dm10_result.get('explanations', [])[:2]:
+            patterns_used.append(exp)
+    
     # DRAW-TO-DRAW LEARNING (DJ Engine)
     if len(draws) >= 3:
         from collections import Counter as C2
@@ -2397,6 +2422,96 @@ def pattern_day_equals_star(target_date: str) -> Dict:
     return {'candidate': None, 'weight': 0, 'explanation': ''}
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# NEW P1 PATTERNS - April 2026 Session (Fork 3)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def pattern_reverse_twin(prev_draw: Dict) -> Dict:
+    """
+    REVERSE TWIN GENERATOR
+    If N appears, check reverse(N) as a candidate!
+    14 appeared → check 41, 27 → 72 (mod 50 = 22), etc.
+    Also catches partial reverses: 14 → first digit 1, last digit 4 → 41
+    """
+    prev_nums = sorted(prev_draw['numbers'])
+    candidates = []
+    explanations = []
+    
+    for n in prev_nums:
+        if n >= 10:
+            # Direct reverse
+            rev = int(str(n)[::-1])
+            if rev > 50:
+                rev_mod = rev - 50 if rev <= 100 else rev % 50
+                if rev_mod == 0:
+                    rev_mod = 50
+                if 1 <= rev_mod <= 50 and rev_mod != n and rev_mod not in prev_nums:
+                    candidates.append((rev_mod, 40, f"reverse({n})→{rev}→mod50={rev_mod}"))
+                    explanations.append(f"REVERSE TWIN: {n} → reverse={rev} → {rev_mod}")
+            elif 1 <= rev <= 50 and rev != n and rev not in prev_nums:
+                candidates.append((rev, 50, f"reverse({n})={rev}"))
+                explanations.append(f"REVERSE TWIN: {n} → {rev}")
+        else:
+            # Single digit: 4 → 40 (4 with 0 appended)
+            expanded = n * 10
+            if 1 <= expanded <= 50 and expanded not in prev_nums:
+                candidates.append((expanded, 30, f"expand({n})={expanded}"))
+                explanations.append(f"REVERSE TWIN: {n} → expand={expanded}")
+    
+    return {
+        'candidates': candidates,
+        'explanations': explanations
+    }
+
+
+def pattern_day_times_month_minus_10(target_date: str) -> Dict:
+    """
+    DAY x MONTH - 10 PATTERN
+    Esoteric formula: Day * Month - 10 = candidate number
+    Example: 15 * 4 - 10 = 50, 7 * 4 - 10 = 18
+    Also adds Day * Month direct if in range
+    """
+    try:
+        day = int(target_date.split('.')[0])
+        month = int(target_date.split('.')[1])
+        
+        candidates = []
+        explanations = []
+        
+        product = day * month
+        minus_10 = product - 10
+        
+        if 1 <= minus_10 <= 50:
+            candidates.append((minus_10, 45, f"D*M-10: {day}*{month}-10={minus_10}"))
+            explanations.append(f"DAY*MONTH-10: {day}x{month}={product} - 10 = {minus_10}")
+        
+        # Also the product itself if in range
+        if 1 <= product <= 50 and product != minus_10:
+            candidates.append((product, 30, f"D*M: {day}*{month}={product}"))
+            explanations.append(f"DAY*MONTH: {day}x{month} = {product}")
+        
+        # And product + 10 for the inverse
+        plus_10 = product + 10
+        if 1 <= plus_10 <= 50 and plus_10 != minus_10 and plus_10 != product:
+            candidates.append((plus_10, 20, f"D*M+10: {day}*{month}+10={plus_10}"))
+        
+        # Circle of the result
+        if 1 <= minus_10 <= 50:
+            circ = minus_10 + 25 if minus_10 <= 25 else minus_10 - 25
+            if 1 <= circ <= 50 and circ != minus_10:
+                candidates.append((circ, 25, f"circle(D*M-10): circle({minus_10})={circ}"))
+                explanations.append(f"CIRCLE(D*M-10): circle({minus_10}) = {circ}")
+        
+        return {
+            'candidates': candidates,
+            'explanations': explanations,
+            'product': product,
+            'minus_10': minus_10
+        }
+    except:
+        return {'candidates': [], 'explanations': [], 'product': 0, 'minus_10': 0}
+
+
 def pattern_p1_king(target_date: str, prev_draw: Dict, prev2_draw: Dict = None) -> Dict:
     """
     👑 P1 KING PATTERN - The music that predicts P1! 👑
@@ -2883,6 +2998,29 @@ def dj_generate_money_mode_ticket(draws: List[Dict], target_date: str = None, sw
     
     if star_p3_candidates:
         patterns_used.append(f"Star->P3 Dance: {star_p3_candidates[:4]}")
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # REVERSE TWIN GENERATOR (new!)
+    # ═══════════════════════════════════════════════════════════════════
+    rev_twin_result = pattern_reverse_twin(prev_draw)
+    for num, weight, reason in rev_twin_result.get('candidates', []):
+        if 1 <= num <= 50:
+            for pos in range(5):
+                candidates[pos].extend([num] * (weight // 10))
+    for exp in rev_twin_result.get('explanations', [])[:2]:
+        patterns_used.append(exp)
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # DAY x MONTH - 10 (new!)
+    # ═══════════════════════════════════════════════════════════════════
+    if target_date:
+        dm10_result = pattern_day_times_month_minus_10(target_date)
+        for num, weight, reason in dm10_result.get('candidates', []):
+            if 1 <= num <= 50:
+                for pos in range(5):
+                    candidates[pos].extend([num] * (weight // 10))
+        for exp in dm10_result.get('explanations', [])[:2]:
+            patterns_used.append(exp)
     
     # ═══════════════════════════════════════════════════════════════════
     # 11. DRAW-TO-DRAW LEARNING: The machine learns momentum

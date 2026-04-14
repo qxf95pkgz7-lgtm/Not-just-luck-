@@ -1,0 +1,102 @@
+{
+  "summary": "Completed testing of EuroMillions Sleeper Engine and new DJ Patterns (Reverse Twin, Day*Month-10). All 19 backend tests pass. Frontend Sleeper Radar panel works correctly - appears only in EuroMillions mode, shows Tease-Hot Numbers, Star Sleepers, and 10-Draw Forecast sections.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "TestSleeperForecastEndpoint::test_sleeper_forecast_returns_200",
+    "TestSleeperForecastEndpoint::test_sleeper_forecast_response_structure - All required keys present (last_draw, total_draws_analyzed, sleeper_report, star_sleepers, forecast, engine_stats)",
+    "TestSleeperForecastEndpoint::test_sleeper_report_structure - Sleeper report has proper structure with num, gap, overdue, circle_partner, circle_boost, tease_score, composite_score",
+    "TestSleeperForecastEndpoint::test_star_sleepers_structure - Star sleepers have proper structure (star 1-12)",
+    "TestSleeperForecastEndpoint::test_forecast_structure - Forecast has D+1 to D+10 predictions with 5 numbers and 2 stars each",
+    "TestSleeperForecastEndpoint::test_engine_stats - Engine stats show proven_wake_rate=88%, proven_tease_rate=72%",
+    "TestMoneyModeEndpoint::test_money_mode_returns_200",
+    "TestMoneyModeEndpoint::test_money_mode_response_structure - Returns mode='💰 MONEY MODE' with tickets array",
+    "TestMoneyModeEndpoint::test_money_mode_ticket_structure - Each ticket has 5 numbers (1-50), 2 stars (1-12), patterns_used",
+    "TestMoneyModeEndpoint::test_money_mode_patterns_include_new_patterns - DJ patterns are used in money mode",
+    "TestDJPatternsIntegration::test_master_predictor_uses_dj_engine",
+    "TestDJPatternsIntegration::test_reverse_twin_pattern_function - pattern_reverse_twin() works correctly (14→41, 27→22, etc.)",
+    "TestDJPatternsIntegration::test_day_times_month_minus_10_pattern_function - pattern_day_times_month_minus_10() works (15*4-10=50)",
+    "TestDJPatternsIntegration::test_day_times_month_edge_cases - Edge cases pass (7*4=28-10=18, 10*5=50-10=40, etc.)",
+    "TestSleeperEngineModule::test_sleeper_engine_imports - sleeper_engine.py imports correctly",
+    "TestSleeperEngineModule::test_detect_sleepers_function - detect_sleepers() returns sleepers with composite_score",
+    "TestSleeperEngineModule::test_predict_next_n_draws_function - predict_next_n_draws() generates valid predictions",
+    "TestEuroMillionsDataAvailability::test_euromillions_draws_endpoint - 1616 draws available",
+    "TestEuroMillionsDataAvailability::test_euromillions_stats_endpoint"
+  ],
+  "failed_tests": [],
+  "frontend_tests": {
+    "passed": [
+      "Swiss Lotto toggle works correctly",
+      "EuroMillions toggle works correctly",
+      "Sleeper Radar panel NOT present in Swiss Lotto mode (correct behavior)",
+      "Sleeper Radar panel appears in EuroMillions mode",
+      "Sleeper Radar toggle expands the panel",
+      "Tease-Hot Numbers section displays with sleeper data",
+      "Star Sleepers section displays",
+      "10-Draw Forecast section displays",
+      "Found 6 sleeper number elements with data-testid",
+      "Sleeper Radar panel correctly removed when switching back to Swiss mode"
+    ],
+    "failed": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_euromillions_sleeper_patterns.py",
+    "/app/test_reports/pytest/sleeper_patterns_iter11.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "pattern_reverse_twin() in dj_patterns.py (line 2429) correctly reverses digits and handles mod 50 for values > 50",
+    "pattern_day_times_month_minus_10() in dj_patterns.py (line 2467) implements the esoteric formula Day*Month-10 with circle derivatives",
+    "sleeper_engine.py has well-structured SleeperInfo class with composite_score calculation based on proven simulation data",
+    "Sleeper Radar panel in App.js (line 2011) correctly uses data-testid attributes for testing",
+    "Conditional rendering {lotteryMode === 'euro' && ...} ensures Sleeper Radar only shows in EuroMillions mode",
+    "EuroMillions data has 1616 draws available for analysis"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_euromillions_sleeper_patterns.py"
+  ],
+  "success_rate": {
+    "backend": "100% (19/19 tests passed)",
+    "frontend": "100% (10/10 UI tests passed)"
+  },
+  "test_credentials": "None required - all endpoints publicly accessible",
+  "seed_data_creation": "N/A - using existing EuroMillions data (1616 draws from static Python files)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "The EuroMillions Sleeper Engine is fully functional. Key endpoints: /api/euromillions/sleeper-forecast returns sleeper analysis with tease detection, circle boost, and 10-draw forecast. /api/euromillions/money-mode generates tickets using DJ patterns including Reverse Twin and Day*Month-10. Frontend Sleeper Radar panel (data-testid='sleeper-radar-panel') only appears in EuroMillions mode and shows Tease-Hot Numbers, Star Sleepers, and Forecast sections. All new DJ patterns (pattern_reverse_twin, pattern_day_times_month_minus_10) are integrated and working.",
+  "features_verified": {
+    "sleeper_forecast_api": {
+      "endpoint": "/api/euromillions/sleeper-forecast",
+      "status": "WORKING",
+      "returns": "last_draw, total_draws_analyzed, sleeper_report (15 numbers), star_sleepers (6 stars), forecast (10 draws), engine_stats"
+    },
+    "money_mode_api": {
+      "endpoint": "/api/euromillions/money-mode",
+      "status": "WORKING",
+      "returns": "tickets with numbers, stars, patterns_used including DJ patterns"
+    },
+    "reverse_twin_pattern": {
+      "function": "pattern_reverse_twin()",
+      "status": "WORKING",
+      "example": "14→41, 27→72→22 (mod 50)"
+    },
+    "day_times_month_minus_10_pattern": {
+      "function": "pattern_day_times_month_minus_10()",
+      "status": "WORKING",
+      "example": "15.04.2026 → 15*4-10=50"
+    },
+    "frontend_sleeper_radar": {
+      "component": "Sleeper Radar panel",
+      "status": "WORKING",
+      "visibility": "EuroMillions mode only",
+      "sections": ["Tease-Hot Numbers", "Star Sleepers", "10-Draw Forecast"]
+    }
+  }
+}

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import "@/App.css";
 import axios from "axios";
-import { Sparkles, RefreshCw, ChevronDown, ChevronUp, Gift, Star, Globe, History, Trash2, Target, TrendingUp, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Sparkles, RefreshCw, ChevronDown, ChevronUp, Gift, Star, Globe, History, Trash2, Target, TrendingUp, CheckCircle2, XCircle, Clock, Zap, Eye } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -584,6 +584,11 @@ function App() {
   const [hitTrackerLoading, setHitTrackerLoading] = useState(false);
   const [storyTickets, setStoryTickets] = useState(null);
   const [storyLoading, setStoryLoading] = useState(false);
+  
+  // Sleeper Radar State
+  const [showSleeperRadar, setShowSleeperRadar] = useState(false);
+  const [sleeperData, setSleeperData] = useState(null);
+  const [sleeperLoading, setSleeperLoading] = useState(false);
 
   // Sync latest lottery results from external sources
   const syncLatestResults = async () => {
@@ -722,6 +727,26 @@ function App() {
       fetchHitStats();
     }
   }, [showHitTracker, lotteryMode]);
+  
+  // Sleeper Radar fetch
+  const fetchSleeperForecast = async () => {
+    setSleeperLoading(true);
+    try {
+      const res = await axios.get(`${API}/euromillions/sleeper-forecast`);
+      setSleeperData(res.data);
+    } catch (e) {
+      console.error("Error fetching sleeper forecast:", e);
+    } finally {
+      setSleeperLoading(false);
+    }
+  };
+  
+  // Load sleeper data when panel is opened (EuroMillions only)
+  useEffect(() => {
+    if (showSleeperRadar && lotteryMode === 'euro') {
+      fetchSleeperForecast();
+    }
+  }, [showSleeperRadar, lotteryMode]);
   
   // Fetch last draw on initial load and when lottery mode changes
   useEffect(() => {
@@ -1980,6 +2005,173 @@ function App() {
             </div>
           )}
         </div>
+
+        {/* SLEEPER RADAR - EuroMillions Only */}
+        {lotteryMode === 'euro' && (
+          <div className="lucky-card p-4 mb-4" data-testid="sleeper-radar-panel">
+            <button 
+              onClick={() => setShowSleeperRadar(!showSleeperRadar)}
+              className="w-full flex items-center justify-between text-left"
+              data-testid="sleeper-radar-toggle"
+            >
+              <div className="flex items-center gap-2">
+                <Eye className="w-5 h-5 text-purple-400" />
+                <span className="font-semibold text-slate-200">Sleeper Radar</span>
+                <span className="text-xs text-purple-400/70">(Numbers About to Wake)</span>
+              </div>
+              {showSleeperRadar ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+            </button>
+            
+            {showSleeperRadar && (
+              <div className="mt-4 space-y-4">
+                {sleeperLoading ? (
+                  <div className="flex items-center justify-center py-8 gap-2">
+                    <RefreshCw className="w-5 h-5 text-purple-400 animate-spin" />
+                    <span className="text-slate-400 text-sm">Scanning sleeper frequencies...</span>
+                  </div>
+                ) : sleeperData ? (
+                  <>
+                    {/* Radar Header Stats */}
+                    <div className="flex items-center justify-between text-xs text-slate-500">
+                      <span>Last Draw: <span className="text-slate-300 font-medium">{sleeperData.last_draw}</span></span>
+                      <span>{sleeperData.total_draws_analyzed} draws analyzed</span>
+                    </div>
+                    
+                    {/* Top Number Sleepers */}
+                    <div className="p-3 rounded-lg" style={{ background: 'linear-gradient(135deg, rgba(147,51,234,0.12) 0%, rgba(79,70,229,0.08) 100%)', border: '1px solid rgba(147,51,234,0.25)' }}>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Zap className="w-4 h-4 text-purple-400" />
+                        <span className="text-sm font-semibold text-purple-300">Tease-Hot Numbers</span>
+                      </div>
+                      <div className="space-y-2">
+                        {sleeperData.sleeper_report?.slice(0, 6).map((s, idx) => (
+                          <div key={s.num} className="flex items-center gap-2" data-testid={`sleeper-number-${s.num}`}>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                              idx < 2 ? 'ring-2 ring-purple-400/60' : ''
+                            }`} style={{
+                              background: s.composite_score >= 60 
+                                ? 'linear-gradient(135deg, #9333ea 0%, #7c3aed 100%)' 
+                                : s.composite_score >= 45 
+                                  ? 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)'
+                                  : 'linear-gradient(135deg, #475569 0%, #334155 100%)',
+                              color: 'white',
+                              boxShadow: s.composite_score >= 60 ? '0 0 12px rgba(147,51,234,0.4)' : '0 2px 4px rgba(0,0,0,0.3)'
+                            }}>
+                              {s.num}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <div className="flex-1 h-1.5 rounded-full bg-slate-700/50 overflow-hidden">
+                                  <div className="h-full rounded-full transition-all duration-500" style={{
+                                    width: `${Math.min(100, s.composite_score * 1.3)}%`,
+                                    background: s.composite_score >= 60 
+                                      ? 'linear-gradient(90deg, #a855f7, #ec4899)' 
+                                      : s.composite_score >= 45 
+                                        ? 'linear-gradient(90deg, #818cf8, #a78bfa)'
+                                        : 'linear-gradient(90deg, #64748b, #94a3b8)'
+                                  }} />
+                                </div>
+                                <span className="text-xs text-slate-400 w-8 text-right">{s.composite_score.toFixed(0)}</span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[10px] text-slate-500">
+                                  {s.overdue >= 1.0 ? `${s.overdue.toFixed(1)}x overdue` : `gap ${s.gap}`}
+                                </span>
+                                {s.tease_score >= 3 && (
+                                  <span className="text-[10px] px-1 rounded bg-purple-500/20 text-purple-300">TEASE-HOT</span>
+                                )}
+                                {s.circle_boost > 1.5 && (
+                                  <span className="text-[10px] px-1 rounded bg-indigo-500/20 text-indigo-300">CIRCLE</span>
+                                )}
+                                {s.overdue >= 3.0 && (
+                                  <span className="text-[10px] px-1 rounded bg-red-500/20 text-red-300">SNAP-BACK</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Star Sleepers */}
+                    <div className="p-3 rounded-lg" style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.1) 0%, rgba(245,158,11,0.06) 100%)', border: '1px solid rgba(251,191,36,0.25)' }}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Star className="w-4 h-4 text-amber-400" fill="currentColor" />
+                        <span className="text-sm font-semibold text-amber-300">Star Sleepers</span>
+                      </div>
+                      <div className="flex flex-wrap gap-3">
+                        {sleeperData.star_sleepers?.slice(0, 5).map((s) => (
+                          <div key={s.star} className="flex items-center gap-1.5 px-2 py-1 rounded-lg" 
+                            style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)' }}
+                            data-testid={`sleeper-star-${s.star}`}
+                          >
+                            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold" style={{
+                              background: s.overdue >= 5 
+                                ? 'linear-gradient(135deg, #f59e0b, #ef4444)' 
+                                : 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+                              color: '#1e1b4b'
+                            }}>
+                              {s.star}
+                            </div>
+                            <div className="text-[10px]">
+                              <div className="text-amber-300 font-medium">{s.overdue.toFixed(1)}x</div>
+                              <div className="text-slate-500">gap {s.gap}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* D+1 Forecast */}
+                    {sleeperData.forecast?.length > 0 && (
+                      <div className="p-3 rounded-lg" style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(5,150,105,0.06) 100%)', border: '1px solid rgba(16,185,129,0.25)' }}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <TrendingUp className="w-4 h-4 text-emerald-400" />
+                            <span className="text-sm font-semibold text-emerald-300">Next Draw Forecast</span>
+                          </div>
+                          <span className="text-xs text-emerald-400/70">{sleeperData.forecast[0].confidence.toFixed(0)}% confidence</span>
+                        </div>
+                        <div className="flex items-center gap-2 mb-2">
+                          {sleeperData.forecast[0].numbers.map((n, i) => (
+                            <Ball key={i} number={n} size="sm" maxNum={50} />
+                          ))}
+                          <div className="flex items-center gap-1 ml-2">
+                            {sleeperData.forecast[0].stars.map((s, i) => (
+                              <StarBall key={i} number={s} size="sm" />
+                            ))}
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          {Object.entries(sleeperData.forecast[0].number_reasons || {}).slice(0, 3).map(([num, reason]) => (
+                            <div key={num} className="text-[10px] text-slate-400 truncate">
+                              <span className="text-emerald-400 font-medium">{num}:</span> {reason}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Refresh Button */}
+                    <button
+                      onClick={fetchSleeperForecast}
+                      disabled={sleeperLoading}
+                      className="w-full py-2 px-4 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 text-sm font-medium transition-all disabled:opacity-50"
+                      data-testid="sleeper-refresh-btn"
+                    >
+                      <RefreshCw className={`w-4 h-4 inline mr-2 ${sleeperLoading ? 'animate-spin' : ''}`} />
+                      Refresh Radar
+                    </button>
+                  </>
+                ) : (
+                  <div className="text-center text-slate-500 text-sm py-4">
+                    No sleeper data available. Try refreshing.
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* HIT TRACKER SECTION - Story Generator History & Hits */}
         <div className="lucky-card p-4 mb-4">
