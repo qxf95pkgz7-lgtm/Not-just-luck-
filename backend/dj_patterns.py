@@ -2664,43 +2664,102 @@ def dj_generate_money_mode_ticket(draws: List[Dict], target_date: str = None, sw
     # ONLY USE HIGH HIT-RATE PATTERNS (10%+)
     # ═══════════════════════════════════════════════════════════════════
     
-    # 1. P5 ECHO (14.8% hit rate!) - STRONGEST
-    for pos in range(5):
-        candidates[pos].extend([p5] * 15)
-    patterns_used.append(f"🔥 P5 Echo: {p5} (14.8%)")
+    # Also look at draw before prev for more signal
+    prev2_draw = draws[1] if len(draws) > 1 else prev_draw
+    prev2_nums = sorted(prev2_draw['numbers'])
+    prev2_stars = sorted(prev2_draw.get('stars', []))
     
-    # 2. P5-1 (11.4% hit rate!)
+    # 1. P5 ECHO (14.8% hit rate!) - but only boost P4/P5 positions
+    candidates[3].extend([p5] * 8)
+    candidates[4].extend([p5] * 10)
+    patterns_used.append(f"P5 Echo: {p5} (14.8%)")
+    
+    # 2. P5-1 (11.4% hit rate!) - natural P4/P5
     p5_minus_1 = p5 - 1 if p5 > 1 else None
     if p5_minus_1:
-        for pos in range(5):
-            candidates[pos].extend([p5_minus_1] * 12)
-        patterns_used.append(f"🔥 P5-1: {p5}-1={p5_minus_1} (11.4%)")
+        candidates[3].extend([p5_minus_1] * 6)
+        candidates[4].extend([p5_minus_1] * 8)
+        patterns_used.append(f"P5-1: {p5}-1={p5_minus_1} (11.4%)")
     
-    # 3. P4 ECHO (12.5% hit rate!)
-    for pos in range(5):
-        candidates[pos].extend([p4] * 12)
-    patterns_used.append(f"🔥 P4 Echo: {p4} (12.5%)")
+    # 3. P4 ECHO (12.5% hit rate!) - P3/P4 positions
+    candidates[2].extend([p4] * 5)
+    candidates[3].extend([p4] * 8)
+    patterns_used.append(f"P4 Echo: {p4} (12.5%)")
     
-    # 4. P1 ECHO (11.1% hit rate!)
-    for pos in range(5):
-        candidates[pos].extend([p1] * 11)
-    patterns_used.append(f"🔥 P1 Echo: {p1} (11.1%)")
+    # 4. P1 ECHO (11.1% hit rate!) - P1 position only
+    candidates[0].extend([p1] * 8)
+    candidates[1].extend([p1] * 4)
+    patterns_used.append(f"P1 Echo: {p1} (11.1%)")
     
-    # 5. CIRCLE MATH (10%+ hit rate)
+    # 5. P2/P3 ECHO - add coverage for middle positions
+    candidates[1].extend([p2] * 6)
+    candidates[2].extend([p3] * 6)
+    
+    # 6. CIRCLE MATH (10%+ hit rate)
     circle_hits = []
     for n in prev_nums:
         c_plus = n + 25 if n + 25 <= 50 else None
         c_minus = n - 25 if n - 25 > 0 else None
         if c_plus:
             circle_hits.append(c_plus)
-            for pos in range(5):
-                candidates[pos].extend([c_plus] * 8)
+            # Place in appropriate position range
+            if c_plus <= 15:
+                candidates[0].extend([c_plus] * 5)
+            elif c_plus <= 25:
+                candidates[1].extend([c_plus] * 5)
+                candidates[2].extend([c_plus] * 4)
+            elif c_plus <= 40:
+                candidates[2].extend([c_plus] * 4)
+                candidates[3].extend([c_plus] * 5)
+            else:
+                candidates[3].extend([c_plus] * 4)
+                candidates[4].extend([c_plus] * 5)
         if c_minus:
             circle_hits.append(c_minus)
-            for pos in range(5):
-                candidates[pos].extend([c_minus] * 8)
+            if c_minus <= 15:
+                candidates[0].extend([c_minus] * 5)
+                candidates[1].extend([c_minus] * 4)
+            elif c_minus <= 25:
+                candidates[1].extend([c_minus] * 4)
+                candidates[2].extend([c_minus] * 5)
+            else:
+                candidates[2].extend([c_minus] * 4)
+                candidates[3].extend([c_minus] * 5)
     if circle_hits:
-        patterns_used.append(f"🔄 Circle Math: {circle_hits[:3]}")
+        patterns_used.append(f"Circle Math: {circle_hits[:4]}")
+    
+    # 7. SLEEPER INJECTION - numbers not seen in last 5 draws get a boost
+    recent_nums = set()
+    for d in draws[:5]:
+        recent_nums.update(d['numbers'])
+    sleepers = [n for n in range(1, 51) if n not in recent_nums]
+    import random as rng
+    if sleepers:
+        for pos in range(5):
+            # Add 3 random sleepers per position
+            for _ in range(3):
+                s = rng.choice(sleepers)
+                candidates[pos].extend([s] * 3)
+        patterns_used.append(f"Sleeper injection: {len(sleepers)} numbers sleeping")
+    
+    # 8. DANCE PATTERN: P1(prev2) + P2(prev) -> circle -> candidate
+    dance_val = prev2_nums[0] + prev_nums[1]
+    while dance_val > 25:
+        dance_val -= 25
+    if 1 <= dance_val <= 50:
+        candidates[0].extend([dance_val] * 6)
+        candidates[1].extend([dance_val] * 4)
+        patterns_used.append(f"Dance: P1({prev2_nums[0]})+P2({prev_nums[1]})={dance_val}")
+    
+    # 9. S1+S1=12 SCREAM: if prev two S1s add to 12, boost number 12
+    if len(draws) > 1:
+        s1_a = min(draws[0].get('stars', [1]))
+        s1_b = min(draws[1].get('stars', [1]))
+        if s1_a + s1_b == 12:
+            candidates[0].extend([12] * 5)
+            candidates[1].extend([12] * 5)
+            candidates[2].extend([12] * 4)
+            patterns_used.append(f"12 Scream: S1({s1_a})+S1({s1_b})=12")
     
     # ═══════════════════════════════════════════════════════════════════
     # CROSS-LOTTERY PATTERNS (13.3%+ hit rate!) - MONEY MODE LOVES THIS!
@@ -2743,38 +2802,55 @@ def dj_generate_money_mode_ticket(draws: List[Dict], target_date: str = None, sw
             pass
     
     # ═══════════════════════════════════════════════════════════════════
-    # STAR FOCUS - CRITICAL FOR MONEY MODE! (only 12 options)
+    # STAR FOCUS - IMPROVED COVERAGE! (only 12 options)
     # ═══════════════════════════════════════════════════════════════════
     
-    # Previous stars echo (high probability in small pool)
-    star_candidates.extend([s1] * 15)
-    star_candidates.extend([s2] * 15)
-    patterns_used.append(f"⭐ Prev stars: {s1}, {s2}")
+    # Previous stars echo (high probability)
+    star_candidates.extend([s1] * 10)
+    star_candidates.extend([s2] * 10)
+    patterns_used.append(f"Prev stars: {s1}, {s2}")
     
     # |S2 - S1| pattern
     star_diff = abs(s2 - s1)
     if 1 <= star_diff <= 12:
-        star_candidates.extend([star_diff] * 10)
-        patterns_used.append(f"⭐ |S2-S1|={star_diff}")
+        star_candidates.extend([star_diff] * 8)
+        patterns_used.append(f"|S2-S1|={star_diff}")
     
     # S1 + S2 mod 12
     star_sum = (s1 + s2) % 12
     if star_sum == 0: star_sum = 12
-    star_candidates.extend([star_sum] * 8)
-    patterns_used.append(f"⭐ (S1+S2)%12={star_sum}")
+    star_candidates.extend([star_sum] * 6)
+    patterns_used.append(f"(S1+S2)%12={star_sum}")
+    
+    # S1 × 2 and S2 × 2 (capped at 12) - catches higher stars!
+    s1x2 = min(s1 * 2, 12)
+    s2x2 = min(s2 * 2, 12)
+    star_candidates.extend([s1x2] * 5)
+    star_candidates.extend([s2x2] * 5)
+    
+    # Stars from draw before prev (adds variety)
+    if prev2_stars:
+        ps1 = prev2_stars[0]
+        ps2 = prev2_stars[1] if len(prev2_stars) > 1 else ps1
+        star_candidates.extend([ps1] * 4)
+        star_candidates.extend([ps2] * 4)
+    
+    # Ensure some high star representation (10, 11, 12)
+    for high_s in [10, 11, 12]:
+        star_candidates.extend([high_s] * 2)
     
     # Date day as star (if valid)
     if target_date:
         try:
             day = int(target_date.split('.')[0])
             if 1 <= day <= 12:
-                star_candidates.extend([day] * 12)
-                patterns_used.append(f"⭐ Day={day} as star")
+                star_candidates.extend([day] * 8)
+                patterns_used.append(f"Day={day} as star")
         except:
             pass
     
     # ═══════════════════════════════════════════════════════════════════
-    # SELECT NUMBERS (Weighted random from high-confidence pool)
+    # SELECT NUMBERS (Weighted random with DECADE SPREAD!)
     # ═══════════════════════════════════════════════════════════════════
     import random
     locked = locked or {}
@@ -2795,6 +2871,29 @@ def dj_generate_money_mode_ticket(draws: List[Dict], target_date: str = None, sw
                 chosen = random.choice(available) if available else 1
             selected.append(chosen)
             used.add(chosen)
+    
+    # DECADE SPREAD CHECK: If all 5 numbers are in 2 or fewer decades, swap one
+    decades_covered = set(n // 10 for n in selected)
+    if len(decades_covered) <= 2:
+        # Find a missing decade and swap the weakest number
+        all_decades = {0, 1, 2, 3, 4}
+        missing = all_decades - decades_covered
+        if missing:
+            target_decade = random.choice(list(missing))
+            # Pick a number from that decade
+            decade_nums = [n for n in range(target_decade*10 + 1, min(target_decade*10 + 10, 50) + 1) if n not in used]
+            if decade_nums:
+                swap_num = random.choice(decade_nums)
+                # Replace the position with least candidate support
+                swap_pos = None
+                for pos in range(4, -1, -1):
+                    if pos not in locked and selected[pos] not in locked.values():
+                        swap_pos = pos
+                        break
+                if swap_pos is not None:
+                    used.discard(selected[swap_pos])
+                    selected[swap_pos] = swap_num
+                    used.add(swap_num)
     
     # SELECT STARS (from focused pool)
     # 🔥 BEAST BLOCK: Suppress Star 6 when on a 2-streak
