@@ -1573,6 +1573,39 @@ def dj_generate_candidates(draws: List[Dict], target_date: str = None, swiss_dra
             star_candidates.extend([day_star_result['candidate']] * 6)
             patterns_used.append(day_star_result['explanation'])
     
+    # STAR→P3 DANCE (17.5% combined - discovered April 2026!)
+    # Stars predict P3 via concat, reverse, and circle
+    star_p3_vals = []
+    # concat(S2,S1) -> circle (6.2% strongest!)
+    try:
+        c_val = int(f"{s2}{s1}")
+        while c_val > 50: c_val -= 25
+        if 1 <= c_val <= 50: star_p3_vals.append(c_val)
+        # concat(S1,S2) -> circle
+        c_val2 = int(f"{s1}{s2}")
+        while c_val2 > 50: c_val2 -= 25
+        if 1 <= c_val2 <= 50: star_p3_vals.append(c_val2)
+        # rev(S1+S2) (3.8%)
+        rv = int(str(s1 + s2)[::-1])
+        if rv > 50: rv -= 25
+        if 1 <= rv <= 50: star_p3_vals.append(rv)
+        # S1+S2+25 (2.8%)
+        sc = s1 + s2 + 25
+        if sc > 50: sc -= 25
+        if 1 <= sc <= 50: star_p3_vals.append(sc)
+        # S2+25
+        s2c = s2 + 25
+        if 1 <= s2c <= 50: star_p3_vals.append(s2c)
+    except:
+        pass
+    
+    for sp3 in star_p3_vals:
+        candidates[2].extend([sp3] * 5)  # P3 focus
+        candidates[1].extend([sp3] * 2)
+        candidates[3].extend([sp3] * 2)
+    if star_p3_vals:
+        patterns_used.append(f"Star->P3 Dance: {star_p3_vals[:4]}")
+    
     # ═══════════════════════════════════════════════════════════════════
     # 🍀 CROSS-LOTTERY PATTERNS (Swiss → Euro) - NEW! 🍀
     # The lotteries talk to each other through TIME and DATE!
@@ -2760,6 +2793,60 @@ def dj_generate_money_mode_ticket(draws: List[Dict], target_date: str = None, sw
             candidates[1].extend([12] * 5)
             candidates[2].extend([12] * 4)
             patterns_used.append(f"12 Scream: S1({s1_a})+S1({s1_b})=12")
+    
+    # 10. STAR→P3 DANCE (17.5% combined hit rate!)
+    # Top 3 formulas discovered: concat(S2,S1)->circle, rev(S1+S2), S1+S2+25
+    star_p3_candidates = []
+    
+    # Formula 1: concat(S2, S1) then circle (6.2% - STRONGEST!)
+    concat_val = int(f"{s2}{s1}")
+    while concat_val > 50:
+        concat_val -= 25
+    if 1 <= concat_val <= 50:
+        star_p3_candidates.append(concat_val)
+    
+    # Also try concat(S1, S2) then circle
+    concat_val2 = int(f"{s1}{s2}")
+    while concat_val2 > 50:
+        concat_val2 -= 25
+    if 1 <= concat_val2 <= 50:
+        star_p3_candidates.append(concat_val2)
+    
+    # Formula 2: reverse(S1+S2) (3.8%)
+    star_sum_str = str(s1 + s2)
+    rev_sum = int(star_sum_str[::-1])
+    if rev_sum > 50:
+        rev_sum -= 25
+    if 1 <= rev_sum <= 50:
+        star_p3_candidates.append(rev_sum)
+    
+    # Formula 3: S1+S2+25 circle (2.8%)
+    sum_circle = s1 + s2 + 25
+    if sum_circle > 50:
+        sum_circle -= 25
+    if 1 <= sum_circle <= 50:
+        star_p3_candidates.append(sum_circle)
+    
+    # Formula 4: S2+25 (star circle)
+    s2_circle = s2 + 25
+    if s2_circle <= 50:
+        star_p3_candidates.append(s2_circle)
+    
+    # Formula 5: rev(S1*S2) then circle
+    prod_rev = int(str(s1 * s2)[::-1])
+    while prod_rev > 50:
+        prod_rev -= 25
+    if 1 <= prod_rev <= 50:
+        star_p3_candidates.append(prod_rev)
+    
+    # Inject star-P3 dance candidates at P3 position with strong weight
+    for sp3 in star_p3_candidates:
+        candidates[2].extend([sp3] * 6)  # Strong P3 weight
+        candidates[1].extend([sp3] * 2)  # Some P2 weight too
+        candidates[3].extend([sp3] * 2)  # Some P4 weight
+    
+    if star_p3_candidates:
+        patterns_used.append(f"Star->P3 Dance: {star_p3_candidates[:4]}")
     
     # ═══════════════════════════════════════════════════════════════════
     # CROSS-LOTTERY PATTERNS (13.3%+ hit rate!) - MONEY MODE LOVES THIS!
