@@ -21,7 +21,7 @@ from collections import Counter
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
-    BASE_URL = "https://dj-pattern-labs.preview.emergentagent.com"
+    BASE_URL = "https://concat-story-vault.preview.emergentagent.com"
 
 
 class TestEndpointStability:
