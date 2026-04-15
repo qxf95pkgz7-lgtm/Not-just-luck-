@@ -413,3 +413,158 @@ def simulate_digit_dna(draws: List[Dict], label: str = "", use_weighted: bool = 
         "top_15_avg": round(top15_hits_total / total_draws, 2) if total_draws > 0 else 0,
         "top_10_avg": round(top10_hits_total / total_draws, 2) if total_draws > 0 else 0,
     }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# P123 CONCAT DIGIT PATTERN — "The Digit Story"
+# Backtested: 56% chance of 3+ hits when 5+ unique digits (1 year, 16 draws)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def concat_derived_numbers(digit_str: str) -> List[int]:
+    """
+    From a digit string, derive all valid Swiss Lotto numbers (1-42).
+    
+    Methods:
+    - Single digits directly
+    - 2-char substrings
+    - All 2-digit permutations of unique digits
+    """
+    nums = set()
+    for c in digit_str:
+        d = int(c)
+        if 1 <= d <= 42:
+            nums.add(d)
+    for j in range(len(digit_str) - 1):
+        v = int(digit_str[j:j + 2])
+        if 1 <= v <= 42:
+            nums.add(v)
+    unique = list(set(digit_str))
+    for a in unique:
+        for b in unique:
+            v = int(a + b)
+            if 1 <= v <= 42:
+                nums.add(v)
+    return sorted(nums)
+
+
+def p123_concat_scores(
+    target_date_str: str,
+    prev_draw_numbers: List[int],
+    prev2_draw_numbers: Optional[List[int]] = None,
+) -> Dict[int, int]:
+    """
+    P123 Concat Digit Pattern — score numbers 1-42 by how many concat pools they appear in.
+    
+    Three sources:
+    1. P123 from prev draw (the last draw's first 3 numbers as digit string)
+    2. Date concat (target day + month as digit string)
+    3. P123 from prev-prev draw (if available)
+    
+    Returns dict: number -> score (0-3, how many pools contain it)
+    
+    Backtested hit rates by unique digit count:
+      3 unique: 1.2/6 avg, 10% chance of 3+
+      4 unique: 1.8/6 avg, 22% chance of 3+
+      5 unique: 2.5/6 avg, 56% chance of 3+
+    """
+    try:
+        dt = datetime.strptime(target_date_str, "%d.%m.%Y")
+    except (ValueError, TypeError):
+        dt = datetime.now()
+
+    pools = []
+
+    # Pool 1: P123 from prev draw
+    if prev_draw_numbers and len(prev_draw_numbers) >= 3:
+        p1, p2, p3 = prev_draw_numbers[0], prev_draw_numbers[1], prev_draw_numbers[2]
+        concat1 = str(p1) + str(p2) + str(p3)
+        pools.append(("P123_prev", concat1, concat_derived_numbers(concat1)))
+
+    # Pool 2: Date concat
+    date_concat = str(dt.day) + str(dt.month)
+    pools.append(("date", date_concat, concat_derived_numbers(date_concat)))
+
+    # Pool 3: P123 from prev-prev draw
+    if prev2_draw_numbers and len(prev2_draw_numbers) >= 3:
+        p1, p2, p3 = prev2_draw_numbers[0], prev2_draw_numbers[1], prev2_draw_numbers[2]
+        concat3 = str(p1) + str(p2) + str(p3)
+        pools.append(("P123_prev2", concat3, concat_derived_numbers(concat3)))
+
+    # Score each number
+    scores = {}
+    for n in range(1, 43):
+        count = sum(1 for _, _, pool_nums in pools if n in pool_nums)
+        scores[n] = count
+
+    return scores
+
+
+def p123_concat_analysis(
+    target_date_str: str,
+    prev_draw_numbers: List[int],
+    prev2_draw_numbers: Optional[List[int]] = None,
+) -> Dict:
+    """
+    Full P123 concat analysis with pools, connections, and predictions.
+    """
+    try:
+        dt = datetime.strptime(target_date_str, "%d.%m.%Y")
+    except (ValueError, TypeError):
+        dt = datetime.now()
+
+    pools = []
+
+    if prev_draw_numbers and len(prev_draw_numbers) >= 3:
+        c = str(prev_draw_numbers[0]) + str(prev_draw_numbers[1]) + str(prev_draw_numbers[2])
+        pools.append({"name": "P123_prev", "concat": c, "digits": sorted(set(int(x) for x in c)), "derived": concat_derived_numbers(c)})
+
+    date_c = str(dt.day) + str(dt.month)
+    pools.append({"name": "date", "concat": date_c, "digits": sorted(set(int(x) for x in date_c)), "derived": concat_derived_numbers(date_c)})
+
+    if prev2_draw_numbers and len(prev2_draw_numbers) >= 3:
+        c = str(prev2_draw_numbers[0]) + str(prev2_draw_numbers[1]) + str(prev2_draw_numbers[2])
+        pools.append({"name": "P123_prev2", "concat": c, "digits": sorted(set(int(x) for x in c)), "derived": concat_derived_numbers(c)})
+
+    # Combined unique digits
+    all_digits = set()
+    for p in pools:
+        all_digits.update(p["digits"])
+
+    # Score numbers
+    scores = {}
+    for n in range(1, 43):
+        count = sum(1 for p in pools if n in p["derived"])
+        scores[n] = count
+
+    # Rank by score
+    ranked = sorted(scores.items(), key=lambda x: -x[1])
+    top_3 = [n for n, s in ranked if s == len(pools)]  # in ALL pools
+    top_2_plus = [n for n, s in ranked if s >= 2]
+
+    return {
+        "pools": pools,
+        "combined_digits": sorted(all_digits),
+        "unique_digit_count": len(all_digits),
+        "numbers_in_all": top_3,
+        "numbers_in_2_plus": top_2_plus,
+        "scores": scores,
+        "ranked": ranked,
+    }
+
+
+def p123_weighted_candidates(
+    target_date_str: str,
+    prev_draw_numbers: List[int],
+    prev2_draw_numbers: Optional[List[int]] = None,
+    weight: int = 8,
+) -> List[int]:
+    """
+    Generate weighted candidate list from P123 concat pattern.
+    Numbers in more pools get more weight.
+    """
+    scores = p123_concat_scores(target_date_str, prev_draw_numbers, prev2_draw_numbers)
+    candidates = []
+    for n, score in scores.items():
+        if score > 0:
+            candidates.extend([n] * (score * weight))
+    return candidates

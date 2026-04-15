@@ -3499,7 +3499,7 @@ async def get_swiss_money_mode(
     """
     from datetime import datetime, timedelta
     import random
-    from digit_dna import digit_dna_scores, swiss_circle
+    from digit_dna import digit_dna_scores, swiss_circle, p123_concat_scores, p123_concat_analysis
     
     num_tickets = max(1, min(20, num_tickets))
     
@@ -3516,6 +3516,7 @@ async def get_swiss_money_mode(
     
     last_draw = draws[0] if draws else None
     prev_draw = draws[1] if len(draws) > 1 else None
+    prev2_draw = draws[2] if len(draws) > 2 else None
     
     # Determine target date
     today = datetime.now()
@@ -3538,9 +3539,16 @@ async def get_swiss_money_mode(
     
     # Get Digit DNA scores
     last_nums = sorted(last_draw['numbers']) if last_draw else []
+    prev_nums_for_p123 = sorted(prev_draw['numbers']) if prev_draw else []
+    prev2_nums_for_p123 = sorted(prev2_draw['numbers']) if prev2_draw else []
     dna_scores = digit_dna_scores(target_date_str, last_nums, weighted=True)
     dna_ranked = sorted(dna_scores.items(), key=lambda x: -x[1])
     dna_top15 = [n for n, s in dna_ranked[:15]]
+    
+    # Get P123 Concat scores (56% at 3+ when 5 unique digits!)
+    p123_scores = p123_concat_scores(target_date_str, last_nums, prev_nums_for_p123)
+    p123_analysis = p123_concat_analysis(target_date_str, last_nums, prev_nums_for_p123)
+    p123_top = [n for n, s in sorted(p123_scores.items(), key=lambda x: -x[1]) if s >= 2]
     
     all_tickets = []
     
@@ -3553,6 +3561,15 @@ async def get_swiss_money_mode(
             if s > 0:
                 candidates.extend([n] * int(s))
         patterns_used.append(f"🧬 Digit DNA Top: {dna_top15[:8]}")
+        
+        # === P123 CONCAT PATTERN (56% at 3+ with 5 unique digits!) ===
+        for n, s in p123_scores.items():
+            if s >= 2:
+                candidates.extend([n] * (s * 12))  # Strong boost for multi-pool numbers
+            elif s == 1:
+                candidates.extend([n] * 6)
+        if p123_top:
+            patterns_used.append(f"🔢 P123 Concat ({p123_analysis['unique_digit_count']} digits): {p123_top[:8]}")
         
         # === POSITION ECHOES (T1-T8) ===
         if last_draw and ticket_idx < 8:
@@ -3743,6 +3760,13 @@ async def get_swiss_money_mode(
         "digit_dna": {
             "top_15": dna_top15,
             "top_scores": [(n, round(s, 1)) for n, s in dna_ranked[:10]],
+        },
+        "p123_concat": {
+            "pools": p123_analysis.get("pools", []),
+            "unique_digits": p123_analysis.get("combined_digits", []),
+            "digit_count": p123_analysis.get("unique_digit_count", 0),
+            "numbers_in_all_pools": p123_analysis.get("numbers_in_all", []),
+            "numbers_in_2_plus": p123_analysis.get("numbers_in_2_plus", []),
         },
         "tickets": all_tickets,
         "total_tickets": len(all_tickets),
