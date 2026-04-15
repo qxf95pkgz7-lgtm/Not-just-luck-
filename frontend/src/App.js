@@ -2496,14 +2496,17 @@ function App() {
                         
                         {/* Show tickets with hit highlighting */}
                         <div className="space-y-1">
-                          {gen.tickets?.slice(0, 3).map((ticket, tidx) => {
+                          {gen.tickets?.map((ticket, tidx) => {
                             const hitResult = gen.hit_results?.[tidx];
                             const hitNumbers = new Set(hitResult?.number_hits || []);
                             const hitStars = new Set(hitResult?.star_hits || []);
+                            const totalHits = (hitResult?.hit_count || 0) + (hitResult?.star_hit_count || 0);
                             
                             return (
-                              <div key={tidx} className="flex items-center gap-1 text-xs">
-                                <span className="text-slate-500 w-5">T{tidx + 1}</span>
+                              <div key={tidx} className={`flex items-center gap-1 text-xs ${totalHits >= 3 ? 'p-1 rounded bg-emerald-500/10 border border-emerald-500/20' : ''}`}>
+                                <span className={`w-5 ${totalHits >= 3 ? 'text-emerald-400 font-bold' : 'text-slate-500'}`}>
+                                  {totalHits >= 4 ? '💰' : totalHits >= 3 ? '🔥' : '✓'}
+                                </span>
                                 <div className="flex items-center gap-0.5">
                                   {ticket.numbers?.map((n, i) => (
                                     <div 
@@ -2528,16 +2531,16 @@ function App() {
                                   </span>
                                 )}
                                 {hitResult && (
-                                  <span className="text-emerald-400 text-[10px] ml-1">
+                                  <span className={`text-[10px] ml-1 ${totalHits >= 3 ? 'text-emerald-400 font-bold' : 'text-emerald-400'}`}>
                                     ({hitResult.hit_count}/{lotteryMode === 'euro' ? '5' : '6'}{lotteryMode === 'euro' ? ` +${hitResult.star_hit_count || 0}⭐` : (hitResult.lucky_hit ? ' +L' : '')})
                                   </span>
+                                )}
+                                {ticket._mode && (
+                                  <span className="text-[9px] text-slate-600 ml-auto">{ticket._mode === 'money' ? '💰' : '🌟'}</span>
                                 )}
                               </div>
                             );
                           })}
-                          {gen.tickets?.length > 3 && (
-                            <div className="text-slate-500 text-xs">+{gen.tickets.length - 3} more tickets...</div>
-                          )}
                         </div>
                         
                         {/* Hit Summary */}
