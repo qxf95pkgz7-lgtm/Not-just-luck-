@@ -3478,7 +3478,7 @@ async def get_master_prediction(
 
 @api_router.get("/money-mode")
 async def get_swiss_money_mode(
-    num_tickets: int = 1,
+    num_tickets: int = 2,
     lock_p1: int = None,
     lock_p2: int = None,
     lock_p3: int = None,
@@ -3501,7 +3501,7 @@ async def get_swiss_money_mode(
     import random
     from digit_dna import digit_dna_scores, swiss_circle, p123_concat_scores, p123_concat_analysis
     
-    num_tickets = max(1, min(20, num_tickets))
+    num_tickets = max(2, min(20, num_tickets))
     
     draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).to_list(500)
     if not draws:
