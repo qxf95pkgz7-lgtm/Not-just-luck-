@@ -568,3 +568,123 @@ def p123_weighted_candidates(
         if score > 0:
             candidates.extend([n] * (score * weight))
     return candidates
+
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FAMILY RHYTHM ENGINE — "The Bass of the Orchestra"
+# ═══════════════════════════════════════════════════════════════════════════════
+# Backtested (212 draws, 2024-2026):
+#   - 3-family draw: 43.4%, 4-family: 49.5%
+#   - Missing Singles: 44.6% of 3-fam draws (avg gap 5.2)
+#   - Missing Teens: 27.2% (avg gap 8.5)
+#   - Missing Twenties: 21.7% (avg gap 9.6)
+#   - Missing Thirties+: 6.5% (avg gap 35.2) — almost never missing!
+#   - Thirties+ gathering (3+): avg gap 3.1 — most frequent family cluster
+# ═══════════════════════════════════════════════════════════════════════════════
+
+FAMILIES = {
+    'S': (1, 9),    # Singles
+    'T': (10, 19),  # Teens
+    'W': (20, 29),  # Twenties
+    'H': (30, 42),  # Thirties+
+}
+
+# Empirical average gaps (from 212 draws backtest)
+FAMILY_MISSING_AVG_GAP = {'S': 5.2, 'T': 8.5, 'W': 9.6, 'H': 35.2}
+FAMILY_GATHER_AVG_GAP = {'S': 9.5, 'T': 11.1, 'W': 9.2, 'H': 3.1}
+
+
+def family_rhythm_analysis(draws: List[Dict]) -> Dict:
+    """
+    Analyze the family rhythm from recent draws.
+    
+    Returns:
+    - For each family: last time it was missing, last time it gathered (3+),
+      overdue ratios, and weight adjustments
+    - Predicted missing family for next draw
+    - Predicted gathering family for next draw
+    """
+    if not draws or len(draws) < 3:
+        return {}
+
+    def fam_counts(nums):
+        return {name: sum(1 for n in nums if lo <= n <= hi)
+                for name, (lo, hi) in FAMILIES.items()}
+
+    # Track: last time each family was missing, last time each family gathered
+    last_missing = {f: None for f in FAMILIES}
+    last_gather = {f: None for f in FAMILIES}
+
+    for i, d in enumerate(draws):
+        nums = sorted(d.get('numbers', []))
+        fc = fam_counts(nums)
+        for name, count in fc.items():
+            if count == 0 and last_missing[name] is None:
+                last_missing[name] = i
+            if count >= 3 and last_gather[name] is None:
+                last_gather[name] = i
+
+    # Compute overdue ratios
+    missing_overdue = {}
+    gather_overdue = {}
+
+    for f in FAMILIES:
+        gap = last_missing[f] if last_missing[f] is not None else len(draws)
+        missing_overdue[f] = round(gap / FAMILY_MISSING_AVG_GAP[f], 2)
+
+        gap_g = last_gather[f] if last_gather[f] is not None else len(draws)
+        gather_overdue[f] = round(gap_g / FAMILY_GATHER_AVG_GAP[f], 2)
+
+    # Predict: which family most overdue for being missing?
+    most_overdue_missing = max(missing_overdue, key=missing_overdue.get)
+
+    # Predict: which family most overdue for gathering?
+    most_overdue_gather = max(gather_overdue, key=gather_overdue.get)
+
+    return {
+        "last_missing": {f: v for f, v in last_missing.items()},
+        "last_gather": {f: v for f, v in last_gather.items()},
+        "missing_overdue": missing_overdue,
+        "gather_overdue": gather_overdue,
+        "predicted_missing": most_overdue_missing,
+        "predicted_gather": most_overdue_gather,
+    }
+
+
+def family_rhythm_weights(draws: List[Dict]) -> Dict[int, float]:
+    """
+    Generate weight adjustments for all numbers 1-42 based on family rhythm.
+    
+    Numbers in the predicted-missing family get REDUCED weight.
+    Numbers in the predicted-gathering family get BOOSTED weight.
+    
+    Returns dict: number -> weight_multiplier (0.5 to 2.0)
+    """
+    analysis = family_rhythm_analysis(draws)
+    if not analysis:
+        return {n: 1.0 for n in range(1, 43)}
+
+    pred_missing = analysis["predicted_missing"]
+    pred_gather = analysis["predicted_gather"]
+    missing_ratio = analysis["missing_overdue"].get(pred_missing, 0)
+    gather_ratio = analysis["gather_overdue"].get(pred_gather, 0)
+
+    weights = {}
+    for n in range(1, 43):
+        w = 1.0
+        # Which family is this number in?
+        for fam_name, (lo, hi) in FAMILIES.items():
+            if lo <= n <= hi:
+                # If this family is predicted missing → reduce
+                if fam_name == pred_missing and missing_ratio >= 1.0:
+                    # Scale reduction: 1.0x overdue = 0.7, 2.0x = 0.5
+                    w *= max(0.5, 1.0 - (missing_ratio - 1.0) * 0.3)
+                # If this family is predicted to gather → boost
+                if fam_name == pred_gather and gather_ratio >= 1.0:
+                    # Scale boost: 1.0x overdue = 1.3, 2.0x = 1.8
+                    w *= min(2.0, 1.0 + (gather_ratio - 1.0) * 0.5)
+                break
+        weights[n] = round(w, 2)
+
+    return weights

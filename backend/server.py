@@ -3499,7 +3499,7 @@ async def get_swiss_money_mode(
     """
     from datetime import datetime, timedelta
     import random
-    from digit_dna import digit_dna_scores, swiss_circle, p123_concat_scores, p123_concat_analysis
+    from digit_dna import digit_dna_scores, swiss_circle, p123_concat_scores, p123_concat_analysis, family_rhythm_weights, family_rhythm_analysis
     
     num_tickets = max(2, min(20, num_tickets))
     
@@ -3565,6 +3565,10 @@ async def get_swiss_money_mode(
         sleeper_data.append((n, gap, ratio))
     sleeper_data.sort(key=lambda x: -x[2])
     
+    # Compute Family Rhythm weights (the bass of the orchestra)
+    family_weights = family_rhythm_weights(all_swiss_draws)
+    family_analysis = family_rhythm_analysis(all_swiss_draws)
+    
     all_tickets = []
     
     for ticket_idx in range(num_tickets):
@@ -3599,6 +3603,29 @@ async def get_swiss_money_mode(
                 patterns_used.append(f"😴 Deep sleepers: {deep}")
             if wake:
                 patterns_used.append(f"⏰ Wake zone: {wake}")
+        
+        # === FAMILY RHYTHM (the bass — weight adjustments) ===
+        if family_analysis:
+            pred_miss = family_analysis.get('predicted_missing', '')
+            pred_gath = family_analysis.get('predicted_gather', '')
+            miss_ratio = family_analysis.get('missing_overdue', {}).get(pred_miss, 0)
+            gath_ratio = family_analysis.get('gather_overdue', {}).get(pred_gath, 0)
+            fam_names = {'S': 'Singles', 'T': 'Teens', 'W': 'Twenties', 'H': 'Thirties+'}
+            # Apply family weights to existing candidates
+            weighted_candidates = []
+            for n in candidates:
+                fw = family_weights.get(n, 1.0)
+                count = max(1, round(fw))
+                weighted_candidates.extend([n] * count)
+            candidates = weighted_candidates
+            
+            parts = []
+            if miss_ratio >= 1.0:
+                parts.append(f"dim {fam_names.get(pred_miss, pred_miss)} ({miss_ratio:.1f}x)")
+            if gath_ratio >= 1.0:
+                parts.append(f"boost {fam_names.get(pred_gath, pred_gath)} ({gath_ratio:.1f}x)")
+            if parts:
+                patterns_used.append(f"🎵 Rhythm: {' | '.join(parts)}")
         
         # === POSITION ECHOES (T1-T8) ===
         if last_draw and ticket_idx < 8:
@@ -3800,6 +3827,12 @@ async def get_swiss_money_mode(
         "sleepers": {
             "deep": [{"number": n, "gap": g, "ratio": round(r, 1)} for n, g, r in sleeper_data if r >= 2.0],
             "wake": [{"number": n, "gap": g, "ratio": round(r, 1)} for n, g, r in sleeper_data if 1.0 <= r < 2.0],
+        },
+        "family_rhythm": {
+            "predicted_missing": family_analysis.get("predicted_missing", ""),
+            "predicted_gather": family_analysis.get("predicted_gather", ""),
+            "missing_overdue": family_analysis.get("missing_overdue", {}),
+            "gather_overdue": family_analysis.get("gather_overdue", {}),
         },
         "tickets": all_tickets,
         "total_tickets": len(all_tickets),
