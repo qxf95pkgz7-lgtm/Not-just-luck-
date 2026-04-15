@@ -591,6 +591,11 @@ function App() {
   const [sleeperData, setSleeperData] = useState(null);
   const [sleeperLoading, setSleeperLoading] = useState(false);
   
+  // Swiss Sleeper State
+  const [showSwissSleepers, setShowSwissSleepers] = useState(false);
+  const [swissSleeperData, setSwissSleeperData] = useState(null);
+  const [swissSleeperLoading, setSwissSleeperLoading] = useState(false);
+  
   // 2Chance State
   const [show2Chance, setShow2Chance] = useState(false);
   const [twoChanceResults, setTwoChanceResults] = useState(null);
@@ -754,6 +759,25 @@ function App() {
       fetchSleeperForecast();
     }
   }, [showSleeperRadar, lotteryMode]);
+
+  // Swiss Sleeper fetch
+  const fetchSwissSleepers = async () => {
+    setSwissSleeperLoading(true);
+    try {
+      const res = await axios.get(`${API}/swiss-sleepers`);
+      setSwissSleeperData(res.data);
+    } catch (e) {
+      console.error("Error fetching swiss sleepers:", e);
+    } finally {
+      setSwissSleeperLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showSwissSleepers && lotteryMode === 'swiss') {
+      fetchSwissSleepers();
+    }
+  }, [showSwissSleepers, lotteryMode]);
   
   // 2Chance functions
   const check2ChanceHits = async () => {
@@ -2040,6 +2064,96 @@ function App() {
             </div>
           )}
         </div>
+
+        {/* SWISS SLEEPER RADAR */}
+        {lotteryMode === 'swiss' && (
+          <div className="lucky-card p-4 mb-4" data-testid="swiss-sleeper-panel">
+            <button 
+              onClick={() => setShowSwissSleepers(!showSwissSleepers)}
+              className="w-full flex items-center justify-between text-left"
+              data-testid="swiss-sleeper-toggle"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-lg">😴</span>
+                <span className="font-semibold text-slate-200">Sleeper Radar</span>
+                <span className="text-xs text-slate-400">Numbers overdue to appear</span>
+              </div>
+              <span className="text-slate-400">{showSwissSleepers ? '▲' : '▼'}</span>
+            </button>
+            
+            {showSwissSleepers && (
+              <div className="mt-3" data-testid="swiss-sleeper-content">
+                {swissSleeperLoading ? (
+                  <div className="text-center text-slate-400 py-4">Loading sleepers...</div>
+                ) : swissSleeperData ? (
+                  <div className="space-y-3">
+                    <div className="text-xs text-slate-400 mb-2">
+                      Last draw: {swissSleeperData.last_draw} | Expected gap: ~{swissSleeperData.expected_gap} draws
+                    </div>
+                    
+                    {/* Deep Sleepers */}
+                    {swissSleeperData.deep?.length > 0 && (
+                      <div>
+                        <div className="text-xs font-semibold text-red-400 mb-1 flex items-center gap-1">
+                          <span>🔴</span> DEEP SLEEPERS — {swissSleeperData.deep.length} numbers 2x+ overdue
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {swissSleeperData.deep.map(s => (
+                            <div key={s.number} className="relative group">
+                              <div className="w-10 h-10 rounded-full bg-red-900/40 border-2 border-red-500/60 flex items-center justify-center text-sm font-bold text-red-300 hover:scale-110 transition-transform cursor-default">
+                                {s.number}
+                              </div>
+                              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-700 text-xs px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                                {s.gap}d ({s.ratio}x)
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Wake Zone */}
+                    {swissSleeperData.wake?.length > 0 && (
+                      <div>
+                        <div className="text-xs font-semibold text-amber-400 mb-1 flex items-center gap-1">
+                          <span>⏰</span> WAKE ZONE — {swissSleeperData.wake.length} numbers due to appear
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {swissSleeperData.wake.map(s => (
+                            <div key={s.number} className="relative group">
+                              <div className="w-10 h-10 rounded-full bg-amber-900/30 border-2 border-amber-500/50 flex items-center justify-center text-sm font-bold text-amber-300 hover:scale-110 transition-transform cursor-default">
+                                {s.number}
+                              </div>
+                              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-700 text-xs px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                                {s.gap}d ({s.ratio}x)
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Fresh (recently appeared) */}
+                    <div>
+                      <div className="text-xs font-semibold text-emerald-400 mb-1 flex items-center gap-1">
+                        <span>🟢</span> FRESH — Recently drawn
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {swissSleeperData.fresh?.slice(0, 15).map(s => (
+                          <span key={s.number} className="px-2 py-0.5 rounded bg-emerald-900/20 border border-emerald-600/30 text-emerald-400 text-xs">
+                            {s.number}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center text-slate-500 py-3 text-sm">No sleeper data</div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* SLEEPER RADAR - EuroMillions Only */}
         {lotteryMode === 'euro' && (
