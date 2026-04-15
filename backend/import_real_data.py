@@ -1391,8 +1391,8 @@ REAL_DRAWS = [
 ]
 
 async def main():
-    client = motor.motor_asyncio.AsyncIOMotorClient(os.environ.get('MONGO_URL', 'mongodb://localhost:27017'))
-    db = client['test_database']
+    client = motor.motor_asyncio.AsyncIOMotorClient(os.environ.get('MONGO_URL'))
+    db = client[os.environ.get('DB_NAME', 'test_database')]
     await db.draws.delete_many({})
     docs = []
     seen = set()
