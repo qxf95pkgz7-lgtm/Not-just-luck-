@@ -33,6 +33,11 @@ A custom Swiss Lotto and EuroMillions Pattern Analyzer ("Lucky Jack") featuring 
 
 ## What's Been Implemented
 
+### Session: April 15, 2026 (Fork 3 continued)
+- **2Chance (Swiss Second Draw)** — Full feature: manual entry of 2Chance numbers, save to DB, check ALL EuroMillions tickets against 2Chance results, show winners with prize tiers (3/5=CHF 44, 4/5=CHF 950, 5/5=CHF 150K)
+- **Hit Tracker Fixed** — API now returns ALL generations merged by date+mode (was only showing 10). Shows 190 generations properly
+- **2 draws already saved**: 14.04.2026 [2,11,12,34,49] and 10.04.2026 [6,19,23,42,47]
+
 ### Session: April 14, 2026 (Fork 3)
 - **10 DJ-Tuned Tickets Generated** for 15.04.2026 using Money Mode with all new patterns
 - **Frontend Sleeper Radar Panel** - Tease-Hot Numbers, Star Sleepers, 10-Draw Forecast (EuroMillions only)
@@ -64,11 +69,15 @@ A custom Swiss Lotto and EuroMillions Pattern Analyzer ("Lucky Jack") featuring 
 | `/api/euromillions/master-predictor` | POST | DJ Engine + auto-save |
 | `/api/euromillions/money-mode` | POST | Money Mode + auto-save |
 | `/api/euromillions/sleeper-forecast` | GET | 10-draw forecast |
-| `/api/euromillions/generation-history` | GET | Hit tracker |
+| `/api/euromillions/generation-history` | GET | Hit tracker (all gens merged) |
 | `/api/euromillions/update-results` | POST | Euro-only update |
+| `/api/euromillions/2chance/save-result` | POST | Save 2Chance draw numbers |
+| `/api/euromillions/2chance/results` | GET | Get 2Chance history |
+| `/api/euromillions/2chance/check` | POST | Check tickets vs 2Chance |
 
 ## Upcoming Tasks
 - **P1**: Sleeper Engine auto-adjust (recalculate after real draw results)
+- **P1**: Try scraping swisslos.ch for automatic 2Chance result fetching
 - **P2**: Refactor monolithic files (server.py, euromillions_routes.py, dj_patterns.py)
 
 ## App Health
@@ -79,7 +88,8 @@ A custom Swiss Lotto and EuroMillions Pattern Analyzer ("Lucky Jack") featuring 
 - Star->P3 Dance: Active
 - Draw-to-Draw Learning: Active
 - DB Data: Corrected (60 fixes)
-- Hit Tracker: Working
-- Sleeper Radar Panel: Working (NEW)
-- Reverse Twin Pattern: Active (NEW)
-- Day x Month - 10 Pattern: Active (NEW)
+- Hit Tracker: Working (fixed - shows all 190 gens)
+- Sleeper Radar Panel: Working
+- Reverse Twin Pattern: Active
+- Day x Month - 10 Pattern: Active
+- 2Chance Panel: Working (manual entry + check)

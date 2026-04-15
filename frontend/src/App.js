@@ -589,6 +589,15 @@ function App() {
   const [showSleeperRadar, setShowSleeperRadar] = useState(false);
   const [sleeperData, setSleeperData] = useState(null);
   const [sleeperLoading, setSleeperLoading] = useState(false);
+  
+  // 2Chance State
+  const [show2Chance, setShow2Chance] = useState(false);
+  const [twoChanceNumbers, setTwoChanceNumbers] = useState(['', '', '', '', '']);
+  const [twoChanceDate, setTwoChanceDate] = useState('');
+  const [twoChanceSaving, setTwoChanceSaving] = useState(false);
+  const [twoChanceResults, setTwoChanceResults] = useState(null);
+  const [twoChanceHistory, setTwoChanceHistory] = useState([]);
+  const [twoChanceChecking, setTwoChanceChecking] = useState(false);
 
   // Sync latest lottery results from external sources
   const syncLatestResults = async () => {
@@ -747,6 +756,55 @@ function App() {
       fetchSleeperForecast();
     }
   }, [showSleeperRadar, lotteryMode]);
+  
+  // 2Chance functions
+  const save2ChanceResult = async () => {
+    const nums = twoChanceNumbers.map(n => parseInt(n)).filter(n => n >= 1 && n <= 50);
+    if (nums.length !== 5) return;
+    if (!twoChanceDate) return;
+    
+    setTwoChanceSaving(true);
+    try {
+      await axios.post(`${API}/euromillions/2chance/save-result`, {
+        date: twoChanceDate,
+        numbers: nums
+      });
+      setTwoChanceNumbers(['', '', '', '', '']);
+      setTwoChanceDate('');
+      fetch2ChanceHistory();
+    } catch (e) {
+      console.error("Error saving 2Chance:", e);
+    } finally {
+      setTwoChanceSaving(false);
+    }
+  };
+  
+  const check2ChanceHits = async () => {
+    setTwoChanceChecking(true);
+    try {
+      const res = await axios.post(`${API}/euromillions/2chance/check`);
+      setTwoChanceResults(res.data.results || []);
+    } catch (e) {
+      console.error("Error checking 2Chance:", e);
+    } finally {
+      setTwoChanceChecking(false);
+    }
+  };
+  
+  const fetch2ChanceHistory = async () => {
+    try {
+      const res = await axios.get(`${API}/euromillions/2chance/results`);
+      setTwoChanceHistory(res.data.draws || []);
+    } catch (e) {
+      console.error("Error fetching 2Chance history:", e);
+    }
+  };
+  
+  useEffect(() => {
+    if (show2Chance && lotteryMode === 'euro') {
+      fetch2ChanceHistory();
+    }
+  }, [show2Chance, lotteryMode]);
   
   // Fetch last draw on initial load and when lottery mode changes
   useEffect(() => {
@@ -2168,6 +2226,165 @@ function App() {
                     No sleeper data available. Try refreshing.
                   </div>
                 )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 2CHANCE - Swiss Second Chance Draw (EuroMillions only) */}
+        {lotteryMode === 'euro' && (
+          <div className="lucky-card p-4 mb-4" data-testid="twochance-panel">
+            <button 
+              onClick={() => setShow2Chance(!show2Chance)}
+              className="w-full flex items-center justify-between text-left"
+              data-testid="twochance-toggle"
+            >
+              <div className="flex items-center gap-2">
+                <Gift className="w-5 h-5 text-orange-400" />
+                <span className="font-semibold text-slate-200">2Chance</span>
+                <span className="text-xs text-orange-400/70">(Swiss Second Draw)</span>
+              </div>
+              {show2Chance ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+            </button>
+            
+            {show2Chance && (
+              <div className="mt-4 space-y-4">
+                {/* Enter 2Chance Numbers */}
+                <div className="p-3 rounded-lg" style={{ background: 'linear-gradient(135deg, rgba(251,146,60,0.12) 0%, rgba(234,88,12,0.08) 100%)', border: '1px solid rgba(251,146,60,0.25)' }}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Gift className="w-4 h-4 text-orange-400" />
+                    <span className="text-sm font-semibold text-orange-300">Enter 2Chance Numbers</span>
+                  </div>
+                  
+                  {/* Date Input */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xs text-slate-400 w-12">Date:</span>
+                    <input
+                      type="text"
+                      value={twoChanceDate}
+                      onChange={(e) => setTwoChanceDate(e.target.value)}
+                      placeholder="DD.MM.YYYY"
+                      className="flex-1 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-600/50 text-slate-200 text-sm placeholder-slate-500 focus:border-orange-400/50 focus:outline-none"
+                      data-testid="twochance-date-input"
+                    />
+                  </div>
+                  
+                  {/* 5 Number Inputs */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xs text-slate-400 w-12">Nums:</span>
+                    {twoChanceNumbers.map((num, idx) => (
+                      <input
+                        key={idx}
+                        type="number"
+                        min="1"
+                        max="50"
+                        value={num}
+                        onChange={(e) => {
+                          const newNums = [...twoChanceNumbers];
+                          newNums[idx] = e.target.value;
+                          setTwoChanceNumbers(newNums);
+                        }}
+                        placeholder={`#${idx+1}`}
+                        className="w-14 px-2 py-1.5 rounded-lg bg-slate-800/80 border border-slate-600/50 text-slate-200 text-sm text-center placeholder-slate-500 focus:border-orange-400/50 focus:outline-none"
+                        data-testid={`twochance-num-${idx}`}
+                      />
+                    ))}
+                  </div>
+                  
+                  {/* Save Button */}
+                  <button
+                    onClick={save2ChanceResult}
+                    disabled={twoChanceSaving || twoChanceNumbers.some(n => !n || parseInt(n) < 1 || parseInt(n) > 50) || !twoChanceDate}
+                    className="w-full py-2 px-4 rounded-lg bg-orange-600/80 hover:bg-orange-600 text-white text-sm font-medium transition-all disabled:opacity-40"
+                    data-testid="twochance-save-btn"
+                  >
+                    {twoChanceSaving ? 'Saving...' : 'Save 2Chance Result'}
+                  </button>
+                </div>
+                
+                {/* Saved 2Chance History */}
+                {twoChanceHistory.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-xs text-slate-400">Saved 2Chance Draws:</span>
+                    {twoChanceHistory.map((d, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-slate-800/40 border border-slate-700/50">
+                        <span className="text-xs text-slate-400 w-20">{d.date}</span>
+                        <div className="flex items-center gap-1">
+                          {d.numbers?.map((n, i) => (
+                            <Ball key={i} number={n} size="xs" maxNum={50} />
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Check 2Chance Hits Button */}
+                <button
+                  onClick={check2ChanceHits}
+                  disabled={twoChanceChecking}
+                  className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold text-sm transition-all disabled:opacity-50"
+                  data-testid="twochance-check-btn"
+                >
+                  {twoChanceChecking ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <RefreshCw className="w-4 h-4 animate-spin" /> Checking...
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-2">
+                      <CheckCircle2 className="w-4 h-4" /> Check 2Chance Hits
+                    </span>
+                  )}
+                </button>
+                
+                {/* 2Chance Results */}
+                {twoChanceResults && twoChanceResults.map((r, idx) => (
+                  <div key={idx} className="p-3 rounded-lg" style={{ background: 'linear-gradient(135deg, rgba(251,146,60,0.08) 0%, rgba(234,88,12,0.04) 100%)', border: '1px solid rgba(251,146,60,0.2)' }}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-orange-300">2Chance {r.date}</span>
+                        <div className="flex items-center gap-1">
+                          {r.twochance_numbers?.map((n, i) => (
+                            <Ball key={i} number={n} size="xs" maxNum={50} />
+                          ))}
+                        </div>
+                      </div>
+                      <span className="text-xs text-slate-500">{r.tickets_checked} checked</span>
+                    </div>
+                    
+                    {r.winners?.length > 0 ? (
+                      <div className="space-y-1.5">
+                        <span className="text-xs text-emerald-400 font-medium">{r.total_matches} ticket(s) with 2+ matches!</span>
+                        {r.winners.map((w, widx) => {
+                          const matchSet = new Set(w.matches);
+                          return (
+                            <div key={widx} className={`flex items-center gap-2 p-1.5 rounded-lg ${
+                              w.match_count >= 3 ? 'bg-emerald-500/15 border border-emerald-500/30' : 'bg-slate-700/30'
+                            }`}>
+                              <span className={`text-xs font-bold ${
+                                w.match_count >= 4 ? 'text-amber-400' : w.match_count >= 3 ? 'text-emerald-400' : 'text-slate-400'
+                              }`}>{w.match_count}/5</span>
+                              <div className="flex items-center gap-0.5">
+                                {w.numbers.map((n, ni) => (
+                                  <div key={ni} className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                                    matchSet.has(n)
+                                      ? 'bg-orange-500 text-white ring-1 ring-orange-400'
+                                      : 'bg-slate-700 text-slate-400'
+                                  }`}>{n}</div>
+                                ))}
+                              </div>
+                              <span className={`text-[10px] ml-auto ${
+                                w.match_count >= 3 ? 'text-emerald-400 font-bold' : 'text-slate-500'
+                              }`}>{w.prize_tier}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-slate-500">No tickets with 2+ matches</span>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </div>

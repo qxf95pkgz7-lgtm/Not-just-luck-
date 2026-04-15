@@ -3183,4 +3183,120 @@ def create_euromillions_router(db):
             }
         }
     
+    # ═══════════════════════════════════════════════════════════════════════
+    # 🎲 2CHANCE - Swiss Second Chance Draw! 🎲
+    # Uses same 5 main numbers, separate draw, 3+ matches wins
+    # ═══════════════════════════════════════════════════════════════════════
+    
+    class TwoChanceRequest(BaseModel):
+        date: str  # DD.MM.YYYY
+        numbers: List[int]  # 5 numbers 1-50
+    
+    @router.post("/2chance/save-result")
+    async def save_2chance_result(request: TwoChanceRequest):
+        """Save a 2Chance draw result (manual entry)"""
+        if len(request.numbers) != 5:
+            raise HTTPException(status_code=400, detail="2Chance needs exactly 5 numbers")
+        if not all(1 <= n <= 50 for n in request.numbers):
+            raise HTTPException(status_code=400, detail="Numbers must be 1-50")
+        
+        # Upsert by date
+        await db.twochance_draws.update_one(
+            {"date": request.date},
+            {"$set": {
+                "date": request.date,
+                "numbers": sorted(request.numbers),
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }},
+            upsert=True
+        )
+        
+        return {"status": "saved", "date": request.date, "numbers": sorted(request.numbers)}
+    
+    @router.get("/2chance/results")
+    async def get_2chance_results(limit: int = 20):
+        """Get saved 2Chance results"""
+        cursor = db.twochance_draws.find({}, {"_id": 0})
+        draws = await cursor.to_list(length=500)
+        
+        def parse_date(d):
+            try:
+                return datetime.strptime(d['date'], '%d.%m.%Y')
+            except:
+                return datetime.min
+        
+        draws.sort(key=parse_date, reverse=True)
+        return {"draws": draws[:limit], "total": len(draws)}
+    
+    @router.post("/2chance/check")
+    async def check_2chance_hits(date: str = None):
+        """Check ALL saved EuroMillions tickets against 2Chance results.
+        If date is provided, check only that date. Otherwise check all."""
+        
+        # Get 2Chance draws
+        if date:
+            tc_draw = await db.twochance_draws.find_one({"date": date}, {"_id": 0})
+            tc_draws = [tc_draw] if tc_draw else []
+        else:
+            cursor = db.twochance_draws.find({}, {"_id": 0})
+            tc_draws = await cursor.to_list(length=500)
+        
+        if not tc_draws:
+            return {"error": "No 2Chance results found", "results": []}
+        
+        # Get all EuroMillions generations
+        all_gens = await db.euromillions_generations.find(
+            {}, {"_id": 0, "target_date": 1, "tickets": 1, "mode": 1}
+        ).to_list(length=2000)
+        
+        results = []
+        for tc in tc_draws:
+            tc_date = tc['date']
+            tc_nums = set(tc['numbers'])
+            
+            # Find generations targeting this date (or close dates)
+            date_results = {
+                "date": tc_date,
+                "twochance_numbers": tc['numbers'],
+                "tickets_checked": 0,
+                "winners": [],
+                "total_matches": 0,
+            }
+            
+            for gen in all_gens:
+                gen_date = gen.get('target_date', '')
+                # Match tickets from same date or ±3 days
+                try:
+                    gen_dt = datetime.strptime(gen_date, '%d.%m.%Y')
+                    tc_dt = datetime.strptime(tc_date, '%d.%m.%Y')
+                    if abs((gen_dt - tc_dt).days) > 3:
+                        continue
+                except:
+                    continue
+                
+                for ticket in gen.get('tickets', []):
+                    nums = set(ticket.get('numbers', []))
+                    matches = nums.intersection(tc_nums)
+                    date_results["tickets_checked"] += 1
+                    
+                    if len(matches) >= 2:
+                        date_results["winners"].append({
+                            "numbers": ticket.get('numbers', []),
+                            "matches": sorted(matches),
+                            "match_count": len(matches),
+                            "target_date": gen_date,
+                            "mode": gen.get('mode', '?'),
+                            "prize_tier": "CHF 150,000" if len(matches) == 5 
+                                else f"~CHF 950" if len(matches) == 4 
+                                else f"~CHF 44" if len(matches) == 3 
+                                else "2 matches"
+                        })
+                        date_results["total_matches"] += 1
+            
+            # Sort winners by match count descending
+            date_results["winners"].sort(key=lambda w: -w["match_count"])
+            results.append(date_results)
+        
+        return {"results": results}
+    
     return router
