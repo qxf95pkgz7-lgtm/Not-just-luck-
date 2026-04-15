@@ -511,7 +511,7 @@ async def get_draws():
     draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).to_list(2000)
     return [
         DrawResponse(
-            id=d['id'],
+            id=d.get('id', ''),
             date=d['date'],
             draw_number=d.get('draw_number'),
             numbers=d['numbers'],
