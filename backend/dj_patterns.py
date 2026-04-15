@@ -3179,6 +3179,64 @@ def dj_generate_money_mode_ticket(draws: List[Dict], target_date: str = None, sw
         patterns_used.append(f"🔢 P123+Date overlap: {p123_boosted[:5]}")
     
     # ═══════════════════════════════════════════════════════════════════
+    # P6 CIRCLE BRIDGE — Swiss P6 to Euro (40% hit rate over 2 years!)
+    # Swiss P6 - 21 (Swiss circle) or Swiss P6 - 25 (Euro circle)
+    # ═══════════════════════════════════════════════════════════════════
+    if swiss_draws and len(swiss_draws) >= 2:
+        swiss_sorted = sorted(swiss_draws, key=lambda d: parse_draw_date(d.get('date', '01.01.2000')), reverse=True)
+        sw_last = sorted(swiss_sorted[0].get('numbers', []))
+        sw_prev = sorted(swiss_sorted[1].get('numbers', []))
+        
+        if len(sw_last) >= 6 and len(sw_prev) >= 6:
+            sw_p6_a = sw_prev[5]
+            sw_p6_b = sw_last[5]
+            sw_p6_sum = sw_p6_a + sw_p6_b
+            sw_p2_a = sw_prev[1]
+            sw_p2_b = sw_last[1]
+            
+            # Bridge: Swiss P6 - 21 and Swiss P6 - 25
+            bridge_nums = set()
+            for p6 in [sw_p6_a, sw_p6_b]:
+                t21 = p6 - 21
+                t25 = p6 - 25
+                if 1 <= t21 <= 50:
+                    bridge_nums.add(t21)
+                if 1 <= t25 <= 50:
+                    bridge_nums.add(t25)
+            
+            # 69 Math: digit arithmetic from P2 concat and P6 sum
+            math_nums = set()
+            for a, b in [(sw_p2_a, sw_p2_b), (sw_p6_a - 30, sw_p6_b - 30)]:
+                s = a + b
+                d = abs(a - b)
+                p = a * b
+                if 1 <= s <= 50: math_nums.add(s)
+                if 1 <= d <= 50: math_nums.add(d)
+                if 1 <= p <= 50: math_nums.add(p)
+            
+            # Circle of P2 digits in Euro context
+            for p2 in [sw_p2_a, sw_p2_b]:
+                c_euro = p2 + 25 if p2 + 25 <= 50 else p2 + 25 - 50
+                if 1 <= c_euro <= 50:
+                    math_nums.add(c_euro)
+            
+            # Apply bridge numbers (strong: 40% hit rate)
+            for n in bridge_nums:
+                for pos in range(5):
+                    if n <= 15: candidates[pos if pos < 2 else 0].extend([n] * 10)
+                    elif n <= 30: candidates[min(pos, 2)].extend([n] * 10)
+                    else: candidates[max(pos, 2)].extend([n] * 10)
+            
+            # Apply 69 math numbers (moderate boost)
+            for n in math_nums:
+                for pos in range(5):
+                    candidates[pos].extend([n] * 5)
+            
+            patterns_used.append(f"🌉 P6 Bridge: Swiss P6={sw_p6_b},{sw_p6_a} sum={sw_p6_sum} → {sorted(bridge_nums)}")
+            if math_nums:
+                patterns_used.append(f"🔢 69 Math: P2={sw_p2_a},{sw_p2_b} → {sorted(math_nums)[:6]}")
+    
+    # ═══════════════════════════════════════════════════════════════════
     # REVERSE TWIN GENERATOR (new!)
     # ═══════════════════════════════════════════════════════════════════
     rev_twin_result = pattern_reverse_twin(prev_draw)

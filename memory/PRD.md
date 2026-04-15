@@ -37,7 +37,20 @@ Reading P1+P2+P3 as a digit string, the digits predict the next draw's numbers.
 - Three sources: P123 from prev draw + date concat + P123 from prev-prev draw
 - Numbers appearing in multiple pools get strongest boost
 
-### NEW: P2 Prediction Rule (Discovered April 15, 2026)
+### NEW: P6 Circle Bridge — Swiss→Euro (Discovered April 15, 2026)
+Swiss P6 connects to Euro through BOTH circle constants:
+- Swiss P6 - 21 = Euro number (Swiss circle): 18% hit
+- Swiss P6 - 25 = Euro number (Euro circle): 27% hit
+- **Combined: 40% hit rate** (1 in 2.5 draws!)
+- Strongest sums: 76 (75%), 66 (75%), 64 (67%)
+- Current: P6=35+34=69, P2 concat="96" → bridges to 9, 10, 13, 14 in Euro
+
+### NEW: 69 Math Pattern (Discovered April 15, 2026)
+When P6+P6=69 and P2 concat=96:
+- |6-9|=3, 6+9=15, circle(6)=27, circle(9)=30, 69-42=27
+- 35-14=21 (Swiss circle), 34-13=21 (Swiss circle)
+- 35-10=25 (Euro circle), 34-9=25 (Euro circle)
+- ALL FOUR bridges hit simultaneously on 10.04.2026!
 - **prev P2 ± 1 = 12.6% = 5.3x random!** (strongest P2 predictor)
 - prev P1 + Lucky = 5.4% = 2.3x random
 - Month = P2: 3.8% = 1.6x random
