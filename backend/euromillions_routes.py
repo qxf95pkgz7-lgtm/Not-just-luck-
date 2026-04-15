@@ -2840,9 +2840,8 @@ def create_euromillions_router(db):
     @router.get("/generation-history")
     async def get_euro_generation_history(limit: int = 200):
         """Get saved EuroMillions generations with hit data.
-        
-        Shows ALL generations grouped by target_date, most recent first.
-        Merges multiple generations for the same date+mode into single entries.
+        Shows only tickets with 2+ total hits (numbers + stars), last 20.
+        Merged by target_date + mode.
         """
         all_gens = await db.euromillions_generations.find(
             {},
@@ -2851,11 +2850,9 @@ def create_euromillions_router(db):
              "star_hits": 1, "best_ticket_hits": 1, "mode": 1}
         ).to_list(length=2000)
         
-        # Convert ObjectId and parse dates for proper sorting
         for gen in all_gens:
             gen["_id"] = str(gen["_id"])
         
-        # Sort by target_date descending (DD.MM.YYYY → proper date sort)
         def parse_target_date(g):
             try:
                 return datetime.strptime(g.get('target_date', '01.01.2000'), '%d.%m.%Y')
@@ -2864,7 +2861,7 @@ def create_euromillions_router(db):
         
         all_gens.sort(key=parse_target_date, reverse=True)
         
-        # Group by target_date + mode and MERGE tickets
+        # Group by target_date + mode and MERGE
         from collections import OrderedDict
         by_date_mode = OrderedDict()
         for gen in all_gens:
@@ -2889,16 +2886,77 @@ def create_euromillions_router(db):
             merged["hit_results"].extend(gen.get("hit_results", []) or [])
             merged["total_hits"] += gen.get("total_hits", 0) or 0
             merged["star_hits"] += gen.get("star_hits", 0) or 0
-            if gen.get("best_ticket_hits", 0) > merged["best_ticket_hits"]:
+            if (gen.get("best_ticket_hits", 0) or 0) > merged["best_ticket_hits"]:
                 merged["best_ticket_hits"] = gen["best_ticket_hits"]
             if not gen.get("hits_calculated", False):
                 merged["hits_calculated"] = False
         
-        result = list(by_date_mode.values())[:limit]
+        # Filter: only keep tickets with 2+ total hits (num_hits + star_hits)
+        # Then merge ALL modes per date and sort by best hits
+        all_winners = []
+        pending_entries = []
+        
+        for key, merged in by_date_mode.items():
+            if merged["hits_calculated"] and merged["hit_results"]:
+                for i, hr in enumerate(merged["hit_results"]):
+                    if not hr or i >= len(merged["tickets"]):
+                        continue
+                    total = (hr.get("hit_count", 0) or 0) + (hr.get("star_hit_count", 0) or 0)
+                    if total >= 2:
+                        all_winners.append({
+                            "target_date": merged["target_date"],
+                            "mode": merged["mode"],
+                            "ticket": merged["tickets"][i],
+                            "hit_result": hr,
+                            "total_score": total,
+                            "num_hits": hr.get("hit_count", 0) or 0,
+                        })
+            elif not merged["hits_calculated"]:
+                pending_entries.append(merged)
+        
+        # Sort winners: best total score first, then by num hits
+        all_winners.sort(key=lambda w: (-w["total_score"], -w["num_hits"]))
+        
+        # Build result grouped by date, max 20 tickets
+        from collections import OrderedDict as OD2
+        grouped = OD2()
+        ticket_count = 0
+        for w in all_winners:
+            if ticket_count >= 20:
+                break
+            td = w["target_date"]
+            if td not in grouped:
+                grouped[td] = {
+                    "_id": td,
+                    "target_date": td,
+                    "hits_calculated": True,
+                    "tickets": [],
+                    "hit_results": [],
+                    "total_hits": 0,
+                    "star_hits": 0,
+                    "best_ticket_hits": 0,
+                    "mode": "mixed",
+                }
+            g = grouped[td]
+            g["tickets"].append({**w["ticket"], "_mode": w["mode"]})
+            g["hit_results"].append(w["hit_result"])
+            g["total_hits"] += w["hit_result"].get("hit_count", 0) or 0
+            g["star_hits"] += w["hit_result"].get("star_hit_count", 0) or 0
+            if (w["hit_result"].get("hit_count", 0) or 0) > g["best_ticket_hits"]:
+                g["best_ticket_hits"] = w["hit_result"]["hit_count"]
+            ticket_count += 1
+        
+        result = list(grouped.values())
+        
+        # Add pending at the top
+        for p in pending_entries[:2]:
+            p["tickets"] = p["tickets"][:3]
+            result.insert(0, p)
         
         return {
             "count": len(result),
             "total_in_db": len(all_gens),
+            "total_winners": len(all_winners),
             "generations": result
         }
     
