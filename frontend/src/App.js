@@ -534,6 +534,7 @@ function App() {
   const [birthday, setBirthday] = useState("");
   const [fullName, setFullName] = useState("");
   const [lockedPositions, setLockedPositions] = useState({ p1: "", p2: "", p3: "", p4: "", p5: "", p6: "" });
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
   
   // Special personas with secret number modifiers
   // The magic is hidden - only the generator knows!
@@ -2605,7 +2606,51 @@ function App() {
         {/* Footer */}
         <div className="text-center text-slate-500 text-xs mt-6 pb-4">
           <p>Good luck! Play responsibly.</p>
+          <button 
+            onClick={() => setShowDisclaimer(true)}
+            className="mt-1 underline hover:text-slate-300 transition-colors"
+            data-testid="disclaimer-link"
+          >
+            Disclaimer & Terms
+          </button>
         </div>
+
+        {/* Disclaimer Modal */}
+        {showDisclaimer && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" data-testid="disclaimer-modal">
+            <div className="bg-slate-800 border border-slate-600 rounded-xl max-w-lg w-full p-6 max-h-[80vh] overflow-y-auto">
+              <h2 className="text-xl font-bold text-amber-400 mb-4">Disclaimer & Terms of Use</h2>
+              
+              <div className="text-slate-300 text-sm space-y-3">
+                <p className="font-semibold text-white">Lucky Jack is an entertainment platform.</p>
+                
+                <p>This application helps you choose lottery numbers using mathematical pattern analysis, historical data, and digit-based algorithms. It is designed purely for entertainment and convenience purposes.</p>
+                
+                <p className="font-semibold text-amber-300">No Guarantee of Winning</p>
+                <p>Lottery draws are random events. Lucky Jack does not guarantee any winnings. Past patterns and statistical analysis do not predict future results. All generated numbers are suggestions based on historical pattern analysis.</p>
+                
+                <p className="font-semibold text-amber-300">Play Responsibly</p>
+                <p>Only spend what you can afford to lose. If you feel that gambling is becoming a problem, please seek help. Lucky Jack is not a gambling platform — it is a number selection tool.</p>
+                
+                <p className="font-semibold text-amber-300">Data & Privacy</p>
+                <p>Lucky Jack uses publicly available lottery draw history. No personal data is collected or stored. Generated tickets are stored locally for hit tracking purposes only.</p>
+                
+                <p className="font-semibold text-amber-300">Accuracy</p>
+                <p>While we strive to maintain accurate historical data, we cannot guarantee the completeness or accuracy of all lottery results. Always verify your tickets against official lottery sources.</p>
+                
+                <p className="text-slate-400 text-xs mt-4">By using Lucky Jack, you acknowledge that this is an entertainment tool and accept these terms.</p>
+              </div>
+              
+              <button 
+                onClick={() => setShowDisclaimer(false)}
+                className="mt-5 w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-2 rounded-lg transition-colors"
+                data-testid="disclaimer-close"
+              >
+                I Understand
+              </button>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
