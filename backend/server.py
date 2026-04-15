@@ -3611,8 +3611,8 @@ async def get_swiss_money_mode(
                     candidates.extend([c] * 10)
             patterns_used.append("🤪 CRAZY high-range boost (30+)")
         
-        # === HIGH-RANGE GUARANTEE (avg 2.4/6 numbers are 30+) ===
-        # Build a high-range pool from: circles of DNA top, prev high ±1, DNA high scorers
+        # === HIGH-RANGE GUARANTEE (avg 1.9 numbers 30+ per draw, mostly P5-P6) ===
+        # Only 1 guaranteed high — frees a slot for stronger DNA/P2 picks
         high_pool = []
         for n, s in dna_scores.items():
             if n >= 30 and s > 0:
@@ -3627,6 +3627,26 @@ async def get_swiss_money_mode(
                     if c >= 30:
                         high_pool.extend([c] * 6)
         
+        # === P2 PREDICTION (5.3x random! prev_P2 +/- 1) ===
+        p2_candidates = []
+        if last_draw:
+            last_p2 = last_nums[1] if len(last_nums) >= 2 else None
+            last_p1 = last_nums[0] if len(last_nums) >= 1 else None
+            last_lk = last_draw.get('lucky_number', 0)
+            if last_p2:
+                for delta in [-1, 0, 1]:
+                    v = last_p2 + delta
+                    if 1 <= v <= 42:
+                        p2_candidates.extend([v] * 15)
+                if last_p1 and last_lk:
+                    v = last_p1 + last_lk
+                    if 1 <= v <= 42:
+                        p2_candidates.extend([v] * 8)
+                if 1 <= month <= 42:
+                    p2_candidates.extend([month] * 5)
+            patterns_used.append(f"P2: prev={last_p2} +/-1, P1+L={last_p1}+{last_lk}")
+        candidates.extend(p2_candidates)
+        
         # === SELECT 6 NUMBERS ===
         selected = []
         used = set()
@@ -3636,18 +3656,14 @@ async def get_swiss_money_mode(
             if lock_val is not None and 1 <= lock_val <= 42:
                 used.add(lock_val)
         
-        # Count how many locks are already 30+
         locked_high = sum(1 for lv in lock_params if lv is not None and lv >= 30)
-        
-        # Guarantee 2 high numbers (30+) per ticket unless locks cover it
-        high_needed = max(0, 2 - locked_high)
+        high_needed = max(0, 1 - locked_high)
         high_placed = 0
         
         for pos in range(6):
             if lock_params[pos] is not None and 1 <= lock_params[pos] <= 42:
                 selected.append(lock_params[pos])
-            elif high_placed < high_needed and pos >= 4:
-                # Place high number at P5/P6 positions
+            elif high_placed < high_needed and pos == 5:
                 h_pool = [n for n in high_pool if n not in used and 30 <= n <= 42]
                 if h_pool:
                     chosen = random.choice(h_pool)
