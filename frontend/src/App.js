@@ -592,9 +592,6 @@ function App() {
   
   // 2Chance State
   const [show2Chance, setShow2Chance] = useState(false);
-  const [twoChanceNumbers, setTwoChanceNumbers] = useState(['', '', '', '', '']);
-  const [twoChanceDate, setTwoChanceDate] = useState('');
-  const [twoChanceSaving, setTwoChanceSaving] = useState(false);
   const [twoChanceResults, setTwoChanceResults] = useState(null);
   const [twoChanceHistory, setTwoChanceHistory] = useState([]);
   const [twoChanceChecking, setTwoChanceChecking] = useState(false);
@@ -758,27 +755,6 @@ function App() {
   }, [showSleeperRadar, lotteryMode]);
   
   // 2Chance functions
-  const save2ChanceResult = async () => {
-    const nums = twoChanceNumbers.map(n => parseInt(n)).filter(n => n >= 1 && n <= 50);
-    if (nums.length !== 5) return;
-    if (!twoChanceDate) return;
-    
-    setTwoChanceSaving(true);
-    try {
-      await axios.post(`${API}/euromillions/2chance/save-result`, {
-        date: twoChanceDate,
-        numbers: nums
-      });
-      setTwoChanceNumbers(['', '', '', '', '']);
-      setTwoChanceDate('');
-      fetch2ChanceHistory();
-    } catch (e) {
-      console.error("Error saving 2Chance:", e);
-    } finally {
-      setTwoChanceSaving(false);
-    }
-  };
-  
   const check2ChanceHits = async () => {
     setTwoChanceChecking(true);
     try {
@@ -2242,71 +2218,18 @@ function App() {
               <div className="flex items-center gap-2">
                 <Gift className="w-5 h-5 text-orange-400" />
                 <span className="font-semibold text-slate-200">2Chance</span>
-                <span className="text-xs text-orange-400/70">(Swiss Second Draw)</span>
+                <span className="text-xs text-orange-400/70">(Auto-synced with Euro)</span>
               </div>
               {show2Chance ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
             </button>
             
             {show2Chance && (
               <div className="mt-4 space-y-4">
-                {/* Enter 2Chance Numbers */}
-                <div className="p-3 rounded-lg" style={{ background: 'linear-gradient(135deg, rgba(251,146,60,0.12) 0%, rgba(234,88,12,0.08) 100%)', border: '1px solid rgba(251,146,60,0.25)' }}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Gift className="w-4 h-4 text-orange-400" />
-                    <span className="text-sm font-semibold text-orange-300">Enter 2Chance Numbers</span>
-                  </div>
-                  
-                  {/* Date Input */}
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-xs text-slate-400 w-12">Date:</span>
-                    <input
-                      type="text"
-                      value={twoChanceDate}
-                      onChange={(e) => setTwoChanceDate(e.target.value)}
-                      placeholder="DD.MM.YYYY"
-                      className="flex-1 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-600/50 text-slate-200 text-sm placeholder-slate-500 focus:border-orange-400/50 focus:outline-none"
-                      data-testid="twochance-date-input"
-                    />
-                  </div>
-                  
-                  {/* 5 Number Inputs */}
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-xs text-slate-400 w-12">Nums:</span>
-                    {twoChanceNumbers.map((num, idx) => (
-                      <input
-                        key={idx}
-                        type="number"
-                        min="1"
-                        max="50"
-                        value={num}
-                        onChange={(e) => {
-                          const newNums = [...twoChanceNumbers];
-                          newNums[idx] = e.target.value;
-                          setTwoChanceNumbers(newNums);
-                        }}
-                        placeholder={`#${idx+1}`}
-                        className="w-14 px-2 py-1.5 rounded-lg bg-slate-800/80 border border-slate-600/50 text-slate-200 text-sm text-center placeholder-slate-500 focus:border-orange-400/50 focus:outline-none"
-                        data-testid={`twochance-num-${idx}`}
-                      />
-                    ))}
-                  </div>
-                  
-                  {/* Save Button */}
-                  <button
-                    onClick={save2ChanceResult}
-                    disabled={twoChanceSaving || twoChanceNumbers.some(n => !n || parseInt(n) < 1 || parseInt(n) > 50) || !twoChanceDate}
-                    className="w-full py-2 px-4 rounded-lg bg-orange-600/80 hover:bg-orange-600 text-white text-sm font-medium transition-all disabled:opacity-40"
-                    data-testid="twochance-save-btn"
-                  >
-                    {twoChanceSaving ? 'Saving...' : 'Save 2Chance Result'}
-                  </button>
-                </div>
-                
-                {/* Saved 2Chance History */}
+                {/* Saved 2Chance Draws */}
                 {twoChanceHistory.length > 0 && (
                   <div className="space-y-2">
-                    <span className="text-xs text-slate-400">Saved 2Chance Draws:</span>
-                    {twoChanceHistory.map((d, idx) => (
+                    <span className="text-xs text-slate-400">Recent 2Chance Draws:</span>
+                    {twoChanceHistory.slice(0, 5).map((d, idx) => (
                       <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-slate-800/40 border border-slate-700/50">
                         <span className="text-xs text-slate-400 w-20">{d.date}</span>
                         <div className="flex items-center gap-1">
@@ -2314,8 +2237,15 @@ function App() {
                             <Ball key={i} number={n} size="xs" maxNum={50} />
                           ))}
                         </div>
+                        {d.source && <span className="text-[9px] text-slate-600 ml-auto">{d.source}</span>}
                       </div>
                     ))}
+                  </div>
+                )}
+                
+                {twoChanceHistory.length === 0 && (
+                  <div className="text-center text-slate-500 text-sm py-2">
+                    No 2Chance draws yet. Hit "Update Draws" to sync.
                   </div>
                 )}
                 
