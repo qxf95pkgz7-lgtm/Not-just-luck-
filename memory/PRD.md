@@ -92,4 +92,4 @@ A custom Swiss Lotto and EuroMillions Pattern Analyzer ("Lucky Jack") featuring 
 - Sleeper Radar Panel: Working
 - Reverse Twin Pattern: Active
 - Day x Month - 10 Pattern: Active
-- 2Chance Panel: Working (manual entry + check)
+- 2Chance Panel: Working (auto-scrape from swisslos.ch + manual entry)

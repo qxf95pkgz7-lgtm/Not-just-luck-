@@ -311,12 +311,13 @@ async def sync_swisslotto_to_db(db, limit: int = 50) -> Dict:
 
 async def auto_sync_all(db) -> Dict:
     """
-    Sync both lotteries and return combined stats
+    Sync both lotteries and 2Chance, return combined stats
     """
     logger.info("Starting auto-sync of lottery results...")
     
     euro_stats = await sync_euromillions_to_db(db)
     swiss_stats = await sync_swisslotto_to_db(db)
+    twochance_stats = await sync_2chance_to_db(db)
     
     total_new = euro_stats["new"] + swiss_stats["new"]
     
@@ -328,6 +329,151 @@ async def auto_sync_all(db) -> Dict:
     return {
         "euromillions": euro_stats,
         "swisslotto": swiss_stats,
+        "twochance": twochance_stats,
         "total_new": total_new,
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 🎲 2CHANCE SCRAPER - Fetches from swisslos.ch
+# ═══════════════════════════════════════════════════════════════════════════════
+
+SWISSLOS_EURO_URL = "https://www.swisslos.ch/en/euromillions/information/winning-numbers/winning-numbers.html"
+
+
+async def fetch_2chance_from_swisslos() -> Optional[Dict]:
+    """
+    Scrape the latest 2Chance result from swisslos.ch
+    
+    HTML structure:
+    <div class="second-chance-logo">...</div>
+    <div class="actual-numbers___body">
+        <ul class="actual-numbers__numbers">
+            <li class="actual-numbers__number actual-numbers__number___normal">
+                <span class="transform__center">2</span>
+            </li>
+            ...
+        </ul>
+    </div>
+    """
+    try:
+        async with httpx.AsyncClient(timeout=15, follow_redirects=True) as client:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept": "text/html,application/xhtml+xml",
+                "Accept-Language": "en-US,en;q=0.9",
+            }
+            resp = await client.get(SWISSLOS_EURO_URL, headers=headers)
+            resp.raise_for_status()
+            
+            soup = BeautifulSoup(resp.text, 'html.parser')
+            
+            # Find the date from the datepicker selected date
+            date_str = None
+            
+            # Find selected date from calendar
+            selected = soup.find('span', class_='selected')
+            if selected and selected.get('aria-label'):
+                try:
+                    from datetime import datetime as dt
+                    parsed = dt.strptime(selected['aria-label'], '%B %d, %Y')
+                    date_str = parsed.strftime('%d.%m.%Y')
+                except:
+                    pass
+            
+            # Fallback to datepicker max-date
+            if not date_str:
+                datepicker = soup.find('div', class_='js-datepicker-wrapper')
+                if datepicker:
+                    date_str = datepicker.get('data-max-date')
+            
+            # Find 2nd Chance section
+            second_chance_logo = soup.find('div', class_='second-chance-logo')
+            if not second_chance_logo:
+                logger.warning("2Chance: Could not find second-chance-logo div")
+                return None
+            
+            # The numbers are in the next sibling div
+            numbers_body = second_chance_logo.find_next_sibling('div', class_='actual-numbers___body')
+            if not numbers_body:
+                # Try parent's next element
+                parent = second_chance_logo.parent
+                if parent:
+                    numbers_body = parent.find('div', class_='actual-numbers___body')
+            
+            if not numbers_body:
+                logger.warning("2Chance: Could not find actual-numbers___body")
+                return None
+            
+            # Extract numbers from span.transform__center
+            number_spans = numbers_body.find_all('span', class_='transform__center')
+            numbers = []
+            for span in number_spans:
+                try:
+                    num = int(span.get_text(strip=True))
+                    if 1 <= num <= 50:
+                        numbers.append(num)
+                except (ValueError, TypeError):
+                    continue
+            
+            if len(numbers) != 5:
+                logger.warning(f"2Chance: Expected 5 numbers, got {len(numbers)}: {numbers}")
+                return None
+            
+            # Also extract the EuroMillions main numbers + date
+            euro_section = soup.find('div', class_='euro-millions-logo')
+            euro_date = date_str
+            
+            if euro_section:
+                euro_body = euro_section.find_next_sibling('div', class_='actual-numbers___body')
+                if euro_body:
+                    euro_spans = euro_body.find_all('span', class_='transform__center')
+                    euro_nums = []
+                    for span in euro_spans:
+                        try:
+                            num = int(span.get_text(strip=True))
+                            euro_nums.append(num)
+                        except:
+                            continue
+            
+            logger.info(f"2Chance scraped: date={euro_date}, numbers={sorted(numbers)}")
+            return {
+                "date": euro_date,
+                "numbers": sorted(numbers)
+            }
+    
+    except Exception as e:
+        logger.error(f"2Chance scraping error: {e}")
+        return None
+
+
+async def sync_2chance_to_db(db) -> Dict:
+    """Sync 2Chance results to database"""
+    result = await fetch_2chance_from_swisslos()
+    
+    if not result or not result.get("date") or not result.get("numbers"):
+        return {"status": "no_data", "new": 0}
+    
+    date = result["date"]
+    numbers = result["numbers"]
+    
+    # Check if we already have this date
+    existing = await db.twochance_draws.find_one({"date": date})
+    if existing:
+        return {"status": "up_to_date", "new": 0, "date": date}
+    
+    # Save new result
+    await db.twochance_draws.update_one(
+        {"date": date},
+        {"$set": {
+            "date": date,
+            "numbers": numbers,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "source": "swisslos.ch"
+        }},
+        upsert=True
+    )
+    
+    logger.info(f"2Chance: Saved new result for {date}: {numbers}")
+    return {"status": "new", "new": 1, "date": date, "numbers": numbers}
