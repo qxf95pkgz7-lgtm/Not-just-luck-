@@ -3611,6 +3611,22 @@ async def get_swiss_money_mode(
                     candidates.extend([c] * 10)
             patterns_used.append("🤪 CRAZY high-range boost (30+)")
         
+        # === HIGH-RANGE GUARANTEE (avg 2.4/6 numbers are 30+) ===
+        # Build a high-range pool from: circles of DNA top, prev high ±1, DNA high scorers
+        high_pool = []
+        for n, s in dna_scores.items():
+            if n >= 30 and s > 0:
+                high_pool.extend([n] * int(s * 2))
+        if last_draw:
+            for n in last_nums:
+                if n >= 30:
+                    high_pool.extend([n] * 8)
+                    if n > 30: high_pool.extend([n - 1] * 4)
+                    if n < 42: high_pool.extend([n + 1] * 4)
+                for c in swiss_circle(n):
+                    if c >= 30:
+                        high_pool.extend([c] * 6)
+        
         # === SELECT 6 NUMBERS ===
         selected = []
         used = set()
@@ -3620,9 +3636,27 @@ async def get_swiss_money_mode(
             if lock_val is not None and 1 <= lock_val <= 42:
                 used.add(lock_val)
         
+        # Count how many locks are already 30+
+        locked_high = sum(1 for lv in lock_params if lv is not None and lv >= 30)
+        
+        # Guarantee 2 high numbers (30+) per ticket unless locks cover it
+        high_needed = max(0, 2 - locked_high)
+        high_placed = 0
+        
         for pos in range(6):
             if lock_params[pos] is not None and 1 <= lock_params[pos] <= 42:
                 selected.append(lock_params[pos])
+            elif high_placed < high_needed and pos >= 4:
+                # Place high number at P5/P6 positions
+                h_pool = [n for n in high_pool if n not in used and 30 <= n <= 42]
+                if h_pool:
+                    chosen = random.choice(h_pool)
+                else:
+                    h_available = [n for n in range(30, 43) if n not in used]
+                    chosen = random.choice(h_available) if h_available else 30
+                selected.append(chosen)
+                used.add(chosen)
+                high_placed += 1
             else:
                 pool = [n for n in candidates if n not in used and 1 <= n <= 42]
                 if pool:
