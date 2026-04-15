@@ -2838,20 +2838,18 @@ def create_euromillions_router(db):
         }
     
     @router.get("/generation-history")
-    async def get_euro_generation_history(limit: int = 50):
+    async def get_euro_generation_history(limit: int = 200):
         """Get saved EuroMillions generations with hit data.
         
-        RULES:
-        - Sorted by target_date descending (newest draw first)
-        - Show last 10 generations for current/recent dates
-        - For older dates: only show if 2+ hits
+        Shows ALL generations grouped by target_date, most recent first.
+        Merges multiple generations for the same date+mode into single entries.
         """
         all_gens = await db.euromillions_generations.find(
             {},
             {"_id": 1, "generated_at": 1, "target_date": 1, "tickets": 1, 
              "hits_calculated": 1, "hit_results": 1, "total_hits": 1, 
              "star_hits": 1, "best_ticket_hits": 1, "mode": 1}
-        ).to_list(length=500)
+        ).to_list(length=2000)
         
         # Convert ObjectId and parse dates for proper sorting
         for gen in all_gens:
@@ -2866,35 +2864,41 @@ def create_euromillions_router(db):
         
         all_gens.sort(key=parse_target_date, reverse=True)
         
-        # Group by target_date
+        # Group by target_date + mode and MERGE tickets
         from collections import OrderedDict
-        by_date = OrderedDict()
+        by_date_mode = OrderedDict()
         for gen in all_gens:
             td = gen.get('target_date', 'unknown')
-            if td not in by_date:
-                by_date[td] = []
-            by_date[td].append(gen)
+            mode = gen.get('mode', 'dreaming')
+            key = f"{td}|{mode}"
+            if key not in by_date_mode:
+                by_date_mode[key] = {
+                    "_id": gen["_id"],
+                    "generated_at": gen.get("generated_at"),
+                    "target_date": td,
+                    "mode": mode,
+                    "tickets": [],
+                    "hits_calculated": True,
+                    "hit_results": [],
+                    "total_hits": 0,
+                    "star_hits": 0,
+                    "best_ticket_hits": 0,
+                }
+            merged = by_date_mode[key]
+            merged["tickets"].extend(gen.get("tickets", []) or [])
+            merged["hit_results"].extend(gen.get("hit_results", []) or [])
+            merged["total_hits"] += gen.get("total_hits", 0) or 0
+            merged["star_hits"] += gen.get("star_hits", 0) or 0
+            if gen.get("best_ticket_hits", 0) > merged["best_ticket_hits"]:
+                merged["best_ticket_hits"] = gen["best_ticket_hits"]
+            if not gen.get("hits_calculated", False):
+                merged["hits_calculated"] = False
         
-        # Build result: last 10 generations + older only if 2+ hits
-        result = []
-        dates_seen = 0
-        
-        for target_date, gens_for_date in by_date.items():
-            dates_seen += 1
-            
-            if dates_seen <= 3:
-                # Recent dates: show all generations (up to 10 total)
-                for g in gens_for_date:
-                    if len(result) < 10:
-                        result.append(g)
-            else:
-                # Older dates: only show if best_ticket_hits >= 2
-                for g in gens_for_date:
-                    if g.get('hits_calculated') and g.get('best_ticket_hits', 0) >= 2:
-                        result.append(g)
+        result = list(by_date_mode.values())[:limit]
         
         return {
             "count": len(result),
+            "total_in_db": len(all_gens),
             "generations": result
         }
     
