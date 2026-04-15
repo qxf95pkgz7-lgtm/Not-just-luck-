@@ -103,11 +103,12 @@ Reading P1+P2+P3 as a digit string, the digits predict the next draw's numbers.
 ## Key API Endpoints
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/money-mode` | GET | Swiss Money Mode v5 (DNA + P123 + P2, min 2 tickets) |
+| `/api/money-mode` | GET | Swiss Money Mode v5 (DNA + P123 + P2 + Sleepers, min 2 tickets) |
+| `/api/swiss-sleepers` | GET | Swiss Lotto sleeper analysis (deep/wake/fresh) |
 | `/api/digit-dna/simulate` | GET | Backtest Digit DNA for any date |
 | `/api/sync-results` | POST | Sync all (Euro + Swiss + 2Chance) |
 | `/api/euromillions/master-predictor` | POST | DJ Engine + auto-save |
-| `/api/euromillions/money-mode` | POST | Money Mode + auto-save |
+| `/api/euromillions/money-mode` | POST | Euro Money Mode (now with P2 + P123) |
 | `/api/euromillions/sleeper-forecast` | GET | 10-draw forecast |
 | `/api/euromillions/generation-history` | GET | Hit tracker (top 20, 2+ hits) |
 | `/api/draws` | GET | Swiss Lotto draws |

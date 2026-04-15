@@ -3119,6 +3119,66 @@ def dj_generate_money_mode_ticket(draws: List[Dict], target_date: str = None, sw
         patterns_used.append(f"Star->P3 Dance: {star_p3_candidates[:4]}")
     
     # ═══════════════════════════════════════════════════════════════════
+    # P2 PREDICTION (2.5x random on Euro! prev P2 ±1 = 15%)
+    # ═══════════════════════════════════════════════════════════════════
+    p2_pm1_hits = []
+    if prev_p2 := prev_nums[1] if len(prev_nums) >= 2 else None:
+        for delta in [-1, 0, 1]:
+            v = p2 + delta
+            if 1 <= v <= 50:
+                candidates[1].extend([v] * 12)
+                p2_pm1_hits.append(v)
+        patterns_used.append(f"🎯 P2 predict: prev={p2}±1 → {p2_pm1_hits} (15%, 2.5x!)")
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # P123 CONCAT DIGIT PATTERN (16% at 3+ with 5 unique digits!)
+    # ═══════════════════════════════════════════════════════════════════
+    def euro_concat_derived(digit_str):
+        nums = set()
+        for c in digit_str:
+            d = int(c)
+            if 1 <= d <= 50: nums.add(d)
+        for j in range(len(digit_str)-1):
+            v = int(digit_str[j:j+2])
+            if 1 <= v <= 50: nums.add(v)
+        unique = list(set(digit_str))
+        for a in unique:
+            for b in unique:
+                v = int(a+b)
+                if 1 <= v <= 50: nums.add(v)
+        return sorted(nums)
+    
+    # Pool 1: P123 from prev draw
+    p123_concat = str(p1) + str(p2) + str(p3)
+    p123_derived = euro_concat_derived(p123_concat)
+    p123_unique = len(set(p123_concat))
+    
+    # Pool 2: date digits
+    date_pool = []
+    if target_date:
+        try:
+            dt = parse_draw_date(target_date)
+            date_concat = str(dt.day) + str(dt.month)
+            date_pool = euro_concat_derived(date_concat)
+        except:
+            pass
+    
+    # Score: numbers in both pools get double weight
+    p123_boosted = []
+    for n in p123_derived:
+        weight = 8 if n in date_pool else 4
+        for pos in range(5):
+            if n <= 15: candidates[pos if pos < 2 else 0].extend([n] * weight)
+            elif n <= 30: candidates[min(pos, 2)].extend([n] * weight)
+            else: candidates[max(pos, 2)].extend([n] * weight)
+        if n in date_pool:
+            p123_boosted.append(n)
+    
+    patterns_used.append(f"🔢 P123 \"{p123_concat}\" ({p123_unique}dig) → {p123_derived[:6]}")
+    if p123_boosted:
+        patterns_used.append(f"🔢 P123+Date overlap: {p123_boosted[:5]}")
+    
+    # ═══════════════════════════════════════════════════════════════════
     # REVERSE TWIN GENERATOR (new!)
     # ═══════════════════════════════════════════════════════════════════
     rev_twin_result = pattern_reverse_twin(prev_draw)

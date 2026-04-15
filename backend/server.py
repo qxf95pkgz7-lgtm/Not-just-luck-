@@ -3550,6 +3550,21 @@ async def get_swiss_money_mode(
     p123_analysis = p123_concat_analysis(target_date_str, last_nums, prev_nums_for_p123)
     p123_top = [n for n, s in sorted(p123_scores.items(), key=lambda x: -x[1]) if s >= 2]
     
+    # Compute Swiss Sleepers (numbers overdue to appear)
+    all_swiss_draws = sorted(draws, key=parse_date_fn, reverse=True)
+    expected_gap = 42 / 6  # ~7 draws
+    last_seen = {}
+    for i, d in enumerate(all_swiss_draws):
+        for n in d.get('numbers', []):
+            if n not in last_seen:
+                last_seen[n] = i
+    sleeper_data = []
+    for n in range(1, 43):
+        gap = last_seen.get(n, len(all_swiss_draws))
+        ratio = gap / expected_gap
+        sleeper_data.append((n, gap, ratio))
+    sleeper_data.sort(key=lambda x: -x[2])
+    
     all_tickets = []
     
     for ticket_idx in range(num_tickets):
@@ -3570,6 +3585,20 @@ async def get_swiss_money_mode(
                 candidates.extend([n] * 6)
         if p123_top:
             patterns_used.append(f"🔢 P123 Concat ({p123_analysis['unique_digit_count']} digits): {p123_top[:8]}")
+        
+        # === SWISS SLEEPER BOOST (overdue numbers wake up!) ===
+        if sleeper_data:
+            for n, gap, ratio in sleeper_data:
+                if ratio >= 2.0:  # DEEP sleeper (2x+ overdue)
+                    candidates.extend([n] * 15)
+                elif ratio >= 1.0:  # WAKE zone (due to appear)
+                    candidates.extend([n] * 10)
+            deep = [n for n, g, r in sleeper_data if r >= 2.0][:5]
+            wake = [n for n, g, r in sleeper_data if 1.0 <= r < 2.0][:5]
+            if deep:
+                patterns_used.append(f"😴 Deep sleepers: {deep}")
+            if wake:
+                patterns_used.append(f"⏰ Wake zone: {wake}")
         
         # === POSITION ECHOES (T1-T8) ===
         if last_draw and ticket_idx < 8:
@@ -3768,6 +3797,10 @@ async def get_swiss_money_mode(
             "numbers_in_all_pools": p123_analysis.get("numbers_in_all", []),
             "numbers_in_2_plus": p123_analysis.get("numbers_in_2_plus", []),
         },
+        "sleepers": {
+            "deep": [{"number": n, "gap": g, "ratio": round(r, 1)} for n, g, r in sleeper_data if r >= 2.0],
+            "wake": [{"number": n, "gap": g, "ratio": round(r, 1)} for n, g, r in sleeper_data if 1.0 <= r < 2.0],
+        },
         "tickets": all_tickets,
         "total_tickets": len(all_tickets),
         "price_per_ticket": price_per_ticket,
@@ -3775,6 +3808,46 @@ async def get_swiss_money_mode(
         "currency": "CHF",
         "engine": "🧬 Digit DNA v2 + Swiss Money Mode 🍀"
     }
+
+
+@api_router.get("/swiss-sleepers")
+async def get_swiss_sleepers():
+    """Swiss Lotto Sleeper Analysis — numbers overdue to appear."""
+    from datetime import datetime as dt_cls
+    swiss_draws = await db.draws.find({}, {"_id": 0}).to_list(5000)
+    if not swiss_draws:
+        return {"error": "No draws available"}
+    
+    def parse_d(d):
+        try: return dt_cls.strptime(d['date'], '%d.%m.%Y')
+        except: return dt_cls.min
+    swiss_draws.sort(key=parse_d, reverse=True)
+    
+    expected_gap = 42 / 6
+    last_seen = {}
+    for i, d in enumerate(swiss_draws):
+        for n in d.get('numbers', []):
+            if n not in last_seen:
+                last_seen[n] = i
+    
+    sleepers = []
+    for n in range(1, 43):
+        gap = last_seen.get(n, len(swiss_draws))
+        ratio = round(gap / expected_gap, 1)
+        status = "DEEP" if ratio >= 2.0 else ("WAKE" if ratio >= 1.0 else "FRESH")
+        sleepers.append({"number": n, "gap": gap, "ratio": ratio, "status": status})
+    
+    sleepers.sort(key=lambda x: -x["ratio"])
+    
+    return {
+        "expected_gap": round(expected_gap, 1),
+        "last_draw": swiss_draws[0]["date"] if swiss_draws else None,
+        "sleepers": sleepers,
+        "deep": [s for s in sleepers if s["status"] == "DEEP"],
+        "wake": [s for s in sleepers if s["status"] == "WAKE"],
+        "fresh": [s for s in sleepers if s["status"] == "FRESH"],
+    }
+
 
 
 @api_router.get("/digit-dna/simulate")
