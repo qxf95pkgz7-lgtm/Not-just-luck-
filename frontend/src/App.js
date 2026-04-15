@@ -565,7 +565,7 @@ function App() {
       }
     });
   };
-  const [numTickets, setNumTickets] = useState(1);
+  const [numTickets, setNumTickets] = useState(2);
   const [generationMode, setGenerationMode] = useState('jackpot'); // 'jackpot' or 'money'
   const [oliviaKiss, setOliviaKiss] = useState(false);
   const [showKissHearts, setShowKissHearts] = useState(false);
@@ -1134,6 +1134,10 @@ function App() {
       if (lotteryMode === 'swiss' && lockedPositions.p6) params.push(`lock_p6=${lockedPositions.p6}`);
       
       if (numTickets > 1) params.push(`num_tickets=${numTickets}`);
+      // Swiss money mode requires minimum 2 tickets
+      if (lotteryMode === 'swiss' && generationMode === 'money' && numTickets <= 1) {
+        params.push('num_tickets=2');
+      }
       if (params.length > 0) url += `?${params.join('&')}`;
       
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -1169,8 +1173,33 @@ function App() {
           persona_applied: activePersonas.join('+') || null
         };
         setPrediction(transformed);
+      } else if (lotteryMode === 'swiss' && res.data.tickets) {
+        // Swiss Money Mode returns { tickets: [...] } format
+        const mainTicket = res.data.tickets[0];
+        const maxNum = 42;
+        const transformed = {
+          main_prediction: applyPersonaModifiers(mainTicket.numbers, activePersonas, maxNum),
+          lucky_prediction: mainTicket.lucky_number,
+          average_confidence: Math.round((mainTicket.confidence || 0.75) * 100),
+          alternate_numbers: res.data.tickets.length > 1 ? res.data.tickets[1].numbers : [],
+          all_tickets: res.data.tickets.map((t, i) => ({
+            ticket_num: i + 1,
+            numbers: applyPersonaModifiers(t.numbers, activePersonas, maxNum),
+            lucky: t.lucky_number,
+            confidence: Math.round((t.confidence || 0.75) * 100),
+            ticket_type: t.ticket_type || 'core',
+            patterns_used: t.patterns_used || []
+          })),
+          total_price: res.data.total_price,
+          engine: res.data.engine,
+          target_date: res.data.target_date,
+          digit_dna: res.data.digit_dna,
+          sleepers: res.data.sleepers,
+          persona_applied: activePersonas.join('+') || null
+        };
+        setPrediction(transformed);
       } else {
-        // Swiss Lotto
+        // Swiss Lotto master-predictor (has main_prediction directly)
         const maxNum = 42;
         const modifiedData = {
           ...res.data,
@@ -1798,7 +1827,7 @@ function App() {
                   </span>
                 </div>
                 <div className="grid grid-cols-7 gap-1">
-                  {[1, 3, 5, 8, 10, 15, 20].map(n => (
+                  {(lotteryMode === 'swiss' ? [2, 3, 5, 8, 10, 15, 20] : [1, 3, 5, 8, 10, 15, 20]).map(n => (
                     <button
                       key={n}
                       onClick={() => setNumTickets(n)}
@@ -1817,49 +1846,76 @@ function App() {
                 </div>
               </div>
               
-              {/* 💰 GENERATION MODE TOGGLE - EuroMillions only */}
-              {lotteryMode === 'euro' && (
-                <div className="mb-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-sm text-slate-300">Generation Mode</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => setGenerationMode('jackpot')}
-                      className={`flex flex-col items-center px-3 py-2.5 rounded-lg transition-all ${
-                        generationMode === 'jackpot'
-                          ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/25'
-                          : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'
-                      }`}
-                      data-testid="jackpot-mode-btn"
-                    >
-                      <span className="text-lg">🎯</span>
-                      <span className="font-bold text-sm">Jackpot</span>
-                      <span className="text-[10px] opacity-75">All 5 + 2⭐</span>
-                    </button>
-                    <button
-                      onClick={() => setGenerationMode('money')}
-                      className={`flex flex-col items-center px-3 py-2.5 rounded-lg transition-all ${
-                        generationMode === 'money'
-                          ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/25'
-                          : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'
-                      }`}
-                      data-testid="money-mode-btn"
-                    >
-                      <span className="text-lg">💰</span>
-                      <span className="font-bold text-sm">Money Mode</span>
-                      <span className="text-[10px] opacity-75">3+ hits focus</span>
-                    </button>
-                  </div>
-                  {generationMode === 'money' && (
-                    <div className="mt-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
-                      <p className="text-xs text-amber-400 text-center">
-                        💰 Focus on consistent small wins: 3+2⭐ (~€50-100), 3+1⭐ (~€15-20)
-                      </p>
-                    </div>
-                  )}
+              {/* GENERATION MODE TOGGLE */}
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm text-slate-300">Generation Mode</span>
                 </div>
-              )}
+                {lotteryMode === 'swiss' ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setGenerationMode('jackpot')}
+                    className={`flex flex-col items-center px-3 py-2.5 rounded-lg transition-all ${
+                      generationMode === 'jackpot'
+                        ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-lg shadow-amber-500/25'
+                        : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'
+                    }`}
+                    data-testid="mode-jackpot"
+                  >
+                    <span className="font-bold text-sm">Jackpot</span>
+                    <span className="text-[10px] opacity-75">All patterns</span>
+                  </button>
+                  <button
+                    onClick={() => setGenerationMode('money')}
+                    className={`flex flex-col items-center px-3 py-2.5 rounded-lg transition-all ${
+                      generationMode === 'money'
+                        ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg shadow-emerald-500/25'
+                        : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'
+                    }`}
+                    data-testid="mode-money"
+                  >
+                    <span className="font-bold text-sm">Money Mode</span>
+                    <span className="text-[10px] opacity-75">DNA + Sleepers</span>
+                  </button>
+                </div>
+                ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setGenerationMode('jackpot')}
+                    className={`flex flex-col items-center px-3 py-2.5 rounded-lg transition-all ${
+                      generationMode === 'jackpot'
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/25'
+                        : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'
+                    }`}
+                    data-testid="jackpot-mode-btn"
+                  >
+                    <span className="font-bold text-sm">Jackpot</span>
+                    <span className="text-[10px] opacity-75">All 5 + 2 stars</span>
+                  </button>
+                  <button
+                    onClick={() => setGenerationMode('money')}
+                    className={`flex flex-col items-center px-3 py-2.5 rounded-lg transition-all ${
+                      generationMode === 'money'
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/25'
+                        : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'
+                    }`}
+                    data-testid="money-mode-btn"
+                  >
+                    <span className="font-bold text-sm">Money Mode</span>
+                    <span className="text-[10px] opacity-75">3+ hits focus</span>
+                  </button>
+                </div>
+                )}
+                {generationMode === 'money' && (
+                  <div className="mt-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                    <p className="text-xs text-amber-400 text-center">
+                      {lotteryMode === 'swiss' 
+                        ? '💰 DNA + Sleepers + P2 engine — target 3+ numbers'
+                        : '💰 Focus on consistent small wins: 3+2⭐ (~€50-100), 3+1⭐ (~€15-20)'}
+                    </p>
+                  </div>
+                )}
+              </div>
               
               {/* Display all tickets */}
               {prediction?.all_tickets && prediction.all_tickets.length > 1 && (
@@ -1888,6 +1944,16 @@ function App() {
                           {ticket.scenario === 'low' ? '📉 Low' : ticket.scenario === 'medium' ? '📊 Mid' : '📈 High'}
                         </span>
                       )}
+                      {/* Ticket type for Swiss Money Mode */}
+                      {lotteryMode === 'swiss' && ticket.ticket_type && (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                          ticket.ticket_type === 'crazy' ? 'bg-purple-500/20 text-purple-400' :
+                          ticket.ticket_type === 'spread' ? 'bg-blue-500/20 text-blue-400' :
+                          'bg-emerald-500/20 text-emerald-400'
+                        }`}>
+                          {ticket.ticket_type === 'crazy' ? '🤪' : ticket.ticket_type === 'spread' ? '🎯' : '🧬'}
+                        </span>
+                      )}
                       <div className="flex gap-1.5 flex-1">
                         {ticket.numbers.map((num, i) => (
                           <Ball key={i} number={num} size="xs" maxNum={maxNum} />
@@ -1895,6 +1961,9 @@ function App() {
                         {lotteryMode === 'euro' && ticket.stars && ticket.stars.map((star, i) => (
                           <StarBall key={`star-${i}`} number={star} size="xs" />
                         ))}
+                        {lotteryMode === 'swiss' && ticket.lucky && (
+                          <span className="text-xs text-amber-400 font-bold ml-1">L:{ticket.lucky}</span>
+                        )}
                       </div>
                       <span className={`text-xs ${idx === 0 ? (lotteryMode === 'swiss' ? 'text-amber-400' : 'text-blue-400') : 'text-slate-500'}`}>
                         {Math.round(ticket.confidence)}%
