@@ -650,15 +650,19 @@ function App() {
     }
   };
   
-  // Fetch generation history with hits - based on lottery mode
+  // Fetch generation history with hits — UNIFIED for both Swiss and Euro
   const fetchGenerationHistory = async () => {
     setHitTrackerLoading(true);
     try {
-      const endpoint = lotteryMode === 'euro' 
-        ? `${API}/euromillions/generation-history?limit=30`
-        : `${API}/generation-history?limit=30`;
-      const res = await axios.get(endpoint);
-      setGenerationHistory(res.data.generations || []);
+      if (lotteryMode === 'euro') {
+        const res = await axios.get(`${API}/euromillions/generation-history?limit=30`);
+        setGenerationHistory(res.data.generations || []);
+      } else {
+        // Use the new clean hit-tracker endpoint for Swiss
+        const res = await axios.get(`${API}/hit-tracker?last_draws=3`);
+        setGenerationHistory(res.data.results || []);
+        setLastDraw(res.data.last_draws?.[0] || null);
+      }
     } catch (e) {
       console.error("Error fetching generation history:", e);
     } finally {
@@ -2636,9 +2640,11 @@ function App() {
               {/* Generation History */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-slate-300 font-medium text-sm">📜 Generation History</span>
+                  <span className="text-slate-300 font-medium text-sm">
+                    {lotteryMode === 'swiss' ? '🎯 Best Tickets (2+ hits, last 3 draws)' : '📜 Generation History'}
+                  </span>
                   {generationHistory.length > 0 && (
-                    <span className="text-slate-500 text-xs">{generationHistory.length} saved</span>
+                    <span className="text-slate-500 text-xs">{generationHistory.length} results</span>
                   )}
                 </div>
                 <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
@@ -2648,7 +2654,49 @@ function App() {
                     <div className="text-center text-slate-500 text-sm py-4">
                       No generations saved yet. Generate numbers to start tracking!
                     </div>
+                  ) : lotteryMode === 'swiss' ? (
+                    /* SWISS CLEAN HIT TRACKER */
+                    generationHistory.map((r, idx) => (
+                      <div 
+                        key={idx}
+                        className={`p-3 rounded-lg border ${
+                          r.hit_count >= 4 ? 'bg-gradient-to-r from-amber-500/20 to-amber-600/10 border-amber-400/40' :
+                          r.hit_count >= 3 ? 'bg-gradient-to-r from-emerald-500/20 to-emerald-600/10 border-emerald-400/40' :
+                          'bg-gradient-to-r from-emerald-500/10 to-emerald-600/5 border-emerald-500/20'
+                        }`}
+                        data-testid={`hit-result-${idx}`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-slate-400 text-xs">
+                            {r.hit_count >= 4 ? '💰' : r.hit_count >= 3 ? '🔥' : '✓'} For: <span className="text-slate-200 font-semibold">{r.target_date}</span>
+                          </span>
+                          <span className={`text-xs font-bold ${r.hit_count >= 3 ? 'text-emerald-400' : 'text-slate-400'}`}>
+                            {r.hit_count}/6 {r.lucky_hit ? '+L' : ''}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {r.numbers?.map((n, i) => {
+                            const isHit = r.hits?.includes(n);
+                            return (
+                              <div key={i} className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                                isHit ? 'bg-emerald-500 text-white ring-2 ring-emerald-400' : 'bg-slate-700 text-slate-400'
+                              }`}>
+                                {n}
+                              </div>
+                            );
+                          })}
+                          <span className={`text-xs ml-1 ${r.lucky_hit ? 'text-emerald-400 font-bold' : 'text-amber-400/50'}`}>
+                            🍀{r.lucky}
+                          </span>
+                          <span className="text-[9px] text-slate-600 ml-auto">{r.story}</span>
+                        </div>
+                        <div className="text-[10px] text-slate-500 mt-1">
+                          Actual: {r.actual_numbers?.join(', ')} L={r.actual_lucky}
+                        </div>
+                      </div>
+                    ))
                   ) : (
+                    /* EURO GENERATION HISTORY (original format) */
                     generationHistory.map((gen, idx) => {
                       const modeLabel = gen.mode === 'money' ? '💰' : gen.mode === 'dreaming' ? '🌟' : '🎻';
                       return (
@@ -2755,8 +2803,6 @@ function App() {
                     );})
                   )}
                 </div>
-                
-                {/* BIG CHECK BUTTON AT BOTTOM */}
                 {generationHistory.some(g => !g.hits_calculated) && (
                   <button
                     onClick={recalculateAllHits}

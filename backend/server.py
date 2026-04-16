@@ -4700,6 +4700,148 @@ async def generate_and_save_story_predictions(target_date: str = None, num_ticke
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.get("/hit-tracker")
+async def get_hit_tracker(last_draws: int = 3):
+    """
+    CLEAN HIT TRACKER — Auto-calculates, shows only 2+ hits, last N draws.
+    Works for BOTH Swiss (generations collection) and prediction_history.
+    """
+    from datetime import datetime as dt_cls
+    
+    def parse_d(date_str):
+        try: return dt_cls.strptime(date_str, '%d.%m.%Y')
+        except: return dt_cls.min
+    
+    # Get last N Swiss draws (sorted properly)
+    all_swiss = await db.draws.find({}, {"_id": 0}).to_list(5000)
+    all_swiss.sort(key=lambda d: parse_d(d.get('date', '')), reverse=True)
+    last_n_draws = all_swiss[:last_draws]
+    last_n_dates = set(d['date'] for d in last_n_draws)
+    
+    results = []
+    
+    # === SWISS GENERATIONS (from hit_tracker/money-mode) ===
+    swiss_gens = await db.generations.find({}, {"_id": 1, "target_date": 1, "tickets": 1, 
+        "hits_calculated": 1, "hit_results": 1, "generation_type": 1}).to_list(5000)
+    
+    for gen in swiss_gens:
+        td = gen.get('target_date', '')
+        if td not in last_n_dates:
+            continue
+        
+        actual = next((d for d in last_n_draws if d['date'] == td), None)
+        if not actual:
+            continue
+        
+        actual_nums = set(actual.get('numbers', []))
+        actual_lucky = actual.get('lucky_number')
+        
+        # Auto-calculate hits if not done
+        if not gen.get('hits_calculated', False):
+            hit_results = []
+            for i, ticket in enumerate(gen.get('tickets', [])):
+                t_nums = set(ticket.get('numbers', []))
+                hits = t_nums & actual_nums
+                lucky_hit = ticket.get('lucky') == actual_lucky or ticket.get('lucky_number') == actual_lucky
+                hit_results.append({
+                    "ticket_num": i + 1,
+                    "hits": sorted(hits),
+                    "hit_count": len(hits),
+                    "lucky_hit": lucky_hit,
+                })
+            await db.generations.update_one(
+                {"_id": gen["_id"]},
+                {"$set": {"hits_calculated": True, "hit_results": hit_results}}
+            )
+            gen["hit_results"] = hit_results
+        
+        # Filter: only tickets with 2+ hits
+        for i, ticket in enumerate(gen.get('tickets', [])):
+            hr = gen.get('hit_results', [])
+            hit_info = hr[i] if i < len(hr) else None
+            if not hit_info:
+                # Calculate on the fly
+                t_nums = set(ticket.get('numbers', []))
+                hits = t_nums & actual_nums
+                hit_count = len(hits)
+                lucky_hit = ticket.get('lucky') == actual_lucky or ticket.get('lucky_number') == actual_lucky
+            else:
+                hit_count = hit_info.get('hit_count', 0)
+                hits = hit_info.get('hits', [])
+                lucky_hit = hit_info.get('lucky_hit', False)
+            
+            if hit_count >= 2:
+                results.append({
+                    "lottery": "swiss",
+                    "target_date": td,
+                    "numbers": ticket.get('numbers', []),
+                    "lucky": ticket.get('lucky') or ticket.get('lucky_number'),
+                    "story": ticket.get('story', gen.get('generation_type', '')),
+                    "hit_count": hit_count,
+                    "hits": sorted(hits) if isinstance(hits, set) else hits,
+                    "lucky_hit": lucky_hit,
+                    "actual_numbers": sorted(actual_nums),
+                    "actual_lucky": actual_lucky,
+                })
+    
+    # === SWISS PREDICTION_HISTORY (from master-predictor) ===
+    swiss_preds = await db.prediction_history.find(
+        {"lottery_type": "swiss"}, {"_id": 0}
+    ).to_list(5000)
+    
+    for pred in swiss_preds:
+        # Try to match to a draw by created_at date
+        created = pred.get('created_at', '')
+        pred_nums = set(pred.get('numbers', []))
+        
+        # Compare against each of the last N draws
+        for draw in last_n_draws:
+            actual_nums = set(draw.get('numbers', []))
+            hits = pred_nums & actual_nums
+            if len(hits) >= 2:
+                actual_lucky = draw.get('lucky_number')
+                lucky_hit = pred.get('lucky_number') == actual_lucky
+                results.append({
+                    "lottery": "swiss",
+                    "target_date": draw['date'],
+                    "numbers": pred.get('numbers', []),
+                    "lucky": pred.get('lucky_number'),
+                    "story": "master-predictor",
+                    "hit_count": len(hits),
+                    "hits": sorted(hits),
+                    "lucky_hit": lucky_hit,
+                    "actual_numbers": sorted(actual_nums),
+                    "actual_lucky": actual_lucky,
+                })
+                break  # Only match to best draw
+    
+    # Sort: best hits first, then by date
+    results.sort(key=lambda r: (-r['hit_count'], r['target_date']))
+    
+    # Deduplicate (same numbers for same date)
+    seen = set()
+    unique_results = []
+    for r in results:
+        key = f"{r['target_date']}|{tuple(sorted(r['numbers']))}"
+        if key not in seen:
+            seen.add(key)
+            unique_results.append(r)
+    
+    # Cap at 20 best
+    unique_results = unique_results[:20]
+    
+    return {
+        "last_draws": [{
+            "date": d['date'],
+            "numbers": sorted(d.get('numbers', [])),
+            "lucky": d.get('lucky_number'),
+        } for d in last_n_draws],
+        "tickets_with_2_plus": len(unique_results),
+        "results": unique_results,
+    }
+
+
+
 @api_router.get("/generation-history")
 async def get_generation_history(limit: int = 50):
     """Get all saved generations with hit data"""
