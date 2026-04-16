@@ -1625,13 +1625,28 @@ function App() {
           </div>
         </div>
         <div className="lg:hidden mb-3">
-          <div id="mobile-pending" className="hidden mt-2 space-y-1 max-h-48 overflow-y-auto">
+          <div id="mobile-pending" className="hidden mt-2 space-y-1.5 max-h-64 overflow-y-auto">
             {pendingTickets.map((t, idx) => (
-              <div key={idx} className="p-1.5 rounded-lg bg-slate-800/50 border border-slate-700/30 flex flex-wrap gap-0.5 items-center">
-                {t.numbers?.map((n, i) => (
-                  <Ball key={i} number={n} size="xs" maxNum={42} />
-                ))}
-                {t.lucky && <span className="text-amber-400 text-[9px] font-bold ml-0.5">L:{t.lucky}</span>}
+              <div key={idx} className="p-2 rounded-lg bg-slate-800/50 border border-slate-700/30">
+                <div className="flex items-center justify-center gap-1">
+                  {t.numbers?.map((n, i) => (
+                    <Ball key={i} number={n} size="xs" maxNum={lotteryMode === 'euro' ? 50 : 42} />
+                  ))}
+                  {lotteryMode === 'swiss' && t.lucky != null && (
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-sm shadow-amber-500/30 ml-1">
+                      <span className="text-white text-[9px] font-black">{t.lucky}</span>
+                    </div>
+                  )}
+                  {lotteryMode === 'euro' && t.stars && t.stars.length > 0 && (
+                    <>
+                      {t.stars.map((s, si) => (
+                        <div key={si} className="w-6 h-6 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-sm shadow-yellow-500/30 ml-0.5">
+                          <span className="text-white text-[8px] font-black">{s}</span>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
               </div>
             ))}
           </div>
