@@ -535,6 +535,7 @@ function App() {
   const [fullName, setFullName] = useState("");
   const [lockedPositions, setLockedPositions] = useState({ p1: "", p2: "", p3: "", p4: "", p5: "", p6: "" });
   const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
   const [ticketCounter, setTicketCounter] = useState(0);
   const [nextDrawTickets, setNextDrawTickets] = useState(0);
   const [nextDrawDate, setNextDrawDate] = useState('');
@@ -2867,14 +2868,93 @@ function App() {
         {/* Footer */}
         <div className="text-center text-slate-500 text-xs mt-6 pb-4">
           <p>Good luck! Play responsibly.</p>
-          <button 
-            onClick={() => setShowDisclaimer(true)}
-            className="mt-1 underline hover:text-slate-300 transition-colors"
-            data-testid="disclaimer-link"
-          >
-            Disclaimer & Terms
-          </button>
+          <div className="flex items-center justify-center gap-4 mt-1">
+            <button 
+              onClick={() => setShowGuide(true)}
+              className="underline hover:text-slate-300 transition-colors"
+              data-testid="guide-link"
+            >
+              How to Use
+            </button>
+            <span className="text-slate-700">|</span>
+            <button 
+              onClick={() => setShowDisclaimer(true)}
+              className="underline hover:text-slate-300 transition-colors"
+              data-testid="disclaimer-link"
+            >
+              Disclaimer & Terms
+            </button>
+          </div>
         </div>
+
+        {/* HOW TO USE GUIDE */}
+        {showGuide && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" data-testid="guide-modal">
+            <div className="bg-slate-800 border border-slate-600 rounded-xl max-w-lg w-full p-6 max-h-[80vh] overflow-y-auto">
+              <h2 className="text-xl font-bold text-amber-400 mb-4">How to Use Lucky Jack</h2>
+              
+              <div className="text-slate-300 text-sm space-y-4">
+                <p className="text-white font-semibold">Lucky Jack reads the rhythm of the stars to help you pick your lottery numbers.</p>
+                
+                <div>
+                  <h3 className="text-amber-300 font-semibold mb-1">Two Lotteries</h3>
+                  <p>Switch between <span className="text-white font-medium">Swiss Lotto</span> (6 numbers 1-42 + Lucky) and <span className="text-white font-medium">EuroMillions</span> (5 numbers 1-50 + 2 Stars) using the toggle at the top.</p>
+                </div>
+
+                <div>
+                  <h3 className="text-amber-300 font-semibold mb-1">Two Modes</h3>
+                  <p><span className="text-white font-medium">Jackpot Mode</span> — Uses all celestial alignments for maximum coverage.</p>
+                  <p><span className="text-white font-medium">Money Mode</span> — Focused on hitting 3+ numbers. The stars whisper which combinations have the strongest resonance. Generates multiple tickets with different energies: Core, Spread, and Crazy.</p>
+                </div>
+
+                <div>
+                  <h3 className="text-amber-300 font-semibold mb-1">Multiple Tickets</h3>
+                  <p>Open the ticket selector to generate 2 to 20 tickets at once. Swiss Lotto starts at 2 tickets (5 CHF). Each ticket carries a different cosmic frequency — some are grounded, some reach for the high stars.</p>
+                </div>
+
+                <div>
+                  <h3 className="text-amber-300 font-semibold mb-1">Sleeper Radar</h3>
+                  <p>Numbers that haven't appeared for a long time build up cosmic energy. The Sleeper Radar shows you which numbers are <span className="text-red-400">deep asleep</span> (overdue) and which are in the <span className="text-amber-400">wake zone</span> (about to appear). When the stars align with a sleeper, magic happens.</p>
+                </div>
+
+                <div>
+                  <h3 className="text-amber-300 font-semibold mb-1">Hit Tracker</h3>
+                  <p>Every ticket you generate is saved and compared against actual draw results. The Hit Tracker shows your best tickets from the last 3 draws — only tickets with 2 or more correct numbers appear. Green balls = hits!</p>
+                </div>
+
+                <div>
+                  <h3 className="text-amber-300 font-semibold mb-1">The Engine</h3>
+                  <p>Behind the scenes, Lucky Jack listens to the music of the universe. The numbers are not random — they follow celestial patterns, cosmic bridges between draws, and rhythmic cycles that echo across the sky. Our engine reads these stellar harmonics and translates them into your tickets.</p>
+                  <p className="text-slate-400 text-xs mt-1">Patterns include: Celestial DNA resonance, Star bridge connections, Cosmic rhythm cycles, Sleeper energy waves, and Cross-constellation harmonics.</p>
+                </div>
+
+                <div>
+                  <h3 className="text-amber-300 font-semibold mb-1">Ticket Counters</h3>
+                  <p>At the top you can see how many tickets have been generated in total, and how many are lined up for the next draw. The universe is listening!</p>
+                </div>
+
+                <div>
+                  <h3 className="text-amber-300 font-semibold mb-1">Tips</h3>
+                  <ul className="list-disc list-inside space-y-1 text-slate-400">
+                    <li>Generate at least 10 tickets for best coverage</li>
+                    <li>Check the Sleeper Radar before playing — overdue numbers carry extra energy</li>
+                    <li>The Crazy tickets reach where others don't — sometimes the stars surprise us</li>
+                    <li>Use the Hit Tracker to learn which cosmic frequencies work best for you</li>
+                    <li>Play responsibly — the stars guide, but never guarantee</li>
+                  </ul>
+                </div>
+              </div>
+              
+              <button 
+                onClick={() => setShowGuide(false)}
+                className="mt-5 w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-2 rounded-lg transition-colors"
+                data-testid="guide-close"
+              >
+                Got it!
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Disclaimer Modal */}
         {showDisclaimer && (

@@ -3730,13 +3730,18 @@ async def get_swiss_money_mode(
                 used.add(lock_val)
         
         locked_high = sum(1 for lv in lock_params if lv is not None and lv >= 30)
-        high_needed = max(0, 1 - locked_high)
+        is_crazy = ticket_idx >= num_tickets - 2 and num_tickets >= 4
+        # Crazy tickets: guarantee 3 from 30+ family (31.1% of draws have this!)
+        # Normal tickets: guarantee 1 from 30+
+        high_target = 3 if is_crazy else 1
+        high_needed = max(0, high_target - locked_high)
         high_placed = 0
         
         for pos in range(6):
             if lock_params[pos] is not None and 1 <= lock_params[pos] <= 42:
                 selected.append(lock_params[pos])
-            elif high_placed < high_needed and pos == 5:
+            elif high_placed < high_needed and pos >= (6 - high_needed):
+                # Place high numbers at last positions
                 h_pool = [n for n in high_pool if n not in used and 30 <= n <= 42]
                 if h_pool:
                     chosen = random.choice(h_pool)
