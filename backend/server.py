@@ -4191,6 +4191,21 @@ async def clear_prediction_history():
     result = await db.prediction_history.delete_many({})
     return {"message": f"Deleted {result.deleted_count} predictions"}
 
+
+@api_router.get("/ticket-counter")
+async def get_ticket_counter():
+    """Total tickets generated across all lotteries."""
+    swiss_gen_count = 0
+    async for g in db.generations.find({}, {'tickets': 1}):
+        swiss_gen_count += len(g.get('tickets', []))
+    swiss_pred_count = await db.prediction_history.count_documents({})
+    euro_count = 0
+    async for g in db.euromillions_generations.find({}, {'tickets': 1}):
+        euro_count += len(g.get('tickets', []))
+    total = swiss_gen_count + swiss_pred_count + euro_count
+    return {"total": total, "swiss": swiss_gen_count + swiss_pred_count, "euro": euro_count}
+
+
 @api_router.get("/prediction-history/stats")
 async def get_prediction_stats():
     """Get detailed statistics about prediction accuracy"""

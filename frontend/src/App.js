@@ -535,6 +535,7 @@ function App() {
   const [fullName, setFullName] = useState("");
   const [lockedPositions, setLockedPositions] = useState({ p1: "", p2: "", p3: "", p4: "", p5: "", p6: "" });
   const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [ticketCounter, setTicketCounter] = useState(0);
   
   // Special personas with secret number modifiers
   // The magic is hidden - only the generator knows!
@@ -822,6 +823,15 @@ function App() {
       fetchHitStats();
     }
   }, [lotteryMode]);
+
+  // Ticket counter — fetch on load and after generations
+  const fetchTicketCounter = async () => {
+    try {
+      const res = await axios.get(`${API}/ticket-counter`);
+      setTicketCounter(res.data.total || 0);
+    } catch (e) {}
+  };
+  useEffect(() => { fetchTicketCounter(); }, []);
 
   // Olivia's Kiss of Luck function - MIXES DIGITS from P1, P2, P3!
   // Falls back to Circle Math (±25) when mixing isn't possible
@@ -1215,6 +1225,7 @@ function App() {
       
       const ballCount = lotteryMode === 'swiss' ? 6 : 5;
       setTimeout(() => setWheelSpinning(true), ballCount * 2000);
+      fetchTicketCounter(); // Update counter after generation
     } catch (e) {
       console.error("Error:", e);
       // Fallback
@@ -1369,6 +1380,12 @@ function App() {
           <span className="text-3xl">{lotteryMode === 'swiss' ? '🍀' : '⭐'}</span>
         </div>
         <p className="text-slate-400 text-sm">{lotteryMode === 'swiss' ? 'Swiss Lotto' : 'EuroMillions'} Number Generator</p>
+        {ticketCounter > 0 && (
+          <div className="mt-1 inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-slate-800/60 border border-slate-700/50" data-testid="ticket-counter">
+            <span className="text-amber-400 text-xs font-mono font-bold">{ticketCounter.toLocaleString()}</span>
+            <span className="text-slate-500 text-[10px]">tickets generated</span>
+          </div>
+        )}
         
         {/* Lottery Mode Toggle */}
         <div className="flex justify-center mt-4">
