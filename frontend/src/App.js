@@ -1561,39 +1561,37 @@ function App() {
       {/* Main Content with Pending Tickets sidebar */}
       <div className="max-w-6xl mx-auto px-4 flex gap-3 justify-center">
         {/* PENDING TICKETS BOX — Left side */}
-        <div className="hidden lg:block w-64 flex-shrink-0" data-testid="pending-tickets-panel">
+        <div className="hidden lg:block w-72 flex-shrink-0" data-testid="pending-tickets-panel">
           <div className="sticky top-4 lucky-card p-3 border border-amber-500/20">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-amber-400 font-semibold text-xs">Pending Tickets</span>
               <span className="text-emerald-400 font-mono font-bold text-sm">{pendingTickets.length}</span>
             </div>
             <div className="text-slate-500 text-[9px] mb-2">For draw: {nextDrawDate}</div>
-            <div className="space-y-1.5 max-h-[70vh] overflow-y-auto pr-0.5">
+            <div className="space-y-1.5 max-h-[70vh] overflow-y-auto">
               {pendingTickets.length === 0 ? (
                 <div className="text-center text-slate-600 text-[10px] py-3">
                   No tickets yet
                 </div>
               ) : pendingTickets.map((t, idx) => (
                 <div key={idx} className="p-1.5 rounded-md bg-slate-800/50 border border-slate-700/30">
-                  <div className="flex items-center justify-center gap-1.5">
-                    <div className="flex gap-0.5 items-center">
-                      {t.numbers?.map((n, i) => (
-                        <Ball key={i} number={n} size="xs" maxNum={lotteryMode === 'euro' ? 50 : 42} />
-                      ))}
-                    </div>
+                  <div className="flex items-center justify-center gap-1">
+                    {t.numbers?.map((n, i) => (
+                      <Ball key={i} number={n} size="xs" maxNum={lotteryMode === 'euro' ? 50 : 42} />
+                    ))}
                     {lotteryMode === 'swiss' && t.lucky != null && (
-                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-sm shadow-amber-500/30 ml-1">
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-sm shadow-amber-500/30 ml-1">
                         <span className="text-white text-[9px] font-black">{t.lucky}</span>
                       </div>
                     )}
                     {lotteryMode === 'euro' && t.stars && t.stars.length > 0 && (
-                      <div className="flex gap-0.5 flex-shrink-0 ml-1">
+                      <>
                         {t.stars.map((s, si) => (
-                          <div key={si} className="w-6 h-6 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-sm shadow-yellow-500/30">
+                          <div key={si} className="w-6 h-6 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-sm shadow-yellow-500/30 ml-0.5">
                             <span className="text-white text-[8px] font-black">{s}</span>
                           </div>
                         ))}
-                      </div>
+                      </>
                     )}
                   </div>
                 </div>
