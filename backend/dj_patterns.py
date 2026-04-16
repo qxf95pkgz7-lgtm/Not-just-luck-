@@ -2842,6 +2842,48 @@ def dj_select_numbers(candidates: Dict, star_candidates: List[int], locked: Dict
                 selected.append(choice)
             used.add(choice)
     
+    # ═══════════════════════════════════════════════════════════════════════
+    # 🌍 SPREAD GUARANTEE — Ensure numbers cover at least 3 decades
+    # ═══════════════════════════════════════════════════════════════════════
+    decades = set((n - 1) // 10 for n in selected)  # 0=1-10, 1=11-20, 2=21-30, 3=31-40, 4=41-50
+    max_retries = 10
+    retry = 0
+    while len(decades) < 3 and retry < max_retries:
+        retry += 1
+        # Find the most crowded decade
+        decade_counts = {}
+        for n in selected:
+            d = (n - 1) // 10
+            decade_counts[d] = decade_counts.get(d, 0) + 1
+        crowded = max(decade_counts, key=decade_counts.get)
+        if decade_counts[crowded] <= 1:
+            break
+        # Find which decades are missing
+        missing = [d for d in range(5) if d not in decades]
+        if not missing:
+            break
+        target_decade = rnd.choice(missing)
+        # Pick a number from the target decade
+        decade_range = list(range(target_decade * 10 + 1, target_decade * 10 + 11))
+        decade_range = [n for n in decade_range if 1 <= n <= 50 and n not in selected]
+        if not decade_range:
+            continue
+        # Replace one number from the crowded decade (not P1 or locked)
+        replaceable = [i for i, n in enumerate(selected) if (n - 1) // 10 == crowded and i not in locked and i > 0]
+        if not replaceable:
+            replaceable = [i for i, n in enumerate(selected) if (n - 1) // 10 == crowded and i not in locked]
+        if replaceable:
+            # Pick from candidates in the target decade if possible
+            target_nums = [n for n in decade_range if n in [c for c in candidates.get(replaceable[0], [])]]
+            if target_nums:
+                new_num = rnd.choice(target_nums)
+            else:
+                new_num = rnd.choice(decade_range)
+            selected[replaceable[-1]] = new_num
+            decades = set((n - 1) // 10 for n in selected)
+    
+    selected = sorted(selected)
+
     # Select stars
     # 🔥 BEAST BLOCK: Suppress Star 6 when on a 2-streak (77% block rate)
     if draws:
