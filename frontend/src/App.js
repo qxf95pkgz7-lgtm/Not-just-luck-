@@ -1661,6 +1661,10 @@ function App() {
             ))}
           </div>
         </div>
+        {/* Ticket Limit Notice */}
+        <div className="mb-3 px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700/40 flex items-center justify-center gap-2" data-testid="ticket-limit-notice">
+          <span className="text-slate-500 text-xs">You can generate up to <span className="text-amber-400 font-semibold">20 tickets</span> per {lotteryMode === 'swiss' ? 'Swiss Lotto' : 'EuroMillions'} draw</span>
+        </div>
         <div className="lucky-card p-6 mb-6" style={lotteryMode === 'euro' ? { background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(2,6,23,0.98) 100%)', borderColor: 'rgba(59,130,246,0.3)' } : {}}>
           <div className="flex items-center justify-center gap-3 mb-6">
             <button
