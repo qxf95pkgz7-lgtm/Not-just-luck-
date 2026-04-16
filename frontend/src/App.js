@@ -540,6 +540,8 @@ function App() {
   const [nextDrawTickets, setNextDrawTickets] = useState(0);
   const [nextDrawDate, setNextDrawDate] = useState('');
   const [pendingTickets, setPendingTickets] = useState([]);
+  const [activeUsers, setActiveUsers] = useState(0);
+  const [totalUsers, setTotalUsers] = useState(0);
   
   // Special personas with secret number modifiers
   // The magic is hidden - only the generator knows!
@@ -845,6 +847,25 @@ function App() {
     } catch (e) {}
   };
   useEffect(() => { fetchTicketCounter(); fetchPendingTickets(); }, []);
+
+  // ─── ACTIVE USER HEARTBEAT ───────────────────────
+  useEffect(() => {
+    let vid = localStorage.getItem('lj_visitor_id');
+    if (!vid) {
+      vid = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36);
+      localStorage.setItem('lj_visitor_id', vid);
+    }
+    const sendHeartbeat = async () => {
+      try {
+        const res = await axios.post(`${API}/heartbeat`, { visitor_id: vid });
+        setActiveUsers(res.data.active_users || 0);
+        setTotalUsers(res.data.total_users || 0);
+      } catch (e) {}
+    };
+    sendHeartbeat();
+    const interval = setInterval(sendHeartbeat, 60000); // every 60s
+    return () => clearInterval(interval);
+  }, []);
 
   // Olivia's Kiss of Luck function - MIXES DIGITS from P1, P2, P3!
   // Falls back to Circle Math (±25) when mixing isn't possible
@@ -1538,36 +1559,36 @@ function App() {
       )}
 
       {/* Main Content with Pending Tickets sidebar */}
-      <div className="max-w-5xl mx-auto px-4 flex gap-4">
-        {/* PENDING TICKETS BOX — Left side */}
-        <div className="hidden lg:block w-64 flex-shrink-0" data-testid="pending-tickets-panel">
-          <div className="sticky top-4 lucky-card p-3 border border-amber-500/20">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-amber-400 font-semibold text-sm">Pending Tickets</span>
-              <span className="text-emerald-400 font-mono font-bold text-lg">{pendingTickets.length}</span>
+      <div className="max-w-5xl mx-auto px-4 flex gap-3">
+        {/* PENDING TICKETS BOX — Left side, compact */}
+        <div className="hidden lg:block w-48 flex-shrink-0" data-testid="pending-tickets-panel">
+          <div className="sticky top-4 lucky-card p-2.5 border border-amber-500/20">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-amber-400 font-semibold text-xs">Pending Tickets</span>
+              <span className="text-emerald-400 font-mono font-bold text-sm">{pendingTickets.length}</span>
             </div>
-            <div className="text-slate-500 text-[10px] mb-2">For draw: {nextDrawDate}</div>
-            <div className="space-y-1.5 max-h-[70vh] overflow-y-auto pr-1">
+            <div className="text-slate-500 text-[9px] mb-1.5">For draw: {nextDrawDate}</div>
+            <div className="space-y-1 max-h-[70vh] overflow-y-auto pr-0.5">
               {pendingTickets.length === 0 ? (
-                <div className="text-center text-slate-600 text-xs py-4">
-                  No tickets yet — generate some!
+                <div className="text-center text-slate-600 text-[10px] py-3">
+                  No tickets yet
                 </div>
               ) : pendingTickets.map((t, idx) => (
-                <div key={idx} className="p-1.5 rounded-lg bg-slate-800/50 border border-slate-700/30">
-                  <div className="flex flex-wrap gap-0.5 items-center">
+                <div key={idx} className="p-1 rounded-md bg-slate-800/50 border border-slate-700/30">
+                  <div className="flex flex-wrap gap-px items-center">
                     {t.numbers?.map((n, i) => (
                       <Ball key={i} number={n} size="xs" maxNum={42} />
                     ))}
                     {t.lucky && (
-                      <span className="text-amber-400 text-[9px] font-bold ml-0.5">L:{t.lucky}</span>
+                      <span className="text-amber-400 text-[8px] font-bold ml-0.5">L:{t.lucky}</span>
                     )}
                   </div>
                 </div>
               ))}
             </div>
             {pendingTickets.length > 0 && (
-              <div className="mt-2 pt-2 border-t border-slate-700/30 text-center">
-                <span className="text-slate-500 text-[10px]">{pendingTickets.length} tickets ready</span>
+              <div className="mt-1.5 pt-1.5 border-t border-slate-700/30 text-center">
+                <span className="text-slate-500 text-[9px]">{pendingTickets.length} tickets ready</span>
               </div>
             )}
           </div>
@@ -1576,16 +1597,23 @@ function App() {
         {/* Main Generator */}
         <main className="flex-1 max-w-2xl">
 
-        {/* Mobile pending tickets (collapsed) */}
-        <div className="lg:hidden mb-3">
+        {/* Mobile pending tickets + active users (collapsed) */}
+        <div className="lg:hidden mb-3 flex gap-2">
           <button 
             onClick={() => document.getElementById('mobile-pending')?.classList.toggle('hidden')}
-            className="w-full p-2 rounded-lg bg-slate-800/60 border border-amber-500/20 flex items-center justify-between"
+            className="flex-1 p-2 rounded-lg bg-slate-800/60 border border-amber-500/20 flex items-center justify-between"
             data-testid="pending-mobile-toggle"
           >
-            <span className="text-amber-400 text-sm font-semibold">Pending Tickets</span>
+            <span className="text-amber-400 text-sm font-semibold">Pending</span>
             <span className="text-emerald-400 font-mono font-bold">{pendingTickets.length}</span>
           </button>
+          <div className="p-2 rounded-lg bg-slate-800/60 border border-emerald-500/20 flex items-center gap-2">
+            <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span>
+            <span className="text-emerald-400 font-mono font-bold">{activeUsers}</span>
+            <span className="text-slate-500 text-[10px]">online</span>
+          </div>
+        </div>
+        <div className="lg:hidden mb-3">
           <div id="mobile-pending" className="hidden mt-2 space-y-1 max-h-48 overflow-y-auto">
             {pendingTickets.map((t, idx) => (
               <div key={idx} className="p-1.5 rounded-lg bg-slate-800/50 border border-slate-700/30 flex flex-wrap gap-0.5 items-center">
@@ -3071,6 +3099,30 @@ function App() {
           </div>
         )}
       </main>
+
+        {/* ACTIVE USERS — Right side */}
+        <div className="hidden lg:block w-48 flex-shrink-0" data-testid="active-users-panel">
+          <div className="sticky top-4 lucky-card p-2.5 border border-emerald-500/20">
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-emerald-400 font-semibold text-xs">Live Users</span>
+            </div>
+            <div className="text-center py-3">
+              <div className="text-emerald-400 text-3xl font-mono font-black" data-testid="active-user-count">{activeUsers}</div>
+              <div className="text-slate-500 text-[9px] mt-1">currently online</div>
+            </div>
+            <div className="border-t border-slate-700/30 pt-2 mt-2">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 text-[9px]">All-time users</span>
+                <span className="text-slate-300 text-xs font-mono font-bold" data-testid="total-user-count">{totalUsers}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div> {/* Close flex wrapper */}
     </div>
   );

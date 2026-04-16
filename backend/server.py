@@ -4962,6 +4962,35 @@ async def get_hit_stats():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ─── ACTIVE USER TRACKING ───────────────────────────────────
+class HeartbeatRequest(BaseModel):
+    visitor_id: str
+
+@api_router.post("/heartbeat")
+async def user_heartbeat(req: HeartbeatRequest):
+    """Register a heartbeat from a visitor."""
+    now = datetime.now(timezone.utc)
+    from datetime import timedelta
+    await db.active_users.update_one(
+        {"visitor_id": req.visitor_id},
+        {"$set": {"last_seen": now.isoformat()}, "$setOnInsert": {"first_seen": now.isoformat()}},
+        upsert=True
+    )
+    cutoff = (now - timedelta(minutes=10)).isoformat()
+    active_count = await db.active_users.count_documents({"last_seen": {"$gte": cutoff}})
+    total_count = await db.active_users.count_documents({})
+    return {"active_users": active_count, "total_users": total_count}
+
+@api_router.get("/active-users")
+async def get_active_users():
+    """Get count of currently active users."""
+    now = datetime.now(timezone.utc)
+    from datetime import timedelta
+    cutoff = (now - timedelta(minutes=10)).isoformat()
+    active_count = await db.active_users.count_documents({"last_seen": {"$gte": cutoff}})
+    total_count = await db.active_users.count_documents({})
+    return {"active_users": active_count, "total_users": total_count}
+
 # Include the router in the main app
 app.include_router(api_router)
 

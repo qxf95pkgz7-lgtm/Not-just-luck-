@@ -141,11 +141,11 @@ When P6+P6=69 and P2 concat=96:
 - Random 2022-2025: avg best 2.0/6
 
 ## Upcoming Tasks
-- **P0**: Wire Digit DNA scores into frontend UI (visual display)
+- **P0**: Code Q1→Q2 transition stories into prediction engine
 - **P1**: Position-by-position deep analysis for P3-P6 and Lucky
 - **P1**: Euro tickets with Swiss P1 Bridge for next EuroMillions
 - **P2**: Cross-draw Bridge Chain Tracker UI
-- **P2**: Refactor monolithic files (server.py ~4800 lines, dj_patterns.py ~3400 lines)
+- **P2**: Refactor monolithic files (server.py ~5000 lines, dj_patterns.py ~3400 lines)
 
 ## App Health
-All systems healthy. Backend + Frontend + MongoDB running. Deployment blocker (.gitignore) fixed.
+All systems healthy. Backend + Frontend + MongoDB running. Deployment blocker (.gitignore) fixed. Active user tracking live.
