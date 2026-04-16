@@ -539,6 +539,7 @@ function App() {
   const [ticketCounter, setTicketCounter] = useState(0);
   const [nextDrawTickets, setNextDrawTickets] = useState(0);
   const [nextDrawDate, setNextDrawDate] = useState('');
+  const [pendingTickets, setPendingTickets] = useState([]);
   
   // Special personas with secret number modifiers
   // The magic is hidden - only the generator knows!
@@ -836,7 +837,14 @@ function App() {
       setNextDrawDate(res.data.next_draw_date || '');
     } catch (e) {}
   };
-  useEffect(() => { fetchTicketCounter(); }, []);
+  const fetchPendingTickets = async () => {
+    try {
+      const res = await axios.get(`${API}/pending-tickets`);
+      setPendingTickets(res.data.tickets || []);
+      setNextDrawDate(res.data.next_date || '');
+    } catch (e) {}
+  };
+  useEffect(() => { fetchTicketCounter(); fetchPendingTickets(); }, []);
 
   // Olivia's Kiss of Luck function - MIXES DIGITS from P1, P2, P3!
   // Falls back to Circle Math (±25) when mixing isn't possible
@@ -1230,7 +1238,8 @@ function App() {
       
       const ballCount = lotteryMode === 'swiss' ? 6 : 5;
       setTimeout(() => setWheelSpinning(true), ballCount * 2000);
-      fetchTicketCounter(); // Update counter after generation
+      fetchTicketCounter();
+      fetchPendingTickets(); // Update pending box after generation
     } catch (e) {
       console.error("Error:", e);
       // Fallback
@@ -1535,8 +1544,66 @@ function App() {
         </div>
       )}
 
-      {/* Main Content */}
-      <main className="max-w-2xl mx-auto px-4">
+      {/* Main Content with Pending Tickets sidebar */}
+      <div className="max-w-5xl mx-auto px-4 flex gap-4">
+        {/* PENDING TICKETS BOX — Left side */}
+        <div className="hidden lg:block w-64 flex-shrink-0" data-testid="pending-tickets-panel">
+          <div className="sticky top-4 lucky-card p-3 border border-amber-500/20">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-amber-400 font-semibold text-sm">Pending Tickets</span>
+              <span className="text-emerald-400 font-mono font-bold text-lg">{pendingTickets.length}</span>
+            </div>
+            <div className="text-slate-500 text-[10px] mb-2">For draw: {nextDrawDate}</div>
+            <div className="space-y-1.5 max-h-[70vh] overflow-y-auto pr-1">
+              {pendingTickets.length === 0 ? (
+                <div className="text-center text-slate-600 text-xs py-4">
+                  No tickets yet — generate some!
+                </div>
+              ) : pendingTickets.map((t, idx) => (
+                <div key={idx} className="p-1.5 rounded-lg bg-slate-800/50 border border-slate-700/30">
+                  <div className="flex flex-wrap gap-0.5 items-center">
+                    {t.numbers?.map((n, i) => (
+                      <Ball key={i} number={n} size="xs" maxNum={42} />
+                    ))}
+                    {t.lucky && (
+                      <span className="text-amber-400 text-[9px] font-bold ml-0.5">L:{t.lucky}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {pendingTickets.length > 0 && (
+              <div className="mt-2 pt-2 border-t border-slate-700/30 text-center">
+                <span className="text-slate-500 text-[10px]">{pendingTickets.length} tickets ready</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Main Generator */}
+        <main className="flex-1 max-w-2xl">
+
+        {/* Mobile pending tickets (collapsed) */}
+        <div className="lg:hidden mb-3">
+          <button 
+            onClick={() => document.getElementById('mobile-pending')?.classList.toggle('hidden')}
+            className="w-full p-2 rounded-lg bg-slate-800/60 border border-amber-500/20 flex items-center justify-between"
+            data-testid="pending-mobile-toggle"
+          >
+            <span className="text-amber-400 text-sm font-semibold">Pending Tickets</span>
+            <span className="text-emerald-400 font-mono font-bold">{pendingTickets.length}</span>
+          </button>
+          <div id="mobile-pending" className="hidden mt-2 space-y-1 max-h-48 overflow-y-auto">
+            {pendingTickets.map((t, idx) => (
+              <div key={idx} className="p-1.5 rounded-lg bg-slate-800/50 border border-slate-700/30 flex flex-wrap gap-0.5 items-center">
+                {t.numbers?.map((n, i) => (
+                  <Ball key={i} number={n} size="xs" maxNum={42} />
+                ))}
+                {t.lucky && <span className="text-amber-400 text-[9px] font-bold ml-0.5">L:{t.lucky}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
         <div className="lucky-card p-6 mb-6" style={lotteryMode === 'euro' ? { background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(2,6,23,0.98) 100%)', borderColor: 'rgba(59,130,246,0.3)' } : {}}>
           <h2 className="text-lg font-semibold text-center text-slate-200 mb-6">
             Your Lucky Numbers
@@ -3002,6 +3069,7 @@ function App() {
           </div>
         )}
       </main>
+      </div> {/* Close flex wrapper */}
     </div>
   );
 }

@@ -4208,6 +4208,31 @@ async def get_ticket_counter():
     async for g in db.euromillions_generations.find({}, {'tickets': 1}):
         euro_count += len(g.get('tickets', []))
     total = swiss_gen_count + swiss_pred_count + euro_count
+
+@api_router.get("/pending-tickets")
+async def get_pending_tickets():
+    """Get all tickets generated for the NEXT upcoming draw."""
+    from datetime import timedelta
+    today = datetime.now()
+    days_wed = (2 - today.weekday()) % 7
+    days_sat = (5 - today.weekday()) % 7
+    if days_wed == 0: days_wed = 7
+    if days_sat == 0: days_sat = 7
+    next_draw = today + timedelta(days=min(days_wed, days_sat))
+    next_date = next_draw.strftime("%d.%m.%Y")
+    
+    tickets = []
+    async for g in db.generations.find({"target_date": next_date}, {"_id": 0, "tickets": 1, "generation_type": 1}):
+        for t in g.get("tickets", []):
+            tickets.append({
+                "numbers": t.get("numbers", []),
+                "lucky": t.get("lucky") or t.get("lucky_number"),
+                "story": t.get("story", g.get("generation_type", "")),
+            })
+    
+    return {"next_date": next_date, "count": len(tickets), "tickets": tickets}
+
+
     
     # Next draw tickets
     from datetime import timedelta
