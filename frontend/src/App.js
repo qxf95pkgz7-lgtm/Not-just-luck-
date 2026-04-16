@@ -536,6 +536,8 @@ function App() {
   const [lockedPositions, setLockedPositions] = useState({ p1: "", p2: "", p3: "", p4: "", p5: "", p6: "" });
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [ticketCounter, setTicketCounter] = useState(0);
+  const [nextDrawTickets, setNextDrawTickets] = useState(0);
+  const [nextDrawDate, setNextDrawDate] = useState('');
   
   // Special personas with secret number modifiers
   // The magic is hidden - only the generator knows!
@@ -829,6 +831,8 @@ function App() {
     try {
       const res = await axios.get(`${API}/ticket-counter`);
       setTicketCounter(res.data.total || 0);
+      setNextDrawTickets(res.data.next_draw_tickets || 0);
+      setNextDrawDate(res.data.next_draw_date || '');
     } catch (e) {}
   };
   useEffect(() => { fetchTicketCounter(); }, []);
@@ -1381,9 +1385,20 @@ function App() {
         </div>
         <p className="text-slate-400 text-sm">{lotteryMode === 'swiss' ? 'Swiss Lotto' : 'EuroMillions'} Number Generator</p>
         {ticketCounter > 0 && (
-          <div className="mt-1 inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-slate-800/60 border border-slate-700/50" data-testid="ticket-counter">
-            <span className="text-amber-400 text-xs font-mono font-bold">{ticketCounter.toLocaleString()}</span>
-            <span className="text-slate-500 text-[10px]">tickets generated</span>
+          <div className="mt-2 flex items-center justify-center gap-3" data-testid="ticket-counters">
+            {/* All-time counter — small */}
+            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-slate-800/60 border border-slate-700/50" data-testid="ticket-counter">
+              <span className="text-amber-400 text-xs font-mono font-bold">{ticketCounter.toLocaleString()}</span>
+              <span className="text-slate-500 text-[10px]">total tickets</span>
+            </div>
+            {/* Next draw counter — bigger, more prominent */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-xl bg-gradient-to-r from-emerald-900/40 to-emerald-800/30 border border-emerald-500/40" data-testid="next-draw-counter">
+              <span className="text-emerald-400 text-xl font-mono font-black tracking-tight">{nextDrawTickets}</span>
+              <div className="flex flex-col leading-none">
+                <span className="text-slate-300 text-[10px] font-semibold">for next draw</span>
+                <span className="text-slate-500 text-[9px]">{nextDrawDate}</span>
+              </div>
+            </div>
           </div>
         )}
         

@@ -4203,7 +4203,30 @@ async def get_ticket_counter():
     async for g in db.euromillions_generations.find({}, {'tickets': 1}):
         euro_count += len(g.get('tickets', []))
     total = swiss_gen_count + swiss_pred_count + euro_count
-    return {"total": total, "swiss": swiss_gen_count + swiss_pred_count, "euro": euro_count}
+    
+    # Next draw tickets
+    from datetime import timedelta
+    today = datetime.now()
+    days_wed = (2 - today.weekday()) % 7
+    days_sat = (5 - today.weekday()) % 7
+    if days_wed == 0: days_wed = 7
+    if days_sat == 0: days_sat = 7
+    next_draw = today + timedelta(days=min(days_wed, days_sat))
+    next_date = next_draw.strftime("%d.%m.%Y")
+    
+    next_draw_count = 0
+    async for g in db.generations.find({'target_date': next_date}, {'tickets': 1}):
+        next_draw_count += len(g.get('tickets', []))
+    next_draw_preds = await db.prediction_history.count_documents({'target_draw_date': next_date})
+    next_draw_count += next_draw_preds
+    
+    return {
+        "total": total,
+        "swiss": swiss_gen_count + swiss_pred_count,
+        "euro": euro_count,
+        "next_draw_date": next_date,
+        "next_draw_tickets": next_draw_count,
+    }
 
 
 @api_router.get("/prediction-history/stats")
