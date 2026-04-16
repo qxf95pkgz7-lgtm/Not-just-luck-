@@ -93,11 +93,19 @@ When P6+P6=69 and P2 concat=96:
 
 ## What's Been Implemented
 
-### Session: April 15, 2026 (Fork 4 - Current)
+### Session: April 16, 2026 (Fork 6 - Current)
+- **"How to Use" button repositioned** — moved to left of "Your Lucky Numbers" heading above ball generator
+
+### Session: April 15, 2026 (Fork 5)
 - **Digit DNA Engine** — date + circles + date math + prev draw circles → digit field (5.3/6 over 1,380 draws)
 - **P123 Concat Pattern** — digit story across draws (56% at 3+ with 5 unique digits)
 - **P2 Prediction Rule** — prev P2 ±1 = 5.3x random
-- **Position Analysis** — P3 ≥30 only 4.9%, avg 1.9 numbers ≥30 per draw
+- **Family Rhythm** — decade density analysis for grouping predictions
+- **69 Bridge** — P6 Circle Bridge Swiss→Euro coded into engine
+- **Hit Tracker overhaul** — top 20 tickets with 2+ hits, unified format
+- **Dual Ticket Counters** — all-time & next draw totals in UI
+- **Pending Tickets Box** — scrollable side panel showing saved tickets
+- **How to Use modal** — mystical guide explaining all app features
 - **Money Mode v5** — DNA + P123 + P2 + 1 High Guarantee + Crazy tickets
 - **Min 2 tickets** = 5 CHF (Swiss Lotto rule)
 - **Simulation API** — `/api/digit-dna/simulate?target_date=DD.MM.YYYY`

@@ -1598,9 +1598,18 @@ function App() {
           </div>
         </div>
         <div className="lucky-card p-6 mb-6" style={lotteryMode === 'euro' ? { background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(2,6,23,0.98) 100%)', borderColor: 'rgba(59,130,246,0.3)' } : {}}>
-          <h2 className="text-lg font-semibold text-center text-slate-200 mb-6">
-            Your Lucky Numbers
-          </h2>
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <button
+              onClick={() => setShowGuide(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-amber-500/25 transition-all"
+              data-testid="how-to-use-inline-btn"
+            >
+              <span>?</span> How to Use
+            </button>
+            <h2 className="text-lg font-semibold text-slate-200">
+              Your Lucky Numbers
+            </h2>
+          </div>
           
           {/* Ball Machine + Wheels */}
           <div className="flex items-start justify-center">
