@@ -5050,23 +5050,24 @@ def _get_next_draw_dates():
     euro_next = (today + timedelta(days=min(dt_, df))).strftime("%d.%m.%Y")
     return swiss_next, euro_next
 
-async def _count_visitor_tickets(visitor_id: str) -> int:
-    """Count total tickets a visitor generated for upcoming draws."""
+async def _count_visitor_tickets(visitor_id: str, mode: str = "swiss") -> int:
+    """Count tickets a visitor generated for the next draw of a specific lottery."""
     swiss_next, euro_next = _get_next_draw_dates()
-    swiss_count = 0
-    async for g in db.generations.find({"visitor_id": visitor_id, "target_date": swiss_next}, {"tickets": 1}):
-        swiss_count += len(g.get("tickets", []))
-    euro_count = 0
-    async for g in db.euromillions_generations.find({"visitor_id": visitor_id, "target_date": euro_next}, {"tickets": 1}):
-        euro_count += len(g.get("tickets", []))
-    return swiss_count + euro_count
+    count = 0
+    if mode == "swiss":
+        async for g in db.generations.find({"visitor_id": visitor_id, "target_date": swiss_next}, {"tickets": 1}):
+            count += len(g.get("tickets", []))
+    else:
+        async for g in db.euromillions_generations.find({"visitor_id": visitor_id, "target_date": euro_next}, {"tickets": 1}):
+            count += len(g.get("tickets", []))
+    return count
 
 @api_router.get("/ticket-limit")
-async def check_ticket_limit(visitor_id: str = ""):
-    """Check how many tickets a visitor has left."""
+async def check_ticket_limit(visitor_id: str = "", mode: str = "swiss"):
+    """Check how many tickets a visitor has left for a specific lottery."""
     if not visitor_id:
         return {"used": 0, "limit": TICKET_LIMIT, "remaining": TICKET_LIMIT}
-    used = await _count_visitor_tickets(visitor_id)
+    used = await _count_visitor_tickets(visitor_id, mode)
     return {"used": used, "limit": TICKET_LIMIT, "remaining": max(0, TICKET_LIMIT - used)}
 
 # Include the router in the main app
