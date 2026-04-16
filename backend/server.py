@@ -839,7 +839,8 @@ async def get_master_prediction(
     lock_p4: int = None,
     lock_p5: int = None,
     lock_p6: int = None,
-    num_tickets: int = 1
+    num_tickets: int = 1,
+    visitor_id: str = ""
 ):
     """
     MASTER PREDICTOR - Combines ALL pattern systems:
@@ -857,6 +858,13 @@ async def get_master_prediction(
     """
     from datetime import datetime
     from collections import defaultdict
+    
+    # Ticket limit check
+    if visitor_id:
+        used = await _count_visitor_tickets(visitor_id)
+        if used >= TICKET_LIMIT:
+            raise HTTPException(status_code=429, detail=f"Ticket limit reached! You've generated {used}/{TICKET_LIMIT} tickets for the next draw.")
+        num_tickets = min(num_tickets, TICKET_LIMIT - used)
     
     # Validate num_tickets
     num_tickets = max(1, min(20, num_tickets))
@@ -3464,7 +3472,8 @@ async def get_master_prediction(
         await hit_tracker.save_generation(
             target_date=target_date_str,
             tickets=tracker_tickets,
-            generation_type="master-predictor"
+            generation_type="master-predictor",
+            visitor_id=visitor_id
         )
     except Exception:
         pass  # Don't fail the prediction if tracker save fails
@@ -3485,7 +3494,8 @@ async def get_swiss_money_mode(
     lock_p4: int = None,
     lock_p5: int = None,
     lock_p6: int = None,
-    target_date: str = None
+    target_date: str = None,
+    visitor_id: str = ""
 ):
     """
     SWISS LOTTO MONEY MODE v2 — Digit DNA + Patterns + Crazy Tickets
@@ -3500,6 +3510,13 @@ async def get_swiss_money_mode(
     from datetime import datetime, timedelta
     import random
     from digit_dna import digit_dna_scores, swiss_circle, p123_concat_scores, p123_concat_analysis, family_rhythm_weights, family_rhythm_analysis
+    
+    # Ticket limit check
+    if visitor_id:
+        used = await _count_visitor_tickets(visitor_id)
+        if used >= TICKET_LIMIT:
+            raise HTTPException(status_code=429, detail=f"Ticket limit reached! You've generated {used}/{TICKET_LIMIT} tickets for the next draw.")
+        num_tickets = min(num_tickets, TICKET_LIMIT - used)
     
     num_tickets = max(2, min(20, num_tickets))
     
@@ -3804,7 +3821,8 @@ async def get_swiss_money_mode(
         await hit_tracker.save_generation(
             target_date=target_date_str,
             tickets=tracker_tickets,
-            generation_type="money-mode-v2"
+            generation_type="money-mode-v2",
+            visitor_id=visitor_id
         )
     except Exception:
         pass
@@ -5010,6 +5028,46 @@ async def get_active_users():
     active_count = await db.active_users.count_documents({"last_seen": {"$gte": cutoff}})
     total_count = await db.active_users.count_documents({})
     return {"active_users": active_count, "total_users": total_count}
+
+# ─── TICKET LIMIT (20 per user per draw period) ─────────────
+TICKET_LIMIT = 20
+
+def _get_next_draw_dates():
+    """Get next Swiss and Euro draw dates."""
+    from datetime import timedelta
+    today = datetime.now()
+    # Swiss: Wed & Sat
+    dw = (2 - today.weekday()) % 7
+    ds = (5 - today.weekday()) % 7
+    if dw == 0: dw = 7
+    if ds == 0: ds = 7
+    swiss_next = (today + timedelta(days=min(dw, ds))).strftime("%d.%m.%Y")
+    # Euro: Tue & Fri
+    dt_ = (1 - today.weekday()) % 7
+    df = (4 - today.weekday()) % 7
+    if dt_ == 0: dt_ = 7
+    if df == 0: df = 7
+    euro_next = (today + timedelta(days=min(dt_, df))).strftime("%d.%m.%Y")
+    return swiss_next, euro_next
+
+async def _count_visitor_tickets(visitor_id: str) -> int:
+    """Count total tickets a visitor generated for upcoming draws."""
+    swiss_next, euro_next = _get_next_draw_dates()
+    swiss_count = 0
+    async for g in db.generations.find({"visitor_id": visitor_id, "target_date": swiss_next}, {"tickets": 1}):
+        swiss_count += len(g.get("tickets", []))
+    euro_count = 0
+    async for g in db.euromillions_generations.find({"visitor_id": visitor_id, "target_date": euro_next}, {"tickets": 1}):
+        euro_count += len(g.get("tickets", []))
+    return swiss_count + euro_count
+
+@api_router.get("/ticket-limit")
+async def check_ticket_limit(visitor_id: str = ""):
+    """Check how many tickets a visitor has left."""
+    if not visitor_id:
+        return {"used": 0, "limit": TICKET_LIMIT, "remaining": TICKET_LIMIT}
+    used = await _count_visitor_tickets(visitor_id)
+    return {"used": used, "limit": TICKET_LIMIT, "remaining": max(0, TICKET_LIMIT - used)}
 
 # Include the router in the main app
 app.include_router(api_router)

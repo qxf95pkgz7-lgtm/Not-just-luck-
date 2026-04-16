@@ -1186,6 +1186,9 @@ function App() {
       if (lotteryMode === 'swiss' && generationMode === 'money' && numTickets <= 1) {
         params.push('num_tickets=2');
       }
+      // Pass visitor_id for ticket limit
+      const vid = localStorage.getItem('lj_visitor_id') || '';
+      if (vid) params.push(`visitor_id=${encodeURIComponent(vid)}`);
       if (params.length > 0) url += `?${params.join('&')}`;
       
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -1197,7 +1200,8 @@ function App() {
             name: fullName || null,
             locked_positions: Object.fromEntries(Object.entries(lockedPositions).filter(([k,v]) => v !== "" && (k !== 'p6' || lotteryMode === 'swiss')).map(([k,v]) => [k, parseInt(v)])),
             num_tickets: numTickets,
-            target_date: null // Will auto-calculate next draw
+            target_date: null,
+            visitor_id: vid
           })
         : await axios.get(url);
       
@@ -1263,6 +1267,12 @@ function App() {
       fetchPendingTickets(); // Update pending box after generation
     } catch (e) {
       console.error("Error:", e);
+      // Handle ticket limit reached
+      if (e.response && e.response.status === 429) {
+        alert(e.response.data?.detail || "Ticket limit reached! Maximum 20 tickets per draw.");
+        setLoading(false);
+        return;
+      }
       // Fallback
       if (lotteryMode === 'swiss') {
         const randomNums = [];

@@ -291,6 +291,7 @@ class EuroMillionsPredictionRequest(BaseModel):
     use_dj_engine: bool = False  # 🎧 Use DJ Pattern Engine
     target_date: Optional[str] = None  # DD.MM.YYYY for date-based patterns
     scenario: Optional[str] = None  # "dj" for DJ mode
+    visitor_id: Optional[str] = ""
 
 
 def create_euromillions_router(db):
@@ -2347,6 +2348,15 @@ def create_euromillions_router(db):
     @router.post("/master-predictor")
     async def predict(request: EuroMillionsPredictionRequest):
         await seed_euromillions_if_empty()
+        
+        # Ticket limit check
+        if request.visitor_id:
+            from server import _count_visitor_tickets, TICKET_LIMIT
+            used = await _count_visitor_tickets(request.visitor_id)
+            if used >= TICKET_LIMIT:
+                raise HTTPException(status_code=429, detail=f"Ticket limit reached! You've generated {used}/{TICKET_LIMIT} tickets for the next draw.")
+            request.num_tickets = min(request.num_tickets, TICKET_LIMIT - used)
+        
         draws = await get_euromillions_draws()
         
         # 🍀 FETCH SWISS DRAWS FOR CROSS-LOTTERY PATTERNS! 🍀
@@ -2412,7 +2422,7 @@ def create_euromillions_router(db):
         
         # Auto-save to hit tracker
         try:
-            await _save_to_tracker(tickets, target_date, mode="dreaming")
+            await _save_to_tracker(tickets, target_date, mode="dreaming", visitor_id=request.visitor_id or "")
         except Exception:
             pass  # Don't fail the prediction if save fails
         
@@ -2426,7 +2436,7 @@ def create_euromillions_router(db):
         }
     
     # Helper: auto-save generated tickets to hit tracker
-    async def _save_to_tracker(tickets_data, target_date, mode="dreaming"):
+    async def _save_to_tracker(tickets_data, target_date, mode="dreaming", visitor_id=""):
         """Save generated tickets to euromillions_generations for hit tracking"""
         from datetime import datetime as dt, timedelta
         
@@ -2456,6 +2466,8 @@ def create_euromillions_router(db):
             "star_hits": 0,
             "best_ticket_hits": 0,
         }
+        if visitor_id:
+            generation["visitor_id"] = visitor_id
         
         await db.euromillions_generations.insert_one(generation)
     
@@ -2467,18 +2479,17 @@ def create_euromillions_router(db):
     async def money_mode_predictor(request: EuroMillionsPredictionRequest):
         """
         💰 MONEY MODE - Generate tickets focused on hitting 3+ numbers!
-        
-        Strategy:
-        - Uses ONLY the highest hit-rate patterns (10%+)
-        - Prioritizes STAR accuracy (smaller pool = higher probability)
-        - Uses cross-lottery vibes (Swiss→Euro 13.3% hit rate!)
-        
-        Target prizes:
-        - 3 + 2⭐ = ~€50-100
-        - 3 + 1⭐ = ~€15-20  
-        - 3 + 0⭐ = ~€10-15
         """
         await seed_euromillions_if_empty()
+        
+        # Ticket limit check
+        if request.visitor_id:
+            from server import _count_visitor_tickets, TICKET_LIMIT
+            used = await _count_visitor_tickets(request.visitor_id)
+            if used >= TICKET_LIMIT:
+                raise HTTPException(status_code=429, detail=f"Ticket limit reached! You've generated {used}/{TICKET_LIMIT} tickets for the next draw.")
+            request.num_tickets = min(request.num_tickets, TICKET_LIMIT - used)
+        
         draws = await get_euromillions_draws()
         
         # 🍀 FETCH SWISS DRAWS FOR CROSS-LOTTERY PATTERNS!
@@ -2541,7 +2552,7 @@ def create_euromillions_router(db):
         
         # Auto-save to hit tracker
         try:
-            await _save_to_tracker(tickets, target_date, mode="money")
+            await _save_to_tracker(tickets, target_date, mode="money", visitor_id=request.visitor_id or "")
         except Exception:
             pass
         

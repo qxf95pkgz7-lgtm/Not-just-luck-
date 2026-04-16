@@ -21,7 +21,8 @@ class HitTracker:
         self,
         target_date: str,
         tickets: List[Dict],
-        generation_type: str = "story"
+        generation_type: str = "story",
+        visitor_id: str = ""
     ) -> str:
         """Save a generation for later hit tracking"""
         
@@ -36,6 +37,8 @@ class HitTracker:
             "lucky_hits": 0,
             "best_ticket_hits": 0
         }
+        if visitor_id:
+            generation["visitor_id"] = visitor_id
         
         result = await self.generations_collection.insert_one(generation)
         return str(result.inserted_id)

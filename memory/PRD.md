@@ -97,7 +97,9 @@ When P6+P6=69 and P2 concat=96:
 - **"How to Use" button repositioned** — moved to left of "Your Lucky Numbers" heading above ball generator
 - **Live Users tracking** — anonymous heartbeat system, MongoDB `active_users` collection, pulsing green panel on right side
 - **Pending Tickets mode-aware** — filters by Swiss/Euro based on active lottery mode, shows Stars for Euro tickets
-- **Layout rebalanced** — both side panels (w-44) nudged toward center for better visual balance
+- **Layout rebalanced** — both side panels nudged toward center for better visual balance
+- **Mobile Pending fix** — centered balls, amber Lucky circles and yellow Star circles on mobile
+- **20 Ticket Limit** — max 20 tickets per visitor per draw (combined Swiss+Euro), enforced via visitor_id tracking
 
 ### Session: April 15, 2026 (Fork 5)
 - **Digit DNA Engine** — date + circles + date math + prev draw circles → digit field (5.3/6 over 1,380 draws)
