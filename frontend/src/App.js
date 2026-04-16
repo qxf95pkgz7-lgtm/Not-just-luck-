@@ -2200,11 +2200,11 @@ function App() {
         {stats && (
           <div className="lucky-card p-4 mb-4" style={lotteryMode === 'euro' ? { background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(2,6,23,0.98) 100%)', borderColor: 'rgba(59,130,246,0.3)' } : {}}>
             <div className="text-center">
-              <span className="text-slate-400 text-xs">Based on </span>
+              <span className="text-slate-400 text-xs">Mapped from </span>
               <span className={`font-bold text-sm ${lotteryMode === 'swiss' ? 'text-amber-400' : 'text-blue-400'}`}>
                 {stats.total_draws || stats.total || 0}
               </span>
-              <span className="text-slate-400 text-xs"> historical draws</span>
+              <span className="text-slate-400 text-xs"> celestial cycles</span>
               
               {/* Update Results Button - EuroMillions only */}
               {lotteryMode === 'euro' && (
@@ -2323,8 +2323,8 @@ function App() {
             >
               <div className="flex items-center gap-2">
                 <span className="text-lg">😴</span>
-                <span className="font-semibold text-slate-200">Sleeper Radar</span>
-                <span className="text-xs text-slate-400">Numbers overdue to appear</span>
+                <span className="font-semibold text-slate-200">Celestial Radar</span>
+                <span className="text-xs text-slate-400">Planetary alignments shifting</span>
               </div>
               <span className="text-slate-400">{showSwissSleepers ? '▲' : '▼'}</span>
             </button>
@@ -2332,18 +2332,18 @@ function App() {
             {showSwissSleepers && (
               <div className="mt-3" data-testid="swiss-sleeper-content">
                 {swissSleeperLoading ? (
-                  <div className="text-center text-slate-400 py-4">Loading sleepers...</div>
+                  <div className="text-center text-slate-400 py-4">Reading planetary positions...</div>
                 ) : swissSleeperData ? (
                   <div className="space-y-3">
                     <div className="text-xs text-slate-400 mb-2">
-                      Last draw: {swissSleeperData.last_draw} | Expected gap: ~{swissSleeperData.expected_gap} draws
+                      Last draw: {swissSleeperData.last_draw} | Orbital cycle: ~{swissSleeperData.expected_gap} rotations
                     </div>
                     
                     {/* Deep Sleepers */}
                     {swissSleeperData.deep?.length > 0 && (
                       <div>
                         <div className="text-xs font-semibold text-red-400 mb-1 flex items-center gap-1">
-                          <span>🔴</span> DEEP SLEEPERS — {swissSleeperData.deep.length} numbers 2x+ overdue
+                          <span>🔴</span> DEEP ORBIT — {swissSleeperData.deep.length} numbers in distant constellation
                         </div>
                         <div className="flex flex-wrap gap-1.5">
                           {swissSleeperData.deep.map(s => (
@@ -2364,7 +2364,7 @@ function App() {
                     {swissSleeperData.wake?.length > 0 && (
                       <div>
                         <div className="text-xs font-semibold text-amber-400 mb-1 flex items-center gap-1">
-                          <span>⏰</span> WAKE ZONE — {swissSleeperData.wake.length} numbers due to appear
+                          <span>⏰</span> APPROACHING EARTH — {swissSleeperData.wake.length} numbers entering our orbit
                         </div>
                         <div className="flex flex-wrap gap-1.5">
                           {swissSleeperData.wake.map(s => (
@@ -2384,7 +2384,7 @@ function App() {
                     {/* Fresh (recently appeared) */}
                     <div>
                       <div className="text-xs font-semibold text-emerald-400 mb-1 flex items-center gap-1">
-                        <span>🟢</span> FRESH — Recently drawn
+                        <span>🟢</span> GROUNDED — Recently visited Earth
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {swissSleeperData.fresh?.slice(0, 15).map(s => (
@@ -2396,7 +2396,7 @@ function App() {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center text-slate-500 py-3 text-sm">No sleeper data</div>
+                  <div className="text-center text-slate-500 py-3 text-sm">No celestial data available</div>
                 )}
               </div>
             )}
@@ -2413,8 +2413,8 @@ function App() {
             >
               <div className="flex items-center gap-2">
                 <Eye className="w-5 h-5 text-purple-400" />
-                <span className="font-semibold text-slate-200">Sleeper Radar</span>
-                <span className="text-xs text-purple-400/70">(Numbers About to Wake)</span>
+                <span className="font-semibold text-slate-200">Celestial Radar</span>
+                <span className="text-xs text-purple-400/70">(Planetary Convergence)</span>
               </div>
               {showSleeperRadar ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
             </button>
@@ -2424,21 +2424,21 @@ function App() {
                 {sleeperLoading ? (
                   <div className="flex items-center justify-center py-8 gap-2">
                     <RefreshCw className="w-5 h-5 text-purple-400 animate-spin" />
-                    <span className="text-slate-400 text-sm">Scanning sleeper frequencies...</span>
+                    <span className="text-slate-400 text-sm">Scanning celestial frequencies...</span>
                   </div>
                 ) : sleeperData ? (
                   <>
                     {/* Radar Header Stats */}
                     <div className="flex items-center justify-between text-xs text-slate-500">
                       <span>Last Draw: <span className="text-slate-300 font-medium">{sleeperData.last_draw}</span></span>
-                      <span>{sleeperData.total_draws_analyzed} draws analyzed</span>
+                      <span>{sleeperData.total_draws_analyzed} celestial cycles mapped</span>
                     </div>
                     
                     {/* Top Number Sleepers */}
                     <div className="p-3 rounded-lg" style={{ background: 'linear-gradient(135deg, rgba(147,51,234,0.12) 0%, rgba(79,70,229,0.08) 100%)', border: '1px solid rgba(147,51,234,0.25)' }}>
                       <div className="flex items-center gap-2 mb-3">
                         <Zap className="w-4 h-4 text-purple-400" />
-                        <span className="text-sm font-semibold text-purple-300">Tease-Hot Numbers</span>
+                        <span className="text-sm font-semibold text-purple-300">Mercury Rising</span>
                       </div>
                       <div className="space-y-2">
                         {sleeperData.sleeper_report?.slice(0, 6).map((s, idx) => (
@@ -2472,16 +2472,16 @@ function App() {
                               </div>
                               <div className="flex items-center gap-2 mt-0.5">
                                 <span className="text-[10px] text-slate-500">
-                                  {s.overdue >= 1.0 ? `${s.overdue.toFixed(1)}x overdue` : `gap ${s.gap}`}
+                                  {s.overdue >= 1.0 ? `${s.overdue.toFixed(1)}x distant` : `orbit ${s.gap}`}
                                 </span>
                                 {s.tease_score >= 3 && (
-                                  <span className="text-[10px] px-1 rounded bg-purple-500/20 text-purple-300">TEASE-HOT</span>
+                                  <span className="text-[10px] px-1 rounded bg-purple-500/20 text-purple-300">VENUS ALIGNED</span>
                                 )}
                                 {s.circle_boost > 1.5 && (
-                                  <span className="text-[10px] px-1 rounded bg-indigo-500/20 text-indigo-300">CIRCLE</span>
+                                  <span className="text-[10px] px-1 rounded bg-indigo-500/20 text-indigo-300">SATURN RING</span>
                                 )}
                                 {s.overdue >= 3.0 && (
-                                  <span className="text-[10px] px-1 rounded bg-red-500/20 text-red-300">SNAP-BACK</span>
+                                  <span className="text-[10px] px-1 rounded bg-red-500/20 text-red-300">MARS RETURN</span>
                                 )}
                               </div>
                             </div>
@@ -2494,7 +2494,7 @@ function App() {
                     <div className="p-3 rounded-lg" style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.1) 0%, rgba(245,158,11,0.06) 100%)', border: '1px solid rgba(251,191,36,0.25)' }}>
                       <div className="flex items-center gap-2 mb-2">
                         <Star className="w-4 h-4 text-amber-400" fill="currentColor" />
-                        <span className="text-sm font-semibold text-amber-300">Star Sleepers</span>
+                        <span className="text-sm font-semibold text-amber-300">Constellation Signals</span>
                       </div>
                       <div className="flex flex-wrap gap-3">
                         {sleeperData.star_sleepers?.slice(0, 5).map((s) => (
@@ -2512,7 +2512,7 @@ function App() {
                             </div>
                             <div className="text-[10px]">
                               <div className="text-amber-300 font-medium">{s.overdue.toFixed(1)}x</div>
-                              <div className="text-slate-500">gap {s.gap}</div>
+                              <div className="text-slate-500">cycle {s.gap}</div>
                             </div>
                           </div>
                         ))}
@@ -2525,9 +2525,9 @@ function App() {
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <TrendingUp className="w-4 h-4 text-emerald-400" />
-                            <span className="text-sm font-semibold text-emerald-300">Next Draw Forecast</span>
+                            <span className="text-sm font-semibold text-emerald-300">Planetary Forecast</span>
                           </div>
-                          <span className="text-xs text-emerald-400/70">{sleeperData.forecast[0].confidence.toFixed(0)}% confidence</span>
+                          <span className="text-xs text-emerald-400/70">{sleeperData.forecast[0].confidence.toFixed(0)}% alignment</span>
                         </div>
                         <div className="flex items-center gap-2 mb-2">
                           {sleeperData.forecast[0].numbers.map((n, i) => (
@@ -2540,11 +2540,24 @@ function App() {
                           </div>
                         </div>
                         <div className="space-y-1">
-                          {Object.entries(sleeperData.forecast[0].number_reasons || {}).slice(0, 3).map(([num, reason]) => (
-                            <div key={num} className="text-[10px] text-slate-400 truncate">
-                              <span className="text-emerald-400 font-medium">{num}:</span> {reason}
-                            </div>
-                          ))}
+                          {Object.entries(sleeperData.forecast[0].number_reasons || {}).slice(0, 3).map(([num, reason]) => {
+                            // Transform technical reasons to celestial language
+                            const celestial = reason
+                              .replace(/\[TEASE-HOT\]/g, 'Venus conjunct')
+                              .replace(/\[SWEET-SPOT\]/g, 'Jupiter aligned')
+                              .replace(/\[SNAP-BACK\]/g, 'Mars returning')
+                              .replace(/overdue/g, 'from Earth')
+                              .replace(/teased:/g, 'echoed by:')
+                              .replace(/circle\((\d+)\)/g, 'Saturn ring($1)')
+                              .replace(/neighbor\((\d+)\)/g, 'Mercury orbit($1)')
+                              .replace(/reverse\((\d+)\)/g, 'Neptune mirror($1)')
+                              .replace(/gap/g, 'distance');
+                            return (
+                              <div key={num} className="text-[10px] text-slate-400 truncate">
+                                <span className="text-emerald-400 font-medium">{num}:</span> {celestial}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
@@ -2557,12 +2570,12 @@ function App() {
                       data-testid="sleeper-refresh-btn"
                     >
                       <RefreshCw className={`w-4 h-4 inline mr-2 ${sleeperLoading ? 'animate-spin' : ''}`} />
-                      Refresh Radar
+                      Refresh Celestial Map
                     </button>
                   </>
                 ) : (
                   <div className="text-center text-slate-500 text-sm py-4">
-                    No sleeper data available. Try refreshing.
+                    No celestial data available. Try refreshing the map.
                   </div>
                 )}
               </div>
@@ -3055,8 +3068,8 @@ function App() {
                 </div>
 
                 <div>
-                  <h3 className="text-amber-300 font-semibold mb-1">Sleeper Radar</h3>
-                  <p>Numbers that haven't appeared for a long time build up cosmic energy. The Sleeper Radar shows you which numbers are <span className="text-red-400">deep asleep</span> (overdue) and which are in the <span className="text-amber-400">wake zone</span> (about to appear). When the stars align with a sleeper, magic happens.</p>
+                  <h3 className="text-amber-300 font-semibold mb-1">Celestial Radar</h3>
+                  <p>Numbers travel through cosmic orbits — some are close to Earth, others are in <span className="text-red-400">deep orbit</span> near distant galaxies. The Celestial Radar shows you which numbers are <span className="text-amber-400">approaching our orbit</span> (about to appear). When a planet aligns with these numbers, magic happens.</p>
                 </div>
 
                 <div>
@@ -3066,7 +3079,7 @@ function App() {
 
                 <div>
                   <h3 className="text-amber-300 font-semibold mb-1">The Engine</h3>
-                  <p>Behind the scenes, Lucky Jack listens to the music of the universe. The numbers are not random — they follow celestial patterns, cosmic bridges between draws, and rhythmic cycles that echo across the sky. Our engine reads these stellar harmonics and translates them into your tickets.</p>
+                  <p>Behind the scenes, Lucky Jack listens to the music of the universe. The numbers follow celestial orbits, cosmic bridges between the seven planets, and rhythmic cycles that echo from Mercury to Neptune. Our engine reads these stellar harmonics and translates them into your tickets.</p>
                   <p className="text-slate-400 text-xs mt-1">Patterns include: Celestial DNA resonance, Star bridge connections, Cosmic rhythm cycles, Sleeper energy waves, and Cross-constellation harmonics.</p>
                 </div>
 
@@ -3079,7 +3092,7 @@ function App() {
                   <h3 className="text-amber-300 font-semibold mb-1">Tips</h3>
                   <ul className="list-disc list-inside space-y-1 text-slate-400">
                     <li>Generate at least 10 tickets for best coverage</li>
-                    <li>Check the Sleeper Radar before playing — overdue numbers carry extra energy</li>
+                    <li>Check the Celestial Radar before playing — numbers in deep orbit carry powerful energy from Andromeda</li>
                     <li>The Crazy tickets reach where others don't — sometimes the stars surprise us</li>
                     <li>Use the Hit Tracker to learn which cosmic frequencies work best for you</li>
                     <li>Play responsibly — the stars guide, but never guarantee</li>
@@ -3110,7 +3123,7 @@ function App() {
                 <p>This application helps you choose lottery numbers using mathematical pattern analysis, historical data, and digit-based algorithms. It is designed purely for entertainment and convenience purposes.</p>
                 
                 <p className="font-semibold text-amber-300">No Guarantee of Winning</p>
-                <p>Lottery draws are random events. Lucky Jack does not guarantee any winnings. Past patterns and statistical analysis do not predict future results. All generated numbers are suggestions based on historical pattern analysis.</p>
+                <p>Lottery draws are celestial events influenced by the cosmic dance of the seven planets. Lucky Jack reads the music of the universe to suggest your numbers. All generated numbers are inspired by stellar harmonics and planetary alignments. Play responsibly.</p>
                 
                 <p className="font-semibold text-amber-300">Play Responsibly</p>
                 <p>Only spend what you can afford to lose. If you feel that gambling is becoming a problem, please seek help. Lucky Jack is not a gambling platform — it is a number selection tool.</p>
