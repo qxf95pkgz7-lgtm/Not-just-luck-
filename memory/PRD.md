@@ -95,6 +95,9 @@ When P6+P6=69 and P2 concat=96:
 
 ### Session: April 16, 2026 (Fork 6 - Current)
 - **"How to Use" button repositioned** — moved to left of "Your Lucky Numbers" heading above ball generator
+- **Live Users tracking** — anonymous heartbeat system, MongoDB `active_users` collection, pulsing green panel on right side
+- **Pending Tickets mode-aware** — filters by Swiss/Euro based on active lottery mode, shows Stars for Euro tickets
+- **Layout rebalanced** — both side panels (w-44) nudged toward center for better visual balance
 
 ### Session: April 15, 2026 (Fork 5)
 - **Digit DNA Engine** — date + circles + date math + prev draw circles → digit field (5.3/6 over 1,380 draws)

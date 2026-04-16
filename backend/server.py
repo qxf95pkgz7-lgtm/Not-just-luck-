@@ -4210,25 +4210,45 @@ async def get_ticket_counter():
     total = swiss_gen_count + swiss_pred_count + euro_count
 
 @api_router.get("/pending-tickets")
-async def get_pending_tickets():
+async def get_pending_tickets(mode: str = "swiss"):
     """Get all tickets generated for the NEXT upcoming draw."""
     from datetime import timedelta
     today = datetime.now()
-    days_wed = (2 - today.weekday()) % 7
-    days_sat = (5 - today.weekday()) % 7
-    if days_wed == 0: days_wed = 7
-    if days_sat == 0: days_sat = 7
-    next_draw = today + timedelta(days=min(days_wed, days_sat))
-    next_date = next_draw.strftime("%d.%m.%Y")
     
-    tickets = []
-    async for g in db.generations.find({"target_date": next_date}, {"_id": 0, "tickets": 1, "generation_type": 1}):
-        for t in g.get("tickets", []):
-            tickets.append({
-                "numbers": t.get("numbers", []),
-                "lucky": t.get("lucky") or t.get("lucky_number"),
-                "story": t.get("story", g.get("generation_type", "")),
-            })
+    if mode == "euro":
+        # EuroMillions: Tuesday & Friday
+        days_tue = (1 - today.weekday()) % 7
+        days_fri = (4 - today.weekday()) % 7
+        if days_tue == 0: days_tue = 7
+        if days_fri == 0: days_fri = 7
+        next_draw = today + timedelta(days=min(days_tue, days_fri))
+        next_date = next_draw.strftime("%d.%m.%Y")
+        
+        tickets = []
+        async for g in db.euromillions_generations.find({"target_date": next_date}, {"_id": 0, "tickets": 1, "mode": 1}):
+            for t in g.get("tickets", []):
+                tickets.append({
+                    "numbers": t.get("numbers", []),
+                    "stars": t.get("stars", []),
+                    "story": t.get("story", g.get("mode", "")),
+                })
+    else:
+        # Swiss Lotto: Wednesday & Saturday
+        days_wed = (2 - today.weekday()) % 7
+        days_sat = (5 - today.weekday()) % 7
+        if days_wed == 0: days_wed = 7
+        if days_sat == 0: days_sat = 7
+        next_draw = today + timedelta(days=min(days_wed, days_sat))
+        next_date = next_draw.strftime("%d.%m.%Y")
+        
+        tickets = []
+        async for g in db.generations.find({"target_date": next_date}, {"_id": 0, "tickets": 1, "generation_type": 1}):
+            for t in g.get("tickets", []):
+                tickets.append({
+                    "numbers": t.get("numbers", []),
+                    "lucky": t.get("lucky") or t.get("lucky_number"),
+                    "story": t.get("story", g.get("generation_type", "")),
+                })
     
     return {"next_date": next_date, "count": len(tickets), "tickets": tickets}
 

@@ -841,12 +841,12 @@ function App() {
   };
   const fetchPendingTickets = async () => {
     try {
-      const res = await axios.get(`${API}/pending-tickets`);
+      const res = await axios.get(`${API}/pending-tickets?mode=${lotteryMode}`);
       setPendingTickets(res.data.tickets || []);
       setNextDrawDate(res.data.next_date || '');
     } catch (e) {}
   };
-  useEffect(() => { fetchTicketCounter(); fetchPendingTickets(); }, []);
+  useEffect(() => { fetchTicketCounter(); fetchPendingTickets(); }, [lotteryMode]);
 
   // ─── ACTIVE USER HEARTBEAT ───────────────────────
   useEffect(() => {
@@ -1559,9 +1559,9 @@ function App() {
       )}
 
       {/* Main Content with Pending Tickets sidebar */}
-      <div className="max-w-5xl mx-auto px-4 flex gap-3">
+      <div className="max-w-5xl mx-auto px-4 flex gap-3 justify-center">
         {/* PENDING TICKETS BOX — Left side, compact */}
-        <div className="hidden lg:block w-48 flex-shrink-0" data-testid="pending-tickets-panel">
+        <div className="hidden lg:block w-44 flex-shrink-0" data-testid="pending-tickets-panel">
           <div className="sticky top-4 lucky-card p-2.5 border border-amber-500/20">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-amber-400 font-semibold text-xs">Pending Tickets</span>
@@ -1577,10 +1577,13 @@ function App() {
                 <div key={idx} className="p-1 rounded-md bg-slate-800/50 border border-slate-700/30">
                   <div className="flex flex-wrap gap-px items-center">
                     {t.numbers?.map((n, i) => (
-                      <Ball key={i} number={n} size="xs" maxNum={42} />
+                      <Ball key={i} number={n} size="xs" maxNum={lotteryMode === 'euro' ? 50 : 42} />
                     ))}
-                    {t.lucky && (
+                    {lotteryMode === 'swiss' && t.lucky && (
                       <span className="text-amber-400 text-[8px] font-bold ml-0.5">L:{t.lucky}</span>
+                    )}
+                    {lotteryMode === 'euro' && t.stars && t.stars.length > 0 && (
+                      <span className="text-blue-400 text-[8px] font-bold ml-0.5">S:{t.stars.join(',')}</span>
                     )}
                   </div>
                 </div>
@@ -3101,7 +3104,7 @@ function App() {
       </main>
 
         {/* ACTIVE USERS — Right side */}
-        <div className="hidden lg:block w-48 flex-shrink-0" data-testid="active-users-panel">
+        <div className="hidden lg:block w-44 flex-shrink-0" data-testid="active-users-panel">
           <div className="sticky top-4 lucky-card p-2.5 border border-emerald-500/20">
             <div className="flex items-center gap-1.5 mb-2">
               <span className="relative flex h-2 w-2">
