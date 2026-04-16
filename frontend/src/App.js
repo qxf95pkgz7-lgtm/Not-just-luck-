@@ -1559,38 +1559,38 @@ function App() {
       )}
 
       {/* Main Content with Pending Tickets sidebar */}
-      <div className="max-w-5xl mx-auto px-4 flex gap-3 justify-center">
-        {/* PENDING TICKETS BOX — Left side, compact */}
-        <div className="hidden lg:block w-44 flex-shrink-0" data-testid="pending-tickets-panel">
-          <div className="sticky top-4 lucky-card p-2.5 border border-amber-500/20">
+      <div className="max-w-6xl mx-auto px-4 flex gap-3 justify-center">
+        {/* PENDING TICKETS BOX — Left side */}
+        <div className="hidden lg:block w-56 flex-shrink-0" data-testid="pending-tickets-panel">
+          <div className="sticky top-4 lucky-card p-3 border border-amber-500/20">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-amber-400 font-semibold text-xs">Pending Tickets</span>
               <span className="text-emerald-400 font-mono font-bold text-sm">{pendingTickets.length}</span>
             </div>
-            <div className="text-slate-500 text-[9px] mb-1.5">For draw: {nextDrawDate}</div>
-            <div className="space-y-1 max-h-[70vh] overflow-y-auto pr-0.5">
+            <div className="text-slate-500 text-[9px] mb-2">For draw: {nextDrawDate}</div>
+            <div className="space-y-1.5 max-h-[70vh] overflow-y-auto pr-0.5">
               {pendingTickets.length === 0 ? (
                 <div className="text-center text-slate-600 text-[10px] py-3">
                   No tickets yet
                 </div>
               ) : pendingTickets.map((t, idx) => (
-                <div key={idx} className="p-1 rounded-md bg-slate-800/50 border border-slate-700/30">
-                  <div className="flex items-center gap-1">
-                    <div className="flex flex-wrap gap-px items-center flex-1">
+                <div key={idx} className="p-1.5 rounded-md bg-slate-800/50 border border-slate-700/30">
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex flex-wrap gap-0.5 items-center flex-1 min-w-0">
                       {t.numbers?.map((n, i) => (
                         <Ball key={i} number={n} size="xs" maxNum={lotteryMode === 'euro' ? 50 : 42} />
                       ))}
                     </div>
                     {lotteryMode === 'swiss' && t.lucky != null && (
-                      <div className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center">
-                        <span className="text-amber-400 text-[8px] font-black">{t.lucky}</span>
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-sm shadow-amber-500/30">
+                        <span className="text-white text-[9px] font-black">{t.lucky}</span>
                       </div>
                     )}
                     {lotteryMode === 'euro' && t.stars && t.stars.length > 0 && (
                       <div className="flex flex-col gap-0.5 flex-shrink-0">
                         {t.stars.map((s, si) => (
-                          <div key={si} className="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-400/40 flex items-center justify-center">
-                            <span className="text-blue-300 text-[7px] font-black">{s}</span>
+                          <div key={si} className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-sm shadow-blue-500/30">
+                            <span className="text-white text-[8px] font-black">{s}</span>
                           </div>
                         ))}
                       </div>
@@ -3114,7 +3114,7 @@ function App() {
       </main>
 
         {/* ACTIVE USERS — Right side */}
-        <div className="hidden lg:block w-44 flex-shrink-0" data-testid="active-users-panel">
+        <div className="hidden lg:block w-40 flex-shrink-0" data-testid="active-users-panel">
           <div className="sticky top-4 lucky-card p-2.5 border border-emerald-500/20">
             <div className="flex items-center gap-1.5 mb-2">
               <span className="relative flex h-2 w-2">
