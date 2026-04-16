@@ -1366,6 +1366,15 @@ function App() {
 
   return (
     <div className="min-h-screen pb-10">
+      {/* How to Use — top right corner */}
+      <button 
+        onClick={() => setShowGuide(true)}
+        className="fixed top-3 right-3 z-40 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-600/50 hover:border-amber-500/50 hover:bg-slate-700/80 transition-all text-slate-400 hover:text-amber-400 text-xs font-medium backdrop-blur-sm"
+        data-testid="guide-btn-top"
+      >
+        ? How to Use
+      </button>
+
       {/* Header */}
       <header className="text-center py-6">
         <div className="flex items-center justify-center gap-3 mb-1">
