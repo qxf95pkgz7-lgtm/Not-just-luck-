@@ -1575,15 +1575,25 @@ function App() {
                 </div>
               ) : pendingTickets.map((t, idx) => (
                 <div key={idx} className="p-1 rounded-md bg-slate-800/50 border border-slate-700/30">
-                  <div className="flex flex-wrap gap-px items-center">
-                    {t.numbers?.map((n, i) => (
-                      <Ball key={i} number={n} size="xs" maxNum={lotteryMode === 'euro' ? 50 : 42} />
-                    ))}
-                    {lotteryMode === 'swiss' && t.lucky && (
-                      <span className="text-amber-400 text-[8px] font-bold ml-0.5">L:{t.lucky}</span>
+                  <div className="flex items-center gap-1">
+                    <div className="flex flex-wrap gap-px items-center flex-1">
+                      {t.numbers?.map((n, i) => (
+                        <Ball key={i} number={n} size="xs" maxNum={lotteryMode === 'euro' ? 50 : 42} />
+                      ))}
+                    </div>
+                    {lotteryMode === 'swiss' && t.lucky != null && (
+                      <div className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center">
+                        <span className="text-amber-400 text-[8px] font-black">{t.lucky}</span>
+                      </div>
                     )}
                     {lotteryMode === 'euro' && t.stars && t.stars.length > 0 && (
-                      <span className="text-blue-400 text-[8px] font-bold ml-0.5">S:{t.stars.join(',')}</span>
+                      <div className="flex flex-col gap-0.5 flex-shrink-0">
+                        {t.stars.map((s, si) => (
+                          <div key={si} className="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-400/40 flex items-center justify-center">
+                            <span className="text-blue-300 text-[7px] font-black">{s}</span>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 </div>
