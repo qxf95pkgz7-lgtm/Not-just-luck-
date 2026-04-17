@@ -3333,21 +3333,35 @@ def find_suspects(draws: List[Dict], target_date: str = None, swiss_draws: List[
                 evidence[day * month].add("DxM")
         except: pass
     
-    # ── 9. P4-P5 HIDDEN (cross digit pairs) ──
-    p4, p5 = prev_nums[3], prev_nums[4]
-    concat = f"{p4}{p5}"
-    digits = [int(c) for c in concat]
-    pairs = set()
-    for a in range(len(digits)):
-        for b in range(len(digits)):
-            if a != b:
-                num = digits[a]*10 + digits[b]
-                if num > 0: pairs.add(num)
-    for p in pairs:
-        if 1 <= p <= 50:
-            evidence[p].add(f"P4P5-hidden({p4},{p5})")
-        elif p > 50 and 1 <= p-50 <= 50:
-            evidence[p-50].add(f"P4P5-minus50({p})")
+    # ── 9. P4-P5 HIDDEN (68.8% any hit!) ──
+    if len(prev_nums) >= 5:
+        p4, p5 = prev_nums[3], prev_nums[4]
+        concat = f"{p4}{p5}"
+        digits = [int(c) for c in concat]
+        
+        # Cross-digit pairs (21.1% — STRONGEST method!)
+        p4_digs = [int(c) for c in str(p4)]
+        p5_digs = [int(c) for c in str(p5)]
+        for d4 in p4_digs:
+            for d5 in p5_digs:
+                for cross in [d4*10+d5, d5*10+d4]:
+                    if 1 <= cross <= 50:
+                        evidence[cross].add(f"P4P5-CROSS({p4},{p5})")
+                    elif cross > 50 and 1 <= cross-50 <= 50:
+                        evidence[cross-50].add(f"P4P5-CROSS-50({cross})")
+        
+        # All digit pairs
+        pairs = set()
+        for a in range(len(digits)):
+            for b in range(len(digits)):
+                if a != b:
+                    num = digits[a]*10 + digits[b]
+                    if num > 0: pairs.add(num)
+        for p in pairs:
+            if 1 <= p <= 50:
+                evidence[p].add(f"P4P5-hidden({p4},{p5})")
+            elif p > 50 and 1 <= p-50 <= 50:
+                evidence[p-50].add(f"P4P5-minus50({p})")
     
     # ── 10. STAR→Q COUNT ──
     if target_date and len(draws) >= 10:
@@ -3395,6 +3409,56 @@ def find_suspects(draws: List[Dict], target_date: str = None, swiss_draws: List[
             if c_sw and 1 <= c_sw <= 50:
                 evidence[c_sw].add("swiss-P1-circle")
     
+    # ── 13. NEXT DATE PRE-LOADING (42% hit when date absent!) ──
+    if target_date and day and month:
+        try:
+            from datetime import datetime as dt_cls, timedelta
+            curr_dt = dt_cls.strptime(target_date, "%d.%m.%Y")
+            for offset in range(1, 8):
+                next_dt = curr_dt + timedelta(days=offset)
+                if next_dt.weekday() in [1, 4]:  # Tue or Fri
+                    nday = next_dt.day
+                    nmonth = next_dt.month
+                    if 1 <= nday <= 50:
+                        evidence[nday].add(f"NEXT-DATE({next_dt.strftime('%d.%m')})")
+                    ndc = circle(nday) if 1 <= nday <= 50 else None
+                    if ndc:
+                        evidence[ndc].add(f"NEXT-CIRCLE({next_dt.strftime('%d.%m')})")
+                    for c in flip_circle_chain(nday) if 1 <= nday <= 50 else []:
+                        if 1 <= c <= 50:
+                            evidence[c].add(f"NEXT-CHAIN({next_dt.strftime('%d.%m')})")
+                    ndm = nday + nmonth
+                    if 1 <= ndm <= 50:
+                        evidence[ndm].add(f"NEXT-D+M({next_dt.strftime('%d.%m')})")
+                    break
+        except: pass
+    
+    # ── 14. DATE STRENGTH + WEAK-DATE BOOST ──
+    date_strength = 0
+    if day and month:
+        if 1 <= day <= 50: date_strength += 1
+        dc = circle(day) if 1 <= day <= 50 else None
+        if dc: date_strength += 1
+        ch = flip_circle_chain(day) if 1 <= day <= 50 else []
+        if len(ch) >= 2: date_strength += 1
+        dm = day + month
+        if 1 <= dm <= 50: date_strength += 1
+        if day >= 10: date_strength += 1
+    
+    date_strong = date_strength >= 3
+    explanations.append(f"DATE STRENGTH: {date_strength}/5 ({'STRONG' if date_strong else 'WEAK'})")
+    
+    if not date_strong:
+        # Boost prev draw patterns when date is weak
+        for n in prev_nums:
+            if n-1 >= 1: evidence[n-1].add("WEAK-BOOST-neighbour")
+            if n+1 <= 50: evidence[n+1].add("WEAK-BOOST-neighbour")
+            evidence[circle(n)].add("WEAK-BOOST-circle")
+            f = flip(n)
+            if 1 <= f <= 50 and f != n:
+                evidence[f].add("WEAK-BOOST-flip")
+        explanations.append("DATE WEAK -> prev draw BOOSTED")
+    
     # ── BUILD SUSPECT LIST ──
     suspects = []
     for n in range(1, 51):
@@ -3414,7 +3478,9 @@ def find_suspects(draws: List[Dict], target_date: str = None, swiss_draws: List[
     return {
         "suspects": suspects,
         "evidence": evidence,
-        "explanations": explanations
+        "explanations": explanations,
+        "date_strength": date_strength,
+        "date_strong": date_strong
     }
 
 
