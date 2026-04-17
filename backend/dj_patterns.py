@@ -3409,7 +3409,21 @@ def find_suspects(draws: List[Dict], target_date: str = None, swiss_draws: List[
             if c_sw and 1 <= c_sw <= 50:
                 evidence[c_sw].add("swiss-P1-circle")
     
-    # ── 13. NEXT DATE PRE-LOADING (42% hit when date absent!) ──
+    # ── 13. MULTI-DRAW LOOKBACK (d-2: 74.7%, d-3: 70%!) ──
+    if len(draws) >= 3:
+        for lookback in [1, 2]:  # d-2 and d-3 (draws[1] and draws[2])
+            lb_draw = draws[lookback]
+            lb_nums = sorted(lb_draw.get('numbers', []))
+            lb_label = f"d-{lookback+1}"
+            for n in lb_nums:
+                for c in flip_circle_chain(n):
+                    if 1 <= c <= 50:
+                        evidence[c].add(f"{lb_label}-chain({n})")
+                circ = circle(n)
+                if 1 <= circ <= 50:
+                    evidence[circ].add(f"{lb_label}-circle({n})")
+    
+    # ── 14. NEXT DATE PRE-LOADING (42% hit when date absent!) ──
     if target_date and day and month:
         try:
             from datetime import datetime as dt_cls, timedelta
