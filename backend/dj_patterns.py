@@ -3241,12 +3241,313 @@ def dj_select_numbers(candidates: Dict, star_candidates: List[int], locked: Dict
     }
 
 
-def dj_generate_ticket(draws: List[Dict], target_date: str = None, locked: Dict = None, swiss_draws: List[Dict] = None) -> Dict:
+def find_suspects(draws: List[Dict], target_date: str = None, swiss_draws: List[Dict] = None) -> dict:
+    """
+    🔍 THE DETECTIVE — Find where all patterns CONVERGE!
+    
+    Runs every pattern, scores each number by how many DIFFERENT patterns
+    point to it. Numbers with 3+ pattern convergence are PRIME SUSPECTS.
+    
+    Returns suspects ranked by conviction level, with their family alternatives.
+    """
+    if not draws:
+        return {"suspects": [], "star_suspects": [], "explanations": []}
+    
+    prev_draw = draws[0]
+    prev_nums = sorted(prev_draw['numbers'])
+    prev_stars = sorted(prev_draw.get('stars', []))
+    
+    # Each number gets a set of REASONS (unique pattern names)
+    evidence = {n: set() for n in range(1, 51)}
+    star_evidence = {s: set() for s in range(1, 13)}
+    explanations = []
+    
+    # ── 1. FLIP+CIRCLE CHAIN ──
+    for n in prev_nums:
+        for c in flip_circle_chain(n):
+            if 1 <= c <= 50:
+                evidence[c].add(f"chain({n})")
+    
+    # ── 2. CIRCLES ──
+    for n in prev_nums:
+        c = circle(n)
+        evidence[c].add(f"circle({n})")
+    
+    # ── 3. NEIGHBOURHOOD ──
+    for n in prev_nums:
+        if n-1 >= 1: evidence[n-1].add(f"neighbour({n})")
+        if n+1 <= 50: evidence[n+1].add(f"neighbour({n})")
+    
+    # ── 4. HUNGRY ──
+    for i in range(len(prev_nums)-1):
+        if prev_nums[i+1] - prev_nums[i] == 2:
+            h = prev_nums[i] + 1
+            evidence[h].add(f"HUNGRY({prev_nums[i]},{prev_nums[i+1]})")
+    
+    # ── 5. ADDITION ──
+    for i in range(len(prev_nums)):
+        for j in range(i+1, len(prev_nums)):
+            s = prev_nums[i] + prev_nums[j]
+            if 1 <= s <= 50:
+                evidence[s].add(f"add({prev_nums[i]}+{prev_nums[j]})")
+    
+    # ── 6. SUM FAMILY ──
+    total = sum(prev_nums)
+    last_d = total % 10
+    for n in range(1, 51):
+        if n % 10 == last_d:
+            evidence[n].add(f"sum-family({total})")
+    
+    # ── 7. REPEAT ──
+    for n in prev_nums:
+        evidence[n].add("repeat")
+    
+    # ── 8. DATE READING ──
+    if target_date:
+        dr = date_reading(target_date)
+        for n in dr.get("numbers", []):
+            if 1 <= n <= 50:
+                evidence[n].add("date-number")
+        for d in dr.get("digits", set()):
+            for n in range(1, 51):
+                if str(d) in str(n):
+                    evidence[n].add(f"date-digit({d})")
+    
+    # ── 9. P4-P5 HIDDEN (cross digit pairs) ──
+    p4, p5 = prev_nums[3], prev_nums[4]
+    concat = f"{p4}{p5}"
+    digits = [int(c) for c in concat]
+    pairs = set()
+    for a in range(len(digits)):
+        for b in range(len(digits)):
+            if a != b:
+                num = digits[a]*10 + digits[b]
+                if num > 0: pairs.add(num)
+    for p in pairs:
+        if 1 <= p <= 50:
+            evidence[p].add(f"P4P5-hidden({p4},{p5})")
+        elif p > 50 and 1 <= p-50 <= 50:
+            evidence[p-50].add(f"P4P5-minus50({p})")
+    
+    # ── 10. STAR→Q COUNT ──
+    if target_date and len(draws) >= 10:
+        try:
+            from datetime import datetime as dt_cls
+            current_date = dt_cls.strptime(target_date, "%d.%m.%Y")
+            current_q = (current_date.month - 1) // 3 + 1
+            current_year = current_date.year
+            prev_q = current_q - 1 if current_q > 1 else 4
+            prev_year = current_year if current_q > 1 else current_year - 1
+            pqs, pqe = (prev_q-1)*3+1, prev_q*3
+            
+            prev_q_draws = []
+            for d in draws:
+                try:
+                    dd = dt_cls.strptime(d['date'], "%d.%m.%Y")
+                    if dd.year == prev_year and pqs <= dd.month <= pqe:
+                        prev_q_draws.append(d)
+                except: continue
+            prev_q_draws.sort(key=lambda x: dt_cls.strptime(x['date'], "%d.%m.%Y"))
+            
+            if prev_q_draws and prev_stars:
+                sq = star_q_count_decode(prev_stars, prev_q_draws)
+                for val, w, reason in sq.get("p1_candidates", []):
+                    if 1 <= val <= 50:
+                        evidence[val].add(f"star-Q({reason[:20]})")
+                for val, w, reason in sq.get("p2_candidates", []):
+                    if 1 <= val <= 50:
+                        evidence[val].add(f"star-Q-digit")
+        except: pass
+    
+    # ── 11. FLIP of prev numbers (simple) ──
+    for n in prev_nums:
+        f = flip(n)
+        if 1 <= f <= 50 and f != n:
+            evidence[f].add(f"flip({n})")
+    
+    # ── 12. CROSS-LOTTERY (Swiss→Euro) ──
+    if swiss_draws:
+        sw = sorted(swiss_draws[0].get('numbers', []))
+        if sw:
+            sw_p1 = sw[0]
+            evidence[sw_p1].add("swiss-P1-bridge")
+            c_sw = circle(sw_p1) if sw_p1 <= 50 else None
+            if c_sw and 1 <= c_sw <= 50:
+                evidence[c_sw].add("swiss-P1-circle")
+    
+    # ── BUILD SUSPECT LIST ──
+    suspects = []
+    for n in range(1, 51):
+        count = len(evidence[n])
+        if count >= 2:  # At least 2 different patterns
+            # Build family
+            fam = flip_circle_chain(n)
+            suspects.append({
+                "number": n,
+                "conviction": count,
+                "patterns": sorted(evidence[n]),
+                "family": [f for f in fam if 1 <= f <= 50]
+            })
+    
+    suspects.sort(key=lambda x: -x["conviction"])
+    
+    return {
+        "suspects": suspects,
+        "evidence": evidence,
+        "explanations": explanations
+    }
+
+
+def dj_generate_ticket_v2(draws: List[Dict], target_date: str = None, locked: Dict = None, 
+                           swiss_draws: List[Dict] = None, ticket_index: int = 0, total_tickets: int = 1) -> Dict:
+    """
+    🎧 V2 TICKET GENERATOR — Suspect-Based! 🔍
+    
+    1. Find suspects (convergence of all patterns)
+    2. Top suspects with 3+ patterns = LOCKED into 60% of tickets
+    3. Remaining tickets use family alternatives (circle/flip of suspects)
+    4. Stars predicted from star progression + star-Q decode
+    """
+    available_swiss = swiss_draws
+    if not available_swiss and hasattr(dj_generate_ticket, 'swiss_draws'):
+        available_swiss = dj_generate_ticket.swiss_draws
+    
+    # Find suspects
+    suspect_result = find_suspects(draws, target_date, swiss_draws=available_swiss)
+    suspects = suspect_result["suspects"]
+    
+    # Also get regular candidates for fallback
+    result = dj_generate_candidates(draws, target_date, swiss_draws=available_swiss)
+    
+    prev_nums = sorted(draws[0]['numbers'])
+    prev_stars = sorted(draws[0].get('stars', []))
+    
+    # Decide: story ticket (60%) or family ticket (40%)
+    use_direct = (ticket_index / max(total_tickets, 1)) < 0.6
+    
+    selected = []
+    used = set()
+    
+    # Handle locked positions
+    locked = locked or {}
+    for pos, val in locked.items():
+        if isinstance(pos, int) and 1 <= val <= 50:
+            used.add(val)
+    
+    if suspects:
+        # Top suspects sorted by conviction
+        prime = [s for s in suspects if s["conviction"] >= 3][:7]
+        secondary = [s for s in suspects if s["conviction"] == 2][:10]
+        
+        if use_direct:
+            # STORY TICKET — use prime suspects, but vary which ones
+            # Shuffle among top suspects with some randomness
+            prime_pool = list(prime)
+            rnd.shuffle(prime_pool)
+            # Always include top 2-3, randomize the rest
+            must_have = prime_pool[:min(3, len(prime_pool))]
+            rest = prime_pool[3:] + secondary[:5]
+            rnd.shuffle(rest)
+            
+            for s in must_have:
+                n = s["number"]
+                if n not in used and len(selected) < 5:
+                    selected.append(n)
+                    used.add(n)
+            for s in rest:
+                n = s["number"]
+                if n not in used and len(selected) < 5:
+                    selected.append(n)
+                    used.add(n)
+        else:
+            # FAMILY TICKET — use suspect families (circles, flips)
+            for s in prime[:3]:
+                n = s["number"]
+                # Pick from family instead
+                fam = [f for f in s["family"] if f not in used and 1 <= f <= 50]
+                if fam and len(selected) < 5:
+                    pick = rnd.choice(fam)
+                    selected.append(pick)
+                    used.add(pick)
+            # Add some direct from secondary
+            for s in secondary:
+                n = s["number"]
+                if n not in used and len(selected) < 5:
+                    selected.append(n)
+                    used.add(n)
+    
+    # Fill remaining from weighted candidates
+    while len(selected) < 5:
+        pos = len(selected)
+        pool = [c for c in result["candidates"].get(pos, []) if c not in used and 1 <= c <= 50]
+        if pool:
+            pick = rnd.choice(pool)
+        else:
+            pick = rnd.choice([n for n in range(1, 51) if n not in used])
+        selected.append(pick)
+        used.add(pick)
+    
+    selected = sorted(selected)
+    
+    # ── SPREAD GUARANTEE (3+ decades) ──
+    decades = set((n-1)//10 for n in selected)
+    retry = 0
+    while len(decades) < 3 and retry < 10:
+        retry += 1
+        decade_counts = {}
+        for n in selected:
+            d = (n-1)//10
+            decade_counts[d] = decade_counts.get(d, 0) + 1
+        crowded = max(decade_counts, key=decade_counts.get)
+        missing = [d for d in range(5) if d not in decades]
+        if not missing: break
+        target_decade = rnd.choice(missing)
+        decade_range = [n for n in range(target_decade*10+1, target_decade*10+11) if 1<=n<=50 and n not in selected]
+        if not decade_range: continue
+        replaceable = [i for i, n in enumerate(selected) if (n-1)//10 == crowded]
+        if replaceable:
+            selected[replaceable[-1]] = rnd.choice(decade_range)
+            decades = set((n-1)//10 for n in selected)
+    
+    selected = sorted(selected)
+    
+    # ── STARS ──
+    star_pool = result.get("star_candidates", list(range(1, 13)))
+    if not star_pool: star_pool = list(range(1, 13))
+    star_pool = [s for s in star_pool if 1 <= s <= 12]
+    if not star_pool: star_pool = list(range(1, 13))
+    
+    star1 = rnd.choice(star_pool)
+    star_pool2 = [s for s in star_pool if s != star1]
+    star2 = rnd.choice(star_pool2) if star_pool2 else (star1 % 12 + 1)
+    
+    # Build patterns description
+    patterns = result.get("patterns", [])
+    suspect_info = []
+    for s in suspects[:5]:
+        suspect_info.append(f"🔍 SUSPECT {s['number']} (conviction:{s['conviction']}): {', '.join(s['patterns'][:3])}")
+    
+    return {
+        "numbers": selected,
+        "stars": sorted([star1, star2]),
+        "patterns_used": suspect_info + patterns[:20],
+        "suspects": [(s["number"], s["conviction"]) for s in suspects[:10]],
+        "ticket_type": "story" if use_direct else "family",
+        "prev_draw": {"numbers": prev_nums, "stars": prev_stars}
+    }
+
+
+
+def dj_generate_ticket(draws: List[Dict], target_date: str = None, locked: Dict = None, swiss_draws: List[Dict] = None, use_v2: bool = True, ticket_index: int = 0, total_tickets: int = 1) -> Dict:
     """
     🎧 Generate a single ticket using the DJ engine
-    👑 Now with P1 KING and P2 PRINCE patterns!
-    🍀 Now with Cross-Lottery (Swiss → Euro) patterns!
+    V2: Suspect-based detective mode (default)
+    V1: Original weighted random (fallback)
     """
+    if use_v2:
+        return dj_generate_ticket_v2(draws, target_date, locked, swiss_draws, ticket_index, total_tickets)
+    
+    # V1 original flow
     # Get swiss_draws from parameter or function attribute
     available_swiss = swiss_draws
     if not available_swiss and hasattr(dj_generate_ticket, 'swiss_draws'):
