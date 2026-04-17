@@ -6,7 +6,7 @@ and predicting the next 10 draws with learning capabilities.
 
 PROVEN BY 30 SIMULATIONS:
 - Sleepers wake 88% of the time within 20 draws
-- 72% of wakers are TEASED first (circle/reverse/neighbor)
+- 72% of wakers are TEASED first (circle/flip/neighbor)
 - Circle-boosted sleepers wake 1.1x FASTER
 - 3x+ overdue numbers wake at 47.9% FAST rate
 
@@ -32,7 +32,7 @@ def circle(n: int, max_val: int = 50) -> int:
             c -= 50
     return c
 
-def reverse_num(n: int) -> int:
+def flip(n: int) -> int:
     """Reverse digits, keep in range 1-50"""
     if n < 10:
         return n
@@ -185,10 +185,10 @@ def detect_sleepers(draws: List[dict], num_range: int = 50,
                 
                 if not is_stars:
                     # Reverse appeared
-                    rev = reverse_num(num)
+                    rev = flip(num)
                     if rev != num and rev in rd_nums:
                         tease_score += 1.5
-                        tease_details.append("reverse(%d)" % rev)
+                        tease_details.append("flip(%d)" % rev)
                     
                     # Neighbor ±1 appeared
                     if (num - 1) >= 1 and (num - 1) in rd_nums:
@@ -400,7 +400,7 @@ def evaluate_prediction(prediction: SleeperPrediction, actual_draw: dict) -> dic
     num_hits = pred_nums.intersection(actual_nums)
     star_hits = pred_stars.intersection(actual_stars)
     
-    # Check near misses (±1, circle, reverse)
+    # Check near misses (±1, circle, flip)
     near_misses = []
     for pn in pred_nums:
         if pn not in actual_nums:
@@ -409,8 +409,8 @@ def evaluate_prediction(prediction: SleeperPrediction, actual_draw: dict) -> dic
                     near_misses.append((pn, an, "neighbor"))
                 elif circle(pn) == an:
                     near_misses.append((pn, an, "circle"))
-                elif reverse_num(pn) == an:
-                    near_misses.append((pn, an, "reverse"))
+                elif flip(pn) == an:
+                    near_misses.append((pn, an, "flip"))
     
     return {
         'draw_offset': prediction.draw_offset,

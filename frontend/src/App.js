@@ -2554,6 +2554,7 @@ function App() {
                               .replace(/teased:/g, 'echoed by:')
                               .replace(/circle\((\d+)\)/g, 'Saturn ring($1)')
                               .replace(/neighbor\((\d+)\)/g, 'Mercury orbit($1)')
+                              .replace(/flip\((\d+)\)/g, 'Neptune mirror($1)')
                               .replace(/reverse\((\d+)\)/g, 'Neptune mirror($1)')
                               .replace(/gap/g, 'distance');
                             return (

@@ -34,7 +34,7 @@ MEDIUM (12-25%):
 
 RARE BUT KEEP (<12%):
   - Circle Partner (+25): 9.3%
-  - Reverse Logic: 10.1%
+  - Flip Logic: 10.1%
   - P3 Hunger: 9.3%
   - P1 repeats: 2.4%
   - Consecutive triple: 2.9%
@@ -134,8 +134,8 @@ def circle(n: int) -> int:
         partner -= 50
     return partner
 
-def reverse_num(n: int) -> int:
-    """Reverse digits, mod 50 if needed"""
+def flip(n: int) -> int:
+    """Flip digits — 28 becomes 82, 4 stays 4. Mod 50 if needed"""
     if n < 10:
         return n
     rev = int(str(n)[::-1])
@@ -568,9 +568,9 @@ def pattern_circle_partner(n: int) -> int:
     """Circle +25 partner - 9.3%"""
     return circle(n)
 
-def pattern_reverse(n: int) -> int:
-    """Reverse digits - 10.1%"""
-    return reverse_num(n)
+def pattern_flip(n: int) -> int:
+    """Flip digits - 10.1%"""
+    return flip(n)
 
 def pattern_p3_hunger(nums: List[int]) -> List[int]:
     """
@@ -934,14 +934,14 @@ def pattern_group_shift(draws: List[Dict], window: int = 4) -> List[int]:
     return list(set(candidates))
 
 
-def pattern_reverse_dance(draws: List[Dict]) -> List[int]:
+def pattern_flip_dance(draws: List[Dict]) -> List[int]:
     """
-    🎧 REVERSE DANCE PATTERN 🎧
+    🎧 FLIP DANCE PATTERN 🎧
     
-    Numbers dance with their reverses!
+    Numbers dance with their flips!
     72 → 27, 47 echoes from 74, etc.
     
-    When X appears, reverse(X) is calling!
+    When X appears, flip(X) is calling!
     """
     if not draws:
         return []
@@ -1425,13 +1425,13 @@ def dj_generate_candidates(draws: List[Dict], target_date: str = None, swiss_dra
                 candidates[pos].extend([s] * 4)
         patterns_used.append(f"↔️ GROUP SHIFT: {shifted_nums[:5]}")
     
-    # Reverse Dance - Numbers dance with their reverses
-    reverse_dancers = pattern_reverse_dance(draws)
-    if reverse_dancers:
-        for r in reverse_dancers:
+    # Flip Dance - Numbers dance with their flips
+    flip_dancers = pattern_flip_dance(draws)
+    if flip_dancers:
+        for r in flip_dancers:
             for pos in range(5):
                 candidates[pos].extend([r] * 6)
-        patterns_used.append(f"🔄 REVERSE DANCE: {reverse_dancers}")
+        patterns_used.append(f"🔄 FLIP DANCE: {flip_dancers}")
     
     # ═══════════════════════════════════════════════════════════════════
     # 🎵 NEW DJ SESSION PATTERNS - April 2026 Discoveries! 🎵
@@ -1521,13 +1521,13 @@ def dj_generate_candidates(draws: List[Dict], target_date: str = None, swiss_dra
             candidates[pos].extend([circ] * WEIGHTS["circle_partner"])
     patterns_used.append(f"🎹 Circle partners (rare)")
     
-    # Reverse Logic - 10.1%
+    # Flip Logic - 10.1%
     for n in prev_nums:
         if n >= 10:
-            rev = pattern_reverse(n)
+            rev = pattern_flip(n)
             for pos in range(5):
                 candidates[pos].extend([rev] * WEIGHTS["reverse_logic"])
-    patterns_used.append(f"🎹 Reverse logic (rare)")
+    patterns_used.append(f"🎹 Flip logic")
     
     # P3 Hunger - 9.3%
     hungry = pattern_p3_hunger(prev_nums)
@@ -1707,7 +1707,7 @@ def dj_generate_candidates(draws: List[Dict], target_date: str = None, swiss_dra
     # REVERSE TWIN GENERATOR (P1 pattern - new!)
     # If N appeared, reverse(N) is calling!
     # ═══════════════════════════════════════════════════════════════════
-    rev_twin_result = pattern_reverse_twin(prev_draw)
+    rev_twin_result = pattern_flip_twin(prev_draw)
     for num, weight, reason in rev_twin_result.get('candidates', []):
         if 1 <= num <= 50:
             for pos in range(5):
@@ -2545,12 +2545,11 @@ def pattern_day_equals_star(target_date: str) -> Dict:
 # NEW P1 PATTERNS - April 2026 Session (Fork 3)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def pattern_reverse_twin(prev_draw: Dict) -> Dict:
+def pattern_flip_twin(prev_draw: Dict) -> Dict:
     """
-    REVERSE TWIN GENERATOR
-    If N appears, check reverse(N) as a candidate!
-    14 appeared → check 41, 27 → 72 (mod 50 = 22), etc.
-    Also catches partial reverses: 14 → first digit 1, last digit 4 → 41
+    FLIP TWIN GENERATOR
+    If N appears, flip(N) is calling!
+    14 → 41, 28 → 82 → 32, single digits expand: 4 → 40
     """
     prev_nums = sorted(prev_draw['numbers'])
     candidates = []
@@ -2558,24 +2557,24 @@ def pattern_reverse_twin(prev_draw: Dict) -> Dict:
     
     for n in prev_nums:
         if n >= 10:
-            # Direct reverse
+            # Direct flip
             rev = int(str(n)[::-1])
             if rev > 50:
                 rev_mod = rev - 50 if rev <= 100 else rev % 50
                 if rev_mod == 0:
                     rev_mod = 50
                 if 1 <= rev_mod <= 50 and rev_mod != n and rev_mod not in prev_nums:
-                    candidates.append((rev_mod, 40, f"reverse({n})→{rev}→mod50={rev_mod}"))
-                    explanations.append(f"REVERSE TWIN: {n} → reverse={rev} → {rev_mod}")
+                    candidates.append((rev_mod, 40, f"flip({n})→{rev}→{rev_mod}"))
+                    explanations.append(f"FLIP TWIN: {n} → flip={rev} → {rev_mod}")
             elif 1 <= rev <= 50 and rev != n and rev not in prev_nums:
-                candidates.append((rev, 50, f"reverse({n})={rev}"))
-                explanations.append(f"REVERSE TWIN: {n} → {rev}")
+                candidates.append((rev, 50, f"flip({n})={rev}"))
+                explanations.append(f"FLIP TWIN: {n} → {rev}")
         else:
-            # Single digit: 4 → 40 (4 with 0 appended)
+            # Single digit: 4 → 40 (digit flips position)
             expanded = n * 10
             if 1 <= expanded <= 50 and expanded not in prev_nums:
-                candidates.append((expanded, 30, f"expand({n})={expanded}"))
-                explanations.append(f"REVERSE TWIN: {n} → expand={expanded}")
+                candidates.append((expanded, 30, f"flip({n})={expanded}"))
+                explanations.append(f"FLIP TWIN: {n} → {expanded}")
     
     return {
         'candidates': candidates,
@@ -3281,7 +3280,7 @@ def dj_generate_money_mode_ticket(draws: List[Dict], target_date: str = None, sw
     # ═══════════════════════════════════════════════════════════════════
     # REVERSE TWIN GENERATOR (new!)
     # ═══════════════════════════════════════════════════════════════════
-    rev_twin_result = pattern_reverse_twin(prev_draw)
+    rev_twin_result = pattern_flip_twin(prev_draw)
     for num, weight, reason in rev_twin_result.get('candidates', []):
         if 1 <= num <= 50:
             for pos in range(5):
