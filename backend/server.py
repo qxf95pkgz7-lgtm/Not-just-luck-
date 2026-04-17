@@ -77,7 +77,7 @@ class DashboardStats(BaseModel):
     last_draws: List[dict]
 
 class PatternData(BaseModel):
-    digit_reversals: List[dict]
+    digit_flips: List[dict]
     series_patterns: List[dict]
 
 class PredictionData(BaseModel):
@@ -87,7 +87,7 @@ class PredictionData(BaseModel):
     gap_analysis: List[dict]
 
 class AdvancedPatternData(BaseModel):
-    digit_reversals_in_draws: List[dict]  # 34 → 13 type patterns
+    digit_flips_in_draws: List[dict]  # 34 → 13 type patterns
     digit_sum_patterns: List[dict]  # 4+5=9, 9/3=3 type
     cross_draw_connections: List[dict]  # Numbers combining across draws
     series_completions: List[dict]  # 10-11-12 + 34(13) = full series
@@ -114,39 +114,39 @@ def get_families(numbers: List[int]) -> List[int]:
     """Return which group each number belongs to: 1 (1-21) or 2 (22-42)"""
     return [1 if n <= 21 else 2 for n in numbers]
 
-def find_digit_reversals(all_numbers: List[int]) -> List[dict]:
+def find_digit_flips(all_numbers: List[int]) -> List[dict]:
     """Find pairs like 12<->21, 13<->31, etc."""
-    reversals = []
+    flips = []
     number_counts = Counter(all_numbers)
     
     seen_pairs = set()
     for num in range(1, 43):
         if num < 10:
-            reversed_num = num * 10
+            flipped_num = num * 10
         else:
             tens = num // 10
             ones = num % 10
             if ones == 0:
                 continue
-            reversed_num = ones * 10 + tens
+            flipped_num = ones * 10 + tens
         
-        if reversed_num > 42 or reversed_num == num:
+        if flipped_num > 42 or flipped_num == num:
             continue
             
-        pair_key = tuple(sorted([num, reversed_num]))
+        pair_key = tuple(sorted([num, flipped_num]))
         if pair_key in seen_pairs:
             continue
         seen_pairs.add(pair_key)
         
-        if number_counts.get(num, 0) > 0 and number_counts.get(reversed_num, 0) > 0:
-            reversals.append({
+        if number_counts.get(num, 0) > 0 and number_counts.get(flipped_num, 0) > 0:
+            flips.append({
                 "num1": num,
-                "num2": reversed_num,
+                "num2": flipped_num,
                 "count1": number_counts[num],
-                "count2": number_counts[reversed_num]
+                "count2": number_counts[flipped_num]
             })
     
-    return reversals[:12]  # Top 12 pairs
+    return flips[:12]  # Top 12 pairs
 
 def find_series_patterns(draws: List[dict]) -> List[dict]:
     """Find consecutive number sequences in draws"""
@@ -217,11 +217,11 @@ def calculate_gap_analysis(draws: List[dict]) -> List[dict]:
     gaps.sort(key=lambda x: x['gap'], reverse=True)
     return gaps[:10]
 
-def reverse_digits(n: int) -> int:
-    """Reverse digits of a number: 34 → 43, 13 → 31"""
+def flip_digits(n: int) -> int:
+    """Flip digits of a number: 34 → 43, 13 → 31"""
     s = str(n)
     if len(s) == 1:
-        return n * 10  # 3 → 30? or keep as is
+        return n * 10  # 3 → 30
     return int(s[::-1])
 
 def digit_sum(n: int) -> int:
@@ -229,9 +229,9 @@ def digit_sum(n: int) -> int:
     return sum(int(d) for d in str(n))
 
 def find_advanced_patterns(draws: List[dict]) -> dict:
-    """Find advanced patterns like digit reversals, sums, and cross-draw connections"""
+    """Find advanced patterns like digit flips, sums, and cross-draw connections"""
     
-    digit_reversals_in_draws = []
+    digit_flips_in_draws = []
     digit_sum_patterns = []
     cross_draw_connections = []
     series_completions = []
@@ -240,36 +240,36 @@ def find_advanced_patterns(draws: List[dict]) -> dict:
         nums = draw['numbers']
         date = draw['date']
         
-        # 1. Digit Reversals within draw (34 in draw means 13 is implied)
+        # 1. Digit Flips within draw (34 in draw means 13 is implied)
         for n in nums:
             if n >= 10:
-                reversed_n = reverse_digits(n)
-                if reversed_n != n and 1 <= reversed_n <= 42:
-                    digit_reversals_in_draws.append({
+                flipped_n = flip_digits(n)
+                if flipped_n != n and 1 <= flipped_n <= 42:
+                    digit_flips_in_draws.append({
                         "date": date,
                         "number": n,
-                        "reversed": reversed_n,
-                        "in_draw": reversed_n in nums
+                        "flipped": flipped_n,
+                        "in_draw": flipped_n in nums
                     })
         
-        # 2. Find series that could be completed with reversals
+        # 2. Find series that could be completed with flips
         sorted_nums = sorted(nums)
         # Check for near-series (e.g., 10,11,12 and 34→13 completes it)
         for j in range(len(sorted_nums) - 2):
             if sorted_nums[j+1] == sorted_nums[j] + 1 and sorted_nums[j+2] == sorted_nums[j] + 2:
-                # Found 3 consecutive, check if 4th exists via reversal
+                # Found 3 consecutive, check if 4th exists via flip
                 next_in_series = sorted_nums[j] + 3
                 prev_in_series = sorted_nums[j] - 1
                 
                 for n in nums:
                     if n >= 10:
-                        rev = reverse_digits(n)
+                        rev = flip_digits(n)
                         if rev == next_in_series or rev == prev_in_series:
                             series_completions.append({
                                 "date": date,
                                 "series": [sorted_nums[j], sorted_nums[j+1], sorted_nums[j+2]],
                                 "completed_by": n,
-                                "as_reversed": rev,
+                                "as_flipped": rev,
                                 "full_series": sorted([sorted_nums[j], sorted_nums[j+1], sorted_nums[j+2], rev])
                             })
         
@@ -296,10 +296,10 @@ def find_advanced_patterns(draws: List[dict]) -> dict:
                             "sum_in_prev": dsum in prev_nums
                         })
                     
-                    # Combined number reversals: 4,5 → 45 → 54 → relates to 12 (5-4 or 5,4)
+                    # Combined number flips: 4,5 → 45 → 54 → relates to 12 (5-4 or 5,4)
                     if n1 < 10 and n2 < 10:
                         combo = n1 * 10 + n2
-                        combo_rev = reverse_digits(combo)
+                        combo_rev = flip_digits(combo)
                         ds = digit_sum(combo)
                         
                         # Check if digit sum or its factors appear
@@ -309,13 +309,13 @@ def find_advanced_patterns(draws: List[dict]) -> dict:
                                 "prev_date": prev_draw['date'],
                                 "numbers": [n1, n2],
                                 "combined": combo,
-                                "reversed": combo_rev,
+                                "flipped": combo_rev,
                                 "digit_sum": ds,
                                 "found_in": "current" if ds in nums else "previous"
                             })
     
     return {
-        "digit_reversals_in_draws": digit_reversals_in_draws[:50],
+        "digit_flips_in_draws": digit_flips_in_draws[:50],
         "digit_sum_patterns": digit_sum_patterns[:50],
         "cross_draw_connections": cross_draw_connections[:50],
         "series_completions": series_completions[:30]
@@ -335,7 +335,7 @@ def get_digit_links(n: int) -> set:
     d1, d2 = n // 10, n % 10
     rev = d2 * 10 + d1
     
-    # Direct reversal in range (12<->21, 13<->31, etc.)
+    # Direct flip in range (12<->21, 13<->31, etc.)
     if 10 <= rev <= 42 and rev != n:
         linked.add(rev)
     
@@ -344,11 +344,11 @@ def get_digit_links(n: int) -> set:
     if 1 <= prod <= 42:
         linked.add(prod)
     
-    # If reversal out of range (27->72, 18->81, etc.)
+    # If flip out of range (27->72, 18->81, etc.)
     if rev > 42:
         for x in range(10, 43):
-            # Pattern: x + rev = total, total reversed = x
-            # Example: 19 + 72 = 91, reverse(91) = 19 ✓
+            # Pattern: x + rev = total, total flipped = x
+            # Example: 19 + 72 = 91, flip(91) = 19 ✓
             total = x + rev
             if 10 <= total <= 99:
                 t_rev = (total % 10) * 10 + (total // 10)
@@ -646,7 +646,7 @@ async def get_patterns():
         all_numbers.extend(draw['numbers'])
     
     return PatternData(
-        digit_reversals=find_digit_reversals(all_numbers),
+        digit_flips=find_digit_flips(all_numbers),
         series_patterns=find_series_patterns(draws)
     )
 
@@ -816,13 +816,13 @@ def get_date_patterns(last_draw):
             "confidence": 12
         })
     
-    # Day reversed (4.6% hit rate)
+    # Day flipped (4.6% hit rate)
     if last_day >= 10:
         day_rev = int(str(last_day)[::-1])
         if 1 <= day_rev <= 42:
             patterns.append({
                 "number": day_rev,
-                "type": "prev_day_reversed",
+                "type": "prev_day_flipped",
                 "reason": f"Day rev ({last_day}→{day_rev})",
                 "confidence": 5
             })
@@ -1207,10 +1207,10 @@ async def get_master_prediction(
                     scores[other]["score"] += 8
                     scores[other]["reasons"].append(f"👨‍👩‍👧 Family: ends in {digit_family}")
     
-    # === 13. DISTANCE FAMILY (reverse - 42s) ===
+    # === 13. DISTANCE FAMILY (flip - 42s) ===
     def get_distance_family(n):
-        reversed_n = int(str(n)[::-1])
-        result = reversed_n
+        flipped_n = int(str(n)[::-1])
+        result = flipped_n
         while result > 42:
             result -= 42
         return result
@@ -1641,7 +1641,7 @@ async def get_master_prediction(
         # Circle partner (+/- 21)
         if num + 21 <= 42: conns.add(num + 21)
         if num - 21 >= 1: conns.add(num - 21)
-        # Digit reversal
+        # Digit flip
         if num >= 10:
             rev = int(str(num)[::-1])
             if 1 <= rev <= 42: conns.add(rev)
@@ -1937,7 +1937,7 @@ async def get_master_prediction(
                 scores[m]["reasons"].append(f"🍽️ Hungry: Family-{digit} chain {appeared}, gap {gap}")
     
     # === 33. MIRROR/REVERSE PATTERN (15% hit rate) ===
-    # Numbers from last draw often appear reversed in next draw
+    # Numbers from last draw often appear flipped in next draw
     # e.g., 13→31, 24→42, 30→3
     if most_recent:
         for n in most_recent['numbers']:
@@ -2663,7 +2663,7 @@ async def get_master_prediction(
                 
                 # 21's connections get boost
                 scores[12]["score"] += 15  # 21 reversed = 12
-                scores[12]["reasons"].append(f"✨✨✨ TRIPLE: 21↔12 reversal active")
+                scores[12]["reasons"].append(f"✨✨✨ TRIPLE: 21↔12 flip active")
                 
                 # Circle partners of 21
                 scores[42]["score"] += 12  # 21 + 21 = 42
