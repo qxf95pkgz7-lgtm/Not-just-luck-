@@ -3312,6 +3312,26 @@ def find_suspects(draws: List[Dict], target_date: str = None, swiss_draws: List[
             for n in range(1, 51):
                 if str(d) in str(n):
                     evidence[n].add(f"date-digit({d})")
+        # Day chain = 25.3% hit rate!
+        try:
+            day = int(target_date.split('.')[0])
+            month = int(target_date.split('.')[1])
+            if 1 <= day <= 50:
+                evidence[day].add("DAY-DIRECT(12.7%)")
+                dc = circle(day)
+                evidence[dc].add("DAY-CIRCLE(12%)")
+                dcf = flip(dc)
+                if 1 <= dcf <= 50:
+                    evidence[dcf].add("DAY-CIRCLE-FLIP")
+                for c in flip_circle_chain(day):
+                    if 1 <= c <= 50:
+                        evidence[c].add("DAY-CHAIN(25.3%)")
+            dm = day + month
+            if 1 <= dm <= 50:
+                evidence[dm].add("D+M")
+            if 1 <= day * month <= 50:
+                evidence[day * month].add("DxM")
+        except: pass
     
     # ── 9. P4-P5 HIDDEN (cross digit pairs) ──
     p4, p5 = prev_nums[3], prev_nums[4]
