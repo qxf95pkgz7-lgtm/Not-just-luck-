@@ -4127,12 +4127,76 @@ async def seed_data():
 
 @api_router.get("/prediction-history")
 async def get_prediction_history(limit: int = 100, lottery_type: str = None):
-    """Get prediction history with optional filtering"""
+    """Get prediction history with optional filtering.
+    
+    🎻 Enriches each entry with V2 Detective 'suspect_story' — the Circle, 
+    P4-P5, chain, date patterns that pointed to each number in the prediction.
+    Highlights ONE 'hero_number' with highest conviction.
+    """
     query = {}
     if lottery_type:
         query["lottery_type"] = lottery_type
     
     history = await db.prediction_history.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    # 🎧 Compute V2 Detective convictions once for the latest Swiss + Euro draw
+    try:
+        from dj_patterns import find_suspects
+        
+        swiss_draws = await db.draws.find({}, {"_id": 0}).to_list(5000)
+        def _pd(s):
+            try: return datetime.strptime(s, '%d.%m.%Y')
+            except: return datetime.min
+        swiss_draws.sort(key=lambda x: _pd(x.get('date', '')), reverse=True)
+        
+        euro_draws = []
+        async for d in db.euromillions_draws.find({}, {"_id": 0}):
+            euro_draws.append({"date": d.get("date", ""), "numbers": d.get("numbers", []), "stars": d.get("stars", [])})
+        euro_draws.sort(key=lambda x: _pd(x.get('date', '')), reverse=True)
+        
+        # Build pattern maps — one for Swiss, one for Euro
+        def _build_map(draws):
+            if not draws: return {}
+            # Compute next draw date: today → next Wed/Sat for Swiss, Tue/Fri for Euro (let find_suspects infer)
+            try:
+                res = find_suspects(draws[:15], target_date=None)
+                m = {}
+                for s in res.get("suspects", []):
+                    m[s["number"]] = {
+                        "conviction": s["conviction"],
+                        "patterns": s.get("patterns", [])[:4],
+                    }
+                return m
+            except Exception:
+                return {}
+        
+        swiss_map = _build_map(swiss_draws)
+        euro_map = _build_map(euro_draws)
+    except Exception:
+        swiss_map, euro_map = {}, {}
+    
+    # Enrich every history row
+    for h in history:
+        lot = h.get("lottery_type", "swiss")
+        pmap = euro_map if lot == "euro" else swiss_map
+        story = []
+        hero = None
+        hero_conv = 0
+        for n in h.get("numbers", []):
+            info = pmap.get(n)
+            if info and info["conviction"] >= 1:
+                story.append({
+                    "n": n,
+                    "conviction": info["conviction"],
+                    "patterns": info["patterns"],
+                })
+                if info["conviction"] > hero_conv:
+                    hero_conv = info["conviction"]
+                    hero = n
+        # Keep only top 3 most convicted
+        story.sort(key=lambda x: -x["conviction"])
+        h["suspect_story"] = story[:3]
+        h["hero_number"] = hero
     
     # Calculate stats
     total = len(history)

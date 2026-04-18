@@ -2476,6 +2476,42 @@ function App() {
                           <span className="ml-2 text-yellow-400">⭐ {h.stars.join(', ')}</span>
                         )}
                       </div>
+                      {/* 🎻 V2 Detective suspect story */}
+                      {h.suspect_story && h.suspect_story.length > 0 && (
+                        <div className="mt-1.5 pt-1.5 border-t border-slate-700/30">
+                          {h.hero_number != null && (
+                            <div className="text-[10px] mb-1 flex items-center gap-1 flex-wrap">
+                              <span className="text-fuchsia-400">🎻 Hero:</span>
+                              <span className="font-bold text-fuchsia-200">{h.hero_number}</span>
+                              <span className="text-slate-500">· convicted by</span>
+                              <span className="text-fuchsia-300">{h.suspect_story[0]?.conviction}×</span>
+                              <span className="text-slate-500">patterns</span>
+                            </div>
+                          )}
+                          <div className="space-y-0.5">
+                            {h.suspect_story.map((s, si) => (
+                              <div key={si} className="text-[10px] text-slate-400 flex items-start gap-1">
+                                <span className="text-indigo-300 font-mono w-5 flex-shrink-0">#{s.n}</span>
+                                <span className="text-slate-600">→</span>
+                                <span className="truncate" title={s.patterns.join(', ')}>
+                                  {s.patterns.slice(0, 2).map((p, pi) => (
+                                    <span key={pi} className="mr-1 px-1 rounded bg-indigo-500/10 text-indigo-300">{
+                                      p.replace(/WEAK-BOOST-/g, '')
+                                       .replace(/P4P5-CROSS-50/g, 'P4P5×')
+                                       .replace(/P4P5-CROSS/g, 'P4P5')
+                                       .replace(/P4P5-hidden/g, 'P4P5·h')
+                                       .replace(/DAY-CHAIN/g, 'DATE')
+                                       .replace(/DAY-DIRECT/g, 'DAY')
+                                       .replace(/NEXT-DATE/g, 'NEXT-D')
+                                       .replace(/star-Q/g, '⭐Q')
+                                    }</span>
+                                  ))}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       {h.matches !== null && h.matches !== undefined && (
                         <div className="mt-1 text-emerald-400">
                           ✓ {h.matches} match{h.matches !== 1 ? 'es' : ''}
