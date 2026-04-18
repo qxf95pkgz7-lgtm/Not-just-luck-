@@ -3513,10 +3513,11 @@ async def get_swiss_money_mode(
     
     # Ticket limit check
     if visitor_id:
-        used = await _count_visitor_tickets(visitor_id)
-        if used >= TICKET_LIMIT:
-            raise HTTPException(status_code=429, detail=f"Ticket limit reached! You've generated {used}/{TICKET_LIMIT} tickets for the next draw.")
-        num_tickets = min(num_tickets, TICKET_LIMIT - used)
+        if not await _is_visitor_unlimited(visitor_id):
+            used = await _count_visitor_tickets(visitor_id)
+            if used >= TICKET_LIMIT:
+                raise HTTPException(status_code=429, detail=f"Ticket limit reached! You've generated {used}/{TICKET_LIMIT} tickets for the next draw.")
+            num_tickets = min(num_tickets, TICKET_LIMIT - used)
     
     num_tickets = max(2, min(20, num_tickets))
     
@@ -5031,6 +5032,14 @@ async def get_active_users():
 
 # ─── TICKET LIMIT (12 per user per draw period — resets when new draw lands) ─────────────
 TICKET_LIMIT = 12
+MASTER_PROMO_CODE = "93928"  # 🎻 VIP bypass — unlimited tickets for holder
+
+async def _is_visitor_unlimited(visitor_id: str) -> bool:
+    """Check if this visitor has redeemed a valid promo code."""
+    if not visitor_id:
+        return False
+    doc = await db.promo_redeemed.find_one({"visitor_id": visitor_id})
+    return bool(doc and doc.get("unlimited"))
 
 def _get_next_draw_dates():
     """Get next Swiss and Euro draw dates."""
@@ -5066,9 +5075,39 @@ async def _count_visitor_tickets(visitor_id: str, mode: str = "swiss") -> int:
 async def check_ticket_limit(visitor_id: str = "", mode: str = "swiss"):
     """Check how many tickets a visitor has left for a specific lottery."""
     if not visitor_id:
-        return {"used": 0, "limit": TICKET_LIMIT, "remaining": TICKET_LIMIT}
+        return {"used": 0, "limit": TICKET_LIMIT, "remaining": TICKET_LIMIT, "unlimited": False}
+    # 🎻 VIP promo bypass
+    if await _is_visitor_unlimited(visitor_id):
+        used = await _count_visitor_tickets(visitor_id, mode)
+        return {"used": used, "limit": 9999, "remaining": 9999, "unlimited": True}
     used = await _count_visitor_tickets(visitor_id, mode)
-    return {"used": used, "limit": TICKET_LIMIT, "remaining": max(0, TICKET_LIMIT - used)}
+    return {"used": used, "limit": TICKET_LIMIT, "remaining": max(0, TICKET_LIMIT - used), "unlimited": False}
+
+
+class RedeemCodeRequest(BaseModel):
+    visitor_id: str
+    code: str
+
+@api_router.post("/redeem-code")
+async def redeem_promo_code(request: RedeemCodeRequest):
+    """🎻 Redeem a promo code. Valid codes unlock unlimited tickets for the visitor."""
+    if not request.visitor_id:
+        raise HTTPException(status_code=400, detail="Missing visitor_id")
+    code = (request.code or "").strip()
+    if code != MASTER_PROMO_CODE:
+        raise HTTPException(status_code=400, detail="Invalid code")
+    # Upsert redemption record
+    await db.promo_redeemed.update_one(
+        {"visitor_id": request.visitor_id},
+        {"$set": {
+            "visitor_id": request.visitor_id,
+            "unlimited": True,
+            "redeemed_at": datetime.now(timezone.utc).isoformat(),
+            "code_used": code,
+        }},
+        upsert=True,
+    )
+    return {"success": True, "unlimited": True, "message": "🎻 VIP unlocked — unlimited tickets!"}
 
 # Include the router in the main app
 app.include_router(api_router)

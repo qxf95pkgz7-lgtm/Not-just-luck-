@@ -537,6 +537,10 @@ function App() {
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [ticketCounter, setTicketCounter] = useState(0);
+  const [isUnlimited, setIsUnlimited] = useState(false);
+  const [showCodeInput, setShowCodeInput] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoMsg, setPromoMsg] = useState(null);
   const [nextDrawTickets, setNextDrawTickets] = useState(0);
   const [nextDrawDate, setNextDrawDate] = useState('');
   const [pendingTickets, setPendingTickets] = useState([]);
@@ -846,7 +850,31 @@ function App() {
       setNextDrawDate(res.data.next_date || '');
     } catch (e) {}
   };
-  useEffect(() => { fetchTicketCounter(); fetchPendingTickets(); }, [lotteryMode]);
+  // 🎻 Check VIP/unlimited status from backend
+  const fetchUnlimitedStatus = async () => {
+    try {
+      const vid = localStorage.getItem('lj_visitor_id') || '';
+      if (!vid) return;
+      const res = await axios.get(`${API}/ticket-limit?visitor_id=${encodeURIComponent(vid)}&mode=${lotteryMode === 'swiss' ? 'swiss' : 'euromillions'}`);
+      setIsUnlimited(!!res.data.unlimited);
+    } catch (e) {}
+  };
+  // 🎻 Redeem promo code
+  const redeemPromoCode = async () => {
+    const vid = localStorage.getItem('lj_visitor_id') || '';
+    if (!vid) { setPromoMsg({ ok: false, text: 'Please wait — loading...' }); return; }
+    if (!promoCode.trim()) { setPromoMsg({ ok: false, text: 'Enter a code' }); return; }
+    try {
+      const res = await axios.post(`${API}/redeem-code`, { visitor_id: vid, code: promoCode.trim() });
+      setIsUnlimited(!!res.data.unlimited);
+      setPromoMsg({ ok: true, text: res.data.message || 'VIP unlocked!' });
+      setPromoCode('');
+      setTimeout(() => setShowCodeInput(false), 1200);
+    } catch (e) {
+      setPromoMsg({ ok: false, text: e.response?.data?.detail || 'Invalid code' });
+    }
+  };
+  useEffect(() => { fetchTicketCounter(); fetchPendingTickets(); fetchUnlimitedStatus(); }, [lotteryMode]);
 
   // ─── ACTIVE USER HEARTBEAT ───────────────────────
   useEffect(() => {
@@ -1662,8 +1690,51 @@ function App() {
           </div>
         </div>
         {/* Ticket Limit Notice */}
-        <div className="mb-3 px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700/40 flex items-center justify-center gap-2" data-testid="ticket-limit-notice">
-          <span className="text-slate-500 text-xs">You can generate up to <span className="text-amber-400 font-semibold">12 tickets</span> per {lotteryMode === 'swiss' ? 'Swiss Lotto' : 'EuroMillions'} draw <span className="text-slate-600">• auto-resets on new draw</span></span>
+        <div className="mb-3 px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700/40 flex flex-col items-center justify-center gap-1.5" data-testid="ticket-limit-notice">
+          {isUnlimited ? (
+            <span className="text-xs flex items-center gap-1.5 flex-wrap justify-center">
+              <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-fuchsia-500/30 to-amber-500/30 text-amber-200 font-semibold">🎻 VIP unlocked</span>
+              <span className="text-slate-400">— unlimited tickets on {lotteryMode === 'swiss' ? 'Swiss Lotto' : 'EuroMillions'}</span>
+            </span>
+          ) : (
+            <span className="text-slate-500 text-xs text-center">You can generate up to <span className="text-amber-400 font-semibold">12 tickets</span> per {lotteryMode === 'swiss' ? 'Swiss Lotto' : 'EuroMillions'} draw <span className="text-slate-600">• auto-resets on new draw</span></span>
+          )}
+          {!isUnlimited && (
+            <button
+              onClick={() => { setShowCodeInput(!showCodeInput); setPromoMsg(null); }}
+              className="text-[11px] text-slate-400 hover:text-amber-300 underline decoration-dotted"
+              data-testid="promo-code-toggle"
+            >
+              {showCodeInput ? 'close' : 'Have a code?'}
+            </button>
+          )}
+          {showCodeInput && !isUnlimited && (
+            <div className="flex items-center gap-2 mt-1 w-full max-w-xs">
+              <input
+                type="text"
+                inputMode="numeric"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') redeemPromoCode(); }}
+                placeholder="Enter code"
+                className="flex-1 px-2.5 py-1 rounded-md bg-slate-900/60 border border-slate-700 text-slate-200 text-xs focus:outline-none focus:border-amber-400 placeholder-slate-600"
+                data-testid="promo-code-input"
+                autoFocus
+              />
+              <button
+                onClick={redeemPromoCode}
+                className="px-3 py-1 rounded-md bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-medium whitespace-nowrap transition-all"
+                data-testid="promo-code-submit"
+              >
+                Unlock 🎻
+              </button>
+            </div>
+          )}
+          {promoMsg && (
+            <span className={`text-[11px] ${promoMsg.ok ? 'text-emerald-400' : 'text-rose-400'}`} data-testid="promo-code-msg">
+              {promoMsg.text}
+            </span>
+          )}
         </div>
         <div className="lucky-card p-6 mb-6" style={lotteryMode === 'euro' ? { background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(2,6,23,0.98) 100%)', borderColor: 'rgba(59,130,246,0.3)' } : {}}>
           <div className="flex items-center justify-center gap-3 mb-6">

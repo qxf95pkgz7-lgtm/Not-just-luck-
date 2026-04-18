@@ -2484,11 +2484,12 @@ def create_euromillions_router(db):
         
         # Ticket limit check
         if request.visitor_id:
-            from server import _count_visitor_tickets, TICKET_LIMIT
-            used = await _count_visitor_tickets(request.visitor_id, "euro")
-            if used >= TICKET_LIMIT:
-                raise HTTPException(status_code=429, detail=f"Ticket limit reached! You've generated {used}/{TICKET_LIMIT} tickets for the next draw.")
-            request.num_tickets = min(request.num_tickets, TICKET_LIMIT - used)
+            from server import _count_visitor_tickets, TICKET_LIMIT, _is_visitor_unlimited
+            if not await _is_visitor_unlimited(request.visitor_id):
+                used = await _count_visitor_tickets(request.visitor_id, "euro")
+                if used >= TICKET_LIMIT:
+                    raise HTTPException(status_code=429, detail=f"Ticket limit reached! You've generated {used}/{TICKET_LIMIT} tickets for the next draw.")
+                request.num_tickets = min(request.num_tickets, TICKET_LIMIT - used)
         
         draws = await get_euromillions_draws()
         
