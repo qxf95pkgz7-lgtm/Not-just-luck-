@@ -2493,29 +2493,29 @@ function App() {
                                 </div>
                                 <span className="text-xs text-slate-400 w-8 text-right">{s.composite_score.toFixed(0)}</span>
                               </div>
-                              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                                <span className="text-[10px] text-slate-500">
+                              <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                                <span className="text-[10px] text-slate-500 whitespace-nowrap">
                                   {s.overdue >= 1.0 ? `${s.overdue.toFixed(1)}x distant` : `orbit ${s.gap}`}
                                 </span>
                                 {/* 🎻 Detective Conviction crossover */}
                                 {s.detective_conviction >= 5 && (
-                                  <span className="text-[10px] px-1.5 rounded bg-fuchsia-500/20 text-fuchsia-300 font-semibold" title={`V2 Detective: ${s.detective_conviction} patterns`}>
-                                    ORBITAL LOCK ×{s.detective_conviction}
+                                  <span className="text-[10px] px-1.5 rounded bg-fuchsia-500/20 text-fuchsia-300 font-semibold whitespace-nowrap" title={`V2 Detective: ${s.detective_conviction} patterns`}>
+                                    LOCK ×{s.detective_conviction}
                                   </span>
                                 )}
                                 {s.detective_conviction >= 3 && s.detective_conviction < 5 && (
-                                  <span className="text-[10px] px-1.5 rounded bg-indigo-500/20 text-indigo-300" title={`V2 Detective: ${s.detective_conviction} patterns`}>
-                                    DEEP SPACE ×{s.detective_conviction}
+                                  <span className="text-[10px] px-1.5 rounded bg-indigo-500/20 text-indigo-300 whitespace-nowrap" title={`V2 Detective: ${s.detective_conviction} patterns`}>
+                                    DEEP ×{s.detective_conviction}
                                   </span>
                                 )}
                                 {s.tease_score >= 3 && (
-                                  <span className="text-[10px] px-1 rounded bg-purple-500/20 text-purple-300">VENUS ALIGNED</span>
+                                  <span className="text-[10px] px-1 rounded bg-purple-500/20 text-purple-300 whitespace-nowrap">VENUS</span>
                                 )}
                                 {s.circle_boost > 1.5 && (
-                                  <span className="text-[10px] px-1 rounded bg-indigo-500/20 text-indigo-300">SATURN RING</span>
+                                  <span className="text-[10px] px-1 rounded bg-indigo-500/20 text-indigo-300 whitespace-nowrap">SATURN</span>
                                 )}
                                 {s.overdue >= 3.0 && (
-                                  <span className="text-[10px] px-1 rounded bg-red-500/20 text-red-300">MARS RETURN</span>
+                                  <span className="text-[10px] px-1 rounded bg-red-500/20 text-red-300 whitespace-nowrap">MARS</span>
                                 )}
                               </div>
                               {/* 🎻 Orbit family — small dots of morph candidates */}
