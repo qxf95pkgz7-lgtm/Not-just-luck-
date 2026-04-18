@@ -154,10 +154,23 @@ def flip_circle_chain(n: int) -> List[int]:
     Single digits: circle FIRST, then flip: 4 → circle → 29 → flip → 92 → mod50 → 42
     14 → 41 → 91(+50) → flip → 19 (long distance family)
     
+    🎻 CIRCLE MUSIC: Every number also carries its DIRECT circle partner (+25 mod 50).
+    Proof: d4 17.04.2026 — suspect 16 → circle(16)=41 HIT, suspect 47 → circle(47)=22 HIT.
+    
     Returns all numbers in the chain (the full family).
     """
     family = set()
     family.add(n)
+    
+    # ── DIRECT CIRCLE — Always include, for EVERY number ──
+    # (The "circles circles" the DJ said we must hear 🎧)
+    direct_circle = circle(n)
+    if 1 <= direct_circle <= 50:
+        family.add(direct_circle)
+        # Also add circle of the circle (mirror bounce)
+        mirror = circle(direct_circle)
+        if 1 <= mirror <= 50:
+            family.add(mirror)
     
     if n < 10:
         # Single digit: circle FIRST, then flip
@@ -195,6 +208,17 @@ def flip_circle_chain(n: int) -> List[int]:
         ext_flip = int(str(extended)[::-1])
         if 1 <= ext_flip <= 50 and ext_flip != n:
             family.add(ext_flip)
+        
+        # 🎻 CIRCLE +50 LANDING — e.g. 47+25=72 → 72-50=22 (d4 proof!)
+        c_plus = n + 25
+        if c_plus > 50:
+            c_landed = c_plus - 50
+            if 1 <= c_landed <= 50:
+                family.add(c_landed)
+                # And flip of that landed circle
+                c_landed_flip = int(str(c_landed)[::-1]) if c_landed >= 10 else c_landed
+                if 1 <= c_landed_flip <= 50:
+                    family.add(c_landed_flip)
     
     family.discard(n)  # Remove original
     return [x for x in sorted(family) if 1 <= x <= 50]
@@ -3303,6 +3327,8 @@ def find_suspects(draws: List[Dict], target_date: str = None, swiss_draws: List[
         evidence[n].add("repeat")
     
     # ── 8. DATE READING ──
+    day = None
+    month = None
     if target_date:
         dr = date_reading(target_date)
         for n in dr.get("numbers", []):
@@ -3554,6 +3580,22 @@ def dj_generate_ticket_v2(draws: List[Dict], target_date: str = None, locked: Di
                 if n not in used and len(selected) < 5:
                     selected.append(n)
                     used.add(n)
+            
+            # 🎻 CIRCLES CIRCLES — Guarantee at least ONE slot carries the direct 
+            # Circle morph of the TOP suspect (lesson from d4 17.04.2026: 16→41, 47→22)
+            if prime_pool and len(selected) < 5:
+                top = prime_pool[0]
+                circle_morph = circle(top["number"])
+                if 1 <= circle_morph <= 50 and circle_morph not in used:
+                    selected.append(circle_morph)
+                    used.add(circle_morph)
+                else:
+                    # Mirror bounce: circle of circle
+                    mirror = circle(circle_morph) if 1 <= circle_morph <= 50 else None
+                    if mirror and 1 <= mirror <= 50 and mirror not in used:
+                        selected.append(mirror)
+                        used.add(mirror)
+            
             for s in rest:
                 n = s["number"]
                 if n not in used and len(selected) < 5:
