@@ -3562,56 +3562,128 @@ def dj_generate_ticket_v2(draws: List[Dict], target_date: str = None, locked: Di
     
     if suspects:
         # Top suspects sorted by conviction
-        prime = [s for s in suspects if s["conviction"] >= 3][:7]
-        secondary = [s for s in suspects if s["conviction"] == 2][:10]
+        prime = [s for s in suspects if s["conviction"] >= 3][:10]
+        secondary = [s for s in suspects if s["conviction"] == 2][:15]
+        
+        # 🎻🎧 CIRCULATING ANCHOR — P3 rotates across size buckets
+        # so the engine doesn't stay stuck on the same 3 red balls.
+        # ticket_index % 3 → small(1-16) / medium(17-33) / big(34-50)
+        size_bucket = ticket_index % 3
+        if size_bucket == 0:
+            anchor_range = (1, 16)      # SMALL story
+            label = "small"
+        elif size_bucket == 1:
+            anchor_range = (17, 33)     # MEDIUM story
+            label = "medium"
+        else:
+            anchor_range = (34, 50)     # BIG story
+            label = "big"
+        
+        # Find anchor suspects that live in the chosen size bucket
+        in_bucket = [s for s in (prime + secondary)
+                     if anchor_range[0] <= s["number"] <= anchor_range[1]]
+        rnd.shuffle(in_bucket)
+        
+        anchor = None
+        if in_bucket:
+            anchor = in_bucket[0]["number"]
+        elif prime:
+            # No suspect in bucket — pick closest prime then find a network partner in bucket
+            anchor = rnd.choice(prime)["number"]
+        
+        # 🎧 BUILD THE STORY NETWORK around the anchor (all patterns converge)
+        def build_story_network(a: int) -> list:
+            """Web of numbers connected to anchor `a` via every pattern."""
+            web = set([a])
+            # Family via chain (already includes direct circle now)
+            for x in flip_circle_chain(a):
+                web.add(x)
+            # Direct circle + mirror bounce
+            c = circle(a)
+            if 1 <= c <= 50:
+                web.add(c)
+                mc = circle(c)
+                if 1 <= mc <= 50: web.add(mc)
+            # Flip
+            f = flip(a)
+            if 1 <= f <= 50: web.add(f)
+            # Neighbours (±1, ±2 for HUNGRY)
+            for off in (-2, -1, 1, 2):
+                v = a + off
+                if 1 <= v <= 50: web.add(v)
+            # Bonds with prev-draw numbers: sums, diffs, circle of prev
+            for p in prev_nums:
+                s = a + p
+                if 1 <= s <= 50: web.add(s)
+                diff = abs(a - p)
+                if 1 <= diff <= 50 and diff != 0: web.add(diff)
+                pc = circle(p)
+                if 1 <= pc <= 50: web.add(pc)
+            return [x for x in web if 1 <= x <= 50 and x not in used]
         
         if use_direct:
-            # STORY TICKET — use prime suspects, but vary which ones
-            # Shuffle among top suspects with some randomness
-            prime_pool = list(prime)
-            rnd.shuffle(prime_pool)
-            # Always include top 2-3, randomize the rest
-            must_have = prime_pool[:min(3, len(prime_pool))]
-            rest = prime_pool[3:] + secondary[:5]
-            rnd.shuffle(rest)
+            # STORY TICKET — circulate via rotating anchor
+            if anchor is not None and anchor not in used and len(selected) < 5:
+                selected.append(anchor)
+                used.add(anchor)
             
-            for s in must_have:
+            # Pull 2 more from the story network around this anchor (different decades)
+            if anchor is not None:
+                web = build_story_network(anchor)
+                rnd.shuffle(web)
+                anchor_decade = (anchor - 1) // 10
+                # Prefer web candidates from DIFFERENT decades to keep spread
+                for pick in sorted(web, key=lambda v: ((v-1)//10 == anchor_decade, rnd.random())):
+                    if len(selected) >= 3:
+                        break
+                    if pick not in used:
+                        selected.append(pick)
+                        used.add(pick)
+            
+            # 🎻 Still guarantee the top-conviction Circle morph lands somewhere
+            if prime and len(selected) < 5:
+                top = prime[0]
+                cm = circle(top["number"])
+                if 1 <= cm <= 50 and cm not in used:
+                    selected.append(cm)
+                    used.add(cm)
+            
+            # Fill remaining with prime + secondary (shuffled, preserving decade spread)
+            pool = list(prime) + list(secondary)
+            rnd.shuffle(pool)
+            for s in pool:
                 n = s["number"]
                 if n not in used and len(selected) < 5:
-                    selected.append(n)
-                    used.add(n)
-            
-            # 🎻 CIRCLES CIRCLES — Guarantee at least ONE slot carries the direct 
-            # Circle morph of the TOP suspect (lesson from d4 17.04.2026: 16→41, 47→22)
-            if prime_pool and len(selected) < 5:
-                top = prime_pool[0]
-                circle_morph = circle(top["number"])
-                if 1 <= circle_morph <= 50 and circle_morph not in used:
-                    selected.append(circle_morph)
-                    used.add(circle_morph)
-                else:
-                    # Mirror bounce: circle of circle
-                    mirror = circle(circle_morph) if 1 <= circle_morph <= 50 else None
-                    if mirror and 1 <= mirror <= 50 and mirror not in used:
-                        selected.append(mirror)
-                        used.add(mirror)
-            
-            for s in rest:
-                n = s["number"]
-                if n not in used and len(selected) < 5:
+                    # Prefer decades not yet represented
+                    current_decades = set((v-1)//10 for v in selected)
+                    n_decade = (n-1)//10
+                    if n_decade in current_decades and len(current_decades) < 4:
+                        # Skip 50% of the time to encourage spread
+                        if rnd.random() < 0.5:
+                            continue
                     selected.append(n)
                     used.add(n)
         else:
-            # FAMILY TICKET — use suspect families (circles, flips)
-            for s in prime[:3]:
+            # FAMILY TICKET — anchor is circulated too, but we pick from FAMILY not face
+            if anchor is not None:
+                fam_a = flip_circle_chain(anchor)
+                fam_a = [f for f in fam_a if f not in used and 1 <= f <= 50]
+                if fam_a and len(selected) < 5:
+                    pick = rnd.choice(fam_a)
+                    selected.append(pick)
+                    used.add(pick)
+            
+            # Pull family numbers from other prime suspects, not face values
+            prime_shuf = list(prime)
+            rnd.shuffle(prime_shuf)
+            for s in prime_shuf[:4]:
                 n = s["number"]
-                # Pick from family instead
                 fam = [f for f in s["family"] if f not in used and 1 <= f <= 50]
                 if fam and len(selected) < 5:
                     pick = rnd.choice(fam)
                     selected.append(pick)
                     used.add(pick)
-            # Add some direct from secondary
+            # Finish with face-value secondaries
             for s in secondary:
                 n = s["number"]
                 if n not in used and len(selected) < 5:
@@ -3669,12 +3741,22 @@ def dj_generate_ticket_v2(draws: List[Dict], target_date: str = None, locked: Di
     for s in suspects[:5]:
         suspect_info.append(f"🔍 SUSPECT {s['number']} (conviction:{s['conviction']}): {', '.join(s['patterns'][:3])}")
     
+    # 🎧 Anchor label (small / medium / big) — circulating story tag
+    anchor_label = None
+    try:
+        if suspects:
+            sb = ticket_index % 3
+            anchor_label = ["small", "medium", "big"][sb]
+    except Exception:
+        anchor_label = None
+    
     return {
         "numbers": selected,
         "stars": sorted([star1, star2]),
         "patterns_used": suspect_info + patterns[:20],
         "suspects": [(s["number"], s["conviction"]) for s in suspects[:10]],
         "ticket_type": "story" if use_direct else "family",
+        "anchor_bucket": anchor_label,
         "prev_draw": {"numbers": prev_nums, "stars": prev_stars}
     }
 
