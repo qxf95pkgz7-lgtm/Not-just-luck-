@@ -39,6 +39,31 @@ Draw = [2, 9, 21, 22, 26, 35] · 🍀 3
 - 8+4 rising → **21** (P3 of draw)
 - **58 = 5 + 53 = Swiss-circle(P5=26) + flip(P6=35)** — THE DATE HIDES THROUGH `circle(P5) + flip(P6)`
 
+## 🗓️ DATE-HIDING formula (Q2d2 11.04.2026)
+Date = 11.04.2026 · sum = 11+4+20+26 = **61**
+Draw = [1, 6, 8, 14, 22, 34] · 🍀 1
+- "11" = four 1s cadence → P1=1
+- Month 4 × 2 = **8** → P3=8
+- P4=14 (direct 1,4 digits)
+- P5=**22 = double of 11** 🎻
+- P6=34 (month×2 + year = 8+26=34) ✓
+
+## 🗓️ DATE-HIDING formula (Q2d3 15.04.2026)
+Date = 15.04.2026 · sum = 15+4+20+26 = **65**
+Draw = [4, 12, 34, 38, 39, 40] · 🍀 5
+- P1=**4** = month itself
+- P3=**34** = month×2 + year = 8+26 ✓ (same as Q2d2 P6!)
+- P4=38 = P1+P3 (4+34)
+- P6=**40 = day(15) + silence(25)** 🎻 — silence-agent revealed
+- 🍀 5 = twin digit of 15
+- **65 = P5(39) + year-suffix(26)** — date hides through `P5 + year`
+
+## 🎻 SILENCE AGENT rule
+- Swiss-circle(month) = silence agent
+- April (4) → silence = **25**
+- Month-change means silence-agent changes: Jan→22, Feb→23, Mar→24, Apr→25, May→26, Jun→27, Jul→28, Aug→29, Sep→30, Oct→31, Nov→32, Dec→33
+- Silence-agent often appears as an ADDITIVE partner hiding inside big numbers (e.g. P6=40 = day+silence)
+
 ## 🔑 Key bridges discovered
 - **33 ↔ 12** (Swiss circle mirror)
 - **P1 suspect 5** + last P1 = 4 → digits 4,5 → 45/54 → **3, 12**
