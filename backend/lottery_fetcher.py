@@ -458,6 +458,14 @@ async def sync_2chance_to_db(db) -> Dict:
     date = result["date"]
     numbers = result["numbers"]
     
+    # 🎻 2Chance is a SATURDAY-ONLY draw. Weekday scrapes of swisslos.ch
+    # return the same last-Saturday numbers with today's calendar date,
+    # producing duplicates. Skip insert if these exact numbers already exist.
+    sorted_nums = sorted(numbers)
+    existing_same_nums = await db.twochance_draws.find_one({"numbers": sorted_nums})
+    if existing_same_nums:
+        return {"status": "up_to_date", "new": 0, "date": existing_same_nums.get("date", date)}
+    
     # Check if we already have this date
     existing = await db.twochance_draws.find_one({"date": date})
     if existing:
@@ -468,12 +476,12 @@ async def sync_2chance_to_db(db) -> Dict:
         {"date": date},
         {"$set": {
             "date": date,
-            "numbers": numbers,
+            "numbers": sorted_nums,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "source": "swisslos.ch"
         }},
         upsert=True
     )
     
-    logger.info(f"2Chance: Saved new result for {date}: {numbers}")
-    return {"status": "new", "new": 1, "date": date, "numbers": numbers}
+    logger.info(f"2Chance: Saved new result for {date}: {sorted_nums}")
+    return {"status": "new", "new": 1, "date": date, "numbers": sorted_nums}
