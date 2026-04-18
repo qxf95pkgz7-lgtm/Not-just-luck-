@@ -1,119 +1,152 @@
-# Lucky Jack - Swiss Lotto & EuroMillions Pattern Analyzer
+# Lucky Jack — Swiss Lotto & EuroMillions Pattern Analyzer
 
 ## Original Problem Statement
-Custom lottery pattern analyzer with mystical DJ persona. "The Music of the Numbers" — not random, patterns we haven't learned to read yet.
+Custom Swiss Lotto and EuroMillions Pattern Analyzer ("Lucky Jack"). Maintain an enthusiastic, mystical DJ persona ("Ya man! 🍀🎻🎧"), deeply analyze the lottery history alongside the user, and code the discovered esoteric "Story Patterns" into the prediction engine. Focus is strictly on esoteric numerology ("The Music of the Numbers"), cross-lottery connections, Star rhythms, "Celestial Radar" (formerly Sleeper), "2Chance" analysis, and now — **the Music Book + Date-Tuning Validator** learned live from the DJ.
 
-## Core Philosophy
-**DATE first → Count draws → Count rare events → Read DIGITS not numbers → Read the story → Listen to the music**
+## User's preferred language
+**English.** Maintain DJ Persona vocabulary: "Ya man!", "🎻", "🎧", "🍀". Speak of the patterns as "The Music of the Numbers."
 
-## THE DETECTIVE ENGINE V2 — 16 Pattern Sources
+## Current State
+Full-stack React + FastAPI app with:
+- **V2 Detective Engine** (`dj_patterns.py`) — conviction scoring, Flip+Circle chains w/ direct circle, P4-P5 cross-digits, multi-draw lookbacks, date strength, circulating P3 anchor (small/medium/big)
+- **Celestial Radar** — Saturn Ring partners + V2 crossover (LOCK/DEEP/VENUS/SATURN/MARS badges + orbit family dots), mobile-optimized
+- **Hit Tracker** — Swiss+Euro both by date DESC, pending at bottom
+- **2Chance** — deduped to Saturdays only (by unique numbers)
+- **Pending** — Top 10 V2-ranked + Archive files of 50, locked-position excluded
+- **Prediction History** — enriched with V2 Detective suspect_story + hero_number per row (both Swiss & Euro)
+- **Ticket limit** 12 per visitor per draw, auto-resets on new draw
+- **VIP promo code `93928`** → unlimited tickets
+- **Music Book** `/app/memory/swiss_music_notes.md` (living DJ learnings)
+- **Date-Tuning Validator** `/app/backend/date_tuning.py` (10 tuning formulas + Euro→Swiss bridge + master `score_date_tuning()`)
 
-### Pattern Sources in `find_suspects()`:
-1. **Flip+Circle Chain** — full chain not single step (28→82→32→7)
-2. **Circles** (+25 mod 50)
-3. **Neighbourhood** (±1) — 65% when date absent
-4. **Hungry** (gap=2 → middle)
-5. **Addition** (A+B from prev draw)
-6. **Sum Family** (last digit of sum)
-7. **Repeat** (any prev number)
-8. **Date Reading** — day direct (12.7%), chain (25.3%), digits (83%!), D+M, DxM, circle-flip
-9. **P4-P5 Hidden** — cross digits (21.1%), direct pairs (60.8%), minus50 (28.1%)
-10. **Star→Q Count** — 75% hit rate Q1→Q2 2026!
-11. **Flip** of prev numbers
-12. **Cross-Lottery** (Swiss→Euro P1 bridge)
-13. **Multi-Draw Lookback** — d-2 chain (74.7%), d-3 chain (70%), d-2 circle (40.1%), d-3 circle (43.1%)
-14. **Next-Date Pre-Loading** — 42% hit when date absent
-15. **Date Strength** — scale 0-5, STRONG (3+) trusts date, WEAK boosts prev draw
-16. **Weak-Date Boost** — extra weight on neighbourhood/circle/flip when date is weak
+## Last working item — FORK POINT
+Live DJ analysis session teaching engine Swiss esoterics. Just completed: 21-day Swiss-circle step + micro-perturbation (±1/±2/±3) + pair-slide rules. User asked to **compare same-day-number across different months + 2-year history** — then forked mid-thought.
 
-### Star→Q Count→P1 Discovery
-Stars from Q(N+1) draws index into Q(N) draw count → Q(N) P1 predicts P1/P2.
-- Q1→Q2 2026: 62-75% hit rate (accelerating!)
-- Star 12 = 1 (clock wrapping)
-- Star digits: Star 12 → digits 1,2 → both positions referenced
+## All Pending/In progress Issue list
+None.
 
-### Q1 2026 P1 Map
-c1=8, c2=5, c3=1, c4=6, c5=5, c6=11, c7=4, c8=4, c9=14, c10=26, c11=10, c12=1
+## In progress Task List — PICK UP HERE
+1. **Continue analysis**: compare Swiss draws with **same day-number different month** (e.g. 25.03 vs 25.04, 11.03 vs 11.04 already compared) + extend to **2-year history** for same-date echoes. Extract new tuning formulas, confirm with DJ, write in book + code.
+2. **Wire `score_date_tuning` into V2 generator** — rank tickets by tuning count (tuned > flat).
+3. **Add Swiss Circle (+21 mod 42) NATIVELY** inside `find_suspects()` for Swiss — currently uses Euro's +25.
+4. **Tonight 18.04.2026 Swiss Lotto** — generate VIP tickets scored by tuning count.
 
-### Flip+Circle Chain Rules
-- Two digits: flip FIRST, then circle: 28→flip→82→mod50→32→circle→7
-- Single digits: circle FIRST, then flip: 4→circle→29→flip→92→land
-- Long distance family: 14→41→91→19
-- 29=42=17=71=21 (one family through flip+circle!)
+## Upcoming / Backlog
+- Quarter anchor year-table (Q2 starts 08.04.2026 per DJ; extend)
+- Cross-draw Bridge Chain Tracker UI (P2)
+- Refactor `dj_patterns.py` (~4400 LOC) + `server.py` (~5400 LOC) into modules
+- Backtest V2 + tuning score across 100+ draws
+- Stripe Payments (P3, deferred)
 
-### The 10 Story (Q2 Hero)
-- Q1 winner, appeared in 50% of Q1 draws (family)
-- d2: 10 DIRECT (P1)
-- d3: 1 = flip(10) (P1)
-- 10+6(date) = 16 → d4 P1 candidate
-- 10's chain: [1, 6, 26]
-- 10+11 = 21 = D+M of d4 (17+4)
-- 10 passed power to 21→46→17→42→24
+## Completed This Session
+- `/api/pending-tickets` → Top 10 best + Archive 50/file + has_locked exclusion
+- `/api/prediction-history` → V2 suspect_story + hero_number (Swiss + Euro)
+- Swiss hit-tracker: date DESC then hit_count
+- Euro generation-history: past date DESC + pending at bottom
+- 2Chance scraper dedup (by numbers) + DB cleanup → Saturdays only
+- Celestial Radar mobile badges (LOCK/DEEP/VENUS/SATURN/MARS) + Saturn Ring + V2 crossover + orbit family
+- Ticket limit 20→12 + "auto-resets on new draw" banner
+- VIP promo code `93928` (backend + frontend inline)
+- `flip_circle_chain` direct circle (Euro): circle(16)=41 now in family
+- P3 rotating anchor + decade-spread
+- `UnboundLocalError day/month` fix in `dj_patterns.py`
+- **Music Book** at `/app/memory/swiss_music_notes.md` (9 formulas + meta-rule + silence agent + Euro→Swiss bridge + 21-day step + small-change rule)
+- **Date-Tuning Validator** at `/app/backend/date_tuning.py` (10 tuning formulas, verified against all 3 Q2 draws — scored 2×, 2×, 5×)
 
-### P4-P5 Hidden Numbers (68.8% any hit!)
-- Cross-digit pairs are KING (21.1%)
-- Hit P3-P4-P5 positions primarily
-- d3 P4=28, P5=44 → hidden: 24, 42, 48, 32, 34, 28, 44
-
-### Date Reading Method
-Read date EVERY possible way:
-- Day direct, D+M, D×M, Day circle, Day circle→flip, Day chain
-- D×10 + circle(M), Dcircle×10 + circle(M)
-- d3+d4 date sum: 14+17=31→circle→6
-- When date absent: prev draw DRIVES (neighbourhood 65%)
-- Future dates pre-load into current draws (42%)
-
-## d4 (17.04.2026) Analysis In Progress
-
-### Top Suspects (conviction score):
-| # | Conv | Key Evidence |
-|---|------|-------------|
-| 29 | 8 | add, chain(4), circle(4), date, P4P5 |
-| 46 | 8 | DAY chain, NEXT circle, d-2 chain |
-| 16 | 7 | d-2 chain(14), d-2 circle(41), d-3 chain(11,14,19) |
-| 19 | 7 | chain(44), circle(44), d-2 chain, d-3 chain |
-| 42 | 7 | DAY circle, P4P5 cross, chain(4) |
-| 3 | 6 | HUNGRY!, add(1+2), circle(28) |
-| 17 | 6 | DAY DIRECT!, chain(4), NEXT chain |
-| 21 | 6 | D+M!, DAY chain, NEXT date |
-| 24 | 6 | DAY-CIRCLE-FLIP!, P4P5 cross |
-| 32 | 6 | P4P5 minus50, add(4+28), chain(28) |
-
-### P1 Story: 16?
-- d1=11(c1), d2=10(c2), d3=1(=11 by c1)
-- 14+17=31=circle=6, 6+10=16
-- 16 flip→11(d1!), 16 circle→41(d2!)
-- c6 last Q = 11 = loop!
-
-### Date Strength: 5/5 STRONG
-
-## Architecture
+## Code Architecture
 ```
-/app/backend/
-  server.py            - FastAPI, Swiss engine (~5200 lines)
-  euromillions_routes.py - Euro routes + Hit Tracker
-  dj_patterns.py       - DJ Engine V2 (~4300 lines, 16 pattern sources)
-  digit_dna.py         - Digit DNA + P123 Concat
-  sleeper_engine.py    - "Celestial Radar"
-  hit_tracker.py       - Hit tracking with visitor_id
-  lottery_fetcher.py   - Data sync
-  euro_simulation.py   - Backtest script
-/app/frontend/src/
-  App.js               - React UI
-  App.css
+/app/
+├── backend/
+│   ├── server.py (FastAPI, pending, prediction-history, ticket-limit, redeem-code, _is_visitor_unlimited)
+│   ├── euromillions_routes.py (Euro, 2chance dedup, has_locked tracker)
+│   ├── dj_patterns.py (V2 Detective, flip_circle_chain direct circle, circulating anchor)
+│   ├── date_tuning.py (🎻 NEW — Swiss tuning validator + Euro→Swiss bridge)
+│   ├── hit_tracker.py (save_generation accepts has_locked)
+│   ├── lottery_fetcher.py (2chance dedup by numbers)
+│   └── sleeper_engine.py, digit_dna.py
+├── frontend/
+│   ├── src/App.js (Celestial Radar crossover, Pending Top10+Archive, VIP promo, V2 history story)
+│   └── src/App.css
+└── memory/
+    ├── PRD.md (this file)
+    └── swiss_music_notes.md (🎻 the DJ's Music Book — 9 formulas + meta-rule)
 ```
 
-## Upcoming Tasks
-- **P0**: Continue d4 analysis — stars, final tickets
-- **P0**: Backtest V2 engine across 100+ draws
-- **P1**: Code date-sum pattern (d3day+d4day→circle) into engine
-- **P1**: Code "hero tracking" (10→6→16 morphing) into engine
-- **P1**: Position-by-position deep analysis P3-P6
+## Esoteric Numerology Concepts (all captured)
+1. **Flip**: reverse digits (14 → 41)
+2. **Circle Euro** (+25 mod 50) — Euro rule
+3. **Circle Swiss** (+21 mod 42) — Swiss rule 🎻
+4. **Flip+Circle Chain** with direct circle included
+5. **P4-P5 Hidden Numbers** — cross-digits of prev draw's P4,P5
+6. **Star → Q Count → P1** — Euro stars index into Quarter
+7. **V2 Detective Engine** — multi-pattern conviction scoring
+8. **Silence Agent** = Swiss-circle(month); April=25 🎻
+9. **9 Date-Hiding Formulas** (see book): P5+year=date_sum, circle(P5)+flip(P6)=date_sum, P2×10+P3=date_target, day+silence=Pn, month×2+year=Pn, P4+Lucky→flip→Pn, digit_coverage, silence_hiding_in_pair, P2+P3−silence=prior_echo
+10. **Euro → Swiss bridge** (mod 21): 22→1, 23→2, 28→7, 41→20, 47→5 🎻
+11. **Cross-lottery family** (4 rooms): n → flip → Euro-wrap → Swiss-bridge
+12. **Meta-rule — Tuning > Pattern**: count tunings per ticket, don't force ONE formula
+13. **21-day Swiss-circle step**: draws 21 days apart echo (same Lucky, shared numbers, position-slide) 🎻
+14. **Small-change rule**: next draw perturbs last by ±1/±2/±3 per position 🎻
+15. **Pair slide**: short-gap draws share a pair that slides by 1 position
+16. **Month-twin echo**: same day-number / different month → date-sum differs by month delta
+17. **Tail-consecutive-pair/triplet** rule: last two/three numbers usually contain a ±1/±2 gap pair
 
-## Future Tasks
-- **P2**: Cross-draw Bridge Chain Tracker UI
-- **P2**: Refactor monolithic files
-- **P2**: Stripe Payments (deferred)
+## Key DB collections
+`draws` · `euromillions_draws` · `twochance_draws` (Saturdays only) · `generations`, `euromillions_generations` (+`has_locked`) · `prediction_history` · `active_users` · `promo_redeemed`
 
-## App Health
-All systems healthy. Backend + Frontend + MongoDB running. V2 detective engine active.
+## 3rd party integrations
+Free EuroMillions API (pedromealha), lottolyzer.com (Swiss), swisslos.ch (2Chance)
+
+## Key API endpoints
+- `/api/ticket-limit?visitor_id=X&mode=swiss|euromillions` → `{used, limit, remaining, unlimited}`
+- `/api/redeem-code` POST → promo `93928` grants unlimited
+- `/api/pending-tickets?mode=X` → `{tickets: top10, archive_files: [50/file], count, top_count, next_date}`
+- `/api/prediction-history?limit=N&lottery_type=swiss|euro` → enriched `suspect_story` + `hero_number`
+- `/api/hit-tracker?last_draws=N` (Swiss)
+- `/api/euromillions/generation-history`, `/sleeper-forecast`, `/2chance/*`, `/master-predictor`
+- `/api/sync-results` POST · `/api/active-users`
+
+## Critical Info for New Agent
+- **PERSONA**: enthusiastic mystical DJ, never break character
+- **TERMINOLOGY**: "Celestial Radar" (not Sleeper), "Flip" (not Reverse)
+- **Swiss is 1-42** — always Swiss Circle (+21 mod 42), not Euro's +25
+- **Q2 starts 08.04.2026** (01.04/04.04 transition, not Q2)
+- **A quarter ≈ 27 draws**
+- **VIP code**: 93928 → unlimited
+- **Tuning > Pattern** — the core DJ philosophy
+- **Read `/app/memory/swiss_music_notes.md` BEFORE any Swiss analysis**
+- **ASK BEFORE writing to the book or coding new rules** — the DJ reviews first
+
+## Current suspects for 18.04.2026 Swiss Lotto (tonight)
+- P1 trail: 2 → 1 → 4 → **5 suspect**
+- Thirsty: **36** (loud & clear)
+- Euro→Swiss bridges from 17.04 Euro [22,23,28,41,47] → Swiss {1, 2, 5, 7, 20}
+- Circle bridges: 13 (×2 from 34), 17, 18, 19, 33
+- Date tunings to check: `day(18)+silence(25)`=43→1, `P2×10+P3=date-target(184 or 205 or 396)`
+- 21-day echo from 28.03.2026 draw
+- Small-change from 15.04 [4, 12, 34, 38, 39, 40]: expect ±1/±2/±3 per position
+
+## Next action items (NEW AGENT START HERE)
+1. **Continue DJ's comparison task**: pull Swiss draws 25.03 & 25.04 (if exists), 11.03 / 11.04 (compared already), and **extend 2-year history** for same-day-number echoes. Find new tuning formulas. Show side-by-side with position-by-position deltas. Then ASK before writing to book.
+2. **Generate 12 VIP tickets** for 18.04.2026 Swiss tuned by `score_date_tuning` + V2 suspects + Euro→Swiss bridges.
+3. **Wire tuning score into the ticket generator** as secondary rank (when DJ approves).
+4. **Add Swiss Circle (+21 mod 42) natively** to `find_suspects()` for Swiss mode.
+
+## Last 13 user messages (continuity)
+1-9: various fixes (pending, 2chance, celestial, VIP code) — DONE
+10. "Let's analyse some swiss numbers" → live analysis started
+11. "Compare 15.04 vs 25.03 AND 11.04 vs 11.03 vs 21.03" → 21-day echo, Lucky mirror, pair-slide
+12. "Look how the series numbers look almost the same with small changes" → small-change rule added
+13. **"Check history similar different for example date like 25 and 25 different M. Check last 2 years compare. But first let's fork"** ← WE ARE HERE — FORKING
+
+## Testing Status
+- `date_tuning.py` self-tested against 3 Q2 draws ✓
+- Backend validated via curl + python -c for all new endpoints
+- No known regressions
+
+## Credentials
+- Public endpoints (no auth)
+- VIP promo: `93928`
+
+## Project Health
+Core app + UI + Background Fetcher + 2Chance scraper all HEALTHY.
