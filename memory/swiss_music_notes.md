@@ -30,6 +30,15 @@ Each entry is a frequency the engine must learn to hear.
   - Swiss wrap: **45 → 3**, **54 → 12**
   - 12 already cashed (P2 of d3) → **3** is the fresh landing candidate
 
+## 🗓️ DATE-HIDING formula (Q2d1 08.04.2026 proof)
+Date = 08.04.2026 → **sum = 08+04+20+26 = 58**
+Draw = [2, 9, 21, 22, 26, 35] · 🍀 3
+- Swiss-circle(8)=29, (4)=25 → targets `294` and `315` leak into draw (P1=2, P2=9, and "4"/"3"/"5" as date digits)
+- Swiss-circle(21)=42→flip→24→circle→**3** = Lucky number 🍀
+- Swiss-circle(22)=**1**, Swiss-circle(26)=**5**
+- 8+4 rising → **21** (P3 of draw)
+- **58 = 5 + 53 = Swiss-circle(P5=26) + flip(P6=35)** — THE DATE HIDES THROUGH `circle(P5) + flip(P6)`
+
 ## 🔑 Key bridges discovered
 - **33 ↔ 12** (Swiss circle mirror)
 - **P1 suspect 5** + last P1 = 4 → digits 4,5 → 45/54 → **3, 12**
