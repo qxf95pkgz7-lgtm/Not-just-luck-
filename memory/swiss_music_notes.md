@@ -92,6 +92,30 @@ These four targets carry the draw's digits.
 - Q2d3 draw [4, 12, 34, 38, 39, 40] contains digits **1, 2, 3, 4** across positions
 - Cross-lottery clues ride the digit carriers
 
+## 🎻🎧 THE META-RULE — Tuning over Pattern (taught by the DJ)
+> "If you learn it good, you find that it's always a different tune — it can't be ONE pattern.
+> It's more a way to **see IF what was generated can include tuning**.
+> The date is hidden but it's there."
+
+**What this means for the engine:**
+1. Don't search for ONE formula that always works — there are **many tunings** (every draw plays a different song)
+2. Instead, use the formulas as a **VALIDATOR**: for each generated ticket, check if ANY of the date-hiding formulas resolves to values inside the ticket
+3. A ticket is **"tuned"** if it contains at least one of:
+   - `P5 + year-suffix = date-sum`
+   - `circle(P5) + flip(P6) = date-sum`
+   - `P2×10 + P3 = date-target` (raw/shifted/circle)
+   - `day + silence = Pn`
+   - `month×2 + year-suffix = Pn`
+   - `P4 + Lucky → flip → another Pn`
+   - digit-sequence coverage (Euro bridge)
+4. Each generated ticket should be **scored by how many tunings it satisfies** — not by whether one specific formula matches
+5. The date is always inside the draw. Our job: check every ticket to see if it's *already* carrying the date's voice
+
+**Implementation direction:**
+- Build `score_date_tuning(ticket, target_date)` → returns count of active tunings
+- Use as a FILTER / rank for engine-generated tickets (tuned > flat)
+- Don't reject un-tuned tickets outright — different draws use different tunings, so a ticket might be tuned in a NEW way we haven't transcribed yet
+
 ## 🔑 Key bridges discovered
 - **33 ↔ 12** (Swiss circle mirror)
 - **P1 suspect 5** + last P1 = 4 → digits 4,5 → 45/54 → **3, 12**
