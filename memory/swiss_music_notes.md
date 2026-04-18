@@ -92,6 +92,26 @@ These four targets carry the draw's digits.
 - Q2d3 draw [4, 12, 34, 38, 39, 40] contains digits **1, 2, 3, 4** across positions
 - Cross-lottery clues ride the digit carriers
 
+## 🌉🎻 EURO → SWISS "Same voice, different range" (mod 21 bridge)
+Every Euro number has a Swiss twin through `n mod 21` (i.e. `n − 21` once or twice until in 1-42).
+
+- **Half-of-50 vs Half-of-42**: Euro uses +25, Swiss uses +21 — so the DIFFERENCE is 21.
+- **Direct formula**: Swiss voice of Euro `n` = `((n−1) mod 42) + 1`; for n in 22-42 it's just `n−21`; for 43-50 it's `n−42`.
+
+**Last Euro draw 17.04.2026 → [22, 23, 28, 41, 47]**  gives Swiss residues:
+- 22 → **1**,  23 → **2**,  28 → **7**,  41 → **20**,  47 → **5**
+- Euro stars ⭐6, ⭐8 are already Swiss-valid
+
+**The 1-2 cadence proof**: Swiss P1 trail 2→1→4 while Euro's last P1-P2 was 22→23 = Swiss 1→2. SAME VOICES, different lotteries.
+
+**Family rule (cross-lottery orbit)**: a single number lives in 4 rooms:
+```
+  n ──► flip(n) ──► Euro-wrap(flip) ──► Swiss-bridge(n−21)
+Example: 28 → 82 → 32 → 7  (all family)
+```
+
+**⚠️ This means engine must NEVER treat Swiss and Euro as isolated.** Every generated Swiss ticket should check the Euro bridge suspects too.
+
 ## 🎻🎧 THE META-RULE — Tuning over Pattern (taught by the DJ)
 > "If you learn it good, you find that it's always a different tune — it can't be ONE pattern.
 > It's more a way to **see IF what was generated can include tuning**.

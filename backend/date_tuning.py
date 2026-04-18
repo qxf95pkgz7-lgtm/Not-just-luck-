@@ -187,6 +187,60 @@ def tune_p2p3_minus_silence_echo(ticket: List[int], date_str: str, prior_draws: 
     return False
 
 
+# ─── 🌉 Euro → Swiss bridge ───────────────────────────────────────────
+
+def euro_to_swiss(n: int) -> Optional[int]:
+    """
+    🎻 Translate a Euro number (1-50) to its Swiss voice.
+    Rule: keep subtracting 21 until ≤ 21 (half-of-42 reduction).
+      22 → 1,  23 → 2,  28 → 7,  41 → 20,  47 → 47−21=26 → 26−21=5.
+    Numbers ≤ 21 stay as-is.
+    """
+    if n is None or n < 1 or n > 50: return None
+    v = n
+    while v > 21:
+        v -= 21
+    return v if 1 <= v <= 21 else None
+
+
+def euro_family(n: int) -> List[int]:
+    """
+    🎻 Cross-lottery family of n: [self, flip-raw, Euro-wrap-of-flip, Swiss-bridge].
+    Example: 28 → [28, 82, 32, 7].
+    Returns unique Swiss-valid + Euro-valid values.
+    """
+    fam = {n}
+    # flip (raw 2-digit reverse, no wrap)
+    if n >= 10:
+        f_raw = int(str(n)[::-1])
+        fam.add(f_raw)
+        # Euro-wrap of flip
+        if f_raw > 50:
+            fam.add(f_raw - 50)
+        elif f_raw < 1:
+            pass
+    # Swiss bridge
+    sb = euro_to_swiss(n)
+    if sb is not None:
+        fam.add(sb)
+    return sorted(fam)
+
+
+def tune_euro_bridge(ticket: List[int], last_euro_numbers: List[int]) -> bool:
+    """
+    🎻 Check if this Swiss ticket carries at least 2 Euro-bridge voices
+    from the last Euro draw (n → n−21 residues).
+    """
+    if not last_euro_numbers: return False
+    swiss_voices = set()
+    for en in last_euro_numbers:
+        sv = euro_to_swiss(en)
+        if sv is not None:
+            swiss_voices.add(sv)
+    hits = sum(1 for n in ticket if n in swiss_voices)
+    return hits >= 2
+
+
 # ─── Master validator ────────────────────────────────────────────────
 
 TUNING_FORMULAS = [
@@ -202,7 +256,8 @@ TUNING_FORMULAS = [
 
 def score_date_tuning(ticket: List[int], date_str: str,
                        lucky: Optional[int] = None,
-                       prior_draws: List[Dict] = None) -> Dict:
+                       prior_draws: List[Dict] = None,
+                       last_euro_numbers: List[int] = None) -> Dict:
     """
     🎻🎧 MASTER TUNING VALIDATOR
     
@@ -236,6 +291,12 @@ def score_date_tuning(ticket: List[int], date_str: str,
             active.append('P2+P3-silence=prior_echo')
     except Exception:
         pass
+    # 🌉 Euro → Swiss bridge
+    try:
+        if tune_euro_bridge(ticket, last_euro_numbers or []):
+            active.append('euro_bridge≥2voices')
+    except Exception:
+        pass
     
     return {
         "score": len(active),
@@ -251,14 +312,21 @@ def score_date_tuning(ticket: List[int], date_str: str,
 if __name__ == "__main__":
     print("🎻 Verifying tunings against the three Q2 draws in the book...\n")
     
+    last_euro = [22, 23, 28, 41, 47]  # 17.04.2026
+    
     cases = [
         ("08.04.2026", [2, 9, 21, 22, 26, 35], 3),   # Q2d1
         ("11.04.2026", [1, 6, 8, 14, 22, 34], 1),    # Q2d2
         ("15.04.2026", [4, 12, 34, 38, 39, 40], 5),  # Q2d3
     ]
     for date_str, ticket, lucky in cases:
-        r = score_date_tuning(ticket, date_str, lucky=lucky)
+        r = score_date_tuning(ticket, date_str, lucky=lucky, last_euro_numbers=last_euro)
         print(f"📅 {date_str}  {ticket}  🍀 {lucky}")
         print(f"   date_sum = {date_sum(date_str)}  targets = {date_targets(date_str)}")
         print(f"   ACTIVE TUNINGS ({r['score']}): {r['active_tunings']}")
         print()
+    
+    # Euro → Swiss bridge demo
+    print("🌉 Euro → Swiss bridge from last Euro draw [22, 23, 28, 41, 47]:")
+    for en in last_euro:
+        print(f"   {en} → Swiss voice = {euro_to_swiss(en)}  | family: {euro_family(en)}")
