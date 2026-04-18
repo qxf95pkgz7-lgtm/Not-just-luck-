@@ -544,6 +544,9 @@ function App() {
   const [nextDrawTickets, setNextDrawTickets] = useState(0);
   const [nextDrawDate, setNextDrawDate] = useState('');
   const [pendingTickets, setPendingTickets] = useState([]);
+  const [pendingTotal, setPendingTotal] = useState(0);
+  const [archiveFiles, setArchiveFiles] = useState([]);
+  const [openArchive, setOpenArchive] = useState(null);
   const [activeUsers, setActiveUsers] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
   
@@ -847,6 +850,8 @@ function App() {
     try {
       const res = await axios.get(`${API}/pending-tickets?mode=${lotteryMode}`);
       setPendingTickets(res.data.tickets || []);
+      setPendingTotal(res.data.count || 0);
+      setArchiveFiles(res.data.archive_files || []);
       setNextDrawDate(res.data.next_date || '');
     } catch (e) {}
   };
@@ -1602,14 +1607,14 @@ function App() {
         <div className="hidden lg:block w-72 flex-shrink-0" data-testid="pending-tickets-panel">
           <div className="sticky top-4 lucky-card p-3 border border-amber-500/20">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-amber-400 font-semibold text-xs">Pending Tickets</span>
-              <span className="text-emerald-400 font-mono font-bold text-sm">{pendingTickets.length}</span>
+              <span className="text-amber-400 font-semibold text-xs">Top 10 Predicted</span>
+              <span className="text-emerald-400 font-mono font-bold text-sm">{pendingTickets.length}/{pendingTotal}</span>
             </div>
-            <div className="text-slate-500 text-[9px] mb-2">For draw: {nextDrawDate}</div>
-            <div className="space-y-1.5 max-h-[70vh] overflow-y-auto">
+            <div className="text-slate-500 text-[9px] mb-2">For draw: {nextDrawDate} <span className="text-slate-600">• engine-ranked</span></div>
+            <div className="space-y-1.5 max-h-[55vh] overflow-y-auto">
               {pendingTickets.length === 0 ? (
                 <div className="text-center text-slate-600 text-[10px] py-3">
-                  No tickets yet
+                  No engine tickets yet
                 </div>
               ) : pendingTickets.map((t, idx) => (
                 <div key={idx} className="p-1.5 rounded-md bg-slate-800/50 border border-slate-700/30">
@@ -1637,7 +1642,58 @@ function App() {
             </div>
             {pendingTickets.length > 0 && (
               <div className="mt-1.5 pt-1.5 border-t border-slate-700/30 text-center">
-                <span className="text-slate-500 text-[9px]">{pendingTickets.length} tickets ready</span>
+                <span className="text-slate-500 text-[9px]">{pendingTickets.length} top picks</span>
+              </div>
+            )}
+            
+            {/* 🎻 Archive files — 50 tickets per file, sorted by generation time */}
+            {archiveFiles.length > 0 && (
+              <div className="mt-3 pt-2 border-t border-slate-700/40">
+                <div className="text-slate-400 text-[10px] mb-1.5 flex items-center gap-1">
+                  <span>📁 Archive</span>
+                  <span className="text-slate-600">({archiveFiles.length} file{archiveFiles.length > 1 ? 's' : ''})</span>
+                </div>
+                <div className="space-y-1">
+                  {archiveFiles.map((af, fi) => (
+                    <div key={fi} className="rounded-md bg-slate-800/40 border border-slate-700/30">
+                      <button
+                        onClick={() => setOpenArchive(openArchive === fi ? null : fi)}
+                        className="w-full px-2 py-1.5 flex items-center justify-between text-left hover:bg-slate-700/30 rounded-md"
+                        data-testid={`archive-file-${fi}`}
+                      >
+                        <span className="text-[10px] text-amber-300 font-mono">{af.file_name}</span>
+                        <span className="text-[9px] text-slate-500">{af.count} tickets {openArchive === fi ? '▲' : '▼'}</span>
+                      </button>
+                      {openArchive === fi && (
+                        <div className="px-1.5 pb-1.5 space-y-1 max-h-[40vh] overflow-y-auto">
+                          {af.tickets?.map((t, ti) => (
+                            <div key={ti} className="p-1 rounded bg-slate-900/60 border border-slate-800/50">
+                              <div className="flex items-center justify-center gap-0.5 flex-wrap">
+                                {t.numbers?.map((n, i) => (
+                                  <Ball key={i} number={n} size="xs" maxNum={lotteryMode === 'euro' ? 50 : 42} />
+                                ))}
+                                {lotteryMode === 'swiss' && t.lucky != null && (
+                                  <div className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-sm ml-0.5">
+                                    <span className="text-white text-[8px] font-black">{t.lucky}</span>
+                                  </div>
+                                )}
+                                {lotteryMode === 'euro' && t.stars && t.stars.length > 0 && (
+                                  <>
+                                    {t.stars.map((s, si) => (
+                                      <div key={si} className="w-5 h-5 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-sm">
+                                        <span className="text-white text-[8px] font-black">{s}</span>
+                                      </div>
+                                    ))}
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -1654,7 +1710,7 @@ function App() {
             data-testid="pending-mobile-toggle"
           >
             <span className="text-amber-400 text-sm font-semibold">Pending</span>
-            <span className="text-emerald-400 font-mono font-bold">{pendingTickets.length}</span>
+            <span className="text-emerald-400 font-mono font-bold">{pendingTotal}</span>
           </button>
           <div className="p-2 rounded-lg bg-slate-800/60 border border-emerald-500/20 flex items-center gap-2">
             <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span>
@@ -1663,7 +1719,8 @@ function App() {
           </div>
         </div>
         <div className="lg:hidden mb-3">
-          <div id="mobile-pending" className="hidden mt-2 space-y-1.5 max-h-64 overflow-y-auto">
+          <div id="mobile-pending" className="hidden mt-2 space-y-1.5 max-h-80 overflow-y-auto">
+            <div className="text-[10px] text-slate-500 px-1">Top {pendingTickets.length} of {pendingTotal} • engine-ranked</div>
             {pendingTickets.map((t, idx) => (
               <div key={idx} className="p-2 rounded-lg bg-slate-800/50 border border-slate-700/30">
                 <div className="flex items-center justify-center gap-1">
@@ -1687,6 +1744,51 @@ function App() {
                 </div>
               </div>
             ))}
+            {/* Mobile Archive files */}
+            {archiveFiles.length > 0 && (
+              <div className="mt-2 pt-2 border-t border-slate-700/40 space-y-1">
+                <div className="text-[10px] text-slate-400 px-1">📁 Archive ({archiveFiles.length} file{archiveFiles.length > 1 ? 's' : ''})</div>
+                {archiveFiles.map((af, fi) => (
+                  <div key={fi} className="rounded-md bg-slate-800/40 border border-slate-700/30">
+                    <button
+                      onClick={() => setOpenArchive(openArchive === `m-${fi}` ? null : `m-${fi}`)}
+                      className="w-full px-2 py-1.5 flex items-center justify-between text-left"
+                      data-testid={`mobile-archive-file-${fi}`}
+                    >
+                      <span className="text-[10px] text-amber-300 font-mono">{af.file_name}</span>
+                      <span className="text-[9px] text-slate-500">{af.count} tickets {openArchive === `m-${fi}` ? '▲' : '▼'}</span>
+                    </button>
+                    {openArchive === `m-${fi}` && (
+                      <div className="px-1.5 pb-1.5 space-y-1 max-h-60 overflow-y-auto">
+                        {af.tickets?.map((t, ti) => (
+                          <div key={ti} className="p-1 rounded bg-slate-900/60 border border-slate-800/50">
+                            <div className="flex items-center justify-center gap-0.5 flex-wrap">
+                              {t.numbers?.map((n, i) => (
+                                <Ball key={i} number={n} size="xs" maxNum={lotteryMode === 'euro' ? 50 : 42} />
+                              ))}
+                              {lotteryMode === 'swiss' && t.lucky != null && (
+                                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center ml-0.5">
+                                  <span className="text-white text-[8px] font-black">{t.lucky}</span>
+                                </div>
+                              )}
+                              {lotteryMode === 'euro' && t.stars && t.stars.length > 0 && (
+                                <>
+                                  {t.stars.map((s, si) => (
+                                    <div key={si} className="w-5 h-5 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
+                                      <span className="text-white text-[8px] font-black">{s}</span>
+                                    </div>
+                                  ))}
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         {/* Ticket Limit Notice */}

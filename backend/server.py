@@ -3473,7 +3473,8 @@ async def get_master_prediction(
             target_date=target_date_str,
             tickets=tracker_tickets,
             generation_type="master-predictor",
-            visitor_id=visitor_id
+            visitor_id=visitor_id,
+            has_locked=bool(locked_positions)
         )
     except Exception:
         pass  # Don't fail the prediction if tracker save fails
@@ -4229,13 +4230,18 @@ async def get_ticket_counter():
     total = swiss_gen_count + swiss_pred_count + euro_count
 
 @api_router.get("/pending-tickets")
-async def get_pending_tickets(mode: str = "swiss"):
-    """Get all tickets generated for the NEXT upcoming draw."""
+async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
+    """
+    Get tickets generated for the NEXT upcoming draw.
+    
+    🎻 Tickets with LOCKED positions are EXCLUDED (user manual picks, not engine predictions).
+    🎧 Returns the TOP 10 best tickets (ranked by V2 Detective conviction for the next draw)
+       plus "archive files" grouped by 50 tickets (sorted by generation time, newest first).
+    """
     from datetime import timedelta
     today = datetime.now()
     
     if mode == "euro":
-        # EuroMillions: Tuesday & Friday
         days_tue = (1 - today.weekday()) % 7
         days_fri = (4 - today.weekday()) % 7
         if days_tue == 0: days_tue = 7
@@ -4243,16 +4249,63 @@ async def get_pending_tickets(mode: str = "swiss"):
         next_draw = today + timedelta(days=min(days_tue, days_fri))
         next_date = next_draw.strftime("%d.%m.%Y")
         
-        tickets = []
-        async for g in db.euromillions_generations.find({"target_date": next_date}, {"_id": 0, "tickets": 1, "mode": 1}):
+        # Collect (ticket, generated_at) from generations WITHOUT locked positions
+        q = {"target_date": next_date, "$or": [{"has_locked": {"$ne": True}}, {"has_locked": {"$exists": False}}]}
+        if visitor_id:
+            q["visitor_id"] = visitor_id
+        all_tickets = []
+        async for g in db.euromillions_generations.find(q, {"_id": 0, "tickets": 1, "mode": 1, "generated_at": 1}):
+            ga = g.get("generated_at", "")
             for t in g.get("tickets", []):
-                tickets.append({
+                all_tickets.append({
                     "numbers": t.get("numbers", []),
                     "stars": t.get("stars", []),
                     "story": t.get("story", g.get("mode", "")),
+                    "generated_at": ga,
                 })
+        
+        # 🎧 Score by V2 Detective conviction for the upcoming draw
+        try:
+            from dj_patterns import find_suspects
+            euro_draws = []
+            async for d in db.euromillions_draws.find({}, {"_id": 0}).sort("date", -1).limit(30):
+                euro_draws.append({"date": d.get("date", ""), "numbers": d.get("numbers", []), "stars": d.get("stars", [])})
+            # sort by date desc (string sort won't work; parse)
+            def _pd(s):
+                try: return datetime.strptime(s, '%d.%m.%Y')
+                except: return datetime.min
+            euro_draws.sort(key=lambda x: _pd(x['date']), reverse=True)
+            suspect_res = find_suspects(euro_draws[:15], target_date=next_date) if euro_draws else {"suspects": []}
+            conv_map = {s['number']: s['conviction'] for s in suspect_res.get('suspects', [])}
+        except Exception:
+            conv_map = {}
+        
+        for t in all_tickets:
+            score = sum(conv_map.get(n, 0) for n in t.get("numbers", []))
+            t["_score"] = score
+        
+        # Top 10 = best-scored. Archive = the rest, sorted by time (newest first), 50 per file.
+        scored_sorted = sorted(all_tickets, key=lambda x: -x["_score"])
+        top10 = scored_sorted[:10]
+        rest = sorted(scored_sorted[10:], key=lambda x: x.get("generated_at", ""), reverse=True)
+        
+        archive_files = []
+        for idx in range(0, len(rest), 50):
+            chunk = rest[idx:idx+50]
+            archive_files.append({
+                "file_name": f"50-tickets-#{idx//50 + 1}",
+                "count": len(chunk),
+                "tickets": [{k: v for k, v in t.items() if k != "_score"} for t in chunk],
+            })
+        
+        return {
+            "next_date": next_date,
+            "count": len(all_tickets),
+            "top_count": len(top10),
+            "tickets": [{k: v for k, v in t.items() if k != "_score"} for t in top10],
+            "archive_files": archive_files,
+        }
     else:
-        # Swiss Lotto: Wednesday & Saturday
         days_wed = (2 - today.weekday()) % 7
         days_sat = (5 - today.weekday()) % 7
         if days_wed == 0: days_wed = 7
@@ -4260,16 +4313,59 @@ async def get_pending_tickets(mode: str = "swiss"):
         next_draw = today + timedelta(days=min(days_wed, days_sat))
         next_date = next_draw.strftime("%d.%m.%Y")
         
-        tickets = []
-        async for g in db.generations.find({"target_date": next_date}, {"_id": 0, "tickets": 1, "generation_type": 1}):
+        q = {"target_date": next_date, "$or": [{"has_locked": {"$ne": True}}, {"has_locked": {"$exists": False}}]}
+        if visitor_id:
+            q["visitor_id"] = visitor_id
+        all_tickets = []
+        async for g in db.generations.find(q, {"_id": 0, "tickets": 1, "generation_type": 1, "generated_at": 1}):
+            ga = g.get("generated_at", "")
             for t in g.get("tickets", []):
-                tickets.append({
+                all_tickets.append({
                     "numbers": t.get("numbers", []),
                     "lucky": t.get("lucky") or t.get("lucky_number"),
                     "story": t.get("story", g.get("generation_type", "")),
+                    "generated_at": ga,
                 })
-    
-    return {"next_date": next_date, "count": len(tickets), "tickets": tickets}
+        
+        # 🎧 Score by Swiss Lotto previous-draw pattern conviction
+        try:
+            from dj_patterns import find_suspects
+            swiss_draws = []
+            async for d in db.draws.find({}, {"_id": 0}).sort("date", -1).limit(30):
+                swiss_draws.append({"date": d.get("date", ""), "numbers": d.get("numbers", [])})
+            def _pd(s):
+                try: return datetime.strptime(s, '%d.%m.%Y')
+                except: return datetime.min
+            swiss_draws.sort(key=lambda x: _pd(x['date']), reverse=True)
+            suspect_res = find_suspects(swiss_draws[:15], target_date=next_date) if swiss_draws else {"suspects": []}
+            conv_map = {s['number']: s['conviction'] for s in suspect_res.get('suspects', [])}
+        except Exception:
+            conv_map = {}
+        
+        for t in all_tickets:
+            score = sum(conv_map.get(n, 0) for n in t.get("numbers", []))
+            t["_score"] = score
+        
+        scored_sorted = sorted(all_tickets, key=lambda x: -x["_score"])
+        top10 = scored_sorted[:10]
+        rest = sorted(scored_sorted[10:], key=lambda x: x.get("generated_at", ""), reverse=True)
+        
+        archive_files = []
+        for idx in range(0, len(rest), 50):
+            chunk = rest[idx:idx+50]
+            archive_files.append({
+                "file_name": f"50-tickets-#{idx//50 + 1}",
+                "count": len(chunk),
+                "tickets": [{k: v for k, v in t.items() if k != "_score"} for t in chunk],
+            })
+        
+        return {
+            "next_date": next_date,
+            "count": len(all_tickets),
+            "top_count": len(top10),
+            "tickets": [{k: v for k, v in t.items() if k != "_score"} for t in top10],
+            "archive_files": archive_files,
+        }
 
 
     

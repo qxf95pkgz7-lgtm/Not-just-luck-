@@ -22,7 +22,8 @@ class HitTracker:
         target_date: str,
         tickets: List[Dict],
         generation_type: str = "story",
-        visitor_id: str = ""
+        visitor_id: str = "",
+        has_locked: bool = False
     ) -> str:
         """Save a generation for later hit tracking"""
         
@@ -35,7 +36,8 @@ class HitTracker:
             "hit_results": None,
             "total_hits": 0,
             "lucky_hits": 0,
-            "best_ticket_hits": 0
+            "best_ticket_hits": 0,
+            "has_locked": has_locked,
         }
         if visitor_id:
             generation["visitor_id"] = visitor_id

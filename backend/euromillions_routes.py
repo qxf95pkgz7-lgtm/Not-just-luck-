@@ -2422,7 +2422,7 @@ def create_euromillions_router(db):
         
         # Auto-save to hit tracker
         try:
-            await _save_to_tracker(tickets, target_date, mode="dreaming", visitor_id=request.visitor_id or "")
+            await _save_to_tracker(tickets, target_date, mode="dreaming", visitor_id=request.visitor_id or "", has_locked=bool(request.locked_positions))
         except Exception:
             pass  # Don't fail the prediction if save fails
         
@@ -2436,7 +2436,7 @@ def create_euromillions_router(db):
         }
     
     # Helper: auto-save generated tickets to hit tracker
-    async def _save_to_tracker(tickets_data, target_date, mode="dreaming", visitor_id=""):
+    async def _save_to_tracker(tickets_data, target_date, mode="dreaming", visitor_id="", has_locked=False):
         """Save generated tickets to euromillions_generations for hit tracking"""
         from datetime import datetime as dt, timedelta
         
@@ -2465,6 +2465,7 @@ def create_euromillions_router(db):
             "total_hits": 0,
             "star_hits": 0,
             "best_ticket_hits": 0,
+            "has_locked": has_locked,
         }
         if visitor_id:
             generation["visitor_id"] = visitor_id
@@ -2553,7 +2554,7 @@ def create_euromillions_router(db):
         
         # Auto-save to hit tracker
         try:
-            await _save_to_tracker(tickets, target_date, mode="money", visitor_id=request.visitor_id or "")
+            await _save_to_tracker(tickets, target_date, mode="money", visitor_id=request.visitor_id or "", has_locked=bool(request.locked_positions))
         except Exception:
             pass
         
