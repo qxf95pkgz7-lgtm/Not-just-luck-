@@ -1269,7 +1269,7 @@ function App() {
       console.error("Error:", e);
       // Handle ticket limit reached
       if (e.response && e.response.status === 429) {
-        alert(e.response.data?.detail || "Ticket limit reached! Maximum 20 tickets per draw.");
+        alert(e.response.data?.detail || "Ticket limit reached! Maximum 12 tickets per draw.");
         setLoading(false);
         return;
       }
@@ -1663,7 +1663,7 @@ function App() {
         </div>
         {/* Ticket Limit Notice */}
         <div className="mb-3 px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700/40 flex items-center justify-center gap-2" data-testid="ticket-limit-notice">
-          <span className="text-slate-500 text-xs">You can generate up to <span className="text-amber-400 font-semibold">20 tickets</span> per {lotteryMode === 'swiss' ? 'Swiss Lotto' : 'EuroMillions'} draw</span>
+          <span className="text-slate-500 text-xs">You can generate up to <span className="text-amber-400 font-semibold">12 tickets</span> per {lotteryMode === 'swiss' ? 'Swiss Lotto' : 'EuroMillions'} draw <span className="text-slate-600">• auto-resets on new draw</span></span>
         </div>
         <div className="lucky-card p-6 mb-6" style={lotteryMode === 'euro' ? { background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(2,6,23,0.98) 100%)', borderColor: 'rgba(59,130,246,0.3)' } : {}}>
           <div className="flex items-center justify-center gap-3 mb-6">
@@ -3123,7 +3123,7 @@ function App() {
 
                 <div>
                   <h3 className="text-amber-300 font-semibold mb-1">Multiple Tickets</h3>
-                  <p>Open the ticket selector to generate 2 to 20 tickets at once. Swiss Lotto starts at 2 tickets (5 CHF). Each ticket carries a different cosmic frequency — some are grounded, some reach for the high stars.</p>
+                  <p>Open the ticket selector to generate 2 to 12 tickets at once. Swiss Lotto starts at 2 tickets (5 CHF). Each ticket carries a different cosmic frequency — some are grounded, some reach for the high stars. A fresh batch of 12 unlocks every time a new draw lands.</p>
                 </div>
 
                 <div>

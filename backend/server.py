@@ -5029,8 +5029,8 @@ async def get_active_users():
     total_count = await db.active_users.count_documents({})
     return {"active_users": active_count, "total_users": total_count}
 
-# ─── TICKET LIMIT (20 per user per draw period) ─────────────
-TICKET_LIMIT = 20
+# ─── TICKET LIMIT (12 per user per draw period — resets when new draw lands) ─────────────
+TICKET_LIMIT = 12
 
 def _get_next_draw_dates():
     """Get next Swiss and Euro draw dates."""
