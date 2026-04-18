@@ -4921,8 +4921,8 @@ async def get_hit_tracker(last_draws: int = 3):
                 })
                 break  # Only match to best draw
     
-    # Sort: best hits first, then by date
-    results.sort(key=lambda r: (-r['hit_count'], r['target_date']))
+    # Sort: ALWAYS by date (latest draw first), then best hits within same date
+    results.sort(key=lambda r: (-parse_d(r['target_date']).timestamp(), -r['hit_count']))
     
     # Deduplicate (same numbers for same date)
     seen = set()

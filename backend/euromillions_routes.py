@@ -2925,8 +2925,8 @@ def create_euromillions_router(db):
             elif not merged["hits_calculated"]:
                 pending_entries.append(merged)
         
-        # Sort winners: best total score first, then by num hits
-        all_winners.sort(key=lambda w: (-w["total_score"], -w["num_hits"]))
+        # Sort winners: ALWAYS by target_date DESC (latest played draw first), then by best hits
+        all_winners.sort(key=lambda w: (-parse_target_date({'target_date': w['target_date']}).timestamp(), -w["total_score"], -w["num_hits"]))
         
         # Build result grouped by date, max 20 tickets
         from collections import OrderedDict as OD2
@@ -2959,10 +2959,10 @@ def create_euromillions_router(db):
         
         result = list(grouped.values())
         
-        # Add pending at the top
+        # Pending/future draws (not yet played) go at the BOTTOM so last played draw stays on top
         for p in pending_entries[:2]:
             p["tickets"] = p["tickets"][:3]
-            result.insert(0, p)
+            result.append(p)
         
         return {
             "count": len(result),
