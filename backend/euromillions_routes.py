@@ -3366,6 +3366,12 @@ def create_euromillions_router(db):
             date_results["winners"].sort(key=lambda w: -w["match_count"])
             results.append(date_results)
         
+        # 🎻 Always sort by date DESC (latest 2Chance draw first)
+        def _parse_d(s):
+            try: return datetime.strptime(s, '%d.%m.%Y')
+            except: return datetime.min
+        results.sort(key=lambda r: _parse_d(r.get("date", "")), reverse=True)
+        
         return {"results": results}
     
     return router
