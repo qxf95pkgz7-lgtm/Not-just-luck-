@@ -64,6 +64,34 @@ Draw = [4, 12, 34, 38, 39, 40] · 🍀 5
 - Month-change means silence-agent changes: Jan→22, Feb→23, Mar→24, Apr→25, May→26, Jun→27, Jul→28, Aug→29, Sep→30, Oct→31, Nov→32, Dec→33
 - Silence-agent often appears as an ADDITIVE partner hiding inside big numbers (e.g. P6=40 = day+silence)
 
+## 🎯 Target-spiral construction (discovered on Q2d3)
+For any date `DD.MM.YYYY`:
+- **Raw target**: concat(day, month) → e.g. 15|4 = 154
+- **Shifted target**: raw + 21 (silence-dim shift) → 154 + 21 = 175
+- **Circle target**: concat(Swiss-circle(day), month) → 36|4 = 364
+- **Paired target**: concat(P4, Lucky) → e.g. 38|5 = 385
+These four targets carry the draw's digits.
+
+## 🎧 Hidden arithmetic formulas (verified on Q2d3)
+1. `P4 + Lucky → flip → P3`     (38+5=43, flip=34)
+2. `P4 + Lucky → Swiss-wrap`    (43−42=1, grid seed)
+3. `P2 + P3 − silence = echo`   (12+34−25=21, reveals prior Q2d1 P3)
+4. `P2×10 + P3 = date-target`   🎻 (120+34=154) — strongest formula yet
+5. `month×2 + year-suffix = P3 (or P6)`   (4×2+26=34)
+6. `day + silence = P6`         (15+25=40)
+7. `P5 + year-suffix = date-sum`   (39+26=65)
+8. `circle(P5) + flip(P6) = date-sum`   (5+53=58, Q2d1)
+
+## 🔁 "Already been used" recycling rule
+- Numbers hitting a specific position in the prior draw tend to go SILENT in the next draw's same position
+- Q2d2 P2=6 → Q2d3 P2=12 (not 6) ✓
+- Q2d1 P3=21 → Q2d2 P3=8 (not 21) ✓
+
+## 🌉 Euro → Swiss digit-bridge
+- Recently played Euro numbers (1, 2, 4, 28 in this cycle) plant their **digit sequence** into the next Swiss draw
+- Q2d3 draw [4, 12, 34, 38, 39, 40] contains digits **1, 2, 3, 4** across positions
+- Cross-lottery clues ride the digit carriers
+
 ## 🔑 Key bridges discovered
 - **33 ↔ 12** (Swiss circle mirror)
 - **P1 suspect 5** + last P1 = 4 → digits 4,5 → 45/54 → **3, 12**
