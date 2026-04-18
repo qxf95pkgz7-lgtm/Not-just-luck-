@@ -3184,6 +3184,8 @@ def create_euromillions_router(db):
         PROVEN: 88% wake rate, 72% tease-first, Stars at 1.8x random!
         """
         from sleeper_engine import detect_sleepers, predict_next_n_draws
+        from dj_patterns import find_suspects, circle as _circle, flip_circle_chain
+        from datetime import datetime as _dt, timedelta as _td
         
         await seed_euromillions_if_empty()
         draws = await get_euromillions_draws()
@@ -3198,22 +3200,45 @@ def create_euromillions_router(db):
         num_sleepers = detect_sleepers(draws, num_range=50, is_stars=False, tease_window=3)
         star_sleepers = detect_sleepers(draws, num_range=12, is_stars=True, tease_window=3)
         
-        # Generate N-draw forecast
-        predictions = predict_next_n_draws(draws, n_draws=n_draws)
+        # 🎻 V2 DETECTIVE CROSSOVER — compute next target date for convictions
+        try:
+            last_dt = _dt.strptime(draws[0]['date'], '%d.%m.%Y')
+            # Next Euro draw = Tue or Fri
+            nxt = last_dt + _td(days=1)
+            while nxt.weekday() not in (1, 4):
+                nxt += _td(days=1)
+            target_date = nxt.strftime('%d.%m.%Y')
+        except Exception:
+            target_date = None
         
-        # Format sleeper report
+        suspect_result = find_suspects(draws, target_date=target_date)
+        conviction_map = {s['number']: s['conviction'] for s in suspect_result.get('suspects', [])}
+        suspect_patterns = {s['number']: s.get('patterns', [])[:3] for s in suspect_result.get('suspects', [])}
+        
+        # Format sleeper report with CIRCLE + CONVICTION crossover
         sleeper_report = []
         for s in num_sleepers[:15]:
+            circle_num = s.circle_partner
+            # Build the full orbit family (circles + flips)
+            orbit = sorted(set(flip_circle_chain(s.num)) | {circle_num} if 1 <= circle_num <= 50 else set(flip_circle_chain(s.num)))
+            orbit = [n for n in orbit if 1 <= n <= 50 and n != s.num][:4]
+            
             sleeper_report.append({
                 "num": s.num,
                 "gap": s.gap,
                 "overdue": round(s.overdue, 2),
-                "circle_partner": s.circle_partner,
+                "circle_partner": circle_num,
+                "circle_partner_conviction": conviction_map.get(circle_num, 0),
                 "circle_boost": round(s.circ_boost, 2),
                 "tease_score": round(s.tease_score, 1),
                 "tease_details": s.tease_details[:3],
                 "composite_score": round(s.composite_score, 1),
                 "last_seen": s.last_date,
+                # 🎻 New: V2 Detective crossover fields
+                "detective_conviction": conviction_map.get(s.num, 0),
+                "detective_patterns": suspect_patterns.get(s.num, []),
+                "orbit_family": orbit,
+                "orbit_convictions": {str(n): conviction_map.get(n, 0) for n in orbit},
             })
         
         star_report = []
@@ -3227,6 +3252,7 @@ def create_euromillions_router(db):
             })
         
         # Format predictions
+        predictions = predict_next_n_draws(draws, n_draws=n_draws)
         forecast = []
         for p in predictions:
             forecast.append({

@@ -2460,6 +2460,25 @@ function App() {
                             }}>
                               {s.num}
                             </div>
+                            
+                            {/* 🎻 Saturn Ring — Circle partner orbit */}
+                            {s.circle_partner && s.circle_partner >= 1 && s.circle_partner <= 50 && (
+                              <div
+                                className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border border-indigo-400/50"
+                                style={{
+                                  background: s.circle_partner_conviction >= 3
+                                    ? 'linear-gradient(135deg, rgba(99,102,241,0.3), rgba(79,70,229,0.5))'
+                                    : 'rgba(99,102,241,0.15)',
+                                  color: s.circle_partner_conviction >= 3 ? '#c7d2fe' : '#94a3b8',
+                                  boxShadow: s.circle_partner_conviction >= 4 ? '0 0 8px rgba(99,102,241,0.5)' : 'none'
+                                }}
+                                data-testid={`sleeper-circle-${s.circle_partner}`}
+                                title={`Saturn Ring: ${s.num} + 25 = ${s.circle_partner}  (Detective conviction: ${s.circle_partner_conviction || 0})`}
+                              >
+                                {s.circle_partner}
+                              </div>
+                            )}
+                            
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <div className="flex-1 h-1.5 rounded-full bg-slate-700/50 overflow-hidden">
@@ -2474,10 +2493,21 @@ function App() {
                                 </div>
                                 <span className="text-xs text-slate-400 w-8 text-right">{s.composite_score.toFixed(0)}</span>
                               </div>
-                              <div className="flex items-center gap-2 mt-0.5">
+                              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                                 <span className="text-[10px] text-slate-500">
                                   {s.overdue >= 1.0 ? `${s.overdue.toFixed(1)}x distant` : `orbit ${s.gap}`}
                                 </span>
+                                {/* 🎻 Detective Conviction crossover */}
+                                {s.detective_conviction >= 5 && (
+                                  <span className="text-[10px] px-1.5 rounded bg-fuchsia-500/20 text-fuchsia-300 font-semibold" title={`V2 Detective: ${s.detective_conviction} patterns`}>
+                                    ORBITAL LOCK ×{s.detective_conviction}
+                                  </span>
+                                )}
+                                {s.detective_conviction >= 3 && s.detective_conviction < 5 && (
+                                  <span className="text-[10px] px-1.5 rounded bg-indigo-500/20 text-indigo-300" title={`V2 Detective: ${s.detective_conviction} patterns`}>
+                                    DEEP SPACE ×{s.detective_conviction}
+                                  </span>
+                                )}
                                 {s.tease_score >= 3 && (
                                   <span className="text-[10px] px-1 rounded bg-purple-500/20 text-purple-300">VENUS ALIGNED</span>
                                 )}
@@ -2488,6 +2518,30 @@ function App() {
                                   <span className="text-[10px] px-1 rounded bg-red-500/20 text-red-300">MARS RETURN</span>
                                 )}
                               </div>
+                              {/* 🎻 Orbit family — small dots of morph candidates */}
+                              {s.orbit_family && s.orbit_family.length > 0 && (
+                                <div className="flex items-center gap-1 mt-1">
+                                  <span className="text-[9px] text-slate-600">orbit:</span>
+                                  {s.orbit_family.slice(0, 4).map((n) => {
+                                    const conv = (s.orbit_convictions && s.orbit_convictions[String(n)]) || 0;
+                                    return (
+                                      <span
+                                        key={n}
+                                        className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[8px] font-semibold"
+                                        style={{
+                                          background: conv >= 3 ? 'rgba(236,72,153,0.25)' : 'rgba(71,85,105,0.4)',
+                                          color: conv >= 3 ? '#fbcfe8' : '#94a3b8',
+                                          border: conv >= 5 ? '1px solid rgba(236,72,153,0.6)' : 'none',
+                                        }}
+                                        title={`${n} — Detective conviction: ${conv}`}
+                                        data-testid={`orbit-num-${n}`}
+                                      >
+                                        {n}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              )}
                             </div>
                           </div>
                         ))}
