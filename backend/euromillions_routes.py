@@ -2966,11 +2966,56 @@ def create_euromillions_router(db):
             p["tickets"] = p["tickets"][:3]
             result.append(p)
         
+        # === PER-DRAW PULSE (last 3 Euro draws) ===
+        all_euro_draws = await db.euromillions_draws.find({}, {"_id": 0}).to_list(length=5000)
+        all_euro_draws.sort(key=lambda d: parse_target_date({'target_date': d.get('date', '01.01.2000')}), reverse=True)
+        last_n_euro = all_euro_draws[:3]
+        
+        per_draw_stats = []
+        for d in last_n_euro:
+            td = d['date']
+            actual_nums = set(d.get('numbers', []))
+            actual_stars = set(d.get('stars', []))
+            
+            total_generated = 0
+            hits_2plus = 0
+            hits_3plus = 0
+            best_hit = 0
+            
+            gens_for_draw = [g for g in all_gens if g.get('target_date') == td]
+            for g in gens_for_draw:
+                tickets = g.get('tickets', [])
+                hr = g.get('hit_results', [])
+                for i, t in enumerate(tickets):
+                    total_generated += 1
+                    if i < len(hr) and hr[i]:
+                        nh = hr[i].get('hit_count', 0) or 0
+                        sh = hr[i].get('star_hit_count', 0) or 0
+                    else:
+                        nh = len(set(t.get('numbers', [])) & actual_nums)
+                        sh = len(set(t.get('stars', [])) & actual_stars)
+                    total_score = nh + sh
+                    if total_score >= 2: hits_2plus += 1
+                    if total_score >= 3: hits_3plus += 1
+                    if nh > best_hit: best_hit = nh
+            
+            hit_rate = round((hits_2plus / total_generated * 100), 1) if total_generated > 0 else 0.0
+            
+            per_draw_stats.append({
+                "date": td,
+                "total_generated": total_generated,
+                "hits_2plus": hits_2plus,
+                "hits_3plus": hits_3plus,
+                "best_hit": best_hit,
+                "hit_rate_pct": hit_rate,
+            })
+        
         return {
             "count": len(result),
             "total_in_db": len(all_gens),
             "total_winners": len(all_winners),
-            "generations": result
+            "generations": result,
+            "per_draw_stats": per_draw_stats,
         }
     
     @router.post("/calculate-hits/{generation_id}")

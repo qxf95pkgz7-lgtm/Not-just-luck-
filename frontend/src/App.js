@@ -672,6 +672,7 @@ function App() {
       if (lotteryMode === 'euro') {
         const res = await axios.get(`${API}/euromillions/generation-history?limit=30`);
         setGenerationHistory(res.data.generations || []);
+        setPerDrawStats(res.data.per_draw_stats || []);
       } else {
         // Use the new clean hit-tracker endpoint for Swiss
         const res = await axios.get(`${API}/hit-tracker?last_draws=3`);
@@ -3035,11 +3036,11 @@ function App() {
                 </div>
               )}
               
-              {/* PER-DRAW PULSE — Swiss only, draw-to-draw breakdown */}
-              {lotteryMode === 'swiss' && perDrawStats.length > 0 && (
-                <div className="p-3 rounded-lg bg-gradient-to-br from-slate-800/60 to-slate-900/80 border border-amber-500/20" data-testid="per-draw-pulse">
+              {/* PER-DRAW PULSE — draw-to-draw breakdown (Swiss + Euro) */}
+              {perDrawStats.length > 0 && (
+                <div className={`p-3 rounded-lg bg-gradient-to-br from-slate-800/60 to-slate-900/80 border ${lotteryMode === 'euro' ? 'border-blue-500/20' : 'border-amber-500/20'}`} data-testid="per-draw-pulse">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-amber-400 font-semibold text-sm flex items-center gap-2">
+                    <span className={`font-semibold text-sm flex items-center gap-2 ${lotteryMode === 'euro' ? 'text-blue-400' : 'text-amber-400'}`}>
                       🎻 Draw-to-Draw Pulse
                     </span>
                     <span className="text-slate-500 text-[10px]">Generated per draw • Hit rate</span>
@@ -3052,7 +3053,7 @@ function App() {
                         </div>
                         <div className="flex items-center gap-3 flex-wrap justify-end">
                           <span className="text-slate-300">
-                            <span className="text-amber-400 font-bold">{s.total_generated}</span>
+                            <span className={`font-bold ${lotteryMode === 'euro' ? 'text-blue-400' : 'text-amber-400'}`}>{s.total_generated}</span>
                             <span className="text-slate-500"> gen</span>
                           </span>
                           <span className="text-slate-300">
@@ -3063,7 +3064,7 @@ function App() {
                             <span className="text-purple-400 font-bold">{s.hits_3plus}× 3+</span>
                           )}
                           <span className="px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-300 font-semibold">
-                            best {s.best_hit}/6
+                            best {s.best_hit}/{lotteryMode === 'euro' ? 5 : 6}
                           </span>
                           <span className={`px-1.5 py-0.5 rounded font-bold ${
                             s.hit_rate_pct >= 20 ? 'bg-emerald-500/20 text-emerald-300' :
