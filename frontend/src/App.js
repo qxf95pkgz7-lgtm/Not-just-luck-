@@ -547,6 +547,7 @@ function App() {
   const [pendingTotal, setPendingTotal] = useState(0);
   const [archiveFiles, setArchiveFiles] = useState([]);
   const [openArchive, setOpenArchive] = useState(null);
+  const [rareSeed, setRareSeed] = useState(null);
   const [activeUsers, setActiveUsers] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
   
@@ -856,6 +857,7 @@ function App() {
       setPendingTotal(res.data.count || 0);
       setArchiveFiles(res.data.archive_files || []);
       setNextDrawDate(res.data.next_date || '');
+      setRareSeed(res.data.rare_seed || null);
     } catch (e) {}
   };
   // 🎻 Check VIP/unlimited status from backend
@@ -1614,6 +1616,20 @@ function App() {
               <span className="text-emerald-400 font-mono font-bold text-sm">{pendingTickets.length}/{pendingTotal}</span>
             </div>
             <div className="text-slate-500 text-[9px] mb-2">For draw: {nextDrawDate} <span className="text-slate-600">• engine-ranked</span></div>
+            {rareSeed && rareSeed.draws_since <= 8 && (
+              <div className="mb-2 p-1.5 rounded-md border border-fuchsia-500/40 bg-gradient-to-br from-fuchsia-900/30 to-purple-900/20" data-testid="rare-event-banner">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-fuchsia-300 text-[10px] font-bold">🚨 RARE EVENT</span>
+                  <span className="text-fuchsia-400/80 text-[9px] font-mono">{rareSeed.date} • +{rareSeed.draws_since}</span>
+                </div>
+                <div className="text-[9px] text-slate-400 mb-0.5">Seed [{(rareSeed.numbers || []).join(', ')}]{rareSeed.stars && rareSeed.stars.length > 0 ? ` ⭐ [${rareSeed.stars.join(', ')}]` : ''}</div>
+                {(rareSeed.unreleased_mains?.length > 0 || rareSeed.unreleased_stars?.length > 0) && (
+                  <div className="text-[9px] text-fuchsia-300 font-semibold" title="Seed numbers that haven't re-emerged since the rare event">
+                    💤 Hungry: {(rareSeed.unreleased_mains || []).join(', ')}{rareSeed.unreleased_stars?.length > 0 ? ` ⭐${rareSeed.unreleased_stars.join(',')}` : ''}
+                  </div>
+                )}
+              </div>
+            )}
             <div className="space-y-1.5 max-h-[55vh] overflow-y-auto">
               {pendingTickets.length === 0 ? (
                 <div className="text-center text-slate-600 text-[10px] py-3">
@@ -1656,6 +1672,16 @@ function App() {
                     >
                       <span className="truncate">{dr.badge}</span>
                       <span className="font-bold tabular-nums">{dr.score >= 0 ? `+${dr.score}` : dr.score}</span>
+                    </div>
+                  )}
+                  {t.rare_echo && t.rare_echo.score > 0 && (
+                    <div
+                      className="mt-1 px-1.5 py-0.5 rounded border border-fuchsia-500/40 bg-fuchsia-500/15 text-fuchsia-300 text-[9px] font-mono flex items-center justify-between gap-1"
+                      title={`Holds unreleased seed: ${(t.rare_echo.held_mains || []).join(', ')}${t.rare_echo.held_stars?.length ? ' ⭐ ' + t.rare_echo.held_stars.join(',') : ''}`}
+                      data-testid={`rare-echo-badge-${idx}`}
+                    >
+                      <span className="truncate">🚨 rare echo</span>
+                      <span className="font-bold tabular-nums">+{t.rare_echo.score}</span>
                     </div>
                   )}
                 </div>
@@ -1779,6 +1805,15 @@ function App() {
                   >
                     <span className="truncate">{dr.badge}</span>
                     <span className="font-bold tabular-nums">{dr.score >= 0 ? `+${dr.score}` : dr.score}</span>
+                  </div>
+                )}
+                {t.rare_echo && t.rare_echo.score > 0 && (
+                  <div
+                    className="mt-1 px-1.5 py-0.5 rounded border border-fuchsia-500/40 bg-fuchsia-500/15 text-fuchsia-300 text-[9px] font-mono flex items-center justify-between gap-1"
+                    title={`Holds unreleased seed: ${(t.rare_echo.held_mains || []).join(', ')}${t.rare_echo.held_stars?.length ? ' ⭐ ' + t.rare_echo.held_stars.join(',') : ''}`}
+                  >
+                    <span className="truncate">🚨 rare echo</span>
+                    <span className="font-bold tabular-nums">+{t.rare_echo.score}</span>
                   </div>
                 )}
               </div>

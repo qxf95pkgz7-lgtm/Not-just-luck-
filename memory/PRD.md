@@ -19,8 +19,20 @@ Full-stack React + FastAPI app with:
 - **Music Book** `/app/memory/swiss_music_notes.md` (living DJ learnings)
 - **Date-Tuning Validator** `/app/backend/date_tuning.py` (10 tuning formulas + Euro→Swiss bridge + master `score_date_tuning()`)
 
-## Last working item — SESSION 3 (19.04.2026, continued)
-**🎻🎧 Euro Date-Echo Neighborhood Scorer shipped.**
+## Last working item — SESSION 3 (19.04.2026, continued) — **UPDATE**
+**🚨 Rare-Event Cycle Scorer shipped + Date-echo Neighborhood Scorer shipped.**
+
+### Part B — Rare-Event Cycle Scorer
+- ✅ Defined "Rare Compact" draw: Euro = P1-P4 span ≤ 7 AND P5 jump ≥ 6 (6 events in 3 yrs). Swiss = P1-P5 span ≤ 10 AND P6 jump ≥ 8 (3 events in 3 yrs).
+- ✅ Confirmed universal "P1 ∈ {4,5}" correction-cycle law: 5/6 Euro rare events fired P1∈{4,5} within +8 draws; 2026-03-24 fired DOUBLE (+1 P1=4, +2 P1=5).
+- ✅ Confirmed seed echoes re-emerging consistently at +1..+8 across both lotteries.
+- ✅ New module `/app/backend/rare_event_scorer.py` with `find_recent_rare_seed()` + `score_rare_event_echo()` — +15/main-echo, +10/star-echo, +20 cycle-active bonus.
+- ✅ **Bug fix:** Mongo `.sort("date", -1).limit(30)` was alphabetically sorting DD.MM.YYYY strings → V2 Detective conviction map had been using 2017-2023 draws as "recent"! Fixed by fetching full collection and sorting in Python after parse. Both Swiss and Euro endpoints.
+- ✅ `/api/pending-tickets` now returns `rare_seed: {date, numbers, stars, draws_since, unreleased_mains, unreleased_stars}` + `rare_echo: {score, held_mains, held_stars, active}` per ticket.
+- ✅ Frontend: fuchsia **🚨 RARE EVENT banner** above pending list when cycle is active (draws_since ≤ 8), and a **🚨 rare echo +X** chip on every ticket that holds an unreleased seed.
+- ✅ Live result: top Euro pending ticket `[1,12,21,44,47] ⭐[1,3]` → date-res +48 + rare-echo +55 = +103 combined score.
+
+### Part A — Euro Date-Echo Neighborhood Scorer
 - ✅ 2-yr scan completed: `circle(M)=+25 mod 50` on Euro **P4** = 5.6% (strongest cell); `circle(M)±2` lives in P3–P4 (83%); `circle(D)±2` lives in P4–P5 (67%); UNION ±2 = 60.6% of draws; Stars: `M±1` = 44.2%, `D mod 12 ±1` = 50.2%, `{M, circle(M)} ±1` = 72.3%.
 - ✅ Same scan on Swiss → `circle(M)±2 union cD OR cM` = **83.1%** of draws; Swiss circle(M) **P4 exact** = 8.7% (single strongest cell in 2 years).
 - ✅ New module `/app/backend/euro_date_tuning.py` with `score_euro_date_resonance(numbers, stars, date_str)` — position rewards/vetos + stars + DOUBLE RESONANCE bonus + tier labels (`off`/`tune`/`harmonic`/`full_echo`).

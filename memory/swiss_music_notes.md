@@ -1,3 +1,37 @@
+<!-- SESSION-3 ADDENDUM — RARE-EVENT CYCLE LAW (Euro & Swiss confirmed) -->
+
+# 🚨 RARE-EVENT CYCLE LAW (Universal across Swiss & Euro)
+
+A "Rare Compact" draw is defined as:
+- **Euro:** P1–P4 span ≤ 7 numbers AND P5 jump ≥ 6 (≈ 1 every 6 months)
+- **Swiss:** P1–P5 span ≤ 10 numbers AND P6 jump ≥ 8 (≈ 3 in 3 years)
+
+After a Rare Compact draw, the machine enters a **correction cycle** that lasts 8 draws:
+
+| Signature | Historical Rate |
+|---|---|
+| **P1 lands in {4, 5}** at least once in next 8 draws | 🍀 Swiss 3/3 (100%) • 🎻 Euro 5/6 (83%) |
+| Seed P5 (or highest-main) echoes EXACT somewhere in +1..+8 | 🎻 Euro 3/5 fired already ≤ +4 • 🍀 Swiss always ≤ +8 |
+| Baseline reset (P1=1, P2=2) often occurs around +6 | confirmed 14-04-2026 |
+| High-sum spike (P1+P2 ≥ 40) common at +7 | confirmed 17-04-2026 (45) |
+| Draw +8 = cycle-close, LATE seed echoes hit | 🍀 Swiss 2023 +8=[9,23], 2024 +8=[7,30], 2025 +8=[12] |
+
+**Current live case — Euro seed 24-03-2026 [12, 16, 17, 18, 27] ⭐ [1, 3]:**
+- P1∈{4,5} DOUBLE fired: +1 (P1=4) and +2 (P1=5) — most concentrated in history
+- Seed P5=27 echoed EXACT at +3 ✓
+- Baseline reset at +6 (1, 2) ✓
+- High-sum at +7 (45) ✓
+- **+8 = 21-04-2026** → UNRELEASED echoes: **12, 16, 17, 18** + ⭐ **1, 3** still holding breath
+
+**After high-sum (P1+P2 ≥ 40) rebound law (55 historical Euro cases):**
+- Mean P1+P2 next draw = 27.7 (down from 48.7)
+- P1 bucket 8–15 = 33.3% (most likely), 1–3 = 27.8%, 4–7 = 20.4%, 16+ = 18.5%
+
+## Code hooks
+- `score_rare_event_echo(ticket, recent_draws, mode)` → bonus for tickets carrying unreleased seed numbers from the most recent Rare Compact draw inside the last 10 draws.
+- Boost: +15 per unreleased seed echo held, +10 for each unreleased star echo (Euro only), +20 cycle-close bonus if the ticket is generated ≤ 8 draws after a Rare Compact.
+
+
 # 🎻 Swiss Lotto Music Notes — The Book
 
 Living learnings from the DJ's esoteric analysis of Swiss Lotto (1-42).

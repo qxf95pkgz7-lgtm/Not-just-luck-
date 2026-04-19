@@ -4332,7 +4332,7 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
         try:
             from dj_patterns import find_suspects
             euro_draws = []
-            async for d in db.euromillions_draws.find({}, {"_id": 0}).sort("date", -1).limit(30):
+            async for d in db.euromillions_draws.find({}, {"_id": 0}):
                 euro_draws.append({"date": d.get("date", ""), "numbers": d.get("numbers", []), "stars": d.get("stars", [])})
             # sort by date desc (string sort won't work; parse)
             def _pd(s):
@@ -4349,6 +4349,13 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
             from euro_date_tuning import score_euro_date_resonance
         except Exception:
             score_euro_date_resonance = None
+        # 🚨 Rare-Event Cycle scorer (Session-3 universal law)
+        try:
+            from rare_event_scorer import score_rare_event_echo, find_recent_rare_seed
+            _rare_seed_info = find_recent_rare_seed(euro_draws, "euro", lookback=12) if euro_draws else None
+        except Exception:
+            score_rare_event_echo = None
+            _rare_seed_info = None
         
         for t in all_tickets:
             score = sum(conv_map.get(n, 0) for n in t.get("numbers", []))
@@ -4366,6 +4373,23 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
                     }
                 except Exception:
                     t["date_resonance"] = None
+            if score_rare_event_echo is not None:
+                try:
+                    rr = score_rare_event_echo(
+                        t.get("numbers", []), t.get("stars", []),
+                        euro_draws, mode="euro"
+                    )
+                    if rr["score"] > 0:
+                        t["rare_echo"] = {
+                            "score": rr["score"],
+                            "held_mains": rr["unreleased_held"]["mains"],
+                            "held_stars": rr["unreleased_held"]["stars"],
+                            "active": rr["active"],
+                        }
+                        # Fold rare-echo into the main ranking score
+                        t["_score"] += rr["score"]
+                except Exception:
+                    pass
         
         # Top 10 = best-scored. Archive = the rest, sorted by time (newest first), 50 per file.
         scored_sorted = sorted(all_tickets, key=lambda x: -x["_score"])
@@ -4381,12 +4405,25 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
                 "tickets": [{k: v for k, v in t.items() if k != "_score"} for t in chunk],
             })
         
+        # Top-level rare seed descriptor for UI banner
+        rare_seed_out = None
+        if _rare_seed_info:
+            rare_seed_out = {
+                "date": _rare_seed_info["rare_date"],
+                "numbers": _rare_seed_info["rare_numbers"],
+                "stars": _rare_seed_info["rare_stars"],
+                "draws_since": _rare_seed_info["draws_since"],
+                "unreleased_mains": _rare_seed_info["unreleased_mains"],
+                "unreleased_stars": _rare_seed_info["unreleased_stars"],
+            }
+        
         return {
             "next_date": next_date,
             "count": len(all_tickets),
             "top_count": len(top10),
             "tickets": [{k: v for k, v in t.items() if k != "_score"} for t in top10],
             "archive_files": archive_files,
+            "rare_seed": rare_seed_out,
         }
     else:
         days_wed = (2 - today.weekday()) % 7
@@ -4414,7 +4451,7 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
         try:
             from dj_patterns import find_suspects
             swiss_draws = []
-            async for d in db.draws.find({}, {"_id": 0}).sort("date", -1).limit(30):
+            async for d in db.draws.find({}, {"_id": 0}):
                 swiss_draws.append({"date": d.get("date", ""), "numbers": d.get("numbers", [])})
             def _pd(s):
                 try: return datetime.strptime(s, '%d.%m.%Y')
@@ -4425,9 +4462,32 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
         except Exception:
             conv_map = {}
         
+        # 🚨 Rare-Event Cycle scorer (Session-3 universal law)
+        try:
+            from rare_event_scorer import score_rare_event_echo, find_recent_rare_seed
+            _rare_seed_info = find_recent_rare_seed(swiss_draws, "swiss", lookback=12) if swiss_draws else None
+        except Exception:
+            score_rare_event_echo = None
+            _rare_seed_info = None
+        
         for t in all_tickets:
             score = sum(conv_map.get(n, 0) for n in t.get("numbers", []))
             t["_score"] = score
+            if score_rare_event_echo is not None:
+                try:
+                    rr = score_rare_event_echo(
+                        t.get("numbers", []), None, swiss_draws, mode="swiss"
+                    )
+                    if rr["score"] > 0:
+                        t["rare_echo"] = {
+                            "score": rr["score"],
+                            "held_mains": rr["unreleased_held"]["mains"],
+                            "held_stars": [],
+                            "active": rr["active"],
+                        }
+                        t["_score"] += rr["score"]
+                except Exception:
+                    pass
         
         scored_sorted = sorted(all_tickets, key=lambda x: -x["_score"])
         top10 = scored_sorted[:10]
@@ -4442,12 +4502,24 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
                 "tickets": [{k: v for k, v in t.items() if k != "_score"} for t in chunk],
             })
         
+        rare_seed_out = None
+        if _rare_seed_info:
+            rare_seed_out = {
+                "date": _rare_seed_info["rare_date"],
+                "numbers": _rare_seed_info["rare_numbers"],
+                "stars": _rare_seed_info["rare_stars"],
+                "draws_since": _rare_seed_info["draws_since"],
+                "unreleased_mains": _rare_seed_info["unreleased_mains"],
+                "unreleased_stars": _rare_seed_info["unreleased_stars"],
+            }
+        
         return {
             "next_date": next_date,
             "count": len(all_tickets),
             "top_count": len(top10),
             "tickets": [{k: v for k, v in t.items() if k != "_score"} for t in top10],
             "archive_files": archive_files,
+            "rare_seed": rare_seed_out,
         }
 
 
