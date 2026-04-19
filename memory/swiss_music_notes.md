@@ -555,3 +555,28 @@ Apply +10 KEY: candidate numbers = `5+10=15, 17+10=27, 24+10=34, 29+10=39, 50+10
 - **⭐ 10, ⭐ 12** — Q1 star-tribute un-played
 - **⭐ 1, ⭐ 3** — rare-event unreleased stars
 
+
+---
+
+# 🎉 DATE-PERMUTATION LAW (discovered 19.04.2026)
+
+**Rule:** Read the target date as a digit-string (e.g., 17.04 → {1, 7, 0, 4}).
+Any 2-digit recombination of those digits that falls in the Euro range (1–50)
+becomes a **strong candidate** to appear in that draw.
+
+### Proof — 17.04.2026 target → digits {1,7,0,4}
+Permutations in range: 14, 17, 41, 47, 10, 40
+→ Draw landed [22, 23, 28, 41, 47] ⭐[6, 8]
+→ **41 and 47 both fired** (2/5 direct mains from date permutations). ✅ Law confirmed.
+
+### Applying to 21.04.2026 → digits {2, 1, 0, 4}
+Permutations in range: **10, 12, 14, 21, 24, 40, 41, 42, 20**
+
+### 🚫 BANNED NUMBERS (per DJ 21.04 call)
+- **21, 24, 28** — angry / missing the party (will NOT appear)
+- 28 is also the mirror-pivot-sum (the axis itself, not a drawable note)
+
+### ✅ DJ 21.04 call (user-locked)
+- P1 = 7 · P2 = 14 (pivot) · ⭐ = 3, 6
+- Strong adds: 41, 42, 17, 18, 10, 12, 40, 47
+
