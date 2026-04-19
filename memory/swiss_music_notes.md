@@ -47,6 +47,22 @@ Each entry is a frequency the engine must learn to hear.
 ## 📅 Quarter counting (Swiss)
 - **Q2 starts on 08.04.2026** (not 01.04).
 - The week of 01.04 / 04.04 is a transition — NOT counted as Q2.
+
+## 📅 Quarter counting (EURO) 🎻
+- **Euro Q2 starts on 07.04.2026 (Tue)** — NOT 03.04 (which is transition).
+- **Euro Q1 starts on 06.01.2026 (Tue)** — NOT 02.01 (NY transition).
+- Transition weeks exist on both sides of every quarter boundary in Euro too.
+- Agent RULE: **Always re-read this section before any quarter-based analysis.** Drift = wrong story.
+- Euro 2026 quarter draws (for reference):
+  - Q1 d1 = 06.01.2026 [5, 14, 17, 18, 31] ⭐[10, 12]
+  - Q1 d2 = 09.01.2026 [1, 7, 10, 26, 34] ⭐[2, 4]
+  - Q1 d3 = 13.01.2026 [6, 10, 18, 44, 47] ⭐[2, 10]
+  - Q1 d4 = 16.01.2026 [5, 17, 24, 29, 50] ⭐[5, 10]
+  - Q2 d1 = 07.04.2026 [11, 14, 19, 36, 49] ⭐[6, 7]
+  - Q2 d2 = 10.04.2026 [10, 13, 14, 38, 41] ⭐[6, 9]
+  - Q2 d3 = 14.04.2026 [1, 2, 4, 28, 44] ⭐[5, 12]
+  - Q2 d4 = 17.04.2026 [22, 23, 28, 41, 47] ⭐[6, 8]
+  - Q2 d5 = 21.04.2026 ← upcoming
 - Q2 sequence:
   - Q2d1 = 08.04.2026 → [2, 9, 21, 22, 26, 35] L=3
   - Q2d2 = 11.04.2026 → [1, 6, 8, 14, 22, 34] L=1
