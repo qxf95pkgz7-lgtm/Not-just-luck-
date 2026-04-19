@@ -662,3 +662,44 @@ DJ-marked numbers that will NOT appear in the target draw based on:
 - Mirror already fired and the pair-sum is "used up"
 Engine applies −25 per ban held.
 
+
+---
+
+# 🌾 HUNGRY MAP — Last 4 Euro draws (snapshot 19.04.2026)
+
+**Reference window:** Q2 d1 07.04 → Q2 d4 17.04 (4 draws)
+
+**Mains played in window:** {1, 2, 4, 10, 11, 13, 14, 19, 22, 23, 28, 36, 38, 41, 44, 47, 49}
+**Stars played in window:** {5, 6, 7, 8, 9, 12}
+
+## 🎯 Mains — hungry ranked by depth
+| # | Hunger sources                                                    | Depth     |
+|---|-------------------------------------------------------------------|-----------|
+| 42 | Yearly-anchor P3 + never played in Q2 2026                        | 🔴 DEEPEST |
+| 31 | Q1d2 P5 + silent even ±2 in all Q2                                | 🔴 DEEP    |
+| 20 | Date-perm for 21.04 + silent all Q2                               | 🔴 DEEP    |
+| 17 | Rare-event hungry + triple-lock                                   | 🟠 triple  |
+| 18 | Rare-event hungry + triple-lock                                   | 🟠 triple  |
+| 16 | Rare-event hungry + mirror of ⭐12                                 | 🟠 double  |
+| 46 | Back-door circle(21) + yearly-anchor P5                           | 🟡 back-door |
+| 5  | Q1d2 P1 (only fired as ⭐ on 14.04)                               | 🟡 seed    |
+| 8  | Yearly-anchor P1 (silent Q2)                                      | 🟡 yearly  |
+| 27 | Yearly + rare-event (only fired on 03.04 transition)              | 🟡 yearly  |
+| 34 | Q1d3 P5 + +10-key                                                 | 🟡 +10 key |
+| 39 | +10-key (un-played)                                               | 🟡 +10 key |
+| 26 | Q1d3 P4 (un-played)                                               | 🟡 seed    |
+| 25 | Mirror of ⭐3 (un-played)                                          | 🟡 mirror  |
+| 15 | +10-key (un-played)                                               | 🟡 +10 key |
+| 29 | circle(M=4) target (un-played)                                    | 🟡 date-circle |
+
+## ⭐ Stars — hungry
+| ⭐ | Hunger                                        |
+|---|-----------------------------------------------|
+| 1 | Rare-event ⭐ + yearly ⭐ (double hungry)      |
+| 3 | Rare-event ⭐ (un-played last 4 draws)        |
+| 10 | Q1 seed ⭐ (not fired as ⭐ in last 4)        |
+| 11 | Silent across Q2, statistically overdue       |
+
+## 🥇 Cosmic-pressure maximum ticket
+**[17, 18, 20, 31, 42] ⭐[1, 3]** — FIVE deepest-hunger mains + both rare-event stars.
+
