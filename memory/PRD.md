@@ -19,17 +19,33 @@ Full-stack React + FastAPI app with:
 - **Music Book** `/app/memory/swiss_music_notes.md` (living DJ learnings)
 - **Date-Tuning Validator** `/app/backend/date_tuning.py` (10 tuning formulas + Euro→Swiss bridge + master `score_date_tuning()`)
 
-## Last working item — FORK POINT
-Live DJ analysis session teaching engine Swiss esoterics. Just completed: 21-day Swiss-circle step + micro-perturbation (±1/±2/±3) + pair-slide rules. User asked to **compare same-day-number across different months + 2-year history** — then forked mid-thought.
+## Last working item — FORK POINT (Session 2, 19.04.2026)
+**Live DJ cross-lottery analysis session + Draw-to-Draw Pulse UI shipped.**
+- ✅ Built `Draw-to-Draw Pulse` panel in Hit Tracker (Swiss + Euro) showing per-draw total_generated, hits, 3+ count, best, hit rate %. Backend: `per_draw_stats` added to `/api/hit-tracker` and `/api/euromillions/generation-history`. Frontend: new panel in Swiss mode (amber) and Euro mode (blue). data-testid `per-draw-pulse`.
+- ✅ **2-year bridge backtest completed** (214 draws): `Euro Δ±2` is KING bridge (1.29 avg hits, 77-79% hit rate, 35% with 2+ hits). The `-21 bridge` is an ANTI-SIGNAL (0.42 avg, 4.7% 2+ rate) — must be retired.
+- ✅ **Decoded Swiss 18.04.2026 and 15.04.2026 100% from prior Euro draws** — new rules discovered: Hidden-Digit Glue, Natural-Spine Digit-Concat, Gap-of-Gaps, Mirror-Wrap (with mod 42 wrap), Sum-Triangle, Star-sum/diff/product.
+- ✅ **Pair-Seed Staircase validated over 2 years** — seed (2,9) ladder hit 46 times, (4,12) cluster hit 10 times. Median ±1-echo gap: 12 draws.
+- ✅ **Column Memory mapped** — P1=4→+4 (×4), P4=21→+7 (×3), P4=38→always drops, P2=12→−7, P2=14→−5.
+- ✅ **After-14 Gravity**: when P2≈14, next draw's P6=40 fires 27.5% of the time, P6 ∈ 39-42 band 70% of the time.
+- ✅ All Session 2 findings written into `/app/memory/swiss_music_notes.md` (see SESSION 2 block at end).
+- **User paused HERE** — wants to fork then continue the "Euro Echo Refinement Loop" (build clue list → check → refine tickets → recheck → show).
 
 ## All Pending/In progress Issue list
 None.
 
-## In progress Task List — PICK UP HERE
-1. **Continue analysis**: compare Swiss draws with **same day-number different month** (e.g. 25.03 vs 25.04, 11.03 vs 11.04 already compared) + extend to **2-year history** for same-date echoes. Extract new tuning formulas, confirm with DJ, write in book + code.
-2. **Wire `score_date_tuning` into V2 generator** — rank tickets by tuning count (tuned > flat).
-3. **Add Swiss Circle (+21 mod 42) NATIVELY** inside `find_suspects()` for Swiss — currently uses Euro's +25.
-4. **Tonight 18.04.2026 Swiss Lotto** — generate VIP tickets scored by tuning count.
+## In progress Task List — PICK UP HERE (NEW AGENT)
+1. **Euro Echo Refinement Loop** (user-requested, not started):
+   - New module `/app/backend/euro_echo.py`:
+     - `build_clue_board(last_euro_draw)` → ranked list of Swiss candidates with weights + clue_type tags
+     - `score_ticket(ticket, clue_board)` → echo score + breakdown
+     - `refine_ticket(ticket, clue_board, max_swaps=2)` → swaps weakest numbers for high-weight clue candidates
+   - New endpoint `/api/euro-echo/tune-top10?mode=swiss|euro` returning refined top 10 pending tickets with before/after scores
+   - UI: "🎻 Tune with Euro" button in Pending Tickets header + echo badge on each ticket
+   - **v1 clues (proven only)**: Δ±1/±2/±3 on Euro nums, star sum/diff/product, consecutive-pair echo. Hold parked clues for v2.
+2. **2-year Date-Twin analysis** (original session-1 resume): compare Swiss draws sharing day-of-month across 2 years. (Still pending after this session.)
+3. **Wire `score_date_tuning` into V2 generator** as secondary rank.
+4. **Add Swiss Circle (+21 mod 42) NATIVELY** inside `find_suspects()` for Swiss mode.
+5. **Retire the −21 bridge** from `date_tuning.py` (validated as anti-signal).
 
 ## Upcoming / Backlog
 - Quarter anchor year-table (Q2 starts 08.04.2026 per DJ; extend)
@@ -132,12 +148,12 @@ Free EuroMillions API (pedromealha), lottolyzer.com (Swiss), swisslos.ch (2Chanc
 3. **Wire tuning score into the ticket generator** as secondary rank (when DJ approves).
 4. **Add Swiss Circle (+21 mod 42) natively** to `find_suspects()` for Swiss mode.
 
-## Last 13 user messages (continuity)
-1-9: various fixes (pending, 2chance, celestial, VIP code) — DONE
-10. "Let's analyse some swiss numbers" → live analysis started
-11. "Compare 15.04 vs 25.03 AND 11.04 vs 11.03 vs 21.03" → 21-day echo, Lucky mirror, pair-slide
-12. "Look how the series numbers look almost the same with small changes" → small-change rule added
-13. **"Check history similar different for example date like 25 and 25 different M. Check last 2 years compare. But first let's fork"** ← WE ARE HERE — FORKING
+## Last 5 user messages (continuity, session 2)
+1. "Check if every thing is working" → health check done (all green)
+2. "The hit tracker works in mobile but not cant see it work on website" → verified it WAS working on desktop; user actually wanted **per-draw breakdown**
+3. "Total generate ? From one d to next... A b" → built **Draw-to-Draw Pulse panel** for Swiss
+4. "Add Euro Pulse too" (then "A only") → extended Pulse panel to EuroMillions Hit Tracker ✅
+5. Live analysis dialogue → decoded last 2 Swiss draws from Euro, uncovered 8+ new clues — **now written into swiss_music_notes.md Session 2 block**. User: "Writ every thing we did , put it in your book. Let's fork, then continue"
 
 ## Testing Status
 - `date_tuning.py` self-tested against 3 Q2 draws ✓
