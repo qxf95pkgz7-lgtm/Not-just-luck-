@@ -1619,8 +1619,16 @@ function App() {
                 <div className="text-center text-slate-600 text-[10px] py-3">
                   No engine tickets yet
                 </div>
-              ) : pendingTickets.map((t, idx) => (
-                <div key={idx} className="p-1.5 rounded-md bg-slate-800/50 border border-slate-700/30">
+              ) : pendingTickets.map((t, idx) => {
+                const dr = t.date_resonance;
+                const tierClass = dr ? (
+                  dr.tier === 'full_echo' ? 'bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/40' :
+                  dr.tier === 'harmonic'  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' :
+                  dr.tier === 'tune'      ? 'bg-sky-500/15 text-sky-300 border-sky-500/30' :
+                                            'bg-slate-700/40 text-slate-400 border-slate-600/40'
+                ) : '';
+                return (
+                <div key={idx} className="p-1.5 rounded-md bg-slate-800/50 border border-slate-700/30" data-testid={`pending-ticket-${idx}`}>
                   <div className="flex items-center justify-center gap-1">
                     {t.numbers?.map((n, i) => (
                       <Ball key={i} number={n} size="xs" maxNum={lotteryMode === 'euro' ? 50 : 42} />
@@ -1640,8 +1648,19 @@ function App() {
                       </>
                     )}
                   </div>
+                  {lotteryMode === 'euro' && dr && (
+                    <div
+                      className={`mt-1 px-1.5 py-0.5 rounded border text-[9px] font-mono flex items-center justify-between gap-1 ${tierClass}`}
+                      title={(dr.signals || []).join('\n')}
+                      data-testid={`date-resonance-badge-${idx}`}
+                    >
+                      <span className="truncate">{dr.badge}</span>
+                      <span className="font-bold tabular-nums">{dr.score >= 0 ? `+${dr.score}` : dr.score}</span>
+                    </div>
+                  )}
                 </div>
-              ))}
+                );
+              })}
             </div>
             {pendingTickets.length > 0 && (
               <div className="mt-1.5 pt-1.5 border-t border-slate-700/30 text-center">
@@ -1724,8 +1743,16 @@ function App() {
         <div className="lg:hidden mb-3">
           <div id="mobile-pending" className="hidden mt-2 space-y-1.5 max-h-80 overflow-y-auto">
             <div className="text-[10px] text-slate-500 px-1">Top {pendingTickets.length} of {pendingTotal} • engine-ranked</div>
-            {pendingTickets.map((t, idx) => (
-              <div key={idx} className="p-2 rounded-lg bg-slate-800/50 border border-slate-700/30">
+            {pendingTickets.map((t, idx) => {
+              const dr = t.date_resonance;
+              const tierClass = dr ? (
+                dr.tier === 'full_echo' ? 'bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/40' :
+                dr.tier === 'harmonic'  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' :
+                dr.tier === 'tune'      ? 'bg-sky-500/15 text-sky-300 border-sky-500/30' :
+                                          'bg-slate-700/40 text-slate-400 border-slate-600/40'
+              ) : '';
+              return (
+              <div key={idx} className="p-2 rounded-lg bg-slate-800/50 border border-slate-700/30" data-testid={`mobile-pending-ticket-${idx}`}>
                 <div className="flex items-center justify-center gap-1">
                   {t.numbers?.map((n, i) => (
                     <Ball key={i} number={n} size="xs" maxNum={lotteryMode === 'euro' ? 50 : 42} />
@@ -1745,8 +1772,18 @@ function App() {
                     </>
                   )}
                 </div>
+                {lotteryMode === 'euro' && dr && (
+                  <div
+                    className={`mt-1 px-1.5 py-0.5 rounded border text-[9px] font-mono flex items-center justify-between gap-1 ${tierClass}`}
+                    title={(dr.signals || []).join('\n')}
+                  >
+                    <span className="truncate">{dr.badge}</span>
+                    <span className="font-bold tabular-nums">{dr.score >= 0 ? `+${dr.score}` : dr.score}</span>
+                  </div>
+                )}
               </div>
-            ))}
+              );
+            })}
             {/* Mobile Archive files */}
             {archiveFiles.length > 0 && (
               <div className="mt-2 pt-2 border-t border-slate-700/40 space-y-1">

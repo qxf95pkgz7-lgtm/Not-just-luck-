@@ -4344,9 +4344,28 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
         except Exception:
             conv_map = {}
         
+        # 🎻 Euro Date-Echo Neighborhood resonance (Session-3 rules)
+        try:
+            from euro_date_tuning import score_euro_date_resonance
+        except Exception:
+            score_euro_date_resonance = None
+        
         for t in all_tickets:
             score = sum(conv_map.get(n, 0) for n in t.get("numbers", []))
             t["_score"] = score
+            if score_euro_date_resonance is not None:
+                try:
+                    res = score_euro_date_resonance(
+                        t.get("numbers", []), t.get("stars", []), next_date
+                    )
+                    t["date_resonance"] = {
+                        "score": res["score"],
+                        "badge": res["badge"],
+                        "tier": res["tier"],
+                        "signals": res["signals"],
+                    }
+                except Exception:
+                    t["date_resonance"] = None
         
         # Top 10 = best-scored. Archive = the rest, sorted by time (newest first), 50 per file.
         scored_sorted = sorted(all_tickets, key=lambda x: -x["_score"])

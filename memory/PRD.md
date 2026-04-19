@@ -19,7 +19,16 @@ Full-stack React + FastAPI app with:
 - **Music Book** `/app/memory/swiss_music_notes.md` (living DJ learnings)
 - **Date-Tuning Validator** `/app/backend/date_tuning.py` (10 tuning formulas + Euro→Swiss bridge + master `score_date_tuning()`)
 
-## Last working item — FORK POINT (Session 2, 19.04.2026)
+## Last working item — SESSION 3 (19.04.2026, continued)
+**🎻🎧 Euro Date-Echo Neighborhood Scorer shipped.**
+- ✅ 2-yr scan completed: `circle(M)=+25 mod 50` on Euro **P4** = 5.6% (strongest cell); `circle(M)±2` lives in P3–P4 (83%); `circle(D)±2` lives in P4–P5 (67%); UNION ±2 = 60.6% of draws; Stars: `M±1` = 44.2%, `D mod 12 ±1` = 50.2%, `{M, circle(M)} ±1` = 72.3%.
+- ✅ Same scan on Swiss → `circle(M)±2 union cD OR cM` = **83.1%** of draws; Swiss circle(M) **P4 exact** = 8.7% (single strongest cell in 2 years).
+- ✅ New module `/app/backend/euro_date_tuning.py` with `score_euro_date_resonance(numbers, stars, date_str)` — position rewards/vetos + stars + DOUBLE RESONANCE bonus + tier labels (`off`/`tune`/`harmonic`/`full_echo`).
+- ✅ Wired into `/api/pending-tickets?mode=euro` — each Euro ticket now carries `date_resonance: {score, badge, tier, signals}`.
+- ✅ Frontend `App.js` — tier-colored badge chip on every Euro pending ticket (desktop sidebar + mobile panel) with hover-tooltip listing firing signals.
+- ✅ All Session-3 rules written into `/app/memory/swiss_music_notes.md` (see SESSION 3 block at end).
+
+## Previous fork point — SESSION 2 (19.04.2026)
 **Live DJ cross-lottery analysis session + Draw-to-Draw Pulse UI shipped.**
 - ✅ Built `Draw-to-Draw Pulse` panel in Hit Tracker (Swiss + Euro) showing per-draw total_generated, hits, 3+ count, best, hit rate %. Backend: `per_draw_stats` added to `/api/hit-tracker` and `/api/euromillions/generation-history`. Frontend: new panel in Swiss mode (amber) and Euro mode (blue). data-testid `per-draw-pulse`.
 - ✅ **2-year bridge backtest completed** (214 draws): `Euro Δ±2` is KING bridge (1.29 avg hits, 77-79% hit rate, 35% with 2+ hits). The `-21 bridge` is an ANTI-SIGNAL (0.42 avg, 4.7% 2+ rate) — must be retired.
