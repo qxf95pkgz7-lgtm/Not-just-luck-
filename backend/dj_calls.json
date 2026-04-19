@@ -1,0 +1,24 @@
+{
+  "euro": {
+    "target_date": "21.04.2026",
+    "p1_lock": 7,
+    "p2_lock": 14,
+    "star_locks": [3, 6],
+    "banned_mains": [21, 24, 28],
+    "back_door_circles": {"21": 46},
+    "expanded_back_row": [41, 42, 46, 47, 49],
+    "star_extensions": [9],
+    "triple_lock_mains": [17, 18],
+    "plus10_key": [10, 15, 27, 34, 39],
+    "date_perms": [10, 12, 14, 20, 40, 41, 42],
+    "q1_seeds_unplayed_in_q2_mains": [7, 5, 26, 34],
+    "notes": "Session-3 composition: mirror-pivot 14, back-door 46, stars 3/6 + 9 echo."
+  },
+  "swiss": {
+    "target_date": null,
+    "banned_mains": [],
+    "triple_lock_mains": [],
+    "p1_lock": null,
+    "lucky_locks": []
+  }
+}

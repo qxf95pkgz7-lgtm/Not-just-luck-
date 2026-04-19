@@ -1684,6 +1684,21 @@ function App() {
                       <span className="font-bold tabular-nums">+{t.rare_echo.score}</span>
                     </div>
                   )}
+                  {t.dj_call && t.dj_call.score !== 0 && (
+                    <div
+                      className={`mt-1 px-1.5 py-0.5 rounded border text-[9px] font-mono flex items-center justify-between gap-1 ${
+                        t.dj_call.score >= 80 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
+                        t.dj_call.score >= 40 ? 'bg-lime-500/15 text-lime-300 border-lime-500/40' :
+                        t.dj_call.score > 0   ? 'bg-sky-500/10 text-sky-300 border-sky-500/30' :
+                                                'bg-rose-500/15 text-rose-300 border-rose-500/40'
+                      }`}
+                      title={(t.dj_call.signals || []).join('\n')}
+                      data-testid={`dj-call-badge-${idx}`}
+                    >
+                      <span className="truncate">{t.dj_call.badge}</span>
+                      <span className="font-bold tabular-nums">{t.dj_call.score >= 0 ? `+${t.dj_call.score}` : t.dj_call.score}</span>
+                    </div>
+                  )}
                 </div>
                 );
               })}
@@ -1814,6 +1829,20 @@ function App() {
                   >
                     <span className="truncate">🚨 rare echo</span>
                     <span className="font-bold tabular-nums">+{t.rare_echo.score}</span>
+                  </div>
+                )}
+                {t.dj_call && t.dj_call.score !== 0 && (
+                  <div
+                    className={`mt-1 px-1.5 py-0.5 rounded border text-[9px] font-mono flex items-center justify-between gap-1 ${
+                      t.dj_call.score >= 80 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
+                      t.dj_call.score >= 40 ? 'bg-lime-500/15 text-lime-300 border-lime-500/40' :
+                      t.dj_call.score > 0   ? 'bg-sky-500/10 text-sky-300 border-sky-500/30' :
+                                              'bg-rose-500/15 text-rose-300 border-rose-500/40'
+                    }`}
+                    title={(t.dj_call.signals || []).join('\n')}
+                  >
+                    <span className="truncate">{t.dj_call.badge}</span>
+                    <span className="font-bold tabular-nums">{t.dj_call.score >= 0 ? `+${t.dj_call.score}` : t.dj_call.score}</span>
                   </div>
                 )}
               </div>

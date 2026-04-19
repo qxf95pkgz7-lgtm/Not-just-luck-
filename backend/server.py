@@ -4356,6 +4356,13 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
         except Exception:
             score_rare_event_echo = None
             _rare_seed_info = None
+        # 🪞 DJ-Call scorer (mirror-of-banned, back-door circles, DJ locks)
+        try:
+            from dj_call_scorer import score_dj_calls, load_dj_calls
+            _dj_calls = load_dj_calls().get("euro", {}) or {}
+        except Exception:
+            score_dj_calls = None
+            _dj_calls = {}
         
         for t in all_tickets:
             score = sum(conv_map.get(n, 0) for n in t.get("numbers", []))
@@ -4386,8 +4393,19 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
                             "held_stars": rr["unreleased_held"]["stars"],
                             "active": rr["active"],
                         }
-                        # Fold rare-echo into the main ranking score
                         t["_score"] += rr["score"]
+                except Exception:
+                    pass
+            if score_dj_calls is not None:
+                try:
+                    dj = score_dj_calls(t.get("numbers", []), t.get("stars", []), mode="euro")
+                    t["dj_call"] = {
+                        "score": dj["score"],
+                        "badge": dj["badge"],
+                        "signals": dj["signals"],
+                        "ban_hits": dj["ban_hits"],
+                    }
+                    t["_score"] += dj["score"]
                 except Exception:
                     pass
         
@@ -4424,6 +4442,7 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
             "tickets": [{k: v for k, v in t.items() if k != "_score"} for t in top10],
             "archive_files": archive_files,
             "rare_seed": rare_seed_out,
+            "dj_calls": _dj_calls,
         }
     else:
         days_wed = (2 - today.weekday()) % 7
