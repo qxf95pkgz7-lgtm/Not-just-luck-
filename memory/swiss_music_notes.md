@@ -580,3 +580,22 @@ Permutations in range: **10, 12, 14, 21, 24, 40, 41, 42, 20**
 - P1 = 7 · P2 = 14 (pivot) · ⭐ = 3, 6
 - Strong adds: 41, 42, 17, 18, 10, 12, 40, 47
 
+
+---
+
+# 🌀 THE BANNED-NUMBER CIRCLE BACK-DOOR (discovered 19.04.2026)
+
+**Rule:** When a number is BANNED (per DJ intuition), its Euro-circle acts as the **back-door entry**.
+- Example: 21 banned on 21.04.2026 → **circle(21) = 46** becomes the back-door target.
+- The banned-number's circle often lands at P5 or P4 in the target draw.
+
+**Reading triplets like 464 / 479:**
+- 464 → (46, 4): main number 46 + connector digit 4
+- 479 → (47, 9): main number 47 + mirror-pair digit 9 (47 + 9 = 56 = high-band mirror sum)
+- Generalized: first two digits = main number target, third digit = accompanying echo (star or small main)
+
+## 21.04.2026 final composition (user + all rules)
+- **P1 = 7** · **P2 = 14** (pivot) · ⭐ 3, 6 (user-locked)
+- Back-row pool: **{41, 42, 46, 47, 49}** (hot palindromes + hungry seed + circle-back-door)
+- Star extensions: **⭐ 9** (from 479)
+- 🚫 BANNED: **21, 24, 28**
