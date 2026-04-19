@@ -515,3 +515,43 @@ VETOS
 
 ---
 *Session 3 notes locked. The Date-Echo Neighborhood rules are now the backbone of the Euro refinement loop.*
+
+---
+
+# 🎻🔄 SESSION 3 — SUBSTITUTION CIPHER + Q1→Q2 GAP GRID LAW
+
+## 🔄 Substitution cipher (discovered 2026 Q2)
+Before comparing Q1 and Q2 draws, apply these number-level substitutions to **reveal hidden song**:
+- **Q1:** swap `1 ↔ 8` (mutual) in both mains and stars.
+- **Q2:** replace `10 → 2` in mains.
+
+Example (2026):
+- Q1d1 [8, 27, 42, 44, 46] ⭐[1, 10] → **[1, 27, 42, 44, 46] ⭐[8, 10]**
+- Q1d3 [1, 7, 10, 26, 34] ⭐[2, 4] → **[7, 8, 10, 26, 34] ⭐[2, 4]**
+- Q2d2 [10, 13, 14, 38, 41] ⭐[6, 9] → **[2, 13, 14, 38, 41] ⭐[6, 9]**
+
+## 🎵 Q1→Q2 GAP GRID (2026, post-substitution)
+| d | P1 | P2 | P3 | P4 | P5 | ⭐S1 | ⭐S2 | sum |
+|---|---|---|---|---|---|---|---|---|
+| d1 | **+10** 🔥 | −13 | −23 | −8 | +3 | −2 | −3 | −38 |
+| d2 | **−3** | −1 | **−3** | +20 | **+10** | −4 | −3 | +23 |
+| d3 | **−6** | **−6** | **−6** 🚨 | +2 | **+10** | +3 | +8 | +1 |
+| d4 | +16 | +13 | **+10** | −3 | **0** 🎯 | +4 | −2 | +36 |
+
+### Signatures
+1. **🔥 +10 KEY** — `+10` appears in ALL 4 draws (d1 P1, d2 P5, d3 P5, d4 P3). It's the **Q-signature constant** of 2026.
+2. **🚨 Triple −6 lock at d3** (P1, P2, P3 all shift by −6) — unique mid-quarter signature.
+3. **🎯 Exact echoes** at d3 P1 (1=1) and d4 P5 (47=47).
+4. **Twin −3** at d2 P1 and P3.
+5. Row-sum wave: `−38, +23, +1, +36` (inhale → exhale → steady → exhale).
+
+## 🔮 Q2d5 (21.04.2026) projection — cycle-close
+**Q1d5 seed: 16.01.2026 [5, 17, 24, 29, 50] ⭐[5, 10]**
+Apply +10 KEY: candidate numbers = `5+10=15, 17+10=27, 24+10=34, 29+10=39, 50+10=60→wrap 10` = **{10, 15, 27, 34, 39}**
+
+### Combined cycle-close forced-seed list (triangulated with earlier rules):
+- **17, 18** — rare-event hungry (24-03 seed) + seed-of-Q1d2 hungry (triple lock)
+- **10, 15, 27, 34, 39** — +10 key translations from Q1d5
+- **⭐ 10, ⭐ 12** — Q1 star-tribute un-played
+- **⭐ 1, ⭐ 3** — rare-event unreleased stars
+
