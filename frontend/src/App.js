@@ -548,6 +548,8 @@ function App() {
   const [archiveFiles, setArchiveFiles] = useState([]);
   const [openArchive, setOpenArchive] = useState(null);
   const [rareSeed, setRareSeed] = useState(null);
+  const [djCalls, setDjCalls] = useState(null);
+  const [jackPicks, setJackPicks] = useState({ mains: [], stars: [] });
   const [activeUsers, setActiveUsers] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
   
@@ -858,6 +860,7 @@ function App() {
       setArchiveFiles(res.data.archive_files || []);
       setNextDrawDate(res.data.next_date || '');
       setRareSeed(res.data.rare_seed || null);
+      setDjCalls(res.data.dj_calls || null);
     } catch (e) {}
   };
   // 🎻 Check VIP/unlimited status from backend
@@ -1616,6 +1619,103 @@ function App() {
               <span className="text-emerald-400 font-mono font-bold text-sm">{pendingTickets.length}/{pendingTotal}</span>
             </div>
             <div className="text-slate-500 text-[9px] mb-2">For draw: {nextDrawDate} <span className="text-slate-600">• engine-ranked</span></div>
+            {lotteryMode === 'euro' && djCalls && Array.isArray(djCalls.user_hungry_list_next_3d) && djCalls.user_hungry_list_next_3d.length > 0 && (() => {
+              const hungry = djCalls.user_hungry_list_next_3d;
+              const hungryMains = hungry.filter(n => n >= 1 && n <= 50 && !(hungry.includes(n) && n <= 12 && djCalls.star_locks?.includes(n)));
+              // separate by Euro ranges — numbers 1-12 could be either main or star. We keep them in mains by default; DJ's star_locks define stars.
+              const mainsPool = hungry.filter(n => n >= 1 && n <= 50);
+              const starsPool = [...new Set([...(djCalls.star_locks || []), ...(djCalls.star_extensions || [])])].filter(n => n >= 1 && n <= 12);
+              const toggleMain = (n) => {
+                setJackPicks(p => {
+                  const has = p.mains.includes(n);
+                  if (has) return { ...p, mains: p.mains.filter(x => x !== n) };
+                  if (p.mains.length >= 5) return p;
+                  return { ...p, mains: [...p.mains, n].sort((a,b)=>a-b) };
+                });
+              };
+              const toggleStar = (n) => {
+                setJackPicks(p => {
+                  const has = p.stars.includes(n);
+                  if (has) return { ...p, stars: p.stars.filter(x => x !== n) };
+                  if (p.stars.length >= 2) return p;
+                  return { ...p, stars: [...p.stars, n].sort((a,b)=>a-b) };
+                });
+              };
+              const lockReady = jackPicks.mains.length === 5 && jackPicks.stars.length === 2;
+              const lockAndGenerate = async () => {
+                try {
+                  const locked_positions = {};
+                  jackPicks.mains.forEach((n, i) => { locked_positions[`p${i+1}`] = n; });
+                  jackPicks.stars.forEach((n, i) => { locked_positions[`s${i+1}`] = n; });
+                  const res = await axios.post(`${API}/euromillions/generate`, {
+                    birthday: '',
+                    name: 'Jack',
+                    locked_positions,
+                    visitor_id: localStorage.getItem('visitor_id') || '',
+                  });
+                  if (res.data && res.data.tickets) {
+                    toast.success(`🎻 Jack's ticket locked! ${jackPicks.mains.join(', ')} ⭐${jackPicks.stars.join(',')}`);
+                    setJackPicks({ mains: [], stars: [] });
+                    fetchPendingTickets && fetchPendingTickets();
+                  }
+                } catch (e) { toast.error('Lock failed: ' + (e.response?.data?.detail || e.message)); }
+              };
+              return (
+                <div className="mb-2 p-1.5 rounded-md border border-lime-500/40 bg-gradient-to-br from-lime-900/20 to-emerald-900/10" data-testid="jack-box">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-lime-300 text-[10px] font-bold">🎻 Jack 👀</span>
+                    <span className="text-lime-400/70 text-[8px] font-mono">hungry · next 3 draws</span>
+                  </div>
+                  <div className="text-[8px] text-slate-400 mb-1">Tap to lock at position</div>
+                  <div className="flex flex-wrap gap-1 mb-1">
+                    {mainsPool.map(n => {
+                      const picked = jackPicks.mains.includes(n);
+                      return (
+                        <button
+                          key={n}
+                          onClick={() => toggleMain(n)}
+                          className={`w-7 h-7 rounded-full text-[10px] font-black border transition-all ${picked
+                            ? 'bg-lime-400 text-slate-900 border-lime-300 shadow shadow-lime-400/40'
+                            : 'bg-slate-800 text-lime-300 border-lime-600/40 hover:border-lime-400/80'}`}
+                          data-testid={`jack-chip-main-${n}`}
+                        >{n}</button>
+                      );
+                    })}
+                  </div>
+                  {starsPool.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-1 pt-1 border-t border-lime-600/20">
+                      <span className="text-[9px] text-amber-400/80 self-center mr-1">⭐</span>
+                      {starsPool.map(n => {
+                        const picked = jackPicks.stars.includes(n);
+                        return (
+                          <button
+                            key={`s-${n}`}
+                            onClick={() => toggleStar(n)}
+                            className={`w-6 h-6 rounded-full text-[9px] font-black border transition-all ${picked
+                              ? 'bg-amber-300 text-slate-900 border-amber-200 shadow shadow-amber-400/40'
+                              : 'bg-slate-800 text-amber-300 border-amber-600/40 hover:border-amber-400'}`}
+                            data-testid={`jack-chip-star-${n}`}
+                          >{n}</button>
+                        );
+                      })}
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between text-[9px] pt-1 border-t border-lime-600/20">
+                    <span className="text-slate-400">
+                      picked {jackPicks.mains.length}/5 · ⭐ {jackPicks.stars.length}/2
+                    </span>
+                    <button
+                      onClick={lockAndGenerate}
+                      disabled={!lockReady}
+                      className={`px-2 py-0.5 rounded text-[9px] font-bold transition-all ${lockReady
+                        ? 'bg-lime-400 text-slate-900 hover:bg-lime-300'
+                        : 'bg-slate-800 text-slate-600 cursor-not-allowed'}`}
+                      data-testid="jack-lock-btn"
+                    >Lock & Generate</button>
+                  </div>
+                </div>
+              );
+            })()}
             {rareSeed && rareSeed.draws_since <= 8 && (
               <div className="mb-2 p-1.5 rounded-md border border-fuchsia-500/40 bg-gradient-to-br from-fuchsia-900/30 to-purple-900/20" data-testid="rare-event-banner">
                 <div className="flex items-center justify-between mb-1">

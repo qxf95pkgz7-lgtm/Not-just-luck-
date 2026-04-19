@@ -1,6 +1,7 @@
 {
   "euro": {
     "target_date": "21.04.2026",
+    "active_until": "28.04.2026",
     "p1_lock": 7,
     "p2_lock": 14,
     "star_locks": [3, 6],
@@ -12,7 +13,9 @@
     "plus10_key": [10, 15, 27, 34, 39],
     "date_perms": [10, 12, 14, 20, 40, 41, 42],
     "q1_seeds_unplayed_in_q2_mains": [7, 5, 26, 34],
-    "notes": "Session-3 composition: mirror-pivot 14, back-door 46, stars 3/6 + 9 echo."
+    "user_hungry_list_next_3d": [35, 12, 29, 34, 3, 6, 15, 17, 20, 33],
+    "user_hungry_list_scope": "next 3 draws (21.04, 24.04, 28.04)",
+    "notes": "Session-3 composition + DJ-curated hungry list for next 3 draws."
   },
   "swiss": {
     "target_date": null,

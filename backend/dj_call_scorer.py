@@ -152,6 +152,13 @@ def score_dj_calls(numbers: List[int],
         score += 15 * len(seed_echoes)
         signals.append(f"🌾 Q1-seed-echo un-played {seed_echoes} (+{15*len(seed_echoes)})")
     
+    # 🎯 USER HUNGRY LIST (DJ-curated, active for next N draws)
+    user_hungry = set(cfg.get("user_hungry_list_next_3d", []) or [])
+    user_hungry_hits = sorted(set(t_mains) & user_hungry)
+    if user_hungry_hits:
+        score += 12 * len(user_hungry_hits)
+        signals.append(f"🌾 DJ hungry-list {user_hungry_hits} (+{12*len(user_hungry_hits)})")
+    
     # Badge tier
     if score >= 80:
         badge = "🎻🎻 dj-symphony"

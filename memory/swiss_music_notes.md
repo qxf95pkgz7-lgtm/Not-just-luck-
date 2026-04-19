@@ -703,3 +703,29 @@ Engine applies −25 per ban held.
 ## 🥇 Cosmic-pressure maximum ticket
 **[17, 18, 20, 31, 42] ⭐[1, 3]** — FIVE deepest-hunger mains + both rare-event stars.
 
+
+---
+
+# 🌾 DJ'S HUNGRY LIST — Next 3 Euro Draws (21.04 · 24.04 · 28.04)
+
+DJ-curated, user-locked:
+**35, 12, 29, 34, 3, 6, 15, 17, 20, 33**
+
+Engine bonus: +12 per number held in any scored ticket (stackable).
+Stored in `/app/backend/dj_calls.json` → `user_hungry_list_next_3d`.
+Active window: next 3 Euro draws.
+
+## Coverage check vs earlier analysis
+| Number | Also supported by |
+|---|---|
+| 12 | rare-event hungry + ⭐ tribute hungry |
+| 17 | triple-lock (rare + seed + date-perm rel) |
+| 20 | silent-all-Q2 + date-perm + mirror(8) |
+| 34 | +10-key + Q1d3 P5 |
+| 15 | +10-key |
+| 3 | ⭐ rare-event (main form still silent) |
+| 6 | Q1d4 P1 (un-played as main in Q2) |
+| 29 | circle(M=4) target (un-played) |
+| 33 | Q1d3-d4 adjacent (silent Q2) |
+| 35 | high-band cooling zone, deep silent |
+
