@@ -49,18 +49,17 @@ Each entry is a frequency the engine must learn to hear.
 - The week of 01.04 / 04.04 is a transition — NOT counted as Q2.
 
 ## 📅 Quarter counting (EURO) 🎻
-- **🗓️ First d of the year = 02.01.2026** [8, 27, 42, 44, 46] ⭐[1, 10] — this is a **YEARLY anchor**, not Q1d1.
-- **Euro Q1d1 = 06.01.2026 (Tue)** [5, 14, 17, 18, 31] ⭐[10, 12] — after NY transition.
-- **Euro Q2d1 = 07.04.2026 (Tue)** [11, 14, 19, 36, 49] ⭐[6, 7] — after Q1→Q2 transition (03.04 is transition).
-- Transition weeks exist on both sides of every quarter boundary in Euro too.
+- **🗓️ First d of the YEAR = Q1 d1 = 02.01.2026** [8, 27, 42, 44, 46] ⭐[1, 10] — NO New-Year transition skip for Q1.
+- **Euro Q2d1 = 07.04.2026 (Tue)** [11, 14, 19, 36, 49] ⭐[6, 7] — 03.04 IS a transition (skipped).
+- Transition weeks exist ONLY between quarters (Q1→Q2, Q2→Q3, Q3→Q4), NOT at year start.
 - **A quarter = 27 draws** (same as Swiss).
 - **Q4 = less than 25 draws** (shorter quarter — end-of-year exception).
 - Agent RULE: **Always re-read this section before any quarter-based analysis.** Drift = wrong story.
 - Euro 2026 quarter draws (for reference):
-  - Q1 d1 = 06.01.2026 [5, 14, 17, 18, 31] ⭐[10, 12]
-  - Q1 d2 = 09.01.2026 [1, 7, 10, 26, 34] ⭐[2, 4]
-  - Q1 d3 = 13.01.2026 [6, 10, 18, 44, 47] ⭐[2, 10]
-  - Q1 d4 = 16.01.2026 [5, 17, 24, 29, 50] ⭐[5, 10]
+  - Q1 d1 = 02.01.2026 [8, 27, 42, 44, 46] ⭐[1, 10]
+  - Q1 d2 = 06.01.2026 [5, 14, 17, 18, 31] ⭐[10, 12]
+  - Q1 d3 = 09.01.2026 [1, 7, 10, 26, 34] ⭐[2, 4]
+  - Q1 d4 = 13.01.2026 [6, 10, 18, 44, 47] ⭐[2, 10]
   - Q2 d1 = 07.04.2026 [11, 14, 19, 36, 49] ⭐[6, 7]
   - Q2 d2 = 10.04.2026 [10, 13, 14, 38, 41] ⭐[6, 9]
   - Q2 d3 = 14.04.2026 [1, 2, 4, 28, 44] ⭐[5, 12]
