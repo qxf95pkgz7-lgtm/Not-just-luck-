@@ -599,3 +599,66 @@ Permutations in range: **10, 12, 14, 21, 24, 40, 41, 42, 20**
 - Back-row pool: **{41, 42, 46, 47, 49}** (hot palindromes + hungry seed + circle-back-door)
 - Star extensions: **⭐ 9** (from 479)
 - 🚫 BANNED: **21, 24, 28**
+
+---
+
+# 📖 GLOSSARY — DJ's VOCABULARY (definitions, not vibes)
+
+## 🌾 HUNGRY NUMBER
+A number that **SHOULD have appeared by now but hasn't** — its pressure is
+rising, so it's "hungry" to land. A number becomes hungry when ANY of these
+hold:
+
+1. **SEED-HUNGRY** — It belongs to a reference seed (Q1d1 mains, rare-event
+   seed, yearly-anchor draw) and has NOT appeared as a main in the current
+   target quarter.
+   *Example (2026):* Q1d1 seed [8, 27, 42, 44, 46] → **42** is seed-hungry
+   because it has not yet appeared as a Q2 main.
+
+2. **RARE-EVENT HUNGRY** — It belongs to the most recent Rare Compact draw
+   (see RARE-EVENT CYCLE LAW) and hasn't re-emerged in the +1..+8 window.
+   *Example:* Rare 24.03.2026 seed [12, 16, 17, 18, 27] → **17, 18** are
+   rare-hungry (27 already fired, 12/16 still rare-hungry).
+
+3. **STAR-HUNGRY** — A Q1 seed star OR a recent ⭐ that hasn't repeated in
+   the expected window. *Example:* Q1d2 ⭐[10, 12] → 10 is still hungry
+   if it hasn't shown as ⭐ in Q2 yet.
+
+4. **SILENT-ZONE HUNGRY** — A number whose ±2 neighborhood has had zero
+   activity in the last 6-10 draws (silence-agent signal).
+
+## 💤 UN-PLAYED / UNRELEASED
+Same concept, different lens. Specifically:
+- "un-played as main" = appeared only as ⭐ or never appeared
+- "unreleased echo" = belongs to a seed but hasn't landed in the target window
+
+## 🌀 BACK-DOOR ENTRY
+When a number is banned or blocked, its **Euro-circle** (n + 25 mod 50)
+becomes the back-door entry. The banned energy often discharges through
+the circle twin at P4 or P5.
+*Example:* 21 banned → circle(21) = **46** is the back-door.
+
+## 🪞 MIRROR TWIN
+A number's partner such that:
+- Low-band pair-sum = 28 (pivot 14): `1↔27, 2↔26, …, 13↔15, 14↔14`
+- High-band pair-sum = 56 (pivot 28): `29↔27, 30↔26, …, 42↔14, 50↔6`
+*Example:* 7 is the mirror twin of 21 (banned) — becomes a back-door
+candidate even when the parent is suppressed.
+
+## 🎯 TRIPLE-LOCK
+A number that satisfies THREE different hunger lenses simultaneously:
+seed-hungry AND rare-event hungry AND (either date-perm OR Q1-seed-echo
+un-played). *Example (21.04.2026):* 17 is triple-locked.
+
+## 🔑 +10 KEY
+The Q1→Q2 gap grid signature discovered 2026: a specific constant (+10)
+that shows up in the row-sums of at least 4 consecutive draws post-Q1d1.
+Used to translate Q1d5 seed into Q2d5 candidates.
+
+## 🚫 BANNED (angry at the party)
+DJ-marked numbers that will NOT appear in the target draw based on:
+- Just fired 2+ times (cooling)
+- Sits on the pivot-sum axis itself (like 28)
+- Mirror already fired and the pair-sum is "used up"
+Engine applies −25 per ban held.
+
