@@ -5097,6 +5097,53 @@ async def get_hit_tracker(last_draws: int = 3):
     # Cap at 20 best
     unique_results = unique_results[:20]
     
+    # === PER-DRAW STATS — total generated, hits, best, rate per draw ===
+    per_draw_stats = []
+    for d in last_n_draws:
+        td = d['date']
+        actual_nums = set(d.get('numbers', []))
+        actual_lucky = d.get('lucky_number')
+        
+        total_generated = 0
+        hits_2plus = 0
+        hits_3plus = 0
+        best_hit = 0
+        
+        # Count from generations collection (money-mode, story, v2)
+        gens_for_draw = [g for g in swiss_gens if g.get('target_date') == td]
+        for g in gens_for_draw:
+            tickets = g.get('tickets', [])
+            hr = g.get('hit_results', [])
+            for i, t in enumerate(tickets):
+                total_generated += 1
+                if i < len(hr) and hr[i]:
+                    hc = hr[i].get('hit_count', 0)
+                else:
+                    hc = len(set(t.get('numbers', [])) & actual_nums)
+                if hc >= 2: hits_2plus += 1
+                if hc >= 3: hits_3plus += 1
+                if hc > best_hit: best_hit = hc
+        
+        # Count from prediction_history (master-predictor)
+        preds_for_draw = [p for p in swiss_preds if p.get('target_draw_date') == td]
+        for p in preds_for_draw:
+            total_generated += 1
+            hc = len(set(p.get('numbers', [])) & actual_nums)
+            if hc >= 2: hits_2plus += 1
+            if hc >= 3: hits_3plus += 1
+            if hc > best_hit: best_hit = hc
+        
+        hit_rate = round((hits_2plus / total_generated * 100), 1) if total_generated > 0 else 0.0
+        
+        per_draw_stats.append({
+            "date": td,
+            "total_generated": total_generated,
+            "hits_2plus": hits_2plus,
+            "hits_3plus": hits_3plus,
+            "best_hit": best_hit,
+            "hit_rate_pct": hit_rate,
+        })
+    
     return {
         "last_draws": [{
             "date": d['date'],
@@ -5105,6 +5152,7 @@ async def get_hit_tracker(last_draws: int = 3):
         } for d in last_n_draws],
         "tickets_with_2_plus": len(unique_results),
         "results": unique_results,
+        "per_draw_stats": per_draw_stats,
     }
 
 
