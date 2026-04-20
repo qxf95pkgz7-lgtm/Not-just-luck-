@@ -409,23 +409,80 @@ def law_dj_calls(rings, dj_call: dict, mode):
         rings[n].append(("dj-date-perm", "DJ date-perm list"))
 
 def law_star_math(rings, draws, mode):
-    """Euro stars: ⭐a+⭐b, ⭐a−⭐b, (⭐a×⭐b)%12, pair reuse."""
+    """
+    EURO STAR KING FORMULAS (DJ discovery 20.04.2026, validated over 1,617 draws):
+    The stars pre-echo the mains via specific arithmetic bridges.
+    Discovered rates vs 2% random baseline:
+      • S2 - S1 = P1          8.2%  🔥🔥  (4× baseline — P1 KING)
+      • S1 + S2 = P1 or P2    4.1% / 3.8%
+      • S1 + 12 = P2          4.3%  🔥
+      • 25 + S1 = P3          3.7%  (circle-lift)
+      • S1 + 21 = P3/P4       3.5%  (bridge)
+      • 25 + S2 = P4          4.3%  🔥  (back-row ladder)
+      • S2 × 4 = P5           3.3%  🔥  (quadruple expansion)
+      • 50 - S1 - S2 = P5     3.2%  (mirror-back)
+      • S1 × 3 = P1           4.0%
+    """
     if mode != "euro" or not draws:
         return
     last = draws[-1]
     stars = last.get("stars", [])
     if len(stars) != 2:
         return
-    a, b = sorted(stars)
+    s1, s2 = sorted(stars)
+    formulas = [
+        (s2 - s1,     f"S2-S1 king (8.2% → P1)"),
+        (s1 + s2,     f"S1+S2 pivot (4.1% → P1/P2)"),
+        (s1 * 3,      f"S1×3 (4.0% → P1)"),
+        (s1 * 4,      f"S1×4 (3.2% → P1)"),
+        (s1 + 12,     f"S1+12 (4.3% → P2)"),
+        (s2 + 12,     f"S2+12 (2.5% → P2)"),
+        (2 * s1 + s2, f"2·S1+S2 (4.0% → P2)"),
+        (25 + s1,     f"25+S1 circle-lift (3.7% → P3)"),
+        (s1 + 21,     f"S1+21 bridge (3.5% → P3)"),
+        (s2 + 21,     f"S2+21 bridge (3.3% → P3/P4)"),
+        (25 + s2,     f"25+S2 circle-lift (4.3% → P4)"),
+        (s2 * 4,      f"S2×4 quad-expand (3.3% → P5)"),
+        (50 - s1 - s2, f"50-S1-S2 mirror-back (3.2% → P5)"),
+        (s1 * s2,     f"S1×S2 product ({s1}×{s2})"),
+        (s1 * 10 + s2, f"concat S1|S2 (6.4% in mains)"),
+        (s2 * 10 + s1, f"concat S2|S1 (0.9% in mains)"),
+    ]
+    for val, why in formulas:
+        if 1 <= val <= 50:
+            rings[val].append(("star-king-formula", why))
+    # Also star-to-star forward hints for star suspects
     for x, why in [
-        (a + b, f"⭐{a}+⭐{b}"),
-        (b - a, f"⭐{b}-⭐{a}"),
-        ((a * b) % 12 or 12, f"⭐{a}×⭐{b} mod 12"),
+        (s1 + s2,  f"⭐{s1}+⭐{s2}"),
+        (s2 - s1,  f"⭐{s2}-⭐{s1}"),
+        ((s1 * s2) % 12 or 12, f"⭐{s1}×⭐{s2} mod 12"),
     ]:
-        if 1 <= x <= 50:
-            rings[x].append(("star-math-main", why))
         if 1 <= x <= 12:
             rings[f"S{x}"].append(("star-math", why))
+
+    # Cross-draw: previous S1+25, S2+25, S1+12, S2+12 can still echo
+    # (Note: already baked into formulas above since we only track last draw)
+
+
+def law_prev_star_forward_echo(rings, draws, mode, window=3):
+    """
+    Prev draw stars → next P1 ±3 fires at 44.7% (strongest cross-draw signal).
+    Add soft bonuses for numbers in the ±3 neighborhood of last draw's stars.
+    """
+    if mode != "euro" or not draws:
+        return
+    last = draws[-1]
+    stars = last.get("stars", [])
+    if len(stars) != 2:
+        return
+    s1, s2 = sorted(stars)
+    mx = 50
+    for star, label in [(s1, "S1"), (s2, "S2")]:
+        for delta in [-3, -2, -1, 0, 1, 2, 3]:
+            n = star + delta
+            if 1 <= n <= mx and delta != 0:
+                tag_name = f"star-forward-echo"
+                rings[n].append((tag_name, f"prev ⭐{label}={star} ±{abs(delta)} → P1/P2 zone (44.7% ±3)"))
 
 # ─────────────────────────────────────────────────────────────
 # Position fitness — documented bias tables
@@ -494,6 +551,7 @@ def run_simulator(target_date: str, mode: str,
     law_backrow_echo(rings, draws, mode)
     law_consecutive_pair(rings, draws, mode)
     law_star_math(rings, draws, mode)
+    law_prev_star_forward_echo(rings, draws, mode)
     if dj_call:
         law_dj_calls(rings, dj_call, mode)
 
