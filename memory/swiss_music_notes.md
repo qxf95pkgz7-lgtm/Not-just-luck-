@@ -1024,6 +1024,8 @@ Applying the 13 formulas to 17.04.2026 stars [6, 8]:
 
 **Rule:** **Split mirror-couples across consecutive tickets** in the orchestra. Ticket N holds one half, ticket N+1 holds the other. Together, the two tickets channel the banned pivot's full frequency without ever playing the pivot itself.
 
+**"28 db" context (for 21.04.2026):** 28 fired at P4 in the **draw before** (14.04) AND again at P3 on 17.04 — two consecutive draws. That's why 28 is cooled and banned for 21.04. The mirror-split is how we discharge the residual energy.
+
 **28-mirror couples (both halves playable):**
 `(10,18) · (11,17) · (12,16) · (13,15) · (2,26) · (3,25) · (5,23) · (6,22) · (8,20) · (9,19)`
 Plus **14 = self-mirror** (the one point that doesn't need a partner). Pairs (4,24) and (7,21) are "single-side only" because their partner is also banned.
