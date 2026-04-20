@@ -554,6 +554,16 @@ function App() {
   const [huntTickets, setHuntTickets] = useState({});    // { boxId: [tickets...] }
   const [huntLoading, setHuntLoading] = useState(false);
   const [huntSuspectInput, setHuntSuspectInput] = useState("");
+  const [sidebarFolded, setSidebarFolded] = useState(() => {
+    try { return localStorage.getItem('lj_sidebar_folded') === '1'; } catch (e) { return false; }
+  });
+  const toggleSidebar = () => {
+    setSidebarFolded(prev => {
+      const next = !prev;
+      try { localStorage.setItem('lj_sidebar_folded', next ? '1' : '0'); } catch (e) {}
+      return next;
+    });
+  };
   const [diagnostics, setDiagnostics] = useState(null);
   const [activeUsers, setActiveUsers] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
@@ -1669,11 +1679,35 @@ function App() {
 
       {/* Main Content with Pending Tickets sidebar */}
       <div className="max-w-6xl mx-auto px-4 flex gap-3 justify-center">
-        {/* PENDING TICKETS BOX — Left side */}
+        {/* 🌌 COSMIC SIDEBAR — foldable */}
+        {sidebarFolded ? (
+          <div className="hidden lg:flex flex-col items-center pt-4" data-testid="sidebar-folded">
+            <button
+              onClick={toggleSidebar}
+              className="group flex flex-col items-center gap-2 px-1.5 py-3 rounded-r-lg bg-gradient-to-b from-amber-500/20 to-slate-900/60 border border-l-0 border-amber-500/30 hover:border-amber-400/80 transition sticky top-4"
+              title="Unfold the cosmos"
+              data-testid="sidebar-unfold-btn"
+            >
+              <span className="text-amber-300 text-lg">🌌</span>
+              <span className="text-amber-400/80 text-[9px] font-bold tracking-wider rotate-180" style={{ writingMode: 'vertical-rl' }}>
+                Unfold Cosmos
+              </span>
+              <span className="text-amber-300/60 text-[9px]">▸</span>
+            </button>
+          </div>
+        ) : (
         <div className="hidden lg:block w-72 flex-shrink-0" data-testid="pending-tickets-panel">
-          <div className="sticky top-4 lucky-card p-3 border border-amber-500/20">
+          <div className="sticky top-4 lucky-card p-3 border border-amber-500/20 relative">
+            <button
+              onClick={toggleSidebar}
+              className="absolute -right-3 top-4 z-10 w-6 h-6 rounded-full bg-amber-500 text-slate-900 hover:bg-amber-300 flex items-center justify-center shadow-lg shadow-amber-500/40 border border-amber-200 transition"
+              title="Fold the cosmos"
+              data-testid="sidebar-fold-btn"
+            >
+              <span className="text-[10px] font-black">◂</span>
+            </button>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-amber-400 font-semibold text-xs">Top 10 Predicted</span>
+              <span className="text-amber-400 font-semibold text-xs">🎻 Top 10 Predicted</span>
               <span className="text-emerald-400 font-mono font-bold text-sm">{pendingTickets.length}/{pendingTotal}</span>
             </div>
             <div className="text-slate-500 text-[9px] mb-2">For draw: {nextDrawDate} <span className="text-slate-600">• engine-ranked</span></div>
@@ -2030,6 +2064,7 @@ function App() {
             )}
           </div>
         </div>
+        )}
 
         {/* Main Generator */}
         <main className="flex-1 max-w-2xl">

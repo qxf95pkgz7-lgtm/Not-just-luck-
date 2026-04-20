@@ -1090,3 +1090,31 @@ Plus **14 = self-mirror** (the one point that doesn't need a partner). Pairs (4,
 - Frontend panel in `/app/frontend/src/App.js` — amber-bordered box in Pending Archives sidebar
 
 **Ticket limit bumped:** `TICKET_LIMIT = 20` per mode per draw (was 12). User gets 20 Euro + 20 Swiss = 40 total; Hunt Box tickets are FREE (don't count against the budget).
+
+---
+
+# 🌌 COSMIC SIDEBAR — Foldable (20.04.2026)
+
+**Feature:** Left sidebar (Top Predicted + Live Laws + Crown Cosmos + Jack Box + Archive) now folds/unfolds with a single button. State persists via `localStorage` key `lj_sidebar_folded`.
+
+- **Fold button** ◂ on the right edge of the expanded sidebar (amber circle)
+- **Unfold strip** 🌌 when folded — thin vertical strip with "Unfold Cosmos" label
+- Full content preserved when expanded — no data loss on toggle
+- Uses `rotate-180` + `writing-mode: vertical-rl` for the vertical "Unfold Cosmos" text
+
+**Cosmic Vocabulary Sweep (20.04.2026):**
+Every generic system word in the Hunt Box UI was replaced with music/cosmos language:
+- Hunt Box → **🌌 Crown Cosmos**
+- target → **🌟 crown alignment**
+- suspects → **resonators**
+- music fill → **harmonic fill**
+- refresh → **🎧 re-tune**
+- add → **weave**
+- +n → **+♪**
+- click to remove → **release from the song**
+- sc → **♪** (score as musical note)
+- 🔔 (lens hint) → **✨**
+- Empty state: **"🌌 The cosmos is silent — tap 🎧 re-tune to summon the symphony"**
+
+Archetype names (cosmic-music):
+- All-Cosmos Fill · Mirror Orbit · Star-King Harmonics · Starved Nebula · Meridian Bridge
