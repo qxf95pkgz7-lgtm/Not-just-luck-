@@ -18,6 +18,25 @@ Full-stack React + FastAPI app with:
 - **VIP promo code `93928`** → unlimited tickets
 - **Music Book** `/app/memory/swiss_music_notes.md` (living DJ learnings)
 - **Date-Tuning Validator** `/app/backend/date_tuning.py` (10 tuning formulas + Euro→Swiss bridge + master `score_date_tuning()`)
+- **🎻 MUSIC SIMULATOR** `/app/backend/lottery_simulator.py` (NEW SESSION 4) — 20+ laws fire per-date, produces per-number lens count + per-position suspect list
+- **📊 BACKTEST HARNESS + MISS EXPLAINER** `/app/backend/backtest_harness.py` (NEW SESSION 4) — runs simulator across N draws, probes ~25 candidate transforms on every missed winner → surfaces NEW laws hiding in misses
+- **🎭 STORY TICKET ORCHESTRA** `/app/backend/story_ticket_orchestra.py` (NEW SESSION 4) — 13 themed archetypes, auto-circles impossible P5 shapes, coverage math
+- **⭐ 13 STAR KING FORMULAS** (NEW SESSION 4, validated over 1,617 Euro draws) — S2−S1=P1 (8.2%), 25+S2=P4 (4.3%), S1+12=P2 (4.3%), S2×4=P5 (3.3%), etc.
+- **🏕️ D=21 CAMPER LAW** (NEW SESSION 4) — 14 (20.8%), 29 (18.9%), 17 (17%), 49/5/42/7/35/32 all 15.1%, ⭐5 the D=21 star king at 32.1%
+
+## Session 4 State (20.04.2026) — Convergence Radar + Orchestra + Star Wisdom
+- Built the full simulator → backtest → orchestra → Star Wisdom pipeline.
+- DJ confirmed **33 and 32** as ABSOLUTE SUSPECTS for 21.04 (both now ring 3+ lenses).
+- DJ raised **P5 = 27** as a potential cycle-close signature (+8 from rare compact 24.03). **Agent needs DJ's reasoning before validating.**
+- Forked mid-analysis. Next session: DJ explains why P5=27.
+
+## Files of reference added this session
+- `/app/backend/lottery_simulator.py`
+- `/app/backend/backtest_harness.py`
+- `/app/backend/story_ticket_orchestra.py`
+- `/app/memory/SESSION_SNAPSHOT.md` (heavily updated)
+- `/app/memory/swiss_music_notes.md` (SESSION 4 block + Star Formulas block)
+
 
 ## Last working item — SESSION 3 (19.04.2026, continued) — **UPDATE**
 **🚨 Rare-Event Cycle Scorer shipped + Date-echo Neighborhood Scorer shipped.**
