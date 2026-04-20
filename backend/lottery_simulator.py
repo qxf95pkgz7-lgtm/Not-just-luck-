@@ -519,15 +519,24 @@ def run_simulator(target_date: str, mode: str,
     if not draws:
         return {"error": "no historical draws before target date"}
 
-    # Seeds (Euro-documented reference anchors for 2026)
+    # Seeds (Euro-documented reference anchors for 2026) — date-gated to avoid hindsight
     seeds = {}
     if mode == "euro":
-        seeds["Q1d1-yearly"] = [8, 27, 42, 44, 46]
-        seeds["Q1d2"]        = [5, 14, 17, 18, 31]
-        seeds["Q1d3"]        = [1, 7, 10, 26, 34]
-        seeds["Q1d4"]        = [6, 10, 18, 44, 47]
-        seeds["Q1d5-+10"]    = [5, 17, 24, 29, 50]
-        seeds["rare-24.03"]  = [12, 16, 17, 18, 27]
+        target_dt = parse_date(target_date)
+        SEED_DATES = {
+            "Q1d1-yearly":  ("02.01.2026", [8, 27, 42, 44, 46]),
+            "Q1d2":         ("06.01.2026", [5, 14, 17, 18, 31]),
+            "Q1d3":         ("09.01.2026", [1, 7, 10, 26, 34]),
+            "Q1d4":         ("13.01.2026", [6, 10, 18, 44, 47]),
+            "Q1d5-+10":     ("16.01.2026", [5, 17, 24, 29, 50]),
+            "rare-24.03":   ("24.03.2026", [12, 16, 17, 18, 27]),
+        }
+        for name, (seed_date, nums) in SEED_DATES.items():
+            try:
+                if parse_date(seed_date) < target_dt:
+                    seeds[name] = nums
+            except Exception:
+                pass
 
     rings: Dict = defaultdict(list)
     banned = (dj_call or {}).get(mode, {}).get("banned_mains", []) if dj_call else []
