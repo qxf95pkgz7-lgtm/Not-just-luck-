@@ -1015,3 +1015,30 @@ Applying the 13 formulas to 17.04.2026 stars [6, 8]:
 - `law_star_math()` in `/app/backend/lottery_simulator.py` — all 13 king formulas now fire
 - `law_prev_star_forward_echo()` — ±3 neighborhood of prev stars as P1/P2 forward echo
 - **32 and 33 now ring 3+ lenses on 21.04** (were 1 lens before) — upgraded to cosmos-shout tier.
+
+---
+
+# 🪞 MIRROR-SPLIT LAW (DJ discovery 20.04.2026 — "28 double back-door")
+
+**Context:** When a pair-sum pivot is banned (e.g., 28 banned as the mirror-axis), we can't play 28 itself. But 28's ADDITIVE mirror couples are all alive — every pair (a, b) such that a+b=28.
+
+**Rule:** **Split mirror-couples across consecutive tickets** in the orchestra. Ticket N holds one half, ticket N+1 holds the other. Together, the two tickets channel the banned pivot's full frequency without ever playing the pivot itself.
+
+**28-mirror couples (both halves playable):**
+`(10,18) · (11,17) · (12,16) · (13,15) · (2,26) · (3,25) · (5,23) · (6,22) · (8,20) · (9,19)`
+Plus **14 = self-mirror** (the one point that doesn't need a partner). Pairs (4,24) and (7,21) are "single-side only" because their partner is also banned.
+
+**Application to 21.04.2026 (banned = 21, 24, 28):**
+- Ticket with P3=18 → next ticket with P3=10 (10+18=28)
+- Ticket with P3=17 → next ticket with P3=11
+- Ticket with P3=12 → next ticket with P3=16
+- Ticket with P3=22 → next ticket with P3=6
+
+**Why it works (DJ's insight):**
+- The cosmos loves the pair-sum pivot 28 — it's the mirror-fold axis of Euro 1-50 (and also Swiss via 28-n mirror).
+- When 28 is banned, its energy has to DISCHARGE somewhere.
+- The safest discharge is through BOTH halves of ANY mirror couple, distributed across tickets.
+- Single-ticket holding both halves (e.g. [10, 18, ...]) still works, but splits across tickets give double-coverage at batch level.
+
+**Engine hook (to code next):**
+- Orchestra generator: after producing N tickets, scan for mirror-pairs within each ticket. For tickets that hold one half of an alive 28-pair, auto-generate a paired ticket with the other half while keeping the same stars/back-row.
