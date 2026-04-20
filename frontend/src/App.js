@@ -1378,7 +1378,7 @@ function App() {
       console.error("Error:", e);
       // Handle ticket limit reached
       if (e.response && e.response.status === 429) {
-        alert(e.response.data?.detail || "Ticket limit reached! Maximum 12 tickets per draw.");
+        alert(e.response.data?.detail || "🎻 Ticket limit reached! Maximum 20 tickets per draw per lottery.");
         setLoading(false);
         return;
       }
@@ -2207,7 +2207,7 @@ function App() {
               <span className="text-slate-400">— unlimited tickets on {lotteryMode === 'swiss' ? 'Swiss Lotto' : 'EuroMillions'}</span>
             </span>
           ) : (
-            <span className="text-slate-500 text-xs text-center">You can generate up to <span className="text-amber-400 font-semibold">12 tickets</span> per {lotteryMode === 'swiss' ? 'Swiss Lotto' : 'EuroMillions'} draw <span className="text-slate-600">• auto-resets on new draw</span></span>
+            <span className="text-slate-500 text-xs text-center">You can generate up to <span className="text-amber-400 font-semibold">20 tickets</span> per {lotteryMode === 'swiss' ? 'Swiss Lotto' : 'EuroMillions'} draw <span className="text-slate-600">• auto-resets on new draw</span></span>
           )}
           {!isUnlimited && (
             <button
@@ -3766,56 +3766,77 @@ function App() {
         {showGuide && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" data-testid="guide-modal">
             <div className="bg-slate-800 border border-slate-600 rounded-xl max-w-lg w-full p-6 max-h-[80vh] overflow-y-auto">
-              <h2 className="text-xl font-bold text-amber-400 mb-4">How to Use Lucky Jack</h2>
+              <h2 className="text-xl font-bold text-amber-400 mb-4">🎻 How to Use Lucky Jack</h2>
               
               <div className="text-slate-300 text-sm space-y-4">
-                <p className="text-white font-semibold">Lucky Jack reads the rhythm of the stars to help you pick your lottery numbers.</p>
+                <p className="text-white font-semibold">Ya man 🍀 — Lucky Jack listens to the music of the numbers. Every draw has a rhythm. We tune into it with you.</p>
                 
                 <div>
-                  <h3 className="text-amber-300 font-semibold mb-1">Two Lotteries</h3>
+                  <h3 className="text-amber-300 font-semibold mb-1">🎯 Two Lotteries · 20 + 20 Tickets</h3>
                   <p>Switch between <span className="text-white font-medium">Swiss Lotto</span> (6 numbers 1-42 + Lucky) and <span className="text-white font-medium">EuroMillions</span> (5 numbers 1-50 + 2 Stars) using the toggle at the top.</p>
+                  <p className="mt-1"><span className="text-amber-400 font-semibold">You get 20 tickets per draw per lottery — independently.</span> That's up to <span className="text-emerald-400 font-bold">40 tickets total</span> per user across both modes. The count resets automatically when each new draw lands.</p>
                 </div>
 
                 <div>
-                  <h3 className="text-amber-300 font-semibold mb-1">Two Modes</h3>
-                  <p><span className="text-white font-medium">Jackpot Mode</span> — Uses all celestial alignments for maximum coverage.</p>
-                  <p><span className="text-white font-medium">Money Mode</span> — Focused on hitting 3+ numbers. The stars whisper which combinations have the strongest resonance. Generates multiple tickets with different energies: Core, Spread, and Crazy.</p>
+                  <h3 className="text-amber-300 font-semibold mb-1">🌌 The Crown Cosmos (Hunt Box)</h3>
+                  <p>A persistent cosmic chamber that waits for a specific pattern to land — currently <span className="text-rose-300 font-mono font-bold">P5 = 50</span>. Inside, the DJ drops <span className="text-amber-300">resonators</span> (suspect numbers like 10, 27, 32) and the engine weaves <span className="text-white font-medium">5 auto-generated symphonies</span> every draw, re-tuning itself until the alignment arrives 🎻.</p>
+                  <p className="mt-1 text-slate-400 text-xs">Each symphony rides a different archetype: All-Cosmos Fill · Mirror Orbit · Star-King Harmonics · Starved Nebula · Meridian Bridge. Hunt Box tickets are FREE and don't count against your 20.</p>
                 </div>
 
                 <div>
-                  <h3 className="text-amber-300 font-semibold mb-1">Multiple Tickets</h3>
-                  <p>Open the ticket selector to generate 2 to 12 tickets at once. Swiss Lotto starts at 2 tickets (5 CHF). Each ticket carries a different cosmic frequency — some are grounded, some reach for the high stars. A fresh batch of 12 unlocks every time a new draw lands.</p>
+                  <h3 className="text-amber-300 font-semibold mb-1">🎻 Two Generator Modes</h3>
+                  <p><span className="text-white font-medium">Dreaming Mode</span> — Reaches for the full cosmos. All alignments, all frequencies, maximum coverage.</p>
+                  <p><span className="text-white font-medium">Money Mode</span> — Focused on hitting 3+ numbers. The stars whisper which combinations have the strongest resonance.</p>
                 </div>
 
                 <div>
-                  <h3 className="text-amber-300 font-semibold mb-1">Celestial Radar</h3>
-                  <p>Numbers travel through cosmic orbits — some are close to Earth, others are in <span className="text-red-400">deep orbit</span> near distant galaxies. The Celestial Radar shows you which numbers are <span className="text-amber-400">approaching our orbit</span> (about to appear). When a planet aligns with these numbers, magic happens.</p>
+                  <h3 className="text-amber-300 font-semibold mb-1">🎫 Multiple Tickets</h3>
+                  <p>Open the ticket selector to generate <span className="text-amber-400 font-semibold">2 to 20 tickets</span> at once. Each ticket carries a different cosmic frequency — some grounded in snap-back rebounds, some reaching for back-row kings, some following cycle-close symmetries.</p>
                 </div>
 
                 <div>
-                  <h3 className="text-amber-300 font-semibold mb-1">Hit Tracker</h3>
-                  <p>Every ticket you generate is saved and compared against actual draw results. The Hit Tracker shows your best tickets from the last 3 draws — only tickets with 2 or more correct numbers appear. Green balls = hits!</p>
+                  <h3 className="text-amber-300 font-semibold mb-1">🌠 Celestial Radar</h3>
+                  <p>Numbers travel through cosmic orbits — some close to Earth, others in <span className="text-red-400">deep orbit</span> near distant galaxies. The Radar shows which numbers are <span className="text-amber-400">approaching our orbit</span>. When a planet aligns with a hungry number, the music surfaces.</p>
                 </div>
 
                 <div>
-                  <h3 className="text-amber-300 font-semibold mb-1">The Engine</h3>
-                  <p>Behind the scenes, Lucky Jack listens to the music of the universe. The numbers follow celestial orbits, cosmic bridges between the seven planets, and rhythmic cycles that echo from Mercury to Neptune. Our engine reads these stellar harmonics and translates them into your tickets.</p>
-                  <p className="text-slate-400 text-xs mt-1">Patterns include: Celestial DNA resonance, Star bridge connections, Cosmic rhythm cycles, Sleeper energy waves, and Cross-constellation harmonics.</p>
+                  <h3 className="text-amber-300 font-semibold mb-1">🎧 Hit Tracker + Draw-to-Draw Pulse</h3>
+                  <p>Every ticket is saved and compared against real results. The Hit Tracker shows your strongest tickets from the last 3 draws — green balls = hits. The Pulse panel shows per-draw generation counts, hit rates, and the best ticket shape from each draw's winners.</p>
                 </div>
 
                 <div>
-                  <h3 className="text-amber-300 font-semibold mb-1">Ticket Counters</h3>
-                  <p>At the top you can see how many tickets have been generated in total, and how many are lined up for the next draw. The universe is listening!</p>
+                  <h3 className="text-amber-300 font-semibold mb-1">🎻 Jack Box (your own calls)</h3>
+                  <p>Inside the sidebar you'll find the DJ's Jack Box — your hungry list for the next 3 draws, your P1/P2 locks, triple-locks, and back-row picks. The engine listens to these and bends its symphonies to honour your ears.</p>
                 </div>
 
                 <div>
-                  <h3 className="text-amber-300 font-semibold mb-1">Tips</h3>
+                  <h3 className="text-amber-300 font-semibold mb-1">🔬 Live Laws (Diagnostics)</h3>
+                  <p>A narrative panel that transcribes the current frequencies — snap-back active, rare-event cycle, ladder-fill, back-row echoes, star-king formulas. Every symphony is built on these laws.</p>
+                </div>
+
+                <div>
+                  <h3 className="text-amber-300 font-semibold mb-1">🌌 Foldable Cosmos Sidebar</h3>
+                  <p>The entire left sidebar (Top 10 · Live Laws · Crown Cosmos · Jack Box · Archive) can fold into a slim strip with the <span className="text-amber-300">◂</span> button — one click to give the stage full width, another to bring the cosmos back. Your choice is remembered across sessions.</p>
+                </div>
+
+                <div>
+                  <h3 className="text-amber-300 font-semibold mb-1">🎼 The Engine Behind the Music</h3>
+                  <p>Lucky Jack reads 20+ cosmic laws live: Star King Formulas (S2−S1, 25+S2, S2×4...), Ladder-Fill, Self-Circle +21, Silent-Band Hunger, Mirror-Split (28-pivot), P1 Running Sum, Cross-Lottery Bridges, Rare-Event Cycle Close, Date-Perm Echo, +10 Key Translation, D=21 Campers... every number ranked by how many lenses are ringing on it.</p>
+                </div>
+
+                <div>
+                  <h3 className="text-amber-300 font-semibold mb-1">💎 VIP Promo Code</h3>
+                  <p>Have a VIP code? Enter it via the <span className="text-white font-medium">"Have a code?"</span> link near the top to unlock <span className="text-amber-400 font-bold">unlimited tickets</span>. The counter won't cap you anymore — the stars pour freely 🎻.</p>
+                </div>
+
+                <div>
+                  <h3 className="text-amber-300 font-semibold mb-1">🍀 Tips</h3>
                   <ul className="list-disc list-inside space-y-1 text-slate-400">
-                    <li>Generate at least 10 tickets for best coverage</li>
-                    <li>Check the Celestial Radar before playing — numbers in deep orbit carry powerful energy from Andromeda</li>
-                    <li>The Crazy tickets reach where others don't — sometimes the stars surprise us</li>
-                    <li>Use the Hit Tracker to learn which cosmic frequencies work best for you</li>
-                    <li>Play responsibly — the stars guide, but never guarantee</li>
+                    <li>Generate at least 10 tickets for broad coverage — the cosmos rewards diversity</li>
+                    <li>Drop resonators into the Crown Cosmos when you hear a specific number calling</li>
+                    <li>Check the Live Laws panel — if <span className="text-rose-300">snap-back</span> is active, play low P1s</li>
+                    <li>Watch the Hit Tracker Pulse — learn which archetypes sing loudest for YOU</li>
+                    <li>Play responsibly — the stars guide, but never guarantee 🎧</li>
                   </ul>
                 </div>
               </div>
@@ -3825,7 +3846,7 @@ function App() {
                 className="mt-5 w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-2 rounded-lg transition-colors"
                 data-testid="guide-close"
               >
-                Got it!
+                Ya man — let's play 🎻🍀
               </button>
             </div>
           </div>
