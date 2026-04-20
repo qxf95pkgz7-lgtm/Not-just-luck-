@@ -5384,7 +5384,7 @@ async def get_active_users():
     return {"active_users": active_count, "total_users": total_count}
 
 # ─── TICKET LIMIT (12 per user per draw period — resets when new draw lands) ─────────────
-TICKET_LIMIT = 12
+TICKET_LIMIT = 20  # 🎻 Session 4: bumped 12→20 per mode per draw (40 total across Swiss+Euro)
 MASTER_PROMO_CODE = "93928"  # 🎻 VIP bypass — unlimited tickets for holder
 
 async def _is_visitor_unlimited(visitor_id: str) -> bool:
@@ -5461,6 +5461,145 @@ async def redeem_promo_code(request: RedeemCodeRequest):
         upsert=True,
     )
     return {"success": True, "unlimited": True, "message": "🎻 VIP unlocked — unlimited tickets!"}
+
+
+# ─────────────────────────────────────────────────────────────
+# 🎯 HUNT BOX endpoints — persistent "wait-for-50" targeting boxes
+# ─────────────────────────────────────────────────────────────
+import hunt_box as _hunt_box
+
+
+class HuntBoxCreate(BaseModel):
+    mode: str  # 'euro' or 'swiss'
+    target_type: str = "p5_value"  # 'p5_value' | 'any_position' | 'p4_value'
+    target_value: int  # e.g. 50
+    jack_picks: List[int] = []
+    label: Optional[str] = None
+
+
+class HuntBoxSuspectUpdate(BaseModel):
+    jack_picks: List[int]
+
+
+@api_router.get("/hunt-box/active")
+async def list_active_hunt_boxes(mode: Optional[str] = None):
+    """List all active (unresolved) hunt boxes, optionally filtered by mode."""
+    q = {"status": "active"}
+    if mode:
+        q["mode"] = mode
+    boxes = await db.hunt_boxes.find(q, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return {"boxes": boxes}
+
+
+@api_router.get("/hunt-box/{box_id}/tickets")
+async def get_hunt_box_tickets(box_id: str):
+    """Generate the current 5 tickets for this hunt box, targeting the next draw."""
+    box = await db.hunt_boxes.find_one({"id": box_id}, {"_id": 0})
+    if not box:
+        raise HTTPException(status_code=404, detail="Hunt box not found")
+    if box["status"] != "active":
+        return {"box": box, "tickets": [], "status": "resolved"}
+
+    swiss_next, euro_next = _get_next_draw_dates()
+    target_date = euro_next if box["mode"] == "euro" else swiss_next
+
+    dj_call = None
+    try:
+        dj_path = Path(__file__).parent / "dj_calls.json"
+        if dj_path.exists():
+            import json as _json
+            dj_call = _json.loads(dj_path.read_text())
+    except Exception:
+        dj_call = None
+
+    tickets = _hunt_box.generate_hunt_tickets(
+        target_date=target_date,
+        mode=box["mode"],
+        target_value=box["target_value"],
+        jack_picks=box.get("jack_picks", []),
+        dj_call=dj_call,
+        num_tickets=5,
+    )
+    return {
+        "box": box,
+        "target_date": target_date,
+        "tickets": tickets,
+    }
+
+
+@api_router.post("/hunt-box")
+async def create_hunt_box(req: HuntBoxCreate):
+    """Create a new hunt box."""
+    if req.mode not in ("euro", "swiss"):
+        raise HTTPException(status_code=400, detail="mode must be 'euro' or 'swiss'")
+    mx = 50 if req.mode == "euro" else 42
+    if not (1 <= req.target_value <= mx):
+        raise HTTPException(status_code=400, detail=f"target_value out of range (1-{mx})")
+    box = {
+        "id": str(uuid.uuid4()),
+        "mode": req.mode,
+        "target_type": req.target_type,
+        "target_value": req.target_value,
+        "jack_picks": sorted(set(req.jack_picks)),
+        "label": req.label or f"{req.mode.upper()} P5={req.target_value} Hunt",
+        "status": "active",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "draws_covered": 0,
+    }
+    await db.hunt_boxes.insert_one(box)
+    box.pop("_id", None)
+    return {"box": box}
+
+
+@api_router.put("/hunt-box/{box_id}/suspects")
+async def update_hunt_box_suspects(box_id: str, req: HuntBoxSuspectUpdate):
+    """Replace the jack_picks list for a hunt box."""
+    box = await db.hunt_boxes.find_one({"id": box_id})
+    if not box:
+        raise HTTPException(status_code=404, detail="Hunt box not found")
+    mx = 50 if box["mode"] == "euro" else 42
+    clean = sorted(set(n for n in req.jack_picks if 1 <= n <= mx and n != box["target_value"]))
+    await db.hunt_boxes.update_one(
+        {"id": box_id},
+        {"$set": {"jack_picks": clean, "updated_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    return {"success": True, "jack_picks": clean}
+
+
+@api_router.delete("/hunt-box/{box_id}")
+async def delete_hunt_box(box_id: str):
+    """Delete/resolve a hunt box."""
+    res = await db.hunt_boxes.delete_one({"id": box_id})
+    return {"deleted": res.deleted_count > 0}
+
+
+@api_router.post("/hunt-box/seed-default")
+async def seed_default_hunt_box():
+    """Seed the DJ's default P5=50 Euro hunt box with jack picks [10, 27, 32]."""
+    existing = await db.hunt_boxes.find_one({
+        "mode": "euro",
+        "target_value": 50,
+        "target_type": "p5_value",
+        "status": "active",
+    })
+    if existing:
+        existing.pop("_id", None)
+        return {"box": existing, "seeded": False}
+    box = {
+        "id": str(uuid.uuid4()),
+        "mode": "euro",
+        "target_type": "p5_value",
+        "target_value": 50,
+        "jack_picks": [10, 27, 32],
+        "label": "🎯 P5=50 Hunt (DJ's original)",
+        "status": "active",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "draws_covered": 0,
+    }
+    await db.hunt_boxes.insert_one(box)
+    box.pop("_id", None)
+    return {"box": box, "seeded": True}
+
 
 # Include the router in the main app
 app.include_router(api_router)

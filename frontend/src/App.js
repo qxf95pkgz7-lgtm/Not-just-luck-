@@ -550,6 +550,10 @@ function App() {
   const [rareSeed, setRareSeed] = useState(null);
   const [djCalls, setDjCalls] = useState(null);
   const [jackPicks, setJackPicks] = useState({ mains: [], stars: [] });
+  const [huntBoxes, setHuntBoxes] = useState([]);       // active hunt boxes for current mode
+  const [huntTickets, setHuntTickets] = useState({});    // { boxId: [tickets...] }
+  const [huntLoading, setHuntLoading] = useState(false);
+  const [huntSuspectInput, setHuntSuspectInput] = useState("");
   const [diagnostics, setDiagnostics] = useState(null);
   const [activeUsers, setActiveUsers] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
@@ -865,6 +869,58 @@ function App() {
       setDiagnostics(res.data.diagnostics || null);
     } catch (e) {}
   };
+  // 🎯 Hunt Box — fetch active boxes and their tickets for current mode
+  const fetchHuntBoxes = async () => {
+    try {
+      const res = await axios.get(`${API}/hunt-box/active?mode=${lotteryMode === 'swiss' ? 'swiss' : 'euro'}`);
+      const boxes = res.data.boxes || [];
+      // If no boxes exist for Euro, auto-seed the default (P5=50 with 10,27,32)
+      if (boxes.length === 0 && lotteryMode === 'euro') {
+        try {
+          const seed = await axios.post(`${API}/hunt-box/seed-default`);
+          if (seed.data.box) boxes.push(seed.data.box);
+        } catch (e) {}
+      }
+      setHuntBoxes(boxes);
+      // Fetch tickets for each box
+      const ticketMap = {};
+      for (const b of boxes) {
+        try {
+          const tr = await axios.get(`${API}/hunt-box/${b.id}/tickets`);
+          ticketMap[b.id] = tr.data.tickets || [];
+        } catch (e) { ticketMap[b.id] = []; }
+      }
+      setHuntTickets(ticketMap);
+    } catch (e) {}
+  };
+  const refreshHuntBox = async (boxId) => {
+    setHuntLoading(true);
+    try {
+      const tr = await axios.get(`${API}/hunt-box/${boxId}/tickets`);
+      setHuntTickets(prev => ({ ...prev, [boxId]: tr.data.tickets || [] }));
+    } catch (e) {}
+    setHuntLoading(false);
+  };
+  const addHuntSuspect = async (boxId, n) => {
+    const box = huntBoxes.find(b => b.id === boxId);
+    if (!box) return;
+    const next = Array.from(new Set([...(box.jack_picks || []), n])).sort((a,b) => a-b);
+    try {
+      await axios.put(`${API}/hunt-box/${boxId}/suspects`, { jack_picks: next });
+      setHuntBoxes(prev => prev.map(b => b.id === boxId ? { ...b, jack_picks: next } : b));
+      await refreshHuntBox(boxId);
+    } catch (e) {}
+  };
+  const removeHuntSuspect = async (boxId, n) => {
+    const box = huntBoxes.find(b => b.id === boxId);
+    if (!box) return;
+    const next = (box.jack_picks || []).filter(x => x !== n);
+    try {
+      await axios.put(`${API}/hunt-box/${boxId}/suspects`, { jack_picks: next });
+      setHuntBoxes(prev => prev.map(b => b.id === boxId ? { ...b, jack_picks: next } : b));
+      await refreshHuntBox(boxId);
+    } catch (e) {}
+  };
   // 🎻 Check VIP/unlimited status from backend
   const fetchUnlimitedStatus = async () => {
     try {
@@ -889,7 +945,7 @@ function App() {
       setPromoMsg({ ok: false, text: e.response?.data?.detail || 'Invalid code' });
     }
   };
-  useEffect(() => { fetchTicketCounter(); fetchPendingTickets(); fetchUnlimitedStatus(); }, [lotteryMode]);
+  useEffect(() => { fetchTicketCounter(); fetchPendingTickets(); fetchUnlimitedStatus(); fetchHuntBoxes(); }, [lotteryMode]);
 
   // ─── ACTIVE USER HEARTBEAT ───────────────────────
   useEffect(() => {
@@ -1637,6 +1693,102 @@ function App() {
                 </ul>
               </div>
             )}
+            {/* 🎯 HUNT BOX — persistent target boxes (e.g. P5=50 hunt) */}
+            {huntBoxes.length > 0 && huntBoxes.map((hb) => {
+              const tickets = huntTickets[hb.id] || [];
+              const mx = hb.mode === 'euro' ? 50 : 42;
+              return (
+                <div key={hb.id} className="mb-2 p-2 rounded-md border-2 border-amber-500/50 bg-gradient-to-br from-amber-900/20 via-orange-900/15 to-slate-900/40" data-testid={`hunt-box-${hb.id}`}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-amber-300 text-[11px] font-black tracking-wide">🎯 {hb.label}</span>
+                    <button
+                      onClick={() => refreshHuntBox(hb.id)}
+                      disabled={huntLoading}
+                      className="text-[9px] text-amber-400 hover:text-amber-200 font-bold px-1.5 py-0.5 rounded border border-amber-600/40 hover:border-amber-400/80 transition"
+                      data-testid={`hunt-refresh-${hb.id}`}
+                    >{huntLoading ? '…' : '↻ refresh'}</button>
+                  </div>
+                  <div className="text-[9px] text-slate-400 mb-1">
+                    Waiting for <span className="text-amber-300 font-mono font-bold">P5 = {hb.target_value}</span> to land — regenerates every draw until it comes 🍀
+                  </div>
+                  {/* Suspect chips with remove */}
+                  <div className="flex flex-wrap gap-1 mb-1.5">
+                    {(hb.jack_picks || []).map(n => (
+                      <button
+                        key={n}
+                        onClick={() => removeHuntSuspect(hb.id, n)}
+                        className="px-2 py-0.5 text-[10px] font-black rounded-full bg-amber-400 text-slate-900 hover:bg-red-400 hover:text-white border border-amber-200 transition"
+                        title={`${n} — click to remove`}
+                        data-testid={`hunt-suspect-${n}`}
+                      >{n} ✕</button>
+                    ))}
+                    {/* Add suspect input */}
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="1"
+                        max={mx}
+                        value={huntSuspectInput}
+                        onChange={(e) => setHuntSuspectInput(e.target.value)}
+                        placeholder="+n"
+                        className="w-12 px-1.5 py-0.5 text-[10px] rounded bg-slate-800 border border-amber-600/40 text-amber-300 focus:outline-none focus:border-amber-400"
+                        data-testid={`hunt-suspect-input-${hb.id}`}
+                      />
+                      <button
+                        onClick={() => {
+                          const n = parseInt(huntSuspectInput);
+                          if (n >= 1 && n <= mx && n !== hb.target_value) {
+                            addHuntSuspect(hb.id, n);
+                            setHuntSuspectInput("");
+                          }
+                        }}
+                        className="px-2 py-0.5 text-[10px] font-bold rounded bg-amber-500 text-slate-900 hover:bg-amber-300 transition"
+                        data-testid={`hunt-add-${hb.id}`}
+                      >add</button>
+                    </div>
+                  </div>
+                  {/* 5 auto-generated tickets */}
+                  <div className="space-y-1 pt-1 border-t border-amber-600/20">
+                    {tickets.length === 0 ? (
+                      <div className="text-[9px] text-slate-500 py-1 text-center">No tickets yet — click ↻ refresh</div>
+                    ) : tickets.map((t, ti) => (
+                      <div key={ti} className="flex items-center justify-between gap-1 px-1.5 py-1 rounded bg-slate-900/60 border border-amber-600/20" data-testid={`hunt-ticket-${hb.id}-${ti}`}>
+                        <div className="flex flex-col flex-1 min-w-0">
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <span className="text-[9px] text-amber-400/90 font-mono">{t.archetype}</span>
+                          </div>
+                          <div className="flex items-center gap-1 flex-wrap mt-0.5">
+                            {t.mains.map((n, ni) => {
+                              const isTarget = n === hb.target_value;
+                              const isSuspect = (hb.jack_picks || []).includes(n);
+                              return (
+                                <span
+                                  key={ni}
+                                  className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-black border ${isTarget ? 'bg-rose-500 text-white border-rose-300 shadow shadow-rose-500/60' : isSuspect ? 'bg-amber-400 text-slate-900 border-amber-200' : 'bg-slate-700 text-slate-200 border-slate-500'}`}
+                                  title={isTarget ? '🎯 target' : isSuspect ? '🎻 suspect' : 'music fill'}
+                                >{n}</span>
+                              );
+                            })}
+                            {hb.mode === 'euro' && t.stars && t.stars.length > 0 && (
+                              <>
+                                <span className="text-amber-400/60 text-[9px]">⭐</span>
+                                {t.stars.map((s, si) => (
+                                  <span key={si} className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[9px] font-black bg-amber-300 text-slate-900 border border-amber-200">{s}</span>
+                                ))}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <div className="text-[9px] text-amber-400/70 font-mono">sc {t.score}</div>
+                          <div className="text-[8px] text-slate-500">{t.unique_laws_hit}🔔</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
             {lotteryMode === 'euro' && djCalls && Array.isArray(djCalls.user_hungry_list_next_3d) && djCalls.user_hungry_list_next_3d.length > 0 && (() => {
               const hungry = djCalls.user_hungry_list_next_3d;
               const hungryMains = hungry.filter(n => n >= 1 && n <= 50 && !(hungry.includes(n) && n <= 12 && djCalls.star_locks?.includes(n)));
@@ -1683,8 +1835,7 @@ function App() {
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-lime-300 text-[10px] font-bold">🎻 Jack 👀</span>
                     <span className="text-lime-400/70 text-[8px] font-mono">hungry · next 3 draws</span>
-                  </div>
-                  <div className="text-[8px] text-slate-400 mb-1">Tap to lock at position</div>
+                  </div><div className="text-[8px] text-slate-400 mb-1">Tap to lock at position</div>
                   <div className="flex flex-wrap gap-1 mb-1">
                     {mainsPool.map(n => {
                       const picked = jackPicks.mains.includes(n);

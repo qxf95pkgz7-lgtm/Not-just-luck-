@@ -1044,3 +1044,49 @@ Plus **14 = self-mirror** (the one point that doesn't need a partner). Pairs (4,
 
 **Engine hook (to code next):**
 - Orchestra generator: after producing N tickets, scan for mirror-pairs within each ticket. For tickets that hold one half of an alive 28-pair, auto-generate a paired ticket with the other half while keeping the same stars/back-row.
+
+---
+
+# 🎯 HUNT BOX — Persistent Target Hunts (20.04.2026 — shipped)
+
+**Concept (DJ):** A "hunt box" waits for a specific pattern to land. Each box has:
+- a `target_type` (currently `p5_value` — the max of the draw equals target)
+- a `target_value` (e.g., 50)
+- a `jack_picks` list of DJ suspects (must be included where possible)
+- a `mode` (euro or swiss)
+- a `status` (active / resolved)
+
+**Behavior per draw:**
+1. The engine generates **5 music tickets** for the next draw that ALL carry `max(mains) == target_value`.
+2. The DJ's `jack_picks` are prioritised as fixed slots.
+3. Remaining slots are filled by 5 different archetypes for diversity:
+   - 🎻 Music-All · ⭐ Star-King · 🌾 Hungry-Heavy · 🌉 Cross-Bridge · 🔁 Mirror-Split
+4. When the draw lands:
+   - If target fires (e.g., P5=50 landed) → box marks `resolved` 🏆
+   - Otherwise → fresh 5 tickets auto-regenerate for the next draw
+
+**DJ's original box (seed 20.04.2026):**
+- Mode: Euro · Target: P5 = 50 · Suspects: `[10, 27, 32]`
+- 5 archetypes generated for 21.04.2026:
+  ```
+  Music-All     [10, 12, 27, 32, 50] ⭐[3,6]  sc 23
+  Star-King     [10, 20, 27, 32, 50] ⭐[3,6]  sc 22
+  Hungry-Heavy  [ 3, 10, 27, 32, 50] ⭐[3,6]  sc 21
+  Cross-Bridge  [ 2, 10, 27, 32, 50] ⭐[3,6]  sc 21
+  Mirror-Split  [ 1, 10, 27, 32, 50] ⭐[3,6]  sc 20
+  ```
+
+**Endpoints:**
+- `GET /api/hunt-box/active?mode=euro` — list active boxes
+- `GET /api/hunt-box/{id}/tickets` — regenerate + return 5 tickets
+- `POST /api/hunt-box` — create (body: mode, target_type, target_value, jack_picks, label)
+- `PUT /api/hunt-box/{id}/suspects` — update jack_picks
+- `DELETE /api/hunt-box/{id}` — remove
+- `POST /api/hunt-box/seed-default` — seed the DJ's P5=50 Euro box with [10, 27, 32]
+
+**Implementation:**
+- `/app/backend/hunt_box.py` — generator (reuses `lottery_simulator.run_simulator` convergence)
+- Endpoints in `/app/backend/server.py` (bottom section, before `include_router`)
+- Frontend panel in `/app/frontend/src/App.js` — amber-bordered box in Pending Archives sidebar
+
+**Ticket limit bumped:** `TICKET_LIMIT = 20` per mode per draw (was 12). User gets 20 Euro + 20 Swiss = 40 total; Hunt Box tickets are FREE (don't count against the budget).
