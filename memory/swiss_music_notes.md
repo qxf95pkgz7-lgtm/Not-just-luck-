@@ -900,3 +900,41 @@ result = run_simulator("21.04.2026", "euro", dj_call=dj_calls)
 # result["position_suspects"] → per-P suspect lists
 ```
 Add `+15 * (lens_count - 2)` as a bonus in `/api/pending-tickets` score stack.
+
+---
+
+# 🎻 SESSION 4 — BACKTEST FINDINGS & 5 CANDIDATE LAWS (20.04.2026)
+
+**Ran backtest harness on last 15 Euro draws (27.02 → 17.04.2026).**
+Baseline coverage was brutal-honest: 0.93/5 in 3+ pool, 1.80/5 in 2+ pool. Position TOP12 accuracy: 31% (missed entirely: 69%).
+
+**Miss Explainer scanned every winner NOT in the 2+ pool and probed ~25 candidate transforms.** The signal families that leaked the most (meaning the cosmos was using them, we just weren't listening):
+
+| # Leaks | Family | Candidate Law |
+|---|---|---|
+| **61** | ±2 of a recent same-lottery number | 🚨 **Same-Lottery Recency Band ±2** (Euro↔Euro, not just Euro↔Swiss) |
+| 53 | ±3 of recent | **Recency Band ±3** (weak support) |
+| 46 | Last draw ± prime delta (5,7,9,11,13) | 🔔 **Prime-Delta Bridge** |
+| 10 | Position-wise sum/avg of last 2 draws | 🎯 **Position-Pair Arithmetic** |
+| 8 | Absent 15+ draws | 💤 **Deep-Silence Overdue** |
+
+**The big one:** the `Δ±2` band was already in `law_cross_lottery_bridge` but only for the OTHER lottery's last draw. Within-Euro recency was deaf. Fix this and expect coverage to jump 2-3x.
+
+## 🎭 THE STORY TICKET ORCHESTRA (new concept)
+
+When the 2+ pool has 20 numbers and each ticket holds 5 mains, **C(20,5) = 15,504** combos to guarantee coverage. Too many. But we don't need guarantee — we need **narrative coverage**.
+
+Every ticket should tell a coherent song:
+- "Ladder-Fill Symphony" → 5 numbers from the ladder + back-row echoes
+- "+10 Key Translation" → 5 from Q1d5+10 pool
+- "Rare-Cycle Close" → 5 unreleased rare seeds
+- "Snap-Back Combo" → snap-back P1 + rebound band + DJ locks
+- "Silent Band Release" → deep-silence overdue numbers
+- "Double Resonance" → raw D/M + circle(D)/circle(M) tight cluster
+- "Mirror Orchestra" → pairs that sum to 28 / 56
+- "Pivot Band" → numbers within ±3 of pivot 14 or 28
+- ...
+
+With 10-15 narrative tickets, **~90% of the 2+ pool** should be covered while each ticket still holds a story the DJ can validate.
+
+Implementation: `/app/backend/story_ticket_orchestra.py` — takes convergence output, routes numbers into thematic archetypes, outputs themed tickets with narrative + coverage statistics.
