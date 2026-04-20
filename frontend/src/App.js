@@ -550,6 +550,7 @@ function App() {
   const [rareSeed, setRareSeed] = useState(null);
   const [djCalls, setDjCalls] = useState(null);
   const [jackPicks, setJackPicks] = useState({ mains: [], stars: [] });
+  const [diagnostics, setDiagnostics] = useState(null);
   const [activeUsers, setActiveUsers] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
   
@@ -861,6 +862,7 @@ function App() {
       setNextDrawDate(res.data.next_date || '');
       setRareSeed(res.data.rare_seed || null);
       setDjCalls(res.data.dj_calls || null);
+      setDiagnostics(res.data.diagnostics || null);
     } catch (e) {}
   };
   // 🎻 Check VIP/unlimited status from backend
@@ -1619,6 +1621,22 @@ function App() {
               <span className="text-emerald-400 font-mono font-bold text-sm">{pendingTickets.length}/{pendingTotal}</span>
             </div>
             <div className="text-slate-500 text-[9px] mb-2">For draw: {nextDrawDate} <span className="text-slate-600">• engine-ranked</span></div>
+            {lotteryMode === 'euro' && diagnostics && Array.isArray(diagnostics.narrative) && diagnostics.narrative.length > 0 && (
+              <div className="mb-2 p-1.5 rounded-md border border-cyan-500/40 bg-gradient-to-br from-cyan-900/25 to-slate-900/20" data-testid="diagnostics-panel">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-cyan-300 text-[10px] font-bold">🔬 Live Laws</span>
+                  <span className="flex gap-1">
+                    {diagnostics.snap_back_active && <span className="px-1 py-0.5 rounded bg-rose-500/25 text-rose-300 text-[8px] font-bold">🔄 snap-back</span>}
+                    {diagnostics.rare_active && <span className="px-1 py-0.5 rounded bg-fuchsia-500/25 text-fuchsia-300 text-[8px] font-bold">🚨 rare</span>}
+                  </span>
+                </div>
+                <ul className="space-y-0.5 text-[9px] text-slate-300 leading-tight">
+                  {diagnostics.narrative.map((line, i) => (
+                    <li key={i} className="truncate" title={line} data-testid={`diag-narrative-${i}`}>{line}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {lotteryMode === 'euro' && djCalls && Array.isArray(djCalls.user_hungry_list_next_3d) && djCalls.user_hungry_list_next_3d.length > 0 && (() => {
               const hungry = djCalls.user_hungry_list_next_3d;
               const hungryMains = hungry.filter(n => n >= 1 && n <= 50 && !(hungry.includes(n) && n <= 12 && djCalls.star_locks?.includes(n)));

@@ -774,3 +774,53 @@ Trigger fires. By the Snap-Back Law, **Q2d5 21.04.2026** should have:
 - Soft penalty −30 with P1 > 20 (the "3.1% anti-zone")
 - Bonus +12 for P1 ≤ 7 (aligned with snap-back median)
 
+
+---
+
+# 🎧 DJ'S PRE-DRAW RITUAL — "Before the Needle Drops"
+
+Run this checklist before every target draw (nd = next draw).
+
+## 1. 🔬 Read Live Laws panel (top of sidebar)
+- ✅ Snap-back active? → P1 ≤ 7 preferred
+- ✅ Rare-event active (+draws since)? → seed hungry mains + stars
+- ✅ Back-row echo candidates? → keep at P4/P5
+- ✅ Date-perm list updated for today's target
+- ✅ Banned list still current (update `dj_calls.json` if not)
+
+## 2. 🌾 Update the Hungry List in Jack 👀 box
+- Add fresh hungry numbers (deep-silence scan)
+- Remove numbers that just fired (2+ draws ago)
+- Edit `/app/backend/dj_calls.json` → `user_hungry_list_next_3d`
+- Hot-reload — refresh UI, no restart needed
+
+## 3. 🚫 Verify bans
+- Confirm 🚫 list (add numbers that fired 2× in last 4 draws)
+- For each banned n: check `circle(n)` AND `mirror(n)` as back-door targets
+
+## 4. 🎯 Confirm DJ locks
+- P1 lock (often what snap-back says)
+- P2 lock (often the pivot 14 or today's equivalent)
+- ⭐ locks (2 stars per call)
+
+## 5. 🎫 Generate & score
+- Fire a fresh batch of 12 tickets
+- Sanity-check Top-10 Predicted sidebar:
+  - Every ticket wears 3 badges (date-res · rare-echo · dj-call)
+  - Top 3 tickets all 🎻🎻 dj-symphony or better
+  - No ticket carries banned numbers
+
+## 6. 🥇 Pick signature ticket (Jack 👀 box)
+- Tap 5 mains + 2 stars → "Lock & Generate"
+- Confirm badge shows dj-symphony +100 or better
+
+## 7. 🔁 Last sanity sweep
+- Rare Event banner hungry list overlaps with your pick?
+- Jack pick visible in Top-5 Predicted?
+- Top-right clock = correct target date?
+
+## 8. 📝 Log the call
+- Jot signature ticket + short "why" in The Book
+- After the draw, append outcome (hit/miss + rules held)
+- This grows the engine's learning corpus over time
+

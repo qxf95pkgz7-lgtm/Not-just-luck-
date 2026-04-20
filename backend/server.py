@@ -4435,6 +4435,40 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
                 "unreleased_stars": _rare_seed_info["unreleased_stars"],
             }
         
+        # 🔬 Live diagnostic (self-aware engine)
+        diagnostics_out = None
+        try:
+            from draw_diagnostics import run_diagnostics
+            # Build q1d1 if we can find the first Euro draw of the target year
+            from datetime import datetime as _dt
+            _target_year = None
+            try:
+                _tdt = _dt.strptime(next_date, "%d.%m.%Y")
+                _target_year = _tdt.year
+            except Exception:
+                pass
+            _q1d1 = None
+            if _target_year:
+                _year_draws = [d for d in euro_draws if str(_target_year) in (d.get("date") or "")]
+                _year_draws_sorted = sorted(_year_draws, key=lambda x: _pd(x.get("date")) or datetime.min)
+                if _year_draws_sorted:
+                    _q1d1 = _year_draws_sorted[0]
+            diagnostics_out = run_diagnostics(
+                euro_draws, next_date,
+                q1d1=_q1d1,
+                banned=_dj_calls.get("banned_mains") or [],
+            )
+            # strip bulky "laws" detail in response — keep narrative + hints
+            diagnostics_out = {
+                "narrative": diagnostics_out.get("dj_narrative", []),
+                "scoring_hints": diagnostics_out.get("scoring_hints", {}),
+                "snap_back_active": diagnostics_out["laws"]["snap_back"].get("active", False),
+                "rare_active": diagnostics_out["laws"]["rare_event"].get("active", False),
+                "backrow_echo": diagnostics_out["laws"]["backrow_echo"].get("echo_candidates", []),
+            }
+        except Exception as _e:
+            diagnostics_out = {"error": str(_e)}
+        
         return {
             "next_date": next_date,
             "count": len(all_tickets),
@@ -4443,6 +4477,7 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
             "archive_files": archive_files,
             "rare_seed": rare_seed_out,
             "dj_calls": _dj_calls,
+            "diagnostics": diagnostics_out,
         }
     else:
         days_wed = (2 - today.weekday()) % 7
