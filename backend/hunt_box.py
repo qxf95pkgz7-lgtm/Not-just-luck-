@@ -93,22 +93,22 @@ def generate_hunt_tickets(target_date: str, mode: str, target_value: int,
     prior_fills = set()  # track free-slot picks across archetypes to force diversity
     # Archetypes for variation: each ticket uses a different "fill strategy"
     archetypes = [
-        ("🎻 Music-All",         "Top-convergence fill around suspects + target"),
-        ("🔁 Mirror-Split",      "Uses 28-mirror pair partners for balance"),
-        ("⭐ Star-King",         "Star-king formula partners fill free slots"),
-        ("🌾 Hungry-Heavy",      "Prioritises seed-hungry and silent-band numbers"),
-        ("🌉 Cross-Bridge",      "Cross-lottery Δ±2 and self-circle fills"),
+        ("🎻 All-Cosmos Fill",      "Top-convergence symphony around resonators + crown"),
+        ("🪞 Mirror Orbit",          "28-mirror pair partners circle the crown in balance"),
+        ("⭐ Star-King Harmonics",  "Star-king formula partners weave the free notes"),
+        ("🌌 Starved Nebula",       "Deep-hungry and silent-band voices carry the song"),
+        ("🌠 Meridian Bridge",      "Cross-lottery Δ±2 and self-circle orbits fill in"),
     ][:num_tickets]
 
     for idx, (arch_name, story) in enumerate(archetypes):
-        mains = list(jack_picks)  # start with DJ suspects
+        mains = list(jack_picks)  # start with DJ resonators
         used = set(mains) | {target_value} | prior_fills
         constraint = lambda n: n < target_value  # nothing above target (it's the max)
         needed = npos - 1 - len(mains)  # minus 1 because we add target last
 
-        if arch_name == "🎻 Music-All":
+        if arch_name == "🎻 All-Cosmos Fill":
             fill = _pick_fill(conv, used, banned, needed, constraint)
-        elif arch_name == "🔁 Mirror-Split":
+        elif arch_name == "🪞 Mirror Orbit":
             mirror_pool = []
             mirror_rest = []
             for c in conv:
@@ -121,19 +121,19 @@ def generate_hunt_tickets(target_date: str, mode: str, target_value: int,
                         mirror_rest.append(c)
             ordered = mirror_pool + mirror_rest
             fill = _pick_fill(ordered, used, banned, needed, constraint)
-        elif arch_name == "⭐ Star-King":
+        elif arch_name == "⭐ Star-King Harmonics":
             kingy = [c for c in conv if any(l.startswith("star-king") for l in c["laws"])
                      and c["n"] < target_value and c["n"] not in banned and c["n"] not in used]
             rest = [c for c in conv if c not in kingy and c["n"] < target_value
                     and c["n"] not in banned and c["n"] not in used]
             fill = _pick_fill(kingy + rest, used, banned, needed, constraint)
-        elif arch_name == "🌾 Hungry-Heavy":
+        elif arch_name == "🌌 Starved Nebula":
             hungry = [c for c in conv if any(l.startswith("seed-hungry") or l.startswith("silent-band") or l.startswith("dj-hungry") for l in c["laws"])
                       and c["n"] < target_value and c["n"] not in banned and c["n"] not in used]
             rest = [c for c in conv if c not in hungry and c["n"] < target_value
                     and c["n"] not in banned and c["n"] not in used]
             fill = _pick_fill(hungry + rest, used, banned, needed, constraint)
-        elif arch_name == "🌉 Cross-Bridge":
+        elif arch_name == "🌠 Meridian Bridge":
             bridge = [c for c in conv if any(l.startswith("cross") or l.startswith("self-circle") for l in c["laws"])
                       and c["n"] < target_value and c["n"] not in banned and c["n"] not in used]
             rest = [c for c in conv if c not in bridge and c["n"] < target_value

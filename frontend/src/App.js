@@ -1693,36 +1693,36 @@ function App() {
                 </ul>
               </div>
             )}
-            {/* 🎯 HUNT BOX — persistent target boxes (e.g. P5=50 hunt) */}
+            {/* 🌌 COSMOS ORBIT — persistent celestial alignment chambers */}
             {huntBoxes.length > 0 && huntBoxes.map((hb) => {
               const tickets = huntTickets[hb.id] || [];
               const mx = hb.mode === 'euro' ? 50 : 42;
               return (
                 <div key={hb.id} className="mb-2 p-2 rounded-md border-2 border-amber-500/50 bg-gradient-to-br from-amber-900/20 via-orange-900/15 to-slate-900/40" data-testid={`hunt-box-${hb.id}`}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-amber-300 text-[11px] font-black tracking-wide">🎯 {hb.label}</span>
+                    <span className="text-amber-300 text-[11px] font-black tracking-wide">{hb.label}</span>
                     <button
                       onClick={() => refreshHuntBox(hb.id)}
                       disabled={huntLoading}
                       className="text-[9px] text-amber-400 hover:text-amber-200 font-bold px-1.5 py-0.5 rounded border border-amber-600/40 hover:border-amber-400/80 transition"
                       data-testid={`hunt-refresh-${hb.id}`}
-                    >{huntLoading ? '…' : '↻ refresh'}</button>
+                    >{huntLoading ? '…' : '🎧 re-tune'}</button>
                   </div>
                   <div className="text-[9px] text-slate-400 mb-1">
-                    Waiting for <span className="text-amber-300 font-mono font-bold">P5 = {hb.target_value}</span> to land — regenerates every draw until it comes 🍀
+                    🎻 Tuning the cosmos until <span className="text-amber-300 font-mono font-bold">P5 = {hb.target_value}</span> crowns the finale — re-tunes every cycle until the alignment lands 🍀
                   </div>
-                  {/* Suspect chips with remove */}
+                  {/* Resonator chips with release */}
                   <div className="flex flex-wrap gap-1 mb-1.5">
                     {(hb.jack_picks || []).map(n => (
                       <button
                         key={n}
                         onClick={() => removeHuntSuspect(hb.id, n)}
                         className="px-2 py-0.5 text-[10px] font-black rounded-full bg-amber-400 text-slate-900 hover:bg-red-400 hover:text-white border border-amber-200 transition"
-                        title={`${n} — click to remove`}
+                        title={`${n} — release from the song`}
                         data-testid={`hunt-suspect-${n}`}
                       >{n} ✕</button>
                     ))}
-                    {/* Add suspect input */}
+                    {/* Weave-in resonator input */}
                     <div className="flex items-center gap-1">
                       <input
                         type="number"
@@ -1730,7 +1730,7 @@ function App() {
                         max={mx}
                         value={huntSuspectInput}
                         onChange={(e) => setHuntSuspectInput(e.target.value)}
-                        placeholder="+n"
+                        placeholder="+♪"
                         className="w-12 px-1.5 py-0.5 text-[10px] rounded bg-slate-800 border border-amber-600/40 text-amber-300 focus:outline-none focus:border-amber-400"
                         data-testid={`hunt-suspect-input-${hb.id}`}
                       />
@@ -1744,13 +1744,13 @@ function App() {
                         }}
                         className="px-2 py-0.5 text-[10px] font-bold rounded bg-amber-500 text-slate-900 hover:bg-amber-300 transition"
                         data-testid={`hunt-add-${hb.id}`}
-                      >add</button>
+                      >weave</button>
                     </div>
                   </div>
-                  {/* 5 auto-generated tickets */}
+                  {/* 5 auto-generated symphonies */}
                   <div className="space-y-1 pt-1 border-t border-amber-600/20">
                     {tickets.length === 0 ? (
-                      <div className="text-[9px] text-slate-500 py-1 text-center">No tickets yet — click ↻ refresh</div>
+                      <div className="text-[9px] text-slate-500 py-1 text-center">🌌 The cosmos is silent — tap 🎧 re-tune to summon the symphony</div>
                     ) : tickets.map((t, ti) => (
                       <div key={ti} className="flex items-center justify-between gap-1 px-1.5 py-1 rounded bg-slate-900/60 border border-amber-600/20" data-testid={`hunt-ticket-${hb.id}-${ti}`}>
                         <div className="flex flex-col flex-1 min-w-0">
@@ -1765,7 +1765,7 @@ function App() {
                                 <span
                                   key={ni}
                                   className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-black border ${isTarget ? 'bg-rose-500 text-white border-rose-300 shadow shadow-rose-500/60' : isSuspect ? 'bg-amber-400 text-slate-900 border-amber-200' : 'bg-slate-700 text-slate-200 border-slate-500'}`}
-                                  title={isTarget ? '🎯 target' : isSuspect ? '🎻 suspect' : 'music fill'}
+                                  title={isTarget ? '🌟 crown alignment' : isSuspect ? '🎻 resonator' : 'harmonic fill'}
                                 >{n}</span>
                               );
                             })}
@@ -1780,8 +1780,8 @@ function App() {
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0">
-                          <div className="text-[9px] text-amber-400/70 font-mono">sc {t.score}</div>
-                          <div className="text-[8px] text-slate-500">{t.unique_laws_hit}🔔</div>
+                          <div className="text-[9px] text-amber-400/70 font-mono">♪ {t.score}</div>
+                          <div className="text-[8px] text-slate-500">{t.unique_laws_hit}✨</div>
                         </div>
                       </div>
                     ))}

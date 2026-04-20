@@ -5591,7 +5591,7 @@ async def seed_default_hunt_box():
         "target_type": "p5_value",
         "target_value": 50,
         "jack_picks": [10, 27, 32],
-        "label": "🎯 P5=50 Hunt (DJ's original)",
+        "label": "🌌 Crown Cosmos — P5=50 Orbit",
         "status": "active",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "draws_covered": 0,
