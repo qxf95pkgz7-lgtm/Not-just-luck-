@@ -729,3 +729,48 @@ Active window: next 3 Euro draws.
 | 33 | Q1d3-d4 adjacent (silent Q2) |
 | 35 | high-band cooling zone, deep silent |
 
+
+---
+
+# 🔄 P1 SNAP-BACK LAW (discovered 19.04.2026, Euro)
+
+**Trigger:** Euro draw with **P1 > 20** (i.e., smallest number is already > 20).
+**Rule:** The very next draw's P1 collapses DOWN, usually to the 1-7 zone.
+
+## Historical stats (32 Euro P1>20 cases since 2022)
+| Next-draw P1 band | Count | % |
+|---|---|---|
+| 1-3  | 7  | 21.9% |
+| 4-7  | 9  | 28.1% |
+| 8-12 | 5  | 15.6% |
+| 13-20| 10 | 31.2% |
+| **21+ (persist high)** | **1** | **3.1%** 💀 |
+
+- **50% of cases next P1 ≤ 7**  
+- **65.6% of cases next P1 ≤ 12**  
+- **3.1% of cases P1 stays > 20** (almost never)
+- Mean next P1 = 9.0 · median = 7.5
+
+## Position means of the next draw after P1 > 20 trigger
+| P1 | P2 | P3 | P4 | P5 |
+|---|---|---|---|---|
+| 9.0 | 15.8 | 25.1 | 34.5 | 41.8 |
+
+## Echo bonus (from recent cases)
+Often 1-2 numbers from the trigger draw echo forward at the BACK row (P4/P5):
+- 2024-01-19 [27,28,44,48,50] → echo `48, 50` at P4/P5 next
+- 2024-12-03 [23,25,34,46,47] → echo `25, 47` next
+- 2024-04-16 [22,29,31,39,46] → echo `46` next
+- 2025-07-15 [24,38,41,45,49] → echo `45` next
+
+## Current case — Q2d4 17.04.2026 [22, 23, 28, 41, 47]
+Trigger fires. By the Snap-Back Law, **Q2d5 21.04.2026** should have:
+- P1 ≤ 7 (50% probability, sweet-spot = 7) — aligns with DJ's P1=7 call ✓
+- P5 likely keeps echo **47** or **41** from trigger
+- Position profile: ~[7, 15, 25, 37, 47]
+
+## Engine hook
+- Soft penalty −15 to any generated ticket for 21.04.2026 with P1 > 12
+- Soft penalty −30 with P1 > 20 (the "3.1% anti-zone")
+- Bonus +12 for P1 ≤ 7 (aligned with snap-back median)
+
