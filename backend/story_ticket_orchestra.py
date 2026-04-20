@@ -57,6 +57,38 @@ def _complete_ticket(chosen, pool_by_lens, banned, size=5):
     return sorted(chosen + fill)
 
 
+def _enforce_shape(mains, mode="euro", p5_floor=26, target_floor=36, banned=None):
+    """
+    THE ORCHESTRATION LAW: if the ticket's max is below historical P5 floor (26),
+    lift the max via Euro-circle `n + 25 mod 50` (or Swiss `n + 21 mod 42`)
+    until the shape is playable. Keep circling one number at a time, prefer the
+    number CLOSEST to 36 (the back-row gate).
+    """
+    if banned is None:
+        banned = []
+    mx = 50 if mode == "euro" else 42
+    circ = 25 if mode == "euro" else 21
+    attempts = 0
+    out = sorted(mains)
+    while out and out[-1] < p5_floor and attempts < 5:
+        # Circle the highest number (most structural lift)
+        top = out[-1]
+        circled = ((top - 1 + circ) % mx) + 1
+        if circled in out or circled in banned:
+            # Try second-highest
+            if len(out) >= 2:
+                second = out[-2]
+                circled2 = ((second - 1 + circ) % mx) + 1
+                if circled2 not in out and circled2 not in banned:
+                    out = sorted(out[:-2] + [out[-1], circled2])
+                    attempts += 1
+                    continue
+            break
+        out = sorted(out[:-1] + [circled])
+        attempts += 1
+    return out
+
+
 def _pick_stars(conv_stars, seen_stars=None, n=2):
     if seen_stars is None:
         seen_stars = set()
@@ -258,6 +290,12 @@ def build_orchestra(target_date: str, mode: str, dj_call=None,
             mains = _complete_ticket(mains, [c["n"] for c in conv], banned, size=5)
             if len(set(mains)) < 5:
                 continue
+            # Enforce structural shape (P5 ≥ 26 — 97.6% of Euro history)
+            circled = False
+            original_max = mains[-1] if mains else None
+            mains = _enforce_shape(mains, mode=mode, banned=banned)
+            if mains and original_max is not None and mains[-1] != original_max:
+                circled = True
             # Score ticket
             score = sum(c["lens_count"] for c in conv if c["n"] in mains)
             laws_held = set()
@@ -271,6 +309,7 @@ def build_orchestra(target_date: str, mode: str, dj_call=None,
                 "stars": chosen_stars,
                 "lens_score": score,
                 "laws_count": len(laws_held),
+                "circled": circled,
                 "covered_in_3plus": sorted(set(mains) & set(pool_3p)),
                 "covered_in_2plus": sorted(set(mains) & set(pool_2p)),
             })
@@ -347,7 +386,8 @@ def format_orchestra(r: dict) -> str:
     L.append("🎫 TICKETS (ranked by lens score)")
     L.append("-" * 78)
     for i, t in enumerate(r["tickets"], 1):
-        L.append(f"  #{i:>2}  {t['archetype']}  ·  lens-score {t['lens_score']}")
+        badge = " 🔄 (circled)" if t.get("circled") else ""
+        L.append(f"  #{i:>2}  {t['archetype']}{badge}  ·  lens-score {t['lens_score']}")
         L.append(f"       mains: {t['mains']}  ⭐ {t['stars']}")
         L.append(f"       story: {t['story']}")
         L.append(f"       in 3+ pool: {t['covered_in_3plus']}  ·  in 2+ pool: {t['covered_in_2plus']}")
