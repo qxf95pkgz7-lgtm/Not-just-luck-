@@ -12,7 +12,7 @@ import requests
 import os
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://dj-pattern-vibes.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://cosmic-dj-mixer.preview.emergentagent.com').rstrip('/')
 
 
 class TestSleeperForecastEndpoint:
