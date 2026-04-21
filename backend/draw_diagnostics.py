@@ -183,8 +183,8 @@ def run_diagnostics(draws: List[Dict], target_date: str,
     report["laws"]["snap_back"] = sb
     if sb.get("active"):
         report["dj_narrative"].append(
-            f"🔄 Snap-back ACTIVE — last draw P1={sb['trigger_P1']}>20 "
-            f"→ next P1 likely ≤ 7 (50%), ≤ 12 (66%). Mean next-P1 = {sb['stats']['next_p1_mean']}."
+            f"🔄 Gravity-pull ACTIVE — last song's opening voice P1={sb['trigger_P1']}>20 "
+            f"→ next opening likely ≤ 7 (50%), ≤ 12 (66%). Mean next opening = {sb['stats']['next_p1_mean']}."
         )
         report["scoring_hints"]["P1_band"] = "1-7"
         report["scoring_hints"]["penalty_P1_gt12"] = sb["recommendation"]["penalty_P1_gt12"]
@@ -195,8 +195,8 @@ def run_diagnostics(draws: List[Dict], target_date: str,
     report["laws"]["backrow_echo"] = echo
     if echo.get("active") and echo.get("echo_candidates"):
         report["dj_narrative"].append(
-            f"🪞 Back-row echo → last P4/P5 {echo['back_row']} likely carry forward "
-            f"(excluding banned: {echo['echo_candidates']})."
+            f"🪞 Deep-orbit echo → last song's outer voices {echo['back_row']} likely carry forward "
+            f"(excluding silenced: {echo['echo_candidates']})."
         )
         report["scoring_hints"]["backrow_echo_candidates"] = echo["echo_candidates"]
     
@@ -205,8 +205,8 @@ def run_diagnostics(draws: List[Dict], target_date: str,
     report["laws"]["rare_event"] = re_law
     if re_law.get("active"):
         report["dj_narrative"].append(
-            f"🚨 Rare-Event cycle active (+{re_law['draws_since']} draws). "
-            f"Hungry: {re_law['unreleased_mains']} ⭐{re_law['unreleased_stars']}."
+            f"🌌 Cosmic storm cycle active (+{re_law['draws_since']} songs). "
+            f"Silent voices: {re_law['unreleased_mains']} ⭐{re_law['unreleased_stars']}."
         )
         report["scoring_hints"]["rare_unreleased_mains"] = re_law["unreleased_mains"]
         report["scoring_hints"]["rare_unreleased_stars"] = re_law["unreleased_stars"]
@@ -222,7 +222,7 @@ def run_diagnostics(draws: List[Dict], target_date: str,
             "playable_after_bans": playable,
         }
         report["dj_narrative"].append(
-            f"🎉 Date-perm {dt.strftime('%d.%m')} → {playable} (playable after bans)"
+            f"🎉 Date resonance {dt.strftime('%d.%m')} → {playable} (still in tune)"
         )
         report["scoring_hints"]["date_perm_playable"] = playable
     
@@ -231,7 +231,7 @@ def run_diagnostics(draws: List[Dict], target_date: str,
     report["laws"]["hungry_map"] = hm
     if hm["mains"] or hm["stars"]:
         report["dj_narrative"].append(
-            f"🌾 Hungry (last 4 d): {hm['mains']} ⭐{hm['stars']}"
+            f"🌾 Silent voices (last 4 songs): {hm['mains']} ⭐{hm['stars']}"
         )
         report["scoring_hints"]["hungry_mains"] = hm["mains"]
         report["scoring_hints"]["hungry_stars"] = hm["stars"]
@@ -246,7 +246,7 @@ def run_diagnostics(draws: List[Dict], target_date: str,
             "mirrors": mirrors,
         }
         report["dj_narrative"].append(
-            f"🌀 Banned {sorted(banned)} → back-doors: circles {bd} · mirrors {mirrors}"
+            f"🌀 Silenced {sorted(banned)} → cosmic side-doors: orbits {bd} · reflections {mirrors}"
         )
         report["scoring_hints"]["banned_circles"] = list(bd.values())
         report["scoring_hints"]["banned_mirrors"] = list(mirrors.values())

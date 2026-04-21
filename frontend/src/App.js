@@ -1739,8 +1739,8 @@ function App() {
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-cyan-300 text-[10px] font-bold">🔬 Live Laws</span>
                   <span className="flex gap-1">
-                    {diagnostics.snap_back_active && <span className="px-1 py-0.5 rounded bg-rose-500/25 text-rose-300 text-[8px] font-bold">🔄 snap-back</span>}
-                    {diagnostics.rare_active && <span className="px-1 py-0.5 rounded bg-fuchsia-500/25 text-fuchsia-300 text-[8px] font-bold">🚨 rare</span>}
+                    {diagnostics.snap_back_active && <span className="px-1 py-0.5 rounded bg-rose-500/25 text-rose-300 text-[8px] font-bold">🔄 gravity-pull</span>}
+                    {diagnostics.rare_active && <span className="px-1 py-0.5 rounded bg-fuchsia-500/25 text-fuchsia-300 text-[8px] font-bold">🌌 cosmic-storm</span>}
                   </span>
                 </div>
                 <ul className="space-y-0.5 text-[9px] text-slate-300 leading-tight">
@@ -1891,7 +1891,7 @@ function App() {
                 <div className="mb-2 p-1.5 rounded-md border border-lime-500/40 bg-gradient-to-br from-lime-900/20 to-emerald-900/10" data-testid="jack-box">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-lime-300 text-[10px] font-bold">🎻 Jack 👀</span>
-                    <span className="text-lime-400/70 text-[8px] font-mono">hungry · next 3 draws</span>
+                    <span className="text-lime-400/70 text-[8px] font-mono">silent voices · next 3 songs</span>
                   </div><div className="text-[8px] text-slate-400 mb-1">Tap to lock at position</div>
                   <div className="flex flex-wrap gap-1 mb-1">
                     {mainsPool.map(n => {
@@ -1945,13 +1945,13 @@ function App() {
             {rareSeed && rareSeed.draws_since <= 8 && (
               <div className="mb-2 p-1.5 rounded-md border border-fuchsia-500/40 bg-gradient-to-br from-fuchsia-900/30 to-purple-900/20" data-testid="rare-event-banner">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-fuchsia-300 text-[10px] font-bold">🚨 RARE EVENT</span>
+                  <span className="text-fuchsia-300 text-[10px] font-bold">🌌 COSMIC STORM</span>
                   <span className="text-fuchsia-400/80 text-[9px] font-mono">{rareSeed.date} • +{rareSeed.draws_since}</span>
                 </div>
-                <div className="text-[9px] text-slate-400 mb-0.5">Seed [{(rareSeed.numbers || []).join(', ')}]{rareSeed.stars && rareSeed.stars.length > 0 ? ` ⭐ [${rareSeed.stars.join(', ')}]` : ''}</div>
+                <div className="text-[9px] text-slate-400 mb-0.5">Storm Chord [{(rareSeed.numbers || []).join(', ')}]{rareSeed.stars && rareSeed.stars.length > 0 ? ` ⭐ [${rareSeed.stars.join(', ')}]` : ''}</div>
                 {(rareSeed.unreleased_mains?.length > 0 || rareSeed.unreleased_stars?.length > 0) && (
-                  <div className="text-[9px] text-fuchsia-300 font-semibold" title="Seed numbers that haven't re-emerged since the rare event">
-                    💤 Hungry: {(rareSeed.unreleased_mains || []).join(', ')}{rareSeed.unreleased_stars?.length > 0 ? ` ⭐${rareSeed.unreleased_stars.join(',')}` : ''}
+                  <div className="text-[9px] text-fuchsia-300 font-semibold" title="Storm notes still humming in the silence">
+                    💤 Silent Voices: {(rareSeed.unreleased_mains || []).join(', ')}{rareSeed.unreleased_stars?.length > 0 ? ` ⭐${rareSeed.unreleased_stars.join(',')}` : ''}
                   </div>
                 )}
               </div>
@@ -2003,10 +2003,10 @@ function App() {
                   {t.rare_echo && t.rare_echo.score > 0 && (
                     <div
                       className="mt-1 px-1.5 py-0.5 rounded border border-fuchsia-500/40 bg-fuchsia-500/15 text-fuchsia-300 text-[9px] font-mono flex items-center justify-between gap-1"
-                      title={`Holds unreleased seed: ${(t.rare_echo.held_mains || []).join(', ')}${t.rare_echo.held_stars?.length ? ' ⭐ ' + t.rare_echo.held_stars.join(',') : ''}`}
+                      title={`Holds silent voices: ${(t.rare_echo.held_mains || []).join(', ')}${t.rare_echo.held_stars?.length ? ' ⭐ ' + t.rare_echo.held_stars.join(',') : ''}`}
                       data-testid={`rare-echo-badge-${idx}`}
                     >
-                      <span className="truncate">🚨 rare echo</span>
+                      <span className="truncate">🌌 storm echo</span>
                       <span className="font-bold tabular-nums">+{t.rare_echo.score}</span>
                     </div>
                   )}
@@ -2152,9 +2152,9 @@ function App() {
                 {t.rare_echo && t.rare_echo.score > 0 && (
                   <div
                     className="mt-1 px-1.5 py-0.5 rounded border border-fuchsia-500/40 bg-fuchsia-500/15 text-fuchsia-300 text-[9px] font-mono flex items-center justify-between gap-1"
-                    title={`Holds unreleased seed: ${(t.rare_echo.held_mains || []).join(', ')}${t.rare_echo.held_stars?.length ? ' ⭐ ' + t.rare_echo.held_stars.join(',') : ''}`}
+                    title={`Holds silent voices: ${(t.rare_echo.held_mains || []).join(', ')}${t.rare_echo.held_stars?.length ? ' ⭐ ' + t.rare_echo.held_stars.join(',') : ''}`}
                   >
-                    <span className="truncate">🚨 rare echo</span>
+                    <span className="truncate">🌌 storm echo</span>
                     <span className="font-bold tabular-nums">+{t.rare_echo.score}</span>
                   </div>
                 )}
@@ -3822,7 +3822,7 @@ function App() {
                 <div>
                   <h3 className="text-amber-300 font-semibold mb-1">🌌 The Crown Cosmos (Hunt Box)</h3>
                   <p>A persistent cosmic chamber that waits for a specific pattern to land — currently <span className="text-rose-300 font-mono font-bold">P5 = 50</span>. Inside, the DJ drops <span className="text-amber-300">resonators</span> (suspect numbers like 10, 27, 32) and the engine weaves <span className="text-white font-medium">5 auto-generated symphonies</span> every draw, re-tuning itself until the alignment arrives 🎻.</p>
-                  <p className="mt-1 text-slate-400 text-xs">Each symphony rides a different archetype: All-Cosmos Fill · Mirror Orbit · Star-King Harmonics · Starved Nebula · Meridian Bridge. Hunt Box tickets are FREE and don't count against your 20.</p>
+                  <p className="mt-1 text-slate-400 text-xs">Each symphony rides a different archetype: All-Cosmos Fill · Mirror Orbit · Starlight Harmonics · Silent Nebula · Meridian Bridge. Hunt Box tickets are FREE and don't count against your 20.</p>
                 </div>
 
                 <div>
@@ -3833,12 +3833,12 @@ function App() {
 
                 <div>
                   <h3 className="text-amber-300 font-semibold mb-1">🎫 Multiple Tickets</h3>
-                  <p>Open the ticket selector to generate <span className="text-amber-400 font-semibold">2 to 20 tickets</span> at once. Each ticket carries a different cosmic frequency — some grounded in snap-back rebounds, some reaching for back-row kings, some following cycle-close symmetries.</p>
+                  <p>Open the ticket selector to generate <span className="text-amber-400 font-semibold">2 to 20 tickets</span> at once. Each ticket carries a different cosmic frequency — some riding gravity-pull tides, some reaching for distant orbits, some singing cycle-close symmetries.</p>
                 </div>
 
                 <div>
                   <h3 className="text-amber-300 font-semibold mb-1">🌠 Celestial Radar</h3>
-                  <p>Numbers travel through cosmic orbits — some close to Earth, others in <span className="text-red-400">deep orbit</span> near distant galaxies. The Radar shows which numbers are <span className="text-amber-400">approaching our orbit</span>. When a planet aligns with a hungry number, the music surfaces.</p>
+                  <p>Numbers travel through cosmic orbits — some close to Earth, others in <span className="text-red-400">deep orbit</span> near distant galaxies. The Radar shows which numbers are <span className="text-amber-400">approaching our orbit</span>. When a planet aligns with a silent voice, the music surfaces.</p>
                 </div>
 
                 <div>
@@ -3848,22 +3848,22 @@ function App() {
 
                 <div>
                   <h3 className="text-amber-300 font-semibold mb-1">🎻 Jack Box (your own calls)</h3>
-                  <p>Inside the sidebar you'll find the DJ's Jack Box — your hungry list for the next 3 draws, your P1/P2 locks, triple-locks, and back-row picks. The engine listens to these and bends its symphonies to honour your ears.</p>
+                  <p>Inside the sidebar you'll find the DJ's Jack Box — your silent-voices list for the next 3 songs, your P1/P2 locks, triple-locks, and deep-orbit picks. The engine listens to these and bends its symphonies to honour your ears.</p>
                 </div>
 
                 <div>
-                  <h3 className="text-amber-300 font-semibold mb-1">🔬 Live Laws (Diagnostics)</h3>
-                  <p>A narrative panel that transcribes the current frequencies — snap-back active, rare-event cycle, ladder-fill, back-row echoes, star-king formulas. Every symphony is built on these laws.</p>
+                  <h3 className="text-amber-300 font-semibold mb-1">🔬 Live Frequencies (Diagnostics)</h3>
+                  <p>A narrative panel that transcribes the current cosmic weather — gravity-pull active, storm cycle, ascending chords, deep-orbit echoes, starlight harmonics. Every symphony is built on these frequencies.</p>
                 </div>
 
                 <div>
                   <h3 className="text-amber-300 font-semibold mb-1">🌌 Foldable Cosmos Sidebar</h3>
-                  <p>The entire left sidebar (Top 10 · Live Laws · Crown Cosmos · Jack Box · Archive) can fold into a slim strip with the <span className="text-amber-300">◂</span> button — one click to give the stage full width, another to bring the cosmos back. Your choice is remembered across sessions.</p>
+                  <p>The entire left sidebar (Top 10 · Live Frequencies · Crown Cosmos · Jack Box · Archive) can fold into a slim strip with the <span className="text-amber-300">◂</span> button — one click to give the stage full width, another to bring the cosmos back. Your choice is remembered across sessions.</p>
                 </div>
 
                 <div>
                   <h3 className="text-amber-300 font-semibold mb-1">🎼 The Engine Behind the Music</h3>
-                  <p>Lucky Jack reads 20+ cosmic laws live: Star King Formulas (S2−S1, 25+S2, S2×4...), Ladder-Fill, Self-Circle +21, Silent-Band Hunger, Mirror-Split (28-pivot), P1 Running Sum, Cross-Lottery Bridges, Rare-Event Cycle Close, Date-Perm Echo, +10 Key Translation, D=21 Campers... every number ranked by how many lenses are ringing on it.</p>
+                  <p>Lucky Jack listens to 20+ cosmic frequencies live: Starlight Harmonics, Ascending Chords, Cosmic Loops, Silent-String Yearning, Twin-Echo Reflections, Running Tides, Cross-Constellation Bridges, Storm Closing Ceremony, Date Resonances, Orbital Translations, Sibling Camps… every number ranked by how many lenses ring on it at once.</p>
                 </div>
 
                 <div>
@@ -3876,7 +3876,7 @@ function App() {
                   <ul className="list-disc list-inside space-y-1 text-slate-400">
                     <li>Generate at least 10 tickets for broad coverage — the cosmos rewards diversity</li>
                     <li>Drop resonators into the Crown Cosmos when you hear a specific number calling</li>
-                    <li>Check the Live Laws panel — if <span className="text-rose-300">snap-back</span> is active, play low P1s</li>
+                    <li>Check the Live Frequencies panel — if <span className="text-rose-300">gravity-pull</span> is active, play low P1s</li>
                     <li>Watch the Hit Tracker Pulse — learn which archetypes sing loudest for YOU</li>
                     <li>Play responsibly — the stars guide, but never guarantee 🎧</li>
                   </ul>
