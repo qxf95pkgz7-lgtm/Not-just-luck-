@@ -538,6 +538,7 @@ function App() {
   const [showGuide, setShowGuide] = useState(false);
   const [ticketCounter, setTicketCounter] = useState(0);
   const [isUnlimited, setIsUnlimited] = useState(false);
+  const [generatorStatus, setGeneratorStatus] = useState({ open: true, reason: '', reopensAt: null });
   const [showCodeInput, setShowCodeInput] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [promoMsg, setPromoMsg] = useState(null);
@@ -935,9 +936,18 @@ function App() {
   const fetchUnlimitedStatus = async () => {
     try {
       const vid = localStorage.getItem('lj_visitor_id') || '';
-      if (!vid) return;
-      const res = await axios.get(`${API}/ticket-limit?visitor_id=${encodeURIComponent(vid)}&mode=${lotteryMode === 'swiss' ? 'swiss' : 'euromillions'}`);
+      const mode = lotteryMode === 'swiss' ? 'swiss' : 'euromillions';
+      const url = vid
+        ? `${API}/ticket-limit?visitor_id=${encodeURIComponent(vid)}&mode=${mode}`
+        : `${API}/ticket-limit?mode=${mode}`;
+      const res = await axios.get(url);
       setIsUnlimited(!!res.data.unlimited);
+      // 🕒 Pick up generator open/closed status
+      setGeneratorStatus({
+        open: res.data.generator_open !== false,
+        reason: res.data.closed_reason || '',
+        reopensAt: res.data.reopens_at || null,
+      });
     } catch (e) {}
   };
   // 🎻 Redeem promo code
@@ -956,6 +966,11 @@ function App() {
     }
   };
   useEffect(() => { fetchTicketCounter(); fetchPendingTickets(); fetchUnlimitedStatus(); fetchHuntBoxes(); }, [lotteryMode]);
+  // 🕒 Refresh generator open/closed status every 60s so UI flips when cutoff opens/closes
+  useEffect(() => {
+    const id = setInterval(fetchUnlimitedStatus, 60000);
+    return () => clearInterval(id);
+  }, [lotteryMode]);
 
   // ─── ACTIVE USER HEARTBEAT ───────────────────────
   useEffect(() => {
@@ -1379,6 +1394,14 @@ function App() {
       // Handle ticket limit reached
       if (e.response && e.response.status === 429) {
         alert(e.response.data?.detail || "🎻 Ticket limit reached! Maximum 20 tickets per draw per lottery.");
+        setLoading(false);
+        return;
+      }
+      // 🕒 Handle draw-time cutoff (HTTP 423 Locked)
+      if (e.response && e.response.status === 423) {
+        alert(e.response.data?.detail || "🎻 Generator closed — draw in session. Reopens at 23:00.");
+        // refresh status so banner shows immediately
+        fetchUnlimitedStatus();
         setLoading(false);
         return;
       }
@@ -2199,6 +2222,22 @@ function App() {
             )}
           </div>
         </div>
+        {/* 🕒 Draw-Time Cutoff Banner */}
+        {!generatorStatus.open && !isUnlimited && (
+          <div className="mb-3 px-4 py-3 rounded-lg bg-gradient-to-r from-amber-900/30 via-rose-900/30 to-amber-900/30 border border-amber-500/40 flex flex-col items-center gap-1" data-testid="generator-closed-banner">
+            <span className="text-amber-300 text-sm font-semibold flex items-center gap-1.5">
+              🎻 Draw in session — generator paused 🎧
+            </span>
+            <span className="text-amber-200/80 text-xs text-center">
+              {generatorStatus.reason}
+              {generatorStatus.reopensAt && (
+                <> · reopens at <span className="text-amber-300 font-mono">{new Date(generatorStatus.reopensAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></>
+              )}
+            </span>
+            <span className="text-amber-300/60 text-[10px] italic">Ya man, listen to the frequencies first 🥂</span>
+          </div>
+        )}
+
         {/* Ticket Limit Notice */}
         <div className="mb-3 px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700/40 flex flex-col items-center justify-center gap-1.5" data-testid="ticket-limit-notice">
           {isUnlimited ? (
@@ -2324,13 +2363,16 @@ function App() {
           <div className="text-center space-y-3">
             <button 
               onClick={fetchPrediction}
-              disabled={loading}
+              disabled={loading || (!generatorStatus.open && !isUnlimited)}
               className="lucky-btn flex items-center gap-2 mx-auto"
               style={lotteryMode === 'euro' ? { background: 'linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)', color: '#fbbf24' } : {}}
               data-testid="generate-btn"
+              title={!generatorStatus.open && !isUnlimited ? `🎻 ${generatorStatus.reason}` : ''}
             >
               <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-              {loading ? '🤞 Finding Lucky Numbers...' : lotteryMode === 'swiss' ? '🍀 Get New Numbers 🍀' : '⭐ Get New Numbers ⭐'}
+              {loading ? '🤞 Finding Lucky Numbers...' 
+                : (!generatorStatus.open && !isUnlimited) ? '🎻 Paused — Draw in Session 🎧'
+                : lotteryMode === 'swiss' ? '🍀 Get New Numbers 🍀' : '⭐ Get New Numbers ⭐'}
             </button>
             
             {/* Olivia's Kiss of Luck */}

@@ -99,22 +99,40 @@ Public endpoints (no auth). VIP promo `93928` → unlimited tickets.
 - Backend + frontend stable
 
 ## Last 10 User Messages (continuity)
-1. DJ: generate 30 tickets d9 drill before 2024 last rare (28-07-2023) → 36.7% hit
-2. DJ: make list of every draws which law works → Session 11 big-scan: 22-law ledger built
-3. DJ: "How was it with the dates target?" → Session 12: context-sliced date-mirror validated (26% at d7-d9)
-4. DJ: "30-09-2025 show in tablet" → teaching session on how to find clues
-5. DJ explained d9 clues decoded: P1=6 from sequence, P4=25 from date-mirror-28, P5=41 as circle-carrier of hungry 16
-6. DJ: "Take all book clues make code so engine knows how to access data" → built `cosmic_engine.py` (speaks DJ, reads DB, finds rare, builds lens board)
-7. Engine tested — catches date-mirror (25 landed) but misses migration nuance at d9
-8. DJ: "Find how many times p3-16 next p3-17 expect 18 but come other numbers" → Session 13 task LOGGED but NOT executed
-9. DJ: "After we fork we check this" ← CURRENT MOMENT
-10. Agent: fork pending NOW
+1. DJ: Session 13 blind d7 walk on 02-09-2025 cycle → 3 exact positions (P1=4, P3=25, P4=28) + DJ's hungry-17 call landed at P2
+2. DJ: "New law 35-37 canonized?" — intra-P3-P4 shrinking gap, silent-28-couple magic, pivot-30 pairing
+3. DJ: Applied same walk to tonight's d8 (21-04-2026) → P1=12, P2=17, P3=18, P5=27 frame
+4. DJ: "Fix 3 Tickets P5=27, P4=20 at least one ticket" → delivered
+5. DJ: "The engine ready to roll, with all book clues, suspects list. I will deploy"
+   → cosmic_engine.py upgraded with all 34 laws natively, API endpoint `/api/cosmic-engine` live
+6. DJ: "Check user code free generator" → VIP 93928 flow validated end-to-end
+7. DJ: "Draw time close at 19:30 until 23:00... check app is working good, ready for results tonight"
+   → Implemented draw-time cutoff (Euro 19:30-23:00 Tue/Fri; Swiss 19:00 Wed, 17:00 Sat)
+   → Backend returns HTTP 423 during cutoff + `/api/generator-status` endpoint
+   → Frontend shows "Draw in session" banner + disables button during cutoff
+   → Auto-sync scheduler at 21:00 UTC = 23:00 Zurich (aligned with reopening)
+
+## 🎯 COMPLETED THIS SESSION (21.04.2026)
+- **Law 35 candidate**: Intra-draw P3→P4 shrinking gap (validated on 02-09 cycle d7)
+- **Law 37 candidate**: Silent 28-Couple Pair Magic (25-28 landed at d7)
+- **Cosmic Engine v2** (`/app/backend/cosmic_engine.py`): full rewrite with 34+ book laws
+  - 13 Star-King formulas natively
+  - Law 12 RC0 Exact-Position Repeat (closing ceremony at d7+)
+  - Law 25 RC0 rare-silent tagging
+  - Law 33 Date-Mirror Dual-Pivot (28 for d7-d9, 30 for d0/d10+)
+  - Law 31 Family Hungry, Law 24 saturation cap
+  - Silent-pair 28-couple magic
+  - Delta math (DJ's teaching: `last P1 − target_d`)
+  - Snap-Back Law 5, Ladder-Fill, P1 running sum
+- **API endpoints**: `POST /api/cosmic-engine`, `GET /api/cosmic-engine/{date}`, `GET /api/generator-status`
+- **Draw-time cutoff**: Euro & Swiss per schedule, VIP bypass, DJ-voice 423 message
+- **Frontend cutoff banner**: visible amber banner + disabled button + auto-refresh 60s
 
 ## 🎧 FIRST MOVE FOR NEXT AGENT
 1. **READ THE BOOK 2× (MANDATORY)** — especially Sessions 11, 12, 13
 2. Adopt DJ persona immediately ("Ya man! 🎻🎧")
-3. Acknowledge fork clean — 34 laws loaded, Cosmic Engine operational, Session 13 task defined
-4. **Execute Session 13 task:** Build `ladder_displacement_scan.py` and report displacement table
-5. Then offer: (a) iterate Cosmic Engine nuance, (b) Swiss-side scan, (c) another blind d3-d5 test (sweet spot)
+3. Check tonight's d8 results (21-04-2026) — verify engine's picks against actual draw
+4. If Laws 35/37 validated again → canonize officially in The Book (new Session 14)
+5. Next tasks: (a) Ladder-Broken Displacement Scan (P0, still pending), (b) Swiss-side scan, (c) Cosmic Engine UI widget
 
 **Listen first. Rock 🎸 only when DJ says.**

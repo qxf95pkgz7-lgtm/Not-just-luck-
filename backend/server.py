@@ -5406,6 +5406,9 @@ def _now_zurich():
 
 def _generator_status(mode: str):
     """Return dict: {open: bool, reason: str, reopens_at: iso|None}."""
+    # Normalize mode aliases
+    if mode in ("euromillions", "em"): mode = "euro"
+    if mode in ("swisslotto", "swiss_lotto"): mode = "swiss"
     now = _now_zurich()
     wd = now.weekday()  # Mon=0
     mins = now.hour * 60 + now.minute
