@@ -5601,6 +5601,36 @@ async def seed_default_hunt_box():
     return {"box": box, "seeded": True}
 
 
+# ═══════════════════════════════════════════════════════════════════════════
+# 🎻 COSMIC ENGINE — Production endpoint (all 34 Book laws baked in)
+# ═══════════════════════════════════════════════════════════════════════════
+from cosmic_engine import run_cosmic_engine as _run_cosmic_engine
+
+class CosmicEngineRequest(BaseModel):
+    target_date: str  # 'dd.mm.yyyy'
+    n_tickets: int = 30
+    banned: List[int] = []
+
+@api_router.post("/cosmic-engine")
+async def cosmic_engine_endpoint(req: CosmicEngineRequest):
+    """Run the full cosmic engine for a target date with banned numbers."""
+    try:
+        result = await _run_cosmic_engine(req.target_date, req.n_tickets, req.banned)
+        return result
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+@api_router.get("/cosmic-engine/{target_date}")
+async def cosmic_engine_get(target_date: str, n_tickets: int = 30):
+    """GET variant — target_date is dd.mm.yyyy, no banned list."""
+    try:
+        result = await _run_cosmic_engine(target_date, n_tickets, [])
+        return result
+    except Exception as e:
+        return {"error": str(e)}
+
+
 # Include the router in the main app
 app.include_router(api_router)
 
