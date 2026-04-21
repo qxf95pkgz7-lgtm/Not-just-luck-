@@ -132,13 +132,8 @@ async def main(target_str=None):
 
     # 4. 31 + date-mirrors
     if len(date_lenses) >= 3:
-        fill = [n for n in top_tier if n not in date_lenses][:1]
-        picks = sorted(set([31] + date_lenses[:3] + fill))[:5]
-        while len(picks) < 5 and top_tier:
-            for t in top_tier:
-                if t not in picks:
-                    picks.append(t); break
-            picks = sorted(picks)
+        pool = list(dict.fromkeys([31] + date_lenses[:5] + top_tier + mid_tier))
+        picks = sorted(pool[:5])
         if len(picks) == 5:
             archetypes.append(("31+date-mirror", picks))
 
@@ -148,13 +143,8 @@ async def main(target_str=None):
 
     # 6. 31 + star-king harmonic
     if len(sk_lenses) >= 3:
-        fill = [n for n in top_tier if n not in sk_lenses][:1]
-        picks = sorted(set([31] + sk_lenses[:3] + fill))[:5]
-        while len(picks) < 5 and top_tier:
-            for t in top_tier:
-                if t not in picks:
-                    picks.append(t); break
-            picks = sorted(picks)
+        pool = list(dict.fromkeys([31] + sk_lenses[:5] + top_tier + mid_tier))
+        picks = sorted(pool[:5])
         if len(picks) == 5:
             archetypes.append(("31+star-king", picks))
 
