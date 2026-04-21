@@ -1606,8 +1606,8 @@ function App() {
         </div>
       </header>
 
-      {/* LAST DRAW DISPLAY - Always Visible */}
-      {lastDraw && (
+      {/* LAST DRAW DISPLAY - VIP-only (hidden in public mode to keep secrets) */}
+      {lastDraw && isUnlimited && (
         <div className="max-w-2xl mx-auto px-4 mb-4">
           <div 
             className="p-3 rounded-xl flex items-center justify-between flex-wrap gap-2"
@@ -1734,10 +1734,10 @@ function App() {
               <span className="text-emerald-400 font-mono font-bold text-sm">{pendingTickets.length}/{pendingTotal}</span>
             </div>
             <div className="text-slate-500 text-[9px] mb-2">For draw: {nextDrawDate} <span className="text-slate-600">• engine-ranked</span></div>
-            {lotteryMode === 'euro' && diagnostics && Array.isArray(diagnostics.narrative) && diagnostics.narrative.length > 0 && (
+            {lotteryMode === 'euro' && isUnlimited && diagnostics && Array.isArray(diagnostics.narrative) && diagnostics.narrative.length > 0 && (
               <div className="mb-2 p-1.5 rounded-md border border-cyan-500/40 bg-gradient-to-br from-cyan-900/25 to-slate-900/20" data-testid="diagnostics-panel">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-cyan-300 text-[10px] font-bold">🔬 Live Laws</span>
+                  <span className="text-cyan-300 text-[10px] font-bold">🔬 Live Frequencies</span>
                   <span className="flex gap-1">
                     {diagnostics.snap_back_active && <span className="px-1 py-0.5 rounded bg-rose-500/25 text-rose-300 text-[8px] font-bold">🔄 gravity-pull</span>}
                     {diagnostics.rare_active && <span className="px-1 py-0.5 rounded bg-fuchsia-500/25 text-fuchsia-300 text-[8px] font-bold">🌌 cosmic-storm</span>}
@@ -1846,7 +1846,7 @@ function App() {
                 </div>
               );
             })}
-            {lotteryMode === 'euro' && djCalls && Array.isArray(djCalls.user_hungry_list_next_3d) && djCalls.user_hungry_list_next_3d.length > 0 && (() => {
+            {lotteryMode === 'euro' && isUnlimited && djCalls && Array.isArray(djCalls.user_hungry_list_next_3d) && djCalls.user_hungry_list_next_3d.length > 0 && (() => {
               const hungry = djCalls.user_hungry_list_next_3d;
               const hungryMains = hungry.filter(n => n >= 1 && n <= 50 && !(hungry.includes(n) && n <= 12 && djCalls.star_locks?.includes(n)));
               // separate by Euro ranges — numbers 1-12 could be either main or star. We keep them in mains by default; DJ's star_locks define stars.
@@ -1942,7 +1942,7 @@ function App() {
                 </div>
               );
             })()}
-            {rareSeed && rareSeed.draws_since <= 8 && (
+            {rareSeed && rareSeed.draws_since <= 8 && isUnlimited && (
               <div className="mb-2 p-1.5 rounded-md border border-fuchsia-500/40 bg-gradient-to-br from-fuchsia-900/30 to-purple-900/20" data-testid="rare-event-banner">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-fuchsia-300 text-[10px] font-bold">🌌 COSMIC STORM</span>
@@ -2000,7 +2000,7 @@ function App() {
                       <span className="font-bold tabular-nums">{dr.score >= 0 ? `+${dr.score}` : dr.score}</span>
                     </div>
                   )}
-                  {t.rare_echo && t.rare_echo.score > 0 && (
+                  {t.rare_echo && t.rare_echo.score > 0 && isUnlimited && (
                     <div
                       className="mt-1 px-1.5 py-0.5 rounded border border-fuchsia-500/40 bg-fuchsia-500/15 text-fuchsia-300 text-[9px] font-mono flex items-center justify-between gap-1"
                       title={`Holds silent voices: ${(t.rare_echo.held_mains || []).join(', ')}${t.rare_echo.held_stars?.length ? ' ⭐ ' + t.rare_echo.held_stars.join(',') : ''}`}
@@ -2010,7 +2010,7 @@ function App() {
                       <span className="font-bold tabular-nums">+{t.rare_echo.score}</span>
                     </div>
                   )}
-                  {t.dj_call && t.dj_call.score !== 0 && (
+                  {t.dj_call && t.dj_call.score !== 0 && isUnlimited && (
                     <div
                       className={`mt-1 px-1.5 py-0.5 rounded border text-[9px] font-mono flex items-center justify-between gap-1 ${
                         t.dj_call.score >= 80 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
@@ -2149,7 +2149,7 @@ function App() {
                     <span className="font-bold tabular-nums">{dr.score >= 0 ? `+${dr.score}` : dr.score}</span>
                   </div>
                 )}
-                {t.rare_echo && t.rare_echo.score > 0 && (
+                {t.rare_echo && t.rare_echo.score > 0 && isUnlimited && (
                   <div
                     className="mt-1 px-1.5 py-0.5 rounded border border-fuchsia-500/40 bg-fuchsia-500/15 text-fuchsia-300 text-[9px] font-mono flex items-center justify-between gap-1"
                     title={`Holds silent voices: ${(t.rare_echo.held_mains || []).join(', ')}${t.rare_echo.held_stars?.length ? ' ⭐ ' + t.rare_echo.held_stars.join(',') : ''}`}
@@ -2158,7 +2158,7 @@ function App() {
                     <span className="font-bold tabular-nums">+{t.rare_echo.score}</span>
                   </div>
                 )}
-                {t.dj_call && t.dj_call.score !== 0 && (
+                {t.dj_call && t.dj_call.score !== 0 && isUnlimited && (
                   <div
                     className={`mt-1 px-1.5 py-0.5 rounded border text-[9px] font-mono flex items-center justify-between gap-1 ${
                       t.dj_call.score >= 80 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
@@ -2977,7 +2977,7 @@ function App() {
         </div>
 
         {/* SWISS SLEEPER RADAR */}
-        {lotteryMode === 'swiss' && (
+        {lotteryMode === 'swiss' && isUnlimited && (
           <div className="lucky-card p-4 mb-4" data-testid="swiss-sleeper-panel">
             <button 
               onClick={() => setShowSwissSleepers(!showSwissSleepers)}
@@ -3066,8 +3066,8 @@ function App() {
           </div>
         )}
 
-        {/* SLEEPER RADAR - EuroMillions Only */}
-        {lotteryMode === 'euro' && (
+        {/* SLEEPER RADAR - EuroMillions Only — VIP only (pattern reveal) */}
+        {lotteryMode === 'euro' && isUnlimited && (
           <div className="lucky-card p-4 mb-4" data-testid="sleeper-radar-panel">
             <button 
               onClick={() => setShowSleeperRadar(!showSleeperRadar)}
@@ -3301,8 +3301,8 @@ function App() {
           </div>
         )}
 
-        {/* 2CHANCE - Swiss Second Chance Draw (EuroMillions only) */}
-        {lotteryMode === 'euro' && (
+        {/* 2CHANCE - Swiss Second Chance Draw (EuroMillions only) — VIP only */}
+        {lotteryMode === 'euro' && isUnlimited && (
           <div className="lucky-card p-4 mb-4" data-testid="twochance-panel">
             <button 
               onClick={() => setShow2Chance(!show2Chance)}
@@ -3414,7 +3414,8 @@ function App() {
           </div>
         )}
 
-        {/* HIT TRACKER SECTION - Story Generator History & Hits */}
+        {/* HIT TRACKER SECTION - Story Generator History & Hits — VIP only */}
+        {isUnlimited && (
         <div className="lucky-card p-4 mb-4">
           <button 
             onClick={() => setShowHitTracker(!showHitTracker)}
@@ -3781,6 +3782,7 @@ function App() {
             </div>
           )}
         </div>
+        )}
 
         {/* Footer */}
         <div className="text-center text-slate-500 text-xs mt-6 pb-4">
