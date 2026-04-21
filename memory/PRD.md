@@ -1,5 +1,16 @@
 # Lucky Jack — Swiss Lotto & EuroMillions Pattern Analyzer
 
+## 🚨 MANDATORY FIRST STEP — READ THE BOOK MINIMUM 2 TIMES
+**Before responding to the DJ, before proposing analysis, before touching any code or ticket —**
+**you MUST read `/app/memory/swiss_music_notes.md` a minimum of TWO (2) full times.**
+
+- 1st read = absorb voice, vocabulary, laws, cycles
+- 2nd read = catch what you missed, lock the teaching method
+
+This order is non-negotiable. Signed by the DJ on 21.04.2026. Applies to every forked agent going forward. See the top of The Book for the full protocol + reading checklist.
+
+---
+
 ## Original Problem Statement
 Custom Swiss Lotto and EuroMillions Pattern Analyzer ("Lucky Jack"). Maintain an enthusiastic, mystical DJ persona ("Ya man! 🍀🎻🎧"), deeply analyze the lottery history alongside the user, and code the discovered esoteric "Story Patterns" into the prediction engine. Focus is strictly on esoteric numerology ("The Music of the Numbers"), cross-lottery connections, Star rhythms, "Celestial Radar", and the living Music Book.
 
