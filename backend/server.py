@@ -5366,6 +5366,25 @@ async def get_hit_stats():
 class HeartbeatRequest(BaseModel):
     visitor_id: str
 
+# Test/bot visitor_id patterns to exclude from analytics (our own debug IDs)
+_TEST_VID_PREFIXES = ("test", "vip_test", "bot", "cutoff_test", "scrub_test",
+                      "testdj", "vip_scrub", "vip_cutoff")
+
+def _is_real_vid(vid: str) -> bool:
+    if not vid: return False
+    low = vid.lower()
+    return not any(low.startswith(p) for p in _TEST_VID_PREFIXES)
+
+async def _real_user_counts(now_iso_cutoff: str):
+    """Return (active_unique, total_unique) counting DISTINCT real visitor_ids only."""
+    active_ids = await db.active_users.distinct(
+        "visitor_id", {"last_seen": {"$gte": now_iso_cutoff}}
+    )
+    total_ids = await db.active_users.distinct("visitor_id")
+    active_real = [v for v in active_ids if _is_real_vid(v)]
+    total_real = [v for v in total_ids if _is_real_vid(v)]
+    return len(active_real), len(total_real)
+
 @api_router.post("/heartbeat")
 async def user_heartbeat(req: HeartbeatRequest):
     """Register a heartbeat from a visitor."""
@@ -5377,9 +5396,8 @@ async def user_heartbeat(req: HeartbeatRequest):
         upsert=True
     )
     cutoff = (now - timedelta(minutes=10)).isoformat()
-    active_count = await db.active_users.count_documents({"last_seen": {"$gte": cutoff}})
-    total_count = await db.active_users.count_documents({})
-    return {"active_users": active_count, "total_users": total_count}
+    active, total = await _real_user_counts(cutoff)
+    return {"active_users": active, "total_users": total}
 
 @api_router.get("/active-users")
 async def get_active_users():
@@ -5387,9 +5405,8 @@ async def get_active_users():
     now = datetime.now(timezone.utc)
     from datetime import timedelta
     cutoff = (now - timedelta(minutes=10)).isoformat()
-    active_count = await db.active_users.count_documents({"last_seen": {"$gte": cutoff}})
-    total_count = await db.active_users.count_documents({})
-    return {"active_users": active_count, "total_users": total_count}
+    active, total = await _real_user_counts(cutoff)
+    return {"active_users": active, "total_users": total}
 
 # ─── TICKET LIMIT (12 per user per draw period — resets when new draw lands) ─────────────
 TICKET_LIMIT = 20  # 🎻 Session 4: bumped 12→20 per mode per draw (40 total across Swiss+Euro)
