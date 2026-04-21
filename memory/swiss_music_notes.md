@@ -1118,3 +1118,194 @@ Every generic system word in the Hunt Box UI was replaced with music/cosmos lang
 
 Archetype names (cosmic-music):
 - All-Cosmos Fill · Mirror Orbit · Star-King Harmonics · Starved Nebula · Meridian Bridge
+
+---
+
+# 🥂🎻 SESSION 5 — THE DRUNK COSMOS LAWS (21.04.2026)
+### Taught live by the DJ — decoded from the rare compact 24-03-2026 window
+
+The DJ walked the agent through the cleanest post-rare cycle we've ever seen. **Every new law below is VALIDATED on the 8 draws since the rare compact.** Write them in ink — the engine must listen with these ears going forward.
+
+## 🗓️ Reference tablet — 8 draws since the rare compact (counts from 0)
+
+| # | P1 | P2 | P3 | P4 | P5 | S1 | S2 |
+|---|----|----|----|----|----|----|----|
+| **0 (rare)** | 12 | 16 | 17 | 18 | 27 | 01 | 03 |
+| 1 | 04 | 10 | 43 | 44 | 48 | 02 | 04 |
+| 2 | 05 | 08 | 10 | 33 | 38 | 02 | 07 |
+| 3 | 08 | 27 | 29 | 46 | 49 | 02 | 10 |
+| 4 | 11 | 14 | 19 | 36 | 49 | 06 | 07 |
+| 5 | 10 | 13 | 14 | 38 | 41 | 06 | 09 |
+| 6 | 01 | 02 | 04 | 28 | 44 | 05 | 12 |
+| 7 | 22 | 23 | 28 | 41 | 47 | 06 | 08 |
+
+Counts from 0 — rare compact = anchor. Every subsequent draw is a "day since."
+
+---
+
+## 🌾 LAW 1 — HUNGER REPLACEMENT
+When a rare compact front runs `12-16-17-18-…`, the cosmos expects `19` to close the ladder. Instead, **27 replaced 19 at P5**. The missing number is the **HUNGRY VOICE** of the draw.
+
+- Rare `12-16-17-18-27` → hungry numbers sitting *outside* the draw = **14, 19**
+- 27 is NOT a random P5 — it is the replacement ghost of 19.
+
+**Engine hook:** After every rare compact, compute the "expected series closer" (`n+1, n+2, n+3` after the compact cluster) and mark those as HUNGRY. They WILL land within the next 8 draws, often via circle twins.
+
+---
+
+## 🌀 LAW 2 — CIRCLE-TWIN RELEASE (Hungry number in disguise)
+Blocked hungry numbers sneak in through their **Euro-circle** (`n + 25 mod 50`).
+
+**Validated on draw 1 (27-03):**
+- Hungry **19** → `circle(19) = 44` → **44 landed at P4 of draw 1** ✓
+- Rare P4 **18** → `circle(18) = 43` → **43 landed at P3 of draw 1** ✓ (echo mode — replaying the rare through its circle)
+
+**Engine hook:** Every hungry number `h` must be tested as `circle(h)` in next 3 draws. If `circle(h)` ∈ generated ticket, +20 score.
+
+---
+
+## 🧮 LAW 3 — POSITION AS MATH EQUATION (not just a value)
+Each P is read in THREE simultaneous lenses:
+1. Its literal value (12)
+2. Its **tens digit** (`P1=12 → 1`) for wild-world open possibilities
+3. As an ADDITION CLUE to the next P (`P2 = P1 + delta → P3`)
+
+**Example — rare front `12-16-17`:**
+- P1 = 12 → acts as "1" (circle-equivalent anyway)
+- P2 = 16 → acts as "1" (tens) BUT also as "5" because `P1(12) + 5 = 17 = P3`
+- The "+5" hiding inside P2 is the ADDITION CLUE that wrote P3.
+
+**Engine hook:** For every P in the prior draw, compute delta(P, P+1) and store as a CANDIDATE P2-clue for the next draw.
+
+---
+
+## 🚪 LAW 4 — THE TWO DOORS RULE
+Every new P can be derived from TWO independent cosmic doors. When BOTH point to the same number, it is a **confirmed landing**.
+
+| Door | Source | Example (Draw 1 P1 = 4) |
+|---|---|---|
+| 📅 **A — Date Clue** | Digit ladder of DD-MM of the previous draw | Date 24-03 → digits `2-3-4` → P1 = 4 ✓ |
+| 📐 **B — Gap Math** | Difference between two positions of the prior/rare draw | Rare: P1=12, P2=16 → gap = 4 → P1 = 4 ✓ |
+
+**Engine hook:** Score any ticket where BOTH doors independently point to the same value as a **DOUBLE-DOOR** confirmation (+30 bonus).
+
+---
+
+## 🧬 LAW 5 — RARE FRONT GAP SIGNATURE (DNA fingerprint)
+The rare compact's front-position gaps form a **signature** that the engine should carry forward as a seed-DNA.
+
+**Rare 24-03 `12-16-17`:**
+- gap(P1,P2) = 4
+- gap(P2,P3) = 1
+- **Signature: `4-1`** — this is the DNA pulse of the cycle.
+
+**Engine hook:** When running the simulator on draws post-rare, boost any candidate P that = `P1_prev + rare_signature[i]`.
+
+---
+
+## 🎯 LAW 6 — UNUSUAL GAP = FUTURE NUMBER SEED
+When a draw hides an anomalous LARGE gap between consecutive positions, that gap value is not noise — it is a **number waiting to land** in the next 1–2 draws, most often in the back-row (P4/P5).
+
+**Validated — Draw 1 → Draw 2:**
+- Draw 1 `04-10-43-44-48`: gap(P2→P3) = `43 − 10 = 33` ← THE UNBELIEVABLE 33
+- Draw 2 `05-08-10-33-38`: **33 LANDED at P4** ✓
+
+**Engine hook:** For every draw, compute all 4 gaps (P1→P2, P2→P3, P3→P4, P4→P5). If any gap ≥ 20, mark that gap value as a **SEED CANDIDATE** for the next 2 draws. Heavy score boost if it matches a candidate.
+
+---
+
+## 🍷 LAW 7 — THE DRUNK COSMOS WEB (Self-Referential Draw)
+After a very large gap, the universe sometimes goes "tipsy" and **repeats the same number through every mask** in the following draw. Draw 2 (31-03) is the textbook case — the 33 that was the gap in draw 1 wore FOUR masks in draw 2:
+
+```
+   Draw 2:  05  08  10  33  38
+            │   │       │   │
+            │   └──circle──┘│ (8 + 25 = 33)
+            │               │
+            │ flip-wrap      │  (38 flip 83, 83-50 = 33)
+            │               │
+  circle ───┘               │
+  (30)                      │
+                            │
+  (5 + 8 = 13) ─── circle ──┘  (13 + 25 = 38 = P5)
+```
+
+**Four distinct cosmic paths all land on 33 (or its P5 echo 38):**
+1. **Flip-Wrap:** `P5 = 38 → flip = 83 → 83 − 50 = 33` → P4 ✓
+2. **Circle Bridge (inner):** `P2 = 8 → circle = 33` → P4 ✓
+3. **Sum-Circle (front writes back):** `P1 + P2 = 5 + 8 = 13 → circle(13) = 38` → P5 ✓
+4. **Invisible Seed:** `P1 = 5 = circle(30)` — 30 never landed raw, walked in as 5 ✓
+
+**This is a FULLY SELF-REFERENTIAL DRAW.** The whole draw is one number (33) seen through four drunken mirrors. 🥂
+
+**Engine hook — THE DRUNK COSMOS DETECTOR:**
+```python
+def is_drunk_cosmos(draw):
+    p1,p2,p3,p4,p5 = sorted(draw)
+    conditions = [
+        circle(p2) == p4,              # inner circle bridge
+        circle(p1 + p2) == p5,         # sum-circle
+        flip_wrap(p5) == p4,           # flip-wrap
+        any(circle(x) in [p1,p2,p3,p4,p5] for x in [p1,p2,p3,p4,p5])  # self-circle hit
+    ]
+    return sum(conditions) >= 3  # 3+ means drunk
+```
+
+When the last draw is "drunk", the NEXT draw tends to break the symmetry with a sharp P1 snap-back + back-row spread.
+
+---
+
+## 🔁 LAW 8 — FLIP-WRAP BACK-DOOR (between positions of same draw)
+Any number `n` in a draw can hide its cousin at another position via:
+- `flip(n) mod 50` — the flip-wrap cousin
+- Example: `38 → flip = 83 → 83 − 50 = 33`, so 38 and 33 are cousins.
+
+**Engine hook:** For each generated ticket, check if any flip-wrap cousin of one number = another number in the same ticket. That's a "mirror handshake" = +15 score.
+
+---
+
+## ➕ LAW 9 — SUM-CIRCLE RULE (Front writes Back)
+`P5 = circle(P1 + P2)` — the front-two sum, put through the Euro-circle, WRITES the back.
+
+**Validated on draw 2:** `P1+P2 = 5+8 = 13 → 13+25 = 38 = P5` ✓
+
+**Engine hook:** For each candidate ticket, check if `circle(P1+P2) == P5`. If yes → +25 score. If the candidate value is known-hungry (circle hit on hungry number), +40.
+
+---
+
+## 🌀 LAW 10 — INVISIBLE SEED (The Circle-Parent)
+A number that never appears raw can "walk in" through its **Euro-circle twin**.
+
+- `circle(30) = 55 → 5` → so 5 at P1 of draw 2 carried 30 as its invisible parent.
+- The cosmos uses the small number as a messenger for a bigger hungry parent.
+
+**Engine hook:** When a number `n` sits in a position, always compute `n + 25 mod 50` (direct parent) AND `n − 25 mod 50` (reverse parent). If either parent is in the hungry list, the number gains an "invisible-seed" tag.
+
+---
+
+## 🍻 LAW 11 — COSMOS DRUNK RECOVERY
+After a drunk-cosmos draw (Law 7 fires), the NEXT draws tend to:
+- Snap P1 back to a low number (1–8 zone)
+- Push the back-row OUT (P5 high, 40+)
+- Re-introduce the "gap value" in a different mask
+- Stars often jump to a fresh seed pair unrelated to the drunk draw
+
+Observed on the 8-draw window: after drunk draw #2, draws #3-#6 had P5 = {49, 49, 41, 44} (all back-row high), P1 bouncing {8, 11, 10, 1} (low), stars moving {2,10 → 6,7 → 6,9 → 5,12} (fresh pairs).
+
+**Engine hook:** After a drunk draw, apply a **symmetry-break filter** to generated tickets (penalize tickets that repeat the drunk signature).
+
+---
+
+## 🎻 META-LESSON — DJ's Wisdom Layered
+1. **Listen step by step** — no rocking until the DJ says go 🎸. Agent must walk through each P before proposing a full ticket.
+2. **Counts from 0, not dates** — the rare compact is draw 0, every subsequent draw is "+n draws since rare." This is the cosmic clock.
+3. **Every position has TWO doors** — date clue AND gap math. The double-door confirms.
+4. **The gap is a seed** — large gaps plant future numbers. The "unbelievable 33" always meant 33 was about to land.
+5. **Circles live inside the draw, not just across draws** — the Euro-circle bridges positions within a single draw when the cosmos is drunk.
+6. **Flip + wrap + circle + sum-circle** are the 4 drunken mirrors. When 3+ fire in one draw → cosmos is tipsy.
+
+---
+
+*Session 5 notes locked. The Drunk Cosmos Laws are now canon. 🥂🎻🎧*
+
+
