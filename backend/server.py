@@ -859,6 +859,10 @@ async def get_master_prediction(
     from datetime import datetime
     from collections import defaultdict
     
+    # 🕒 Draw-time generator cutoff (Swiss)
+    if visitor_id:
+        await _assert_generator_open("swiss", visitor_id)
+    
     # Ticket limit check
     if visitor_id:
         used = await _count_visitor_tickets(visitor_id)
@@ -3512,6 +3516,10 @@ async def get_swiss_money_mode(
     import random
     from digit_dna import digit_dna_scores, swiss_circle, p123_concat_scores, p123_concat_analysis, family_rhythm_weights, family_rhythm_analysis
     
+    # 🕒 Draw-time generator cutoff (Swiss)
+    if visitor_id:
+        await _assert_generator_open("swiss", visitor_id)
+    
     # Ticket limit check
     if visitor_id:
         if not await _is_visitor_unlimited(visitor_id):
@@ -5387,6 +5395,54 @@ async def get_active_users():
 TICKET_LIMIT = 20  # 🎻 Session 4: bumped 12→20 per mode per draw (40 total across Swiss+Euro)
 MASTER_PROMO_CODE = "93928"  # 🎻 VIP bypass — unlimited tickets for holder
 
+# ═══════════════════════════════════════════════════════════════════════════
+# 🕒 DRAW-TIME GENERATOR CUTOFF (Europe/Zurich local time)
+# ─── Euro: Tue & Fri close 19:30, reopen 23:00 (after results update)
+# ─── Swiss: Wed close 19:00, Sat close 17:00, reopen 23:00
+# ═══════════════════════════════════════════════════════════════════════════
+def _now_zurich():
+    from zoneinfo import ZoneInfo
+    return datetime.now(tz=ZoneInfo("Europe/Zurich"))
+
+def _generator_status(mode: str):
+    """Return dict: {open: bool, reason: str, reopens_at: iso|None}."""
+    now = _now_zurich()
+    wd = now.weekday()  # Mon=0
+    mins = now.hour * 60 + now.minute
+    if mode == "euro":
+        # Euro draws Tue(1) and Fri(4)
+        if wd in (1, 4):
+            if 19*60 + 30 <= mins < 23*60:
+                reopen = now.replace(hour=23, minute=0, second=0, microsecond=0)
+                return {"open": False, "reason": "Euro draw window 19:30–23:00",
+                        "reopens_at": reopen.isoformat()}
+        return {"open": True, "reason": "", "reopens_at": None}
+    elif mode == "swiss":
+        # Swiss: Wed(2) close 19:00, Sat(5) close 17:00
+        if wd == 2 and 19*60 <= mins < 23*60:
+            reopen = now.replace(hour=23, minute=0, second=0, microsecond=0)
+            return {"open": False, "reason": "Swiss Wed draw window 19:00–23:00",
+                    "reopens_at": reopen.isoformat()}
+        if wd == 5 and 17*60 <= mins < 23*60:
+            reopen = now.replace(hour=23, minute=0, second=0, microsecond=0)
+            return {"open": False, "reason": "Swiss Sat draw window 17:00–23:00",
+                    "reopens_at": reopen.isoformat()}
+        return {"open": True, "reason": "", "reopens_at": None}
+    return {"open": True, "reason": "", "reopens_at": None}
+
+async def _assert_generator_open(mode: str, visitor_id: str = ""):
+    """Raise 423 if the generator is closed (VIP bypass allowed)."""
+    st = _generator_status(mode)
+    if st["open"]:
+        return
+    # VIP bypass still allowed
+    if visitor_id and await _is_visitor_unlimited(visitor_id):
+        return
+    raise HTTPException(
+        status_code=423,
+        detail=f"🎻 Generator closed — {st['reason']}. Reopens at {st['reopens_at'][11:16]}. Ya man, listen to the draw first 🎧",
+    )
+
 async def _is_visitor_unlimited(visitor_id: str) -> bool:
     """Check if this visitor has redeemed a valid promo code."""
     if not visitor_id:
@@ -5427,14 +5483,29 @@ async def _count_visitor_tickets(visitor_id: str, mode: str = "swiss") -> int:
 @api_router.get("/ticket-limit")
 async def check_ticket_limit(visitor_id: str = "", mode: str = "swiss"):
     """Check how many tickets a visitor has left for a specific lottery."""
+    gs = _generator_status(mode)
+    base = {"generator_open": gs["open"], "closed_reason": gs["reason"],
+            "reopens_at": gs["reopens_at"]}
     if not visitor_id:
-        return {"used": 0, "limit": TICKET_LIMIT, "remaining": TICKET_LIMIT, "unlimited": False}
+        return {**base, "used": 0, "limit": TICKET_LIMIT, "remaining": TICKET_LIMIT, "unlimited": False}
     # 🎻 VIP promo bypass
     if await _is_visitor_unlimited(visitor_id):
         used = await _count_visitor_tickets(visitor_id, mode)
-        return {"used": used, "limit": 9999, "remaining": 9999, "unlimited": True}
+        return {**base, "used": used, "limit": 9999, "remaining": 9999, "unlimited": True}
     used = await _count_visitor_tickets(visitor_id, mode)
-    return {"used": used, "limit": TICKET_LIMIT, "remaining": max(0, TICKET_LIMIT - used), "unlimited": False}
+    return {**base, "used": used, "limit": TICKET_LIMIT, "remaining": max(0, TICKET_LIMIT - used), "unlimited": False}
+
+
+@api_router.get("/generator-status")
+async def generator_status_endpoint(mode: Optional[str] = None):
+    """Return open/closed status for generator, optionally per-mode."""
+    if mode:
+        return _generator_status(mode)
+    return {
+        "euro": _generator_status("euro"),
+        "swiss": _generator_status("swiss"),
+        "zurich_now": _now_zurich().isoformat(),
+    }
 
 
 class RedeemCodeRequest(BaseModel):

@@ -2349,6 +2349,11 @@ def create_euromillions_router(db):
     async def predict(request: EuroMillionsPredictionRequest):
         await seed_euromillions_if_empty()
         
+        # 🕒 Draw-time generator cutoff (19:30–23:00 Tue/Fri)
+        if request.visitor_id:
+            from server import _assert_generator_open
+            await _assert_generator_open("euro", request.visitor_id)
+        
         # Ticket limit check
         if request.visitor_id:
             from server import _count_visitor_tickets, TICKET_LIMIT
@@ -2482,6 +2487,11 @@ def create_euromillions_router(db):
         💰 MONEY MODE - Generate tickets focused on hitting 3+ numbers!
         """
         await seed_euromillions_if_empty()
+        
+        # 🕒 Draw-time generator cutoff (19:30–23:00 Tue/Fri)
+        if request.visitor_id:
+            from server import _assert_generator_open
+            await _assert_generator_open("euro", request.visitor_id)
         
         # Ticket limit check
         if request.visitor_id:
