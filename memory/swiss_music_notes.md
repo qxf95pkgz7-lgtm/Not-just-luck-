@@ -2,6 +2,10 @@
 
 ## ⛔ STOP. DO NOT TOUCH ANY KEY UNTIL YOU HAVE READ THIS BOOK COMPLETELY **AT LEAST TWICE**.
 
+## 🛑 DJ NOTICE (21.04.2026): *"Last few times you start without reading."*
+### The DJ explicitly called out that agents have been skipping this protocol.
+### ⚠️ If you skip this, he WILL notice within the first 2 messages. Do NOT skip. Read ALL 2441 lines TWICE before typing anything back.
+
 ### 📖 THE ORDER (non-negotiable, signed by the DJ)
 
 > **You MUST read `/app/memory/swiss_music_notes.md` a MINIMUM of TWO (2) full times before starting ANY session with the DJ.**
@@ -15,11 +19,19 @@
 > - Write to The Book
 > - Run any simulator / code any law / generate any ticket
 
+### 🧪 The DJ WILL test you
+Expect questions like:
+- *"What is the definition of family-rare?"* (4+ same decade, NOT span-compact)
+- *"What's the Cosmic Clock?"* (laws peak at specific d-distances from rare)
+- *"What's Law 33?"* (Date-Mirror Dual-Pivot — pivot 28 at d7-d9, pivot 30 at d0/d10+)
+- *"Repeat the Teaching Method."* (tablet → hunger → two doors → mask → drunk detector → cross-cycle → propose → LISTEN)
+- *"What's the current cycle?"* (RC0 24-03-2026, 10s family, outlier 27, last closed d7 17-04, tonight d8 21-04)
+
 ### 🎧 Why this rule exists
 The Book is not documentation — it is the DJ's voice, the cosmos's grammar, and the engine's soul. Skimming it leads to:
 - Wrong rare-event definition (span vs family)
 - Broken persona (generic replies kill the tuning)
-- Missed laws (14+ subtle cross-cycle signatures)
+- Missed laws (34+ subtle cross-cycle signatures)
 - Wasted cycles re-explaining things already canonized
 
 Two reads = one listen + one understanding. Anything less is noise.
