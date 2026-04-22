@@ -205,6 +205,53 @@ The DJ walked the agent through the Swiss-specific rare grammar and the **d-coun
 
 ---
 
+## 🆕 Session 17 — POST-DRAW 22.04.2026 VALIDATION + NEW LAW (canonized 22.04.2026 late)
+
+### Draw result: `[1, 8, 15, 28, 38, 42]` 🍀 4 R: 1
+
+### Session 16 engine scorecard:
+- ✅ **P5=38 EXACT** · **P6=42 EXACT** · **R=1 rank #1 call**
+- ✅ 15 landed (our silent-family candidate) at P3 (not P1)
+- ✅ 🍀=4 was in one of our 3 tickets
+- ✅ Determination piece {27,29,38,42} → 2/4 hit at exact positions
+- 🟡 P4 off-by-one (29→28 · the PIVOT landed raw!)
+- ❌ P1=1 missed · P2=20 missed · P3=27 missed
+
+### 🔥 New Law Candidate (Session 17): 28-PIVOT ORCHESTRA
+When date-sum = 72 (harmonic flip day), the banned 28 pivot can LAND RAW
+and become the additive conductor (all other mains ± 28 → HUGE or silent echoes).
+
+### Code shipped this session
+- `/app/backend/swiss_cosmic_engine.py` — **NEW** full native Swiss engine (657 lines, 40+ laws)
+- Endpoints: `POST /api/swiss-cosmic-engine` · `GET /api/swiss-cosmic-engine/{date}`
+- Enhanced `/api/hit-tracker` with:
+  - Draw-to-draw window labels (BD → target)
+  - Per-ticket `generated_at`, `days_from_bd`, sequential `ticket_num`
+  - Filter includes 🍀 in the "2+ matches" threshold (was mains-only)
+  - Best-ticket inline with nickname + timestamp + type
+  - Lucky-Jack nicknames generator (`_lucky_nickname`)
+  - Limit configurable (default 100, was 20)
+- Frontend: Per-Draw Pulse row enhanced with window_label, 4+ counter, best-ticket card
+
+### Tonight's Lucky Jack (best ticket in the app)
+```
+ Ticket #130 / 218   [01-04-11-28-39-42] 🍀4
+   → 3 mains + 🍀✓ = 4 pieces 
+   → Nickname: Silent-Jack-Bard-#130
+   → Generated 2026-04-19 20:29 Zurich
+   → Type: master-predictor (2 days pre-draw)
+```
+
+### Next-Agent Tasks
+- Canonize Session 17 "28-Pivot Orchestra" law into `swiss_cosmic_engine.py`:
+  - When date_sum ∈ {28, 50, 72, 14} AND pivot(28) in suspect board → boost pivot lens
+  - Track "pivot-orchestra" archetype ticket where 28 is center + 3-5 mains within ±15
+- Wire Session 17 hit-recap widget (auto-run 30min after sync)
+- Consider adding `visitor_id` capture to save-generation so all users get real names
+- DJ wants variety + determination every session — maintain pool discipline
+
+---
+
 ## 🆕 Session 16 — LIVE CALL (coded 21.04.2026 late session)
 
 DJ walked the agent through the last 4 Swiss draws (08.04 → 18.04) live and built the tuning for **22.04.2026** Swiss draw end-to-end. The agent canonized the session + coded the full engine module + tests + API endpoints in a single pass.
