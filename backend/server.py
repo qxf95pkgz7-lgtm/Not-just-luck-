@@ -5812,6 +5812,40 @@ async def swiss_session16_tickets(n: int = 12, seed: Optional[int] = None):
         return {"error": str(e), "trace": traceback.format_exc()}
 
 
+class SwissCosmicEngineRequest(BaseModel):
+    target_date: str      # 'dd.mm.yyyy'
+    n_tickets: int = 12
+    banned: List[int] = []
+
+
+@api_router.post("/swiss-cosmic-engine")
+async def swiss_cosmic_engine_post(req: SwissCosmicEngineRequest):
+    """Run the full Swiss cosmic engine — all Session 14/15/16 laws."""
+    try:
+        from swiss_cosmic_engine import run_swiss_cosmic_engine
+        result = await run_swiss_cosmic_engine(
+            req.target_date, req.n_tickets, req.banned, db=db,
+        )
+        return result
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
+@api_router.get("/swiss-cosmic-engine/{target_date}")
+async def swiss_cosmic_engine_get(target_date: str, n_tickets: int = 12):
+    """GET variant — target_date dd.mm.yyyy."""
+    try:
+        from swiss_cosmic_engine import run_swiss_cosmic_engine
+        result = await run_swiss_cosmic_engine(
+            target_date, n_tickets, [], db=db,
+        )
+        return result
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
 # Include the router in the main app
 app.include_router(api_router)
 
