@@ -694,7 +694,7 @@ function App() {
         setPerDrawStats(res.data.per_draw_stats || []);
       } else {
         // Use the new clean hit-tracker endpoint for Swiss
-        const res = await axios.get(`${API}/hit-tracker?last_draws=3`);
+        const res = await axios.get(`${API}/hit-tracker?last_draws=3&limit=100`);
         setGenerationHistory(res.data.results || []);
         setLastDraw(res.data.last_draws?.[0] || null);
         setPerDrawStats(res.data.per_draw_stats || []);
@@ -3495,33 +3495,69 @@ function App() {
                   </div>
                   <div className="space-y-1.5">
                     {perDrawStats.map((s, idx) => (
-                      <div key={idx} className="flex items-center justify-between gap-2 text-xs p-2 rounded-md bg-slate-900/60 border border-slate-700/40" data-testid={`per-draw-row-${idx}`}>
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-slate-400 font-mono">{s.date}</span>
+                      <div key={idx} className="p-2 rounded-md bg-slate-900/60 border border-slate-700/40" data-testid={`per-draw-row-${idx}`}>
+                        <div className="flex items-center justify-between gap-2 text-xs">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-slate-400 font-mono">
+                              {s.window_label || s.date}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 flex-wrap justify-end">
+                            <span className="text-slate-300">
+                              <span className={`font-bold ${lotteryMode === 'euro' ? 'text-blue-400' : 'text-amber-400'}`}>{s.total_generated}</span>
+                              <span className="text-slate-500"> gen</span>
+                            </span>
+                            <span className="text-slate-300">
+                              <span className="text-emerald-400 font-bold">{s.hits_2plus}</span>
+                              <span className="text-slate-500"> ×2+</span>
+                            </span>
+                            {s.hits_3plus > 0 && (
+                              <span className="text-purple-400 font-bold">{s.hits_3plus}× 3+</span>
+                            )}
+                            {s.hits_4plus > 0 && (
+                              <span className="text-pink-400 font-bold">{s.hits_4plus}× 4+ 🔥</span>
+                            )}
+                            <span className="px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-300 font-semibold">
+                              best {s.best_total_match ?? s.best_hit}/{lotteryMode === 'euro' ? 5 : 6}{s.best_ticket?.lucky_hit ? '+L' : ''}
+                            </span>
+                            <span className={`px-1.5 py-0.5 rounded font-bold ${
+                              s.hit_rate_pct >= 20 ? 'bg-emerald-500/20 text-emerald-300' :
+                              s.hit_rate_pct >= 10 ? 'bg-amber-500/20 text-amber-300' :
+                              'bg-slate-700/40 text-slate-400'
+                            }`}>
+                              {s.hit_rate_pct}%
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-3 flex-wrap justify-end">
-                          <span className="text-slate-300">
-                            <span className={`font-bold ${lotteryMode === 'euro' ? 'text-blue-400' : 'text-amber-400'}`}>{s.total_generated}</span>
-                            <span className="text-slate-500"> gen</span>
-                          </span>
-                          <span className="text-slate-300">
-                            <span className="text-emerald-400 font-bold">{s.hits_2plus}</span>
-                            <span className="text-slate-500"> hits</span>
-                          </span>
-                          {s.hits_3plus > 0 && (
-                            <span className="text-purple-400 font-bold">{s.hits_3plus}× 3+</span>
-                          )}
-                          <span className="px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-300 font-semibold">
-                            best {s.best_hit}/{lotteryMode === 'euro' ? 5 : 6}
-                          </span>
-                          <span className={`px-1.5 py-0.5 rounded font-bold ${
-                            s.hit_rate_pct >= 20 ? 'bg-emerald-500/20 text-emerald-300' :
-                            s.hit_rate_pct >= 10 ? 'bg-amber-500/20 text-amber-300' :
-                            'bg-slate-700/40 text-slate-400'
-                          }`}>
-                            {s.hit_rate_pct}%
-                          </span>
-                        </div>
+                        {/* BEST TICKET OF THE DRAW — inline callout */}
+                        {s.best_ticket && s.best_ticket.total_match >= 2 && (
+                          <div className="mt-2 p-2 rounded bg-gradient-to-r from-amber-500/10 to-amber-600/5 border border-amber-500/30" data-testid={`best-ticket-${idx}`}>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-amber-300 font-semibold text-[11px]">
+                                🏆 Lucky Jack #{s.best_ticket.ticket_num_in_window} · {s.best_ticket.nickname}
+                              </span>
+                              <span className="text-[10px] text-slate-400">
+                                {s.best_ticket.total_match}/{lotteryMode === 'euro' ? 5 : 6} match
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 flex-wrap">
+                              {s.best_ticket.numbers?.map((n, i) => {
+                                const isHit = (s.best_ticket.hits || []).includes(n);
+                                return (
+                                  <div key={i} className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                                    isHit ? 'bg-emerald-500 text-white ring-2 ring-emerald-300' : 'bg-slate-700 text-slate-300'
+                                  }`}>{n}</div>
+                                );
+                              })}
+                              <span className={`text-[10px] ml-1 ${s.best_ticket.lucky_hit ? 'text-emerald-300 font-bold' : 'text-amber-400/60'}`}>
+                                🍀{s.best_ticket.lucky}{s.best_ticket.lucky_hit ? ' ✓' : ''}
+                              </span>
+                            </div>
+                            <div className="text-[10px] text-slate-400 mt-1">
+                              🕐 {s.best_ticket.generated_at ? new Date(s.best_ticket.generated_at).toLocaleString() : '—'} · {s.best_ticket.generation_type}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -3619,7 +3655,7 @@ function App() {
                       >
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-slate-400 text-xs">
-                            {r.hit_count >= 4 ? '💰' : r.hit_count >= 3 ? '🔥' : '✓'} For: <span className="text-slate-200 font-semibold">{r.target_date}</span>
+                            {r.hit_count >= 4 ? '💰' : r.hit_count >= 3 ? '🔥' : '✓'} #{r.ticket_num || idx+1} · <span className="text-slate-200 font-semibold">{r.window_label || r.target_date}</span>
                           </span>
                           <span className={`text-xs font-bold ${r.hit_count >= 3 ? 'text-emerald-400' : 'text-slate-400'}`}>
                             {r.hit_count}/6 {r.lucky_hit ? '+L' : ''}
@@ -3641,8 +3677,10 @@ function App() {
                           </span>
                           <span className="text-[9px] text-slate-600 ml-auto">{r.story}</span>
                         </div>
-                        <div className="text-[10px] text-slate-500 mt-1">
-                          Actual: {r.actual_numbers?.join(', ')} L={r.actual_lucky}
+                        <div className="text-[10px] text-slate-500 mt-1 flex flex-wrap gap-x-2">
+                          <span>Actual: {r.actual_numbers?.join(', ')} L={r.actual_lucky}</span>
+                          {r.generated_at && <span className="text-slate-600">🕐 {new Date(r.generated_at).toLocaleString()}</span>}
+                          {typeof r.days_from_bd === 'number' && <span className="text-slate-600">{r.days_from_bd >= 0 ? `+${r.days_from_bd}d from BD` : `${r.days_from_bd}d pre-BD`}</span>}
                         </div>
                       </div>
                     ))

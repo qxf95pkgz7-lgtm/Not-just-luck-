@@ -5121,9 +5121,11 @@ async def generate_and_save_story_predictions(target_date: str = None, num_ticke
 
 
 @api_router.get("/hit-tracker")
-async def get_hit_tracker(last_draws: int = 3):
+async def get_hit_tracker(last_draws: int = 3, limit: int = 100):
     """
-    CLEAN HIT TRACKER — Auto-calculates, shows only 2+ hits, last N draws.
+    CLEAN HIT TRACKER — Auto-calculates, shows tickets with 2+ total matches
+    (mains + 🍀 combined), last N draws. Adds per-ticket generated_at timestamps
+    and draw-to-draw window context (BD date → target date).
     Works for BOTH Swiss (generations collection) and prediction_history.
     """
     from datetime import datetime as dt_cls
@@ -5138,105 +5140,168 @@ async def get_hit_tracker(last_draws: int = 3):
     last_n_draws = all_swiss[:last_draws]
     last_n_dates = set(d['date'] for d in last_n_draws)
     
+    # Map each target_date to the PREVIOUS (BD) draw date for "draw-to-draw" window
+    bd_map = {}  # target_date -> bd_date
+    sorted_all = sorted(all_swiss, key=lambda d: parse_d(d.get('date', '')))
+    for i, d in enumerate(sorted_all):
+        if i > 0:
+            bd_map[d['date']] = sorted_all[i-1]['date']
+    
     results = []
     
     # === SWISS GENERATIONS (from hit_tracker/money-mode) ===
-    swiss_gens = await db.generations.find({}, {"_id": 1, "target_date": 1, "tickets": 1, 
-        "hits_calculated": 1, "hit_results": 1, "generation_type": 1}).to_list(5000)
-    
+    # Pull generated_at + visitor_id too for the enriched view
+    swiss_gens = await db.generations.find({}, {
+        "_id": 1, "target_date": 1, "tickets": 1,
+        "hits_calculated": 1, "hit_results": 1, "generation_type": 1,
+        "generated_at": 1, "visitor_id": 1,
+    }).to_list(5000)
+
+    # Sort by generated_at so ticket_num is chronological per target_date
+    gens_by_target = {}
     for gen in swiss_gens:
         td = gen.get('target_date', '')
+        gens_by_target.setdefault(td, []).append(gen)
+    for td in gens_by_target:
+        gens_by_target[td].sort(key=lambda g: g.get('generated_at', ''))
+    
+    for td in gens_by_target:
         if td not in last_n_dates:
             continue
-        
         actual = next((d for d in last_n_draws if d['date'] == td), None)
         if not actual:
             continue
-        
         actual_nums = set(actual.get('numbers', []))
         actual_lucky = actual.get('lucky_number')
-        
-        # Auto-calculate hits if not done
-        if not gen.get('hits_calculated', False):
-            hit_results = []
-            for i, ticket in enumerate(gen.get('tickets', [])):
-                t_nums = set(ticket.get('numbers', []))
-                hits = t_nums & actual_nums
-                lucky_hit = ticket.get('lucky') == actual_lucky or ticket.get('lucky_number') == actual_lucky
-                hit_results.append({
-                    "ticket_num": i + 1,
-                    "hits": sorted(hits),
-                    "hit_count": len(hits),
-                    "lucky_hit": lucky_hit,
-                })
-            await db.generations.update_one(
-                {"_id": gen["_id"]},
-                {"$set": {"hits_calculated": True, "hit_results": hit_results}}
-            )
-            gen["hit_results"] = hit_results
-        
-        # Filter: only tickets with 2+ hits
-        for i, ticket in enumerate(gen.get('tickets', [])):
+        bd_date = bd_map.get(td)
+        bd_dt = parse_d(bd_date) if bd_date else None
+        tgt_dt = parse_d(td)
+
+        global_ticket_num = 0
+        for gen in gens_by_target[td]:
+            # Auto-calculate hits if not done
+            if not gen.get('hits_calculated', False):
+                hit_results = []
+                for i, ticket in enumerate(gen.get('tickets', [])):
+                    t_nums = set(ticket.get('numbers', []))
+                    hits = t_nums & actual_nums
+                    lucky_hit = ticket.get('lucky') == actual_lucky or ticket.get('lucky_number') == actual_lucky
+                    hit_results.append({
+                        "ticket_num": i + 1,
+                        "hits": sorted(hits),
+                        "hit_count": len(hits),
+                        "lucky_hit": lucky_hit,
+                    })
+                await db.generations.update_one(
+                    {"_id": gen["_id"]},
+                    {"$set": {"hits_calculated": True, "hit_results": hit_results}}
+                )
+                gen["hit_results"] = hit_results
+
             hr = gen.get('hit_results', [])
-            hit_info = hr[i] if i < len(hr) else None
-            if not hit_info:
-                # Calculate on the fly
+            gen_at = gen.get('generated_at', '')
+            visitor_id = gen.get('visitor_id') or ''
+            for i, ticket in enumerate(gen.get('tickets', [])):
+                global_ticket_num += 1
                 t_nums = set(ticket.get('numbers', []))
-                hits = t_nums & actual_nums
-                hit_count = len(hits)
-                lucky_hit = ticket.get('lucky') == actual_lucky or ticket.get('lucky_number') == actual_lucky
-            else:
-                hit_count = hit_info.get('hit_count', 0)
-                hits = hit_info.get('hits', [])
-                lucky_hit = hit_info.get('lucky_hit', False)
-            
-            if hit_count >= 2:
-                results.append({
-                    "lottery": "swiss",
-                    "target_date": td,
-                    "numbers": ticket.get('numbers', []),
-                    "lucky": ticket.get('lucky') or ticket.get('lucky_number'),
-                    "story": ticket.get('story', gen.get('generation_type', '')),
-                    "hit_count": hit_count,
-                    "hits": sorted(hits) if isinstance(hits, set) else hits,
-                    "lucky_hit": lucky_hit,
-                    "actual_numbers": sorted(actual_nums),
-                    "actual_lucky": actual_lucky,
-                })
+                if i < len(hr) and hr[i]:
+                    hit_count = hr[i].get('hit_count', 0)
+                    hits = hr[i].get('hits', [])
+                    lucky_hit = hr[i].get('lucky_hit', False)
+                else:
+                    hits = sorted(t_nums & actual_nums)
+                    hit_count = len(hits)
+                    lucky_hit = ticket.get('lucky') == actual_lucky or ticket.get('lucky_number') == actual_lucky
+
+                total_match = hit_count + (1 if lucky_hit else 0)
+                if total_match >= 2:
+                    # Draw-to-draw days_from_bd
+                    days_from_bd = None
+                    if bd_dt and gen_at:
+                        try:
+                            gen_dt = dt_cls.fromisoformat(gen_at.replace('Z','+00:00'))
+                            gen_dt_naive = gen_dt.replace(tzinfo=None)
+                            days_from_bd = (gen_dt_naive - bd_dt).total_seconds() / 86400
+                            days_from_bd = round(days_from_bd, 2)
+                        except Exception:
+                            pass
+                    results.append({
+                        "lottery": "swiss",
+                        "target_date": td,
+                        "bd_date": bd_date,
+                        "window_label": f"{bd_date} → {td}" if bd_date else td,
+                        "ticket_num": global_ticket_num,
+                        "generated_at": gen_at,
+                        "days_from_bd": days_from_bd,
+                        "visitor_id": visitor_id,
+                        "numbers": sorted(ticket.get('numbers', [])),
+                        "lucky": ticket.get('lucky') or ticket.get('lucky_number'),
+                        "story": ticket.get('story', gen.get('generation_type', '')),
+                        "generation_type": gen.get('generation_type', 'story'),
+                        "hit_count": hit_count,
+                        "hits": sorted(hits) if isinstance(hits, set) else sorted(hits or []),
+                        "lucky_hit": lucky_hit,
+                        "total_match": total_match,
+                        "actual_numbers": sorted(actual_nums),
+                        "actual_lucky": actual_lucky,
+                    })
     
     # === SWISS PREDICTION_HISTORY (from master-predictor) ===
     swiss_preds = await db.prediction_history.find(
         {"lottery_type": "swiss"}, {"_id": 0}
     ).to_list(5000)
     
+    pred_seq = {}  # target_date -> running count
     for pred in swiss_preds:
-        # Try to match to a draw by created_at date
-        created = pred.get('created_at', '')
         pred_nums = set(pred.get('numbers', []))
-        
-        # Compare against each of the last N draws
+        pred_lucky = pred.get('lucky_number')
+        created = pred.get('created_at', '') or pred.get('generated_at', '')
         for draw in last_n_draws:
             actual_nums = set(draw.get('numbers', []))
             hits = pred_nums & actual_nums
-            if len(hits) >= 2:
-                actual_lucky = draw.get('lucky_number')
-                lucky_hit = pred.get('lucky_number') == actual_lucky
+            actual_lucky = draw.get('lucky_number')
+            lucky_hit = pred_lucky == actual_lucky
+            total_match = len(hits) + (1 if lucky_hit else 0)
+            if total_match >= 2:
+                td = draw['date']
+                pred_seq[td] = pred_seq.get(td, 0) + 1
+                bd_date = bd_map.get(td)
+                bd_dt = parse_d(bd_date) if bd_date else None
+                days_from_bd = None
+                if bd_dt and created:
+                    try:
+                        gen_dt = dt_cls.fromisoformat(created.replace('Z','+00:00'))
+                        days_from_bd = round((gen_dt.replace(tzinfo=None) - bd_dt).total_seconds() / 86400, 2)
+                    except Exception:
+                        pass
                 results.append({
                     "lottery": "swiss",
-                    "target_date": draw['date'],
-                    "numbers": pred.get('numbers', []),
-                    "lucky": pred.get('lucky_number'),
+                    "target_date": td,
+                    "bd_date": bd_date,
+                    "window_label": f"{bd_date} → {td}" if bd_date else td,
+                    "ticket_num": pred_seq[td],
+                    "generated_at": created,
+                    "days_from_bd": days_from_bd,
+                    "visitor_id": pred.get('visitor_id', ''),
+                    "numbers": sorted(pred.get('numbers', [])),
+                    "lucky": pred_lucky,
                     "story": "master-predictor",
+                    "generation_type": "master-predictor",
                     "hit_count": len(hits),
                     "hits": sorted(hits),
                     "lucky_hit": lucky_hit,
+                    "total_match": total_match,
                     "actual_numbers": sorted(actual_nums),
                     "actual_lucky": actual_lucky,
                 })
                 break  # Only match to best draw
     
-    # Sort: ALWAYS by date (latest draw first), then best hits within same date
-    results.sort(key=lambda r: (-parse_d(r['target_date']).timestamp(), -r['hit_count']))
+    # Sort: by date (latest draw first), then highest total_match, then hit_count
+    results.sort(key=lambda r: (
+        -parse_d(r['target_date']).timestamp(),
+        -r.get('total_match', 0),
+        -r['hit_count'],
+    ))
     
     # Deduplicate (same numbers for same date)
     seen = set()
@@ -5247,8 +5312,9 @@ async def get_hit_tracker(last_draws: int = 3):
             seen.add(key)
             unique_results.append(r)
     
-    # Cap at 20 best
-    unique_results = unique_results[:20]
+    # Cap at `limit` best (default 100, up from 20)
+    total_with_2plus = len(unique_results)
+    unique_results = unique_results[:limit]
     
     # === PER-DRAW STATS — total generated, hits, best, rate per draw ===
     per_draw_stats = []
@@ -5256,44 +5322,99 @@ async def get_hit_tracker(last_draws: int = 3):
         td = d['date']
         actual_nums = set(d.get('numbers', []))
         actual_lucky = d.get('lucky_number')
-        
+        bd_date = bd_map.get(td)
+
         total_generated = 0
         hits_2plus = 0
         hits_3plus = 0
+        hits_4plus = 0
         best_hit = 0
-        
-        # Count from generations collection (money-mode, story, v2)
+        best_total_match = 0
+        best_ticket_info = None
+
         gens_for_draw = [g for g in swiss_gens if g.get('target_date') == td]
         for g in gens_for_draw:
             tickets = g.get('tickets', [])
             hr = g.get('hit_results', [])
             for i, t in enumerate(tickets):
                 total_generated += 1
+                t_nums = set(t.get('numbers', []))
                 if i < len(hr) and hr[i]:
                     hc = hr[i].get('hit_count', 0)
+                    lh = hr[i].get('lucky_hit', False)
                 else:
-                    hc = len(set(t.get('numbers', [])) & actual_nums)
-                if hc >= 2: hits_2plus += 1
-                if hc >= 3: hits_3plus += 1
+                    hc = len(t_nums & actual_nums)
+                    lh = t.get('lucky') == actual_lucky or t.get('lucky_number') == actual_lucky
+                tm = hc + (1 if lh else 0)
+                if tm >= 2: hits_2plus += 1
+                if tm >= 3: hits_3plus += 1
+                if tm >= 4: hits_4plus += 1
                 if hc > best_hit: best_hit = hc
-        
-        # Count from prediction_history (master-predictor)
+                if (tm, hc) > (best_total_match, best_ticket_info.get('hit_count', -1) if best_ticket_info else -1):
+                    best_total_match = tm
+                    best_ticket_info = {
+                        "ticket_num_in_window": total_generated,
+                        "numbers": sorted(t.get('numbers', [])),
+                        "lucky": t.get('lucky') or t.get('lucky_number'),
+                        "hit_count": hc,
+                        "lucky_hit": lh,
+                        "total_match": tm,
+                        "generated_at": g.get('generated_at', ''),
+                        "generation_type": g.get('generation_type', 'story'),
+                        "visitor_id": g.get('visitor_id') or '',
+                        "nickname": _lucky_nickname(
+                            g.get('visitor_id') or '',
+                            total_generated,
+                            g.get('generated_at', ''),
+                        ),
+                        "hits": sorted(t_nums & actual_nums),
+                    }
+
+        # Count from prediction_history too
         preds_for_draw = [p for p in swiss_preds if p.get('target_draw_date') == td]
         for p in preds_for_draw:
             total_generated += 1
-            hc = len(set(p.get('numbers', [])) & actual_nums)
-            if hc >= 2: hits_2plus += 1
-            if hc >= 3: hits_3plus += 1
+            p_nums = set(p.get('numbers', []))
+            hc = len(p_nums & actual_nums)
+            lh = p.get('lucky_number') == actual_lucky
+            tm = hc + (1 if lh else 0)
+            if tm >= 2: hits_2plus += 1
+            if tm >= 3: hits_3plus += 1
+            if tm >= 4: hits_4plus += 1
             if hc > best_hit: best_hit = hc
-        
+            if tm > best_total_match:
+                best_total_match = tm
+                best_ticket_info = {
+                    "ticket_num_in_window": total_generated,
+                    "numbers": sorted(p.get('numbers', [])),
+                    "lucky": p.get('lucky_number'),
+                    "hit_count": hc,
+                    "lucky_hit": lh,
+                    "total_match": tm,
+                    "generated_at": p.get('created_at', '') or p.get('generated_at', ''),
+                    "generation_type": "master-predictor",
+                    "visitor_id": p.get('visitor_id', ''),
+                    "nickname": _lucky_nickname(
+                        p.get('visitor_id', ''),
+                        total_generated,
+                        p.get('created_at', '') or p.get('generated_at', ''),
+                    ),
+                    "hits": sorted(p_nums & actual_nums),
+                }
+
         hit_rate = round((hits_2plus / total_generated * 100), 1) if total_generated > 0 else 0.0
         
         per_draw_stats.append({
             "date": td,
+            "bd_date": bd_date,
+            "window_label": f"{bd_date} → {td}" if bd_date else td,
             "total_generated": total_generated,
             "hits_2plus": hits_2plus,
             "hits_3plus": hits_3plus,
+            "hits_4plus": hits_4plus,
             "best_hit": best_hit,
+            "best_total_match": best_total_match,
+            "best_ticket": best_ticket_info,
             "hit_rate_pct": hit_rate,
         })
     
@@ -5303,10 +5424,34 @@ async def get_hit_tracker(last_draws: int = 3):
             "numbers": sorted(d.get('numbers', [])),
             "lucky": d.get('lucky_number'),
         } for d in last_n_draws],
-        "tickets_with_2_plus": len(unique_results),
+        "tickets_with_2_plus": total_with_2plus,
+        "tickets_shown": len(unique_results),
         "results": unique_results,
         "per_draw_stats": per_draw_stats,
     }
+
+
+def _lucky_nickname(visitor_id: str, ticket_num: int, generated_at: str) -> str:
+    """Generate a friendly Lucky User name for a ticket."""
+    if visitor_id:
+        vid_tail = visitor_id[-6:] if len(visitor_id) > 6 else visitor_id
+        return f"Lucky-{vid_tail}"
+    # No visitor_id → anonymous ticket nickname based on ticket number + time
+    tags = ["Silent", "Cosmic", "Starlight", "Midnight", "Twilight",
+            "Dawn", "Sunset", "Moonlit", "Astral", "Drunken"]
+    tag = tags[ticket_num % len(tags)]
+    hour_label = ""
+    try:
+        from datetime import datetime as dtc
+        dtp = dtc.fromisoformat(generated_at.replace('Z','+00:00'))
+        h = dtp.hour
+        if h < 6: hour_label = "Owl"
+        elif h < 12: hour_label = "Lark"
+        elif h < 18: hour_label = "Sage"
+        else: hour_label = "Bard"
+    except Exception:
+        hour_label = "Seer"
+    return f"{tag}-Jack-{hour_label}-#{ticket_num}"
 
 
 
