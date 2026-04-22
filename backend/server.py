@@ -5143,9 +5143,26 @@ async def get_hit_tracker(last_draws: int = 3, limit: int = 100):
     # Map each target_date to the PREVIOUS (BD) draw date for "draw-to-draw" window
     bd_map = {}  # target_date -> bd_date
     sorted_all = sorted(all_swiss, key=lambda d: parse_d(d.get('date', '')))
+    sorted_date_strs = [d.get('date') for d in sorted_all if d.get('date')]
     for i, d in enumerate(sorted_all):
         if i > 0:
             bd_map[d['date']] = sorted_all[i-1]['date']
+
+    def _gen_window_bd(generated_at: str) -> Optional[str]:
+        """Find the last Swiss draw date strictly BEFORE generated_at timestamp."""
+        if not generated_at or not sorted_date_strs:
+            return None
+        try:
+            gen_dt = dt_cls.fromisoformat(generated_at.replace('Z','+00:00')).replace(tzinfo=None)
+        except Exception:
+            return None
+        last = None
+        for ds in sorted_date_strs:
+            if parse_d(ds) < gen_dt:
+                last = ds
+            else:
+                break
+        return last
     
     results = []
     
@@ -5225,11 +5242,14 @@ async def get_hit_tracker(last_draws: int = 3, limit: int = 100):
                             days_from_bd = round(days_from_bd, 2)
                         except Exception:
                             pass
+                    # REAL window: find Swiss draw immediately before ticket gen
+                    real_bd = _gen_window_bd(gen_at) or bd_date
                     results.append({
                         "lottery": "swiss",
                         "target_date": td,
                         "bd_date": bd_date,
-                        "window_label": f"{bd_date} → {td}" if bd_date else td,
+                        "gen_bd": real_bd,
+                        "window_label": f"{real_bd} → {td}" if real_bd else td,
                         "ticket_num": global_ticket_num,
                         "generated_at": gen_at,
                         "days_from_bd": days_from_bd,
@@ -5274,11 +5294,13 @@ async def get_hit_tracker(last_draws: int = 3, limit: int = 100):
                         days_from_bd = round((gen_dt.replace(tzinfo=None) - bd_dt).total_seconds() / 86400, 2)
                     except Exception:
                         pass
+                real_bd = _gen_window_bd(created) or bd_date
                 results.append({
                     "lottery": "swiss",
                     "target_date": td,
                     "bd_date": bd_date,
-                    "window_label": f"{bd_date} → {td}" if bd_date else td,
+                    "gen_bd": real_bd,
+                    "window_label": f"{real_bd} → {td}" if real_bd else td,
                     "ticket_num": pred_seq[td],
                     "generated_at": created,
                     "days_from_bd": days_from_bd,
@@ -5507,6 +5529,30 @@ async def get_tickets_archive(
     swiss_bd = build_bd(swiss_by_date)
     euro_bd = build_bd(euro_by_date)
 
+    # Sorted draw-date lists for "find the draw BEFORE generated_at" lookup
+    swiss_dates_sorted = sorted(swiss_by_date.keys(), key=parse_d)
+    euro_dates_sorted = sorted(euro_by_date.keys(), key=parse_d)
+
+    def _gen_window_bd(generated_at: str, dates_sorted: list) -> Optional[str]:
+        """Find the last draw date strictly BEFORE the generated_at timestamp."""
+        if not generated_at or not dates_sorted:
+            return None
+        try:
+            gen_dt = dtc.fromisoformat(generated_at.replace('Z', '+00:00')).replace(tzinfo=None)
+        except Exception:
+            return None
+        last = None
+        for d in dates_sorted:
+            try:
+                dd = parse_d(d)
+                if dd < gen_dt:
+                    last = d
+                else:
+                    break
+            except Exception:
+                continue
+        return last
+
     # --- SWISS ---
     if mode in ("swiss", "all"):
         q: dict = {}
@@ -5525,6 +5571,8 @@ async def get_tickets_archive(
             actual_nums = set(actual.get('numbers', [])) if actual else set()
             actual_lucky = actual.get('lucky_number') if actual else None
             bd_date = swiss_bd.get(td)
+            # REAL window: find the Swiss draw immediately before the ticket was generated
+            real_bd = _gen_window_bd(ga, swiss_dates_sorted)
             for t in g.get("tickets", []):
                 nums = sorted(t.get("numbers", []))
                 if len(nums) != 6: continue
@@ -5537,7 +5585,8 @@ async def get_tickets_archive(
                     "mode": "swiss",
                     "target_date": td,
                     "bd_date": bd_date,
-                    "window_label": f"{bd_date} → {td}" if bd_date else td,
+                    "gen_bd": real_bd,
+                    "window_label": f"{real_bd} → {td}" if real_bd else td,
                     "generated_at": ga,
                     "generation_type": g.get("generation_type", "story"),
                     "visitor_id": g.get("visitor_id") or "",
@@ -5565,6 +5614,7 @@ async def get_tickets_archive(
             actual_nums = set(actual.get('numbers', [])) if actual else set()
             actual_lucky = actual.get('lucky_number') if actual else None
             bd_date = swiss_bd.get(td)
+            real_bd = _gen_window_bd(ga, swiss_dates_sorted)
             nums = sorted(p.get("numbers", []))
             if len(nums) != 6: continue
             lucky = p.get("lucky_number")
@@ -5576,7 +5626,8 @@ async def get_tickets_archive(
                 "mode": "swiss",
                 "target_date": td,
                 "bd_date": bd_date,
-                "window_label": f"{bd_date} → {td}" if bd_date else td,
+                "gen_bd": real_bd,
+                "window_label": f"{real_bd} → {td}" if real_bd else td,
                 "generated_at": ga,
                 "generation_type": "master-predictor",
                 "visitor_id": p.get("visitor_id") or "",
@@ -5609,6 +5660,7 @@ async def get_tickets_archive(
             actual_nums = set(actual.get('numbers', [])) if actual else set()
             actual_stars = set(actual.get('stars', [])) if actual else set()
             bd_date = euro_bd.get(td)
+            real_bd = _gen_window_bd(ga, euro_dates_sorted)
             for t in g.get("tickets", []):
                 nums = sorted(t.get("numbers", []))
                 if len(nums) != 5: continue
@@ -5621,7 +5673,8 @@ async def get_tickets_archive(
                     "mode": "euro",
                     "target_date": td,
                     "bd_date": bd_date,
-                    "window_label": f"{bd_date} → {td}" if bd_date else td,
+                    "gen_bd": real_bd,
+                    "window_label": f"{real_bd} → {td}" if real_bd else td,
                     "generated_at": ga,
                     "generation_type": g.get("mode", "story"),
                     "visitor_id": g.get("visitor_id") or "",
