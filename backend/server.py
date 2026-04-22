@@ -5722,6 +5722,96 @@ async def cosmic_engine_get(target_date: str, n_tickets: int = 30):
         return {"error": str(e)}
 
 
+# ─── SESSION 15/16 — Silent P1 Compass + DJ Live Call endpoints ───
+async def _load_swiss_history_sorted():
+    """Load Swiss draws chronologically oldest→newest."""
+    from datetime import datetime as _dt
+    draws = await db.draws.find({}, {"_id": 0}).to_list(length=10000)
+    def _pk(d):
+        try:
+            return _dt.strptime(d.get('date', ''), '%d.%m.%Y')
+        except Exception:
+            return _dt.min
+    draws.sort(key=_pk)
+    return draws
+
+
+@api_router.get("/swiss/silent-compass")
+async def swiss_silent_compass():
+    """Session 15: Live Silent-P1 Compass state + frame suggestion."""
+    try:
+        from silent_p1_compass import (
+            compute_p1_silence_state, suggest_silent_frame,
+            SILENT_FAMILY, WELCOME_COMPANION, HUGE_TWIN_LOCK,
+        )
+        history = await _load_swiss_history_sorted()
+        if not history:
+            return {"error": "no swiss draws in db"}
+        last_draw = history[-1]
+        state = compute_p1_silence_state(history)
+        frame = suggest_silent_frame(state, last_draw)
+        return {
+            "target_inferred": "next Swiss draw",
+            "last_draw": {
+                "date": last_draw.get('date'),
+                "numbers": sorted(last_draw.get('numbers', [])),
+                "lucky": last_draw.get('lucky_number'),
+                "replay": last_draw.get('replay_number'),
+            },
+            "silent_state": state,
+            "silent_family": sorted(SILENT_FAMILY),
+            "welcome_companion": WELCOME_COMPANION,
+            "huge_twin_lock": HUGE_TWIN_LOCK,
+            "frame": frame,
+        }
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
+@api_router.get("/swiss/session16")
+async def swiss_session16_snapshot():
+    """Session 16: Full live-call snapshot (frame + anchors + variants)."""
+    try:
+        from session16_live_call import get_session16_snapshot
+        return get_session16_snapshot()
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
+@api_router.get("/swiss/session16/tickets")
+async def swiss_session16_tickets(n: int = 12, seed: Optional[int] = None):
+    """Session 16: Generate DJ-determined tickets (core-locked + variants)."""
+    try:
+        from session16_live_call import (
+            generate_session16_tickets, get_determination_piece,
+            generate_whatif_variants,
+        )
+        history = await _load_swiss_history_sorted()
+        last_draw = history[-1] if history else None
+        tickets = generate_session16_tickets(
+            n=n, last_draw=last_draw, history=history, seed=seed,
+        )
+        whatif = generate_whatif_variants(last_draw=last_draw, history=history)
+        return {
+            "target_date": "22.04.2026",
+            "mode": "swiss",
+            "determination_piece": get_determination_piece(),
+            "last_draw_bd": {
+                "date": last_draw.get('date') if last_draw else None,
+                "numbers": sorted(last_draw.get('numbers', [])) if last_draw else [],
+                "lucky": last_draw.get('lucky_number') if last_draw else None,
+                "replay": last_draw.get('replay_number') if last_draw else None,
+            },
+            "tickets": tickets,
+            "whatif_broken_core": whatif,
+        }
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
 # Include the router in the main app
 app.include_router(api_router)
 
