@@ -5148,35 +5148,33 @@ async def get_hit_tracker(last_draws: int = 3, limit: int = 100):
         if i > 0:
             bd_map[d['date']] = sorted_all[i-1]['date']
 
+    # Precompute (draw-time datetime, date-string) once — reused by both helpers
+    import bisect
+    _dates_dt19 = [parse_d(ds).replace(hour=19) for ds in sorted_date_strs]
+
     def _gen_window_bd(generated_at: str) -> Optional[str]:
-        """Last Swiss draw strictly BEFORE generated_at (draw ~19 UTC on date)."""
-        if not generated_at or not sorted_date_strs:
+        """Last Swiss draw strictly BEFORE generated_at (draw ~19:00 UTC)."""
+        if not generated_at or not _dates_dt19:
             return None
         try:
             gen_dt = dt_cls.fromisoformat(generated_at.replace('Z','+00:00')).replace(tzinfo=None)
         except Exception:
             return None
-        last = None
-        for ds in sorted_date_strs:
-            dd = parse_d(ds).replace(hour=19)
-            if dd < gen_dt:
-                last = ds
-            else:
-                break
-        return last
+        # bisect: find rightmost date < gen_dt
+        idx = bisect.bisect_left(_dates_dt19, gen_dt)
+        return sorted_date_strs[idx - 1] if idx > 0 else None
 
     def _true_target(generated_at: str) -> Optional[str]:
-        """First Swiss draw whose draw-time (19h UTC) is AFTER generated_at."""
-        if not generated_at or not sorted_date_strs:
+        """First Swiss draw whose draw-time (19 UTC) is AFTER generated_at."""
+        if not generated_at or not _dates_dt19:
             return None
         try:
             gen_dt = dt_cls.fromisoformat(generated_at.replace('Z','+00:00')).replace(tzinfo=None)
         except Exception:
             return None
-        for ds in sorted_date_strs:
-            if parse_d(ds).replace(hour=19) > gen_dt:
-                return ds
-        return None
+        # bisect: find leftmost date > gen_dt
+        idx = bisect.bisect_right(_dates_dt19, gen_dt)
+        return sorted_date_strs[idx] if idx < len(sorted_date_strs) else None
     
     results = []
     
@@ -5558,26 +5556,21 @@ async def get_tickets_archive(
     # Sorted draw-date lists for "find the draw BEFORE generated_at" lookup
     swiss_dates_sorted = sorted(swiss_by_date.keys(), key=parse_d)
     euro_dates_sorted = sorted(euro_by_date.keys(), key=parse_d)
+    import bisect
+    _swiss_dt19 = [parse_d(ds).replace(hour=19) for ds in swiss_dates_sorted]
+    _euro_dt19 = [parse_d(ds).replace(hour=19) for ds in euro_dates_sorted]
 
     def _gen_window_bd(generated_at: str, dates_sorted: list) -> Optional[str]:
-        """Last draw strictly BEFORE generated_at (draws occur ~19:00 UTC on their date)."""
+        """Last draw strictly BEFORE generated_at (draws ~19:00 UTC)."""
         if not generated_at or not dates_sorted:
             return None
         try:
             gen_dt = dtc.fromisoformat(generated_at.replace('Z', '+00:00')).replace(tzinfo=None)
         except Exception:
             return None
-        last = None
-        for d in dates_sorted:
-            try:
-                dd = parse_d(d).replace(hour=19)  # draw happens ~19:00 UTC on date d
-                if dd < gen_dt:
-                    last = d
-                else:
-                    break
-            except Exception:
-                continue
-        return last
+        dt_arr = _swiss_dt19 if dates_sorted is swiss_dates_sorted else _euro_dt19
+        idx = bisect.bisect_left(dt_arr, gen_dt)
+        return dates_sorted[idx - 1] if idx > 0 else None
 
     def _true_target(generated_at: str, dates_sorted: list) -> Optional[str]:
         """First draw whose draw-time is AFTER generated_at — ticket's real target."""
@@ -5587,14 +5580,9 @@ async def get_tickets_archive(
             gen_dt = dtc.fromisoformat(generated_at.replace('Z', '+00:00')).replace(tzinfo=None)
         except Exception:
             return None
-        for d in dates_sorted:
-            try:
-                dd = parse_d(d).replace(hour=19)
-                if dd > gen_dt:
-                    return d
-            except Exception:
-                continue
-        return None  # generated after the most recent draw — still pending
+        dt_arr = _swiss_dt19 if dates_sorted is swiss_dates_sorted else _euro_dt19
+        idx = bisect.bisect_right(dt_arr, gen_dt)
+        return dates_sorted[idx] if idx < len(dates_sorted) else None
 
     # --- SWISS ---
     if mode in ("swiss", "all"):

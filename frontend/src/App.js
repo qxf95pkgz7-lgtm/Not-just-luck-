@@ -692,18 +692,21 @@ function App() {
     setHitTrackerLoading(true);
     try {
       if (lotteryMode === 'euro') {
-        const res = await axios.get(`${API}/euromillions/generation-history?limit=30`);
+        const res = await axios.get(`${API}/euromillions/generation-history?limit=30`, { timeout: 20000 });
         setGenerationHistory(res.data.generations || []);
         setPerDrawStats(res.data.per_draw_stats || []);
       } else {
         // Use the new clean hit-tracker endpoint for Swiss
-        const res = await axios.get(`${API}/hit-tracker?last_draws=3&limit=100`);
+        const res = await axios.get(`${API}/hit-tracker?last_draws=3&limit=100`, { timeout: 20000 });
         setGenerationHistory(res.data.results || []);
         setLastDraw(res.data.last_draws?.[0] || null);
         setPerDrawStats(res.data.per_draw_stats || []);
       }
     } catch (e) {
       console.error("Error fetching generation history:", e);
+      // graceful fallback so "Loading..." never sticks forever
+      setGenerationHistory([]);
+      setPerDrawStats([]);
     } finally {
       setHitTrackerLoading(false);
     }
