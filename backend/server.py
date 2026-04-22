@@ -5149,7 +5149,7 @@ async def get_hit_tracker(last_draws: int = 3, limit: int = 100):
             bd_map[d['date']] = sorted_all[i-1]['date']
 
     def _gen_window_bd(generated_at: str) -> Optional[str]:
-        """Find the last Swiss draw date strictly BEFORE generated_at timestamp."""
+        """Last Swiss draw strictly BEFORE generated_at (draw ~19 UTC on date)."""
         if not generated_at or not sorted_date_strs:
             return None
         try:
@@ -5158,11 +5158,25 @@ async def get_hit_tracker(last_draws: int = 3, limit: int = 100):
             return None
         last = None
         for ds in sorted_date_strs:
-            if parse_d(ds) < gen_dt:
+            dd = parse_d(ds).replace(hour=19)
+            if dd < gen_dt:
                 last = ds
             else:
                 break
         return last
+
+    def _true_target(generated_at: str) -> Optional[str]:
+        """First Swiss draw whose draw-time (19h UTC) is AFTER generated_at."""
+        if not generated_at or not sorted_date_strs:
+            return None
+        try:
+            gen_dt = dt_cls.fromisoformat(generated_at.replace('Z','+00:00')).replace(tzinfo=None)
+        except Exception:
+            return None
+        for ds in sorted_date_strs:
+            if parse_d(ds).replace(hour=19) > gen_dt:
+                return ds
+        return None
     
     results = []
     
@@ -5174,15 +5188,19 @@ async def get_hit_tracker(last_draws: int = 3, limit: int = 100):
         "generated_at": 1, "visitor_id": 1,
     }).to_list(5000)
 
-    # Sort by generated_at so ticket_num is chronological per target_date
-    gens_by_target = {}
+    # REGROUP by TRUE target (first draw after generated_at), not saved target_date
+    # This is what DJ asked: tickets generated before last draw don't count for next draw
+    gens_by_true_target: dict = {}
     for gen in swiss_gens:
-        td = gen.get('target_date', '')
-        gens_by_target.setdefault(td, []).append(gen)
-    for td in gens_by_target:
-        gens_by_target[td].sort(key=lambda g: g.get('generated_at', ''))
+        ga = gen.get('generated_at', '')
+        true_td = _true_target(ga)
+        if not true_td:
+            continue
+        gens_by_true_target.setdefault(true_td, []).append(gen)
+    for td in gens_by_true_target:
+        gens_by_true_target[td].sort(key=lambda g: g.get('generated_at', ''))
     
-    for td in gens_by_target:
+    for td in gens_by_true_target:
         if td not in last_n_dates:
             continue
         actual = next((d for d in last_n_draws if d['date'] == td), None)
@@ -5191,44 +5209,33 @@ async def get_hit_tracker(last_draws: int = 3, limit: int = 100):
         actual_nums = set(actual.get('numbers', []))
         actual_lucky = actual.get('lucky_number')
         bd_date = bd_map.get(td)
-        bd_dt = parse_d(bd_date) if bd_date else None
+        bd_dt = parse_d(bd_date).replace(hour=19) if bd_date else None
         tgt_dt = parse_d(td)
 
         global_ticket_num = 0
-        for gen in gens_by_target[td]:
-            # Auto-calculate hits if not done
-            if not gen.get('hits_calculated', False):
-                hit_results = []
-                for i, ticket in enumerate(gen.get('tickets', [])):
-                    t_nums = set(ticket.get('numbers', []))
-                    hits = t_nums & actual_nums
-                    lucky_hit = ticket.get('lucky') == actual_lucky or ticket.get('lucky_number') == actual_lucky
-                    hit_results.append({
-                        "ticket_num": i + 1,
-                        "hits": sorted(hits),
-                        "hit_count": len(hits),
-                        "lucky_hit": lucky_hit,
-                    })
-                await db.generations.update_one(
-                    {"_id": gen["_id"]},
-                    {"$set": {"hits_calculated": True, "hit_results": hit_results}}
-                )
-                gen["hit_results"] = hit_results
+        for gen in gens_by_true_target[td]:
+            # Recalculate hits vs the TRUE target's actual draw (ignore stale hits_calculated)
+            hr = []
+            for i, ticket in enumerate(gen.get('tickets', [])):
+                t_nums = set(ticket.get('numbers', []))
+                hits_set = t_nums & actual_nums
+                lucky_hit = (ticket.get('lucky') == actual_lucky or
+                             ticket.get('lucky_number') == actual_lucky)
+                hr.append({
+                    "ticket_num": i + 1,
+                    "hits": sorted(hits_set),
+                    "hit_count": len(hits_set),
+                    "lucky_hit": lucky_hit,
+                })
 
-            hr = gen.get('hit_results', [])
             gen_at = gen.get('generated_at', '')
             visitor_id = gen.get('visitor_id') or ''
             for i, ticket in enumerate(gen.get('tickets', [])):
                 global_ticket_num += 1
                 t_nums = set(ticket.get('numbers', []))
-                if i < len(hr) and hr[i]:
-                    hit_count = hr[i].get('hit_count', 0)
-                    hits = hr[i].get('hits', [])
-                    lucky_hit = hr[i].get('lucky_hit', False)
-                else:
-                    hits = sorted(t_nums & actual_nums)
-                    hit_count = len(hits)
-                    lucky_hit = ticket.get('lucky') == actual_lucky or ticket.get('lucky_number') == actual_lucky
+                hit_count = hr[i]['hit_count']
+                hits = hr[i]['hits']
+                lucky_hit = hr[i]['lucky_hit']
 
                 total_match = hit_count + (1 if lucky_hit else 0)
                 if total_match >= 2:
@@ -5276,47 +5283,52 @@ async def get_hit_tracker(last_draws: int = 3, limit: int = 100):
         pred_nums = set(pred.get('numbers', []))
         pred_lucky = pred.get('lucky_number')
         created = pred.get('created_at', '') or pred.get('generated_at', '')
-        for draw in last_n_draws:
-            actual_nums = set(draw.get('numbers', []))
-            hits = pred_nums & actual_nums
-            actual_lucky = draw.get('lucky_number')
-            lucky_hit = pred_lucky == actual_lucky
-            total_match = len(hits) + (1 if lucky_hit else 0)
-            if total_match >= 2:
-                td = draw['date']
-                pred_seq[td] = pred_seq.get(td, 0) + 1
-                bd_date = bd_map.get(td)
-                bd_dt = parse_d(bd_date) if bd_date else None
-                days_from_bd = None
-                if bd_dt and created:
-                    try:
-                        gen_dt = dt_cls.fromisoformat(created.replace('Z','+00:00'))
-                        days_from_bd = round((gen_dt.replace(tzinfo=None) - bd_dt).total_seconds() / 86400, 2)
-                    except Exception:
-                        pass
-                real_bd = _gen_window_bd(created) or bd_date
-                results.append({
-                    "lottery": "swiss",
-                    "target_date": td,
-                    "bd_date": bd_date,
-                    "gen_bd": real_bd,
-                    "window_label": f"{real_bd} → {td}" if real_bd else td,
-                    "ticket_num": pred_seq[td],
-                    "generated_at": created,
-                    "days_from_bd": days_from_bd,
-                    "visitor_id": pred.get('visitor_id', ''),
-                    "numbers": sorted(pred.get('numbers', [])),
-                    "lucky": pred_lucky,
-                    "story": "master-predictor",
-                    "generation_type": "master-predictor",
-                    "hit_count": len(hits),
-                    "hits": sorted(hits),
-                    "lucky_hit": lucky_hit,
-                    "total_match": total_match,
-                    "actual_numbers": sorted(actual_nums),
-                    "actual_lucky": actual_lucky,
-                })
-                break  # Only match to best draw
+        # TRUE target = first Swiss draw after creation
+        true_td = _true_target(created)
+        if not true_td or true_td not in last_n_dates:
+            continue
+        draw = next((d for d in last_n_draws if d['date'] == true_td), None)
+        if not draw:
+            continue
+        actual_nums = set(draw.get('numbers', []))
+        actual_lucky = draw.get('lucky_number')
+        hits = pred_nums & actual_nums
+        lucky_hit = pred_lucky == actual_lucky
+        total_match = len(hits) + (1 if lucky_hit else 0)
+        if total_match >= 2:
+            td = draw['date']
+            pred_seq[td] = pred_seq.get(td, 0) + 1
+            bd_date = bd_map.get(td)
+            bd_dt = parse_d(bd_date).replace(hour=19) if bd_date else None
+            days_from_bd = None
+            if bd_dt and created:
+                try:
+                    gen_dt = dt_cls.fromisoformat(created.replace('Z','+00:00'))
+                    days_from_bd = round((gen_dt.replace(tzinfo=None) - bd_dt).total_seconds() / 86400, 2)
+                except Exception:
+                    pass
+            real_bd = _gen_window_bd(created) or bd_date
+            results.append({
+                "lottery": "swiss",
+                "target_date": td,
+                "bd_date": bd_date,
+                "gen_bd": real_bd,
+                "window_label": f"{real_bd} → {td}" if real_bd else td,
+                "ticket_num": pred_seq[td],
+                "generated_at": created,
+                "days_from_bd": days_from_bd,
+                "visitor_id": pred.get('visitor_id', ''),
+                "numbers": sorted(pred.get('numbers', [])),
+                "lucky": pred_lucky,
+                "story": "master-predictor",
+                "generation_type": "master-predictor",
+                "hit_count": len(hits),
+                "hits": sorted(hits),
+                "lucky_hit": lucky_hit,
+                "total_match": total_match,
+                "actual_numbers": sorted(actual_nums),
+                "actual_lucky": actual_lucky,
+            })
     
     # Sort: by date (latest draw first), then highest total_match, then hit_count
     results.sort(key=lambda r: (
@@ -5345,6 +5357,7 @@ async def get_hit_tracker(last_draws: int = 3, limit: int = 100):
         actual_nums = set(d.get('numbers', []))
         actual_lucky = d.get('lucky_number')
         bd_date = bd_map.get(td)
+        bd_dt = parse_d(bd_date).replace(hour=19) if bd_date else None
 
         total_generated = 0
         hits_2plus = 0
@@ -5354,19 +5367,24 @@ async def get_hit_tracker(last_draws: int = 3, limit: int = 100):
         best_total_match = 0
         best_ticket_info = None
 
-        gens_for_draw = [g for g in swiss_gens if g.get('target_date') == td]
+        # ONLY tickets whose TRUE target equals this draw (generated after BD)
+        gens_for_draw = gens_by_true_target.get(td, [])
+        # Filter to only in-window tickets (sanity: generated_at > BD of this draw)
         for g in gens_for_draw:
+            ga = g.get('generated_at', '')
+            # Extra filter: must be generated AFTER the BD of this draw
+            if bd_dt and ga:
+                try:
+                    if dt_cls.fromisoformat(ga.replace('Z','+00:00')).replace(tzinfo=None) <= bd_dt:
+                        continue
+                except Exception:
+                    pass
             tickets = g.get('tickets', [])
-            hr = g.get('hit_results', [])
             for i, t in enumerate(tickets):
                 total_generated += 1
                 t_nums = set(t.get('numbers', []))
-                if i < len(hr) and hr[i]:
-                    hc = hr[i].get('hit_count', 0)
-                    lh = hr[i].get('lucky_hit', False)
-                else:
-                    hc = len(t_nums & actual_nums)
-                    lh = t.get('lucky') == actual_lucky or t.get('lucky_number') == actual_lucky
+                hc = len(t_nums & actual_nums)
+                lh = t.get('lucky') == actual_lucky or t.get('lucky_number') == actual_lucky
                 tm = hc + (1 if lh else 0)
                 if tm >= 2: hits_2plus += 1
                 if tm >= 3: hits_3plus += 1
@@ -5392,9 +5410,17 @@ async def get_hit_tracker(last_draws: int = 3, limit: int = 100):
                         "hits": sorted(t_nums & actual_nums),
                     }
 
-        # Count from prediction_history too
-        preds_for_draw = [p for p in swiss_preds if p.get('target_draw_date') == td]
-        for p in preds_for_draw:
+        # Count from prediction_history — ONLY if TRUE target == this draw
+        for p in swiss_preds:
+            ga = p.get('created_at', '') or p.get('generated_at', '')
+            if _true_target(ga) != td:
+                continue
+            if bd_dt and ga:
+                try:
+                    if dt_cls.fromisoformat(ga.replace('Z','+00:00')).replace(tzinfo=None) <= bd_dt:
+                        continue
+                except Exception:
+                    pass
             total_generated += 1
             p_nums = set(p.get('numbers', []))
             hc = len(p_nums & actual_nums)
@@ -5404,7 +5430,7 @@ async def get_hit_tracker(last_draws: int = 3, limit: int = 100):
             if tm >= 3: hits_3plus += 1
             if tm >= 4: hits_4plus += 1
             if hc > best_hit: best_hit = hc
-            if tm > best_total_match:
+            if (tm, hc) > (best_total_match, best_ticket_info.get('hit_count', -1) if best_ticket_info else -1):
                 best_total_match = tm
                 best_ticket_info = {
                     "ticket_num_in_window": total_generated,
@@ -5413,13 +5439,13 @@ async def get_hit_tracker(last_draws: int = 3, limit: int = 100):
                     "hit_count": hc,
                     "lucky_hit": lh,
                     "total_match": tm,
-                    "generated_at": p.get('created_at', '') or p.get('generated_at', ''),
+                    "generated_at": ga,
                     "generation_type": "master-predictor",
                     "visitor_id": p.get('visitor_id', ''),
                     "nickname": _lucky_nickname(
                         p.get('visitor_id', ''),
                         total_generated,
-                        p.get('created_at', '') or p.get('generated_at', ''),
+                        ga,
                     ),
                     "hits": sorted(p_nums & actual_nums),
                 }
@@ -5534,7 +5560,7 @@ async def get_tickets_archive(
     euro_dates_sorted = sorted(euro_by_date.keys(), key=parse_d)
 
     def _gen_window_bd(generated_at: str, dates_sorted: list) -> Optional[str]:
-        """Find the last draw date strictly BEFORE the generated_at timestamp."""
+        """Last draw strictly BEFORE generated_at (draws occur ~19:00 UTC on their date)."""
         if not generated_at or not dates_sorted:
             return None
         try:
@@ -5544,7 +5570,7 @@ async def get_tickets_archive(
         last = None
         for d in dates_sorted:
             try:
-                dd = parse_d(d)
+                dd = parse_d(d).replace(hour=19)  # draw happens ~19:00 UTC on date d
                 if dd < gen_dt:
                     last = d
                 else:
@@ -5553,25 +5579,43 @@ async def get_tickets_archive(
                 continue
         return last
 
+    def _true_target(generated_at: str, dates_sorted: list) -> Optional[str]:
+        """First draw whose draw-time is AFTER generated_at — ticket's real target."""
+        if not generated_at or not dates_sorted:
+            return None
+        try:
+            gen_dt = dtc.fromisoformat(generated_at.replace('Z', '+00:00')).replace(tzinfo=None)
+        except Exception:
+            return None
+        for d in dates_sorted:
+            try:
+                dd = parse_d(d).replace(hour=19)
+                if dd > gen_dt:
+                    return d
+            except Exception:
+                continue
+        return None  # generated after the most recent draw — still pending
+
     # --- SWISS ---
     if mode in ("swiss", "all"):
         q: dict = {}
-        if target_date:
-            q["target_date"] = target_date
-        cursor = db.generations.find(q, {
+        # if target_date filter is set, interpret as TRUE target filter
+        want_target = target_date
+        cursor = db.generations.find({}, {
             "_id": 0, "tickets": 1, "target_date": 1, "generated_at": 1,
             "generation_type": 1, "visitor_id": 1,
         })
         async for g in cursor:
-            td = g.get("target_date", "")
             ga = g.get("generated_at", "")
             if from_date and ga < from_date: continue
             if to_date and ga > to_date: continue
-            actual = swiss_by_date.get(td)
+            # TRUE target = first Swiss draw after generated_at
+            true_td = _true_target(ga, swiss_dates_sorted)
+            if want_target and true_td != want_target: continue
+            saved_td = g.get("target_date", "")
+            actual = swiss_by_date.get(true_td) if true_td else None
             actual_nums = set(actual.get('numbers', [])) if actual else set()
             actual_lucky = actual.get('lucky_number') if actual else None
-            bd_date = swiss_bd.get(td)
-            # REAL window: find the Swiss draw immediately before the ticket was generated
             real_bd = _gen_window_bd(ga, swiss_dates_sorted)
             for t in g.get("tickets", []):
                 nums = sorted(t.get("numbers", []))
@@ -5583,10 +5627,11 @@ async def get_tickets_archive(
                 if total_match < min_hits: continue
                 tickets_out.append({
                     "mode": "swiss",
-                    "target_date": td,
-                    "bd_date": bd_date,
+                    "target_date": true_td or saved_td,   # TRUE target for scoring
+                    "saved_target_date": saved_td,
+                    "bd_date": real_bd,
                     "gen_bd": real_bd,
-                    "window_label": f"{real_bd} → {td}" if real_bd else td,
+                    "window_label": f"{real_bd} → {true_td}" if real_bd and true_td else (true_td or saved_td),
                     "generated_at": ga,
                     "generation_type": g.get("generation_type", "story"),
                     "visitor_id": g.get("visitor_id") or "",
@@ -5602,18 +5647,16 @@ async def get_tickets_archive(
                 })
 
         # ALSO include prediction_history (master-predictor)
-        pred_q: dict = {"lottery_type": "swiss"}
-        if target_date:
-            pred_q["target_draw_date"] = target_date
-        async for p in db.prediction_history.find(pred_q, {"_id": 0}):
+        async for p in db.prediction_history.find({"lottery_type": "swiss"}, {"_id": 0}):
             ga = p.get("created_at") or p.get("generated_at") or ""
             if from_date and ga < from_date: continue
             if to_date and ga > to_date: continue
-            td = p.get("target_draw_date", "")
-            actual = swiss_by_date.get(td)
+            true_td = _true_target(ga, swiss_dates_sorted)
+            if want_target and true_td != want_target: continue
+            saved_td = p.get("target_draw_date", "")
+            actual = swiss_by_date.get(true_td) if true_td else None
             actual_nums = set(actual.get('numbers', [])) if actual else set()
             actual_lucky = actual.get('lucky_number') if actual else None
-            bd_date = swiss_bd.get(td)
             real_bd = _gen_window_bd(ga, swiss_dates_sorted)
             nums = sorted(p.get("numbers", []))
             if len(nums) != 6: continue
@@ -5624,10 +5667,11 @@ async def get_tickets_archive(
             if total_match < min_hits: continue
             tickets_out.append({
                 "mode": "swiss",
-                "target_date": td,
-                "bd_date": bd_date,
+                "target_date": true_td or saved_td,
+                "saved_target_date": saved_td,
+                "bd_date": real_bd,
                 "gen_bd": real_bd,
-                "window_label": f"{real_bd} → {td}" if real_bd else td,
+                "window_label": f"{real_bd} → {true_td}" if real_bd and true_td else (true_td or saved_td),
                 "generated_at": ga,
                 "generation_type": "master-predictor",
                 "visitor_id": p.get("visitor_id") or "",
@@ -5644,22 +5688,21 @@ async def get_tickets_archive(
 
     # --- EURO ---
     if mode in ("euro", "all"):
-        q = {}
-        if target_date:
-            q["target_date"] = target_date
-        cursor = db.euromillions_generations.find(q, {
+        want_target = target_date
+        cursor = db.euromillions_generations.find({}, {
             "_id": 0, "tickets": 1, "target_date": 1, "generated_at": 1,
             "mode": 1, "visitor_id": 1,
         })
         async for g in cursor:
-            td = g.get("target_date", "")
             ga = g.get("generated_at", "")
             if from_date and ga < from_date: continue
             if to_date and ga > to_date: continue
-            actual = euro_by_date.get(td)
+            true_td = _true_target(ga, euro_dates_sorted)
+            if want_target and true_td != want_target: continue
+            saved_td = g.get("target_date", "")
+            actual = euro_by_date.get(true_td) if true_td else None
             actual_nums = set(actual.get('numbers', [])) if actual else set()
             actual_stars = set(actual.get('stars', [])) if actual else set()
-            bd_date = euro_bd.get(td)
             real_bd = _gen_window_bd(ga, euro_dates_sorted)
             for t in g.get("tickets", []):
                 nums = sorted(t.get("numbers", []))
@@ -5671,10 +5714,11 @@ async def get_tickets_archive(
                 if total_match < min_hits: continue
                 tickets_out.append({
                     "mode": "euro",
-                    "target_date": td,
-                    "bd_date": bd_date,
+                    "target_date": true_td or saved_td,
+                    "saved_target_date": saved_td,
+                    "bd_date": real_bd,
                     "gen_bd": real_bd,
-                    "window_label": f"{real_bd} → {td}" if real_bd else td,
+                    "window_label": f"{real_bd} → {true_td}" if real_bd and true_td else (true_td or saved_td),
                     "generated_at": ga,
                     "generation_type": g.get("mode", "story"),
                     "visitor_id": g.get("visitor_id") or "",
@@ -5764,22 +5808,63 @@ async def get_tickets_archive(
 
 @api_router.get("/tickets-archive/dates")
 async def get_archive_date_index(mode: str = "swiss"):
-    """List all target_dates that have generations, with counts. Used for
-    archive navigation (DJ can pick a draw to drill into)."""
-    out = []
-    if mode in ("swiss", "all"):
-        pipeline = [{"$group": {"_id": "$target_date", "count": {"$sum": {"$size": "$tickets"}}}}]
-        async for row in db.generations.aggregate(pipeline):
-            out.append({"mode": "swiss", "target_date": row["_id"], "count": row["count"]})
-    if mode in ("euro", "all"):
-        pipeline = [{"$group": {"_id": "$target_date", "count": {"$sum": {"$size": "$tickets"}}}}]
-        async for row in db.euromillions_generations.aggregate(pipeline):
-            out.append({"mode": "euro", "target_date": row["_id"], "count": row["count"]})
+    """List all target_dates (by TRUE target = first draw after generation)
+    that have generations, with counts. Used for archive navigation."""
     from datetime import datetime as dtc
-    def pk(row):
-        try: return dtc.strptime(row["target_date"], '%d.%m.%Y')
+
+    def parse_d(s):
+        try: return dtc.strptime(s, '%d.%m.%Y')
         except: return dtc.min
-    out.sort(key=pk, reverse=True)
+
+    # Load draw dates to compute TRUE target
+    def _find_true_target(ga, dates_sorted):
+        if not ga or not dates_sorted:
+            return None
+        try:
+            gen_dt = dtc.fromisoformat(ga.replace('Z', '+00:00')).replace(tzinfo=None)
+        except Exception:
+            return None
+        for d in dates_sorted:
+            if parse_d(d).replace(hour=19) > gen_dt:
+                return d
+        return None
+
+    from collections import Counter
+    out_counts: dict = {}
+
+    if mode in ("swiss", "all"):
+        swiss_dates = sorted(
+            [d['date'] async for d in db.draws.find({}, {'_id': 0, 'date': 1}) if d.get('date')],
+            key=parse_d,
+        )
+        async for g in db.generations.find({}, {'_id': 0, 'tickets': 1, 'generated_at': 1}):
+            ga = g.get('generated_at', '')
+            true_td = _find_true_target(ga, swiss_dates)
+            if not true_td: continue
+            key = ('swiss', true_td)
+            out_counts[key] = out_counts.get(key, 0) + len(g.get('tickets', []))
+        async for p in db.prediction_history.find({'lottery_type': 'swiss'}, {'_id': 0, 'created_at': 1, 'generated_at': 1}):
+            ga = p.get('created_at') or p.get('generated_at') or ''
+            true_td = _find_true_target(ga, swiss_dates)
+            if not true_td: continue
+            key = ('swiss', true_td)
+            out_counts[key] = out_counts.get(key, 0) + 1
+
+    if mode in ("euro", "all"):
+        euro_dates = sorted(
+            [d['date'] async for d in db.euromillions_draws.find({}, {'_id': 0, 'date': 1}) if d.get('date')],
+            key=parse_d,
+        )
+        async for g in db.euromillions_generations.find({}, {'_id': 0, 'tickets': 1, 'generated_at': 1}):
+            ga = g.get('generated_at', '')
+            true_td = _find_true_target(ga, euro_dates)
+            if not true_td: continue
+            key = ('euro', true_td)
+            out_counts[key] = out_counts.get(key, 0) + len(g.get('tickets', []))
+
+    out = [{'mode': m, 'target_date': td, 'count': c}
+           for (m, td), c in out_counts.items()]
+    out.sort(key=lambda r: parse_d(r['target_date']), reverse=True)
     return {"mode": mode, "total_dates": len(out), "dates": out}
 
 

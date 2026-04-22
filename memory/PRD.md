@@ -224,28 +224,22 @@ and become the additive conductor (all other mains ± 28 → HUGE or silent echo
 ### Code shipped this session
 - `/app/backend/swiss_cosmic_engine.py` — **NEW** full native Swiss engine (657 lines, 40+ laws)
 - Endpoints: `POST /api/swiss-cosmic-engine` · `GET /api/swiss-cosmic-engine/{date}`
-- Enhanced `/api/hit-tracker` with:
-  - Draw-to-draw window labels (BD → target)
-  - Per-ticket `generated_at`, `days_from_bd`, sequential `ticket_num`
-  - Filter includes 🍀 in the "2+ matches" threshold (was mains-only)
-  - Best-ticket inline with nickname + timestamp + type
-  - Lucky-Jack nicknames generator (`_lucky_nickname`)
-  - Limit configurable (default 100, was 20)
+- Enhanced `/api/hit-tracker` with TRUE-target regrouping:
+  - **Every ticket evaluated vs the FIRST Swiss draw after its generated_at** (not the saved target_date)
+  - Draw time treated as 19:00 UTC (Swiss draws fire ~19:30 local)
+  - Pre-BD tickets don't pollute later draws' stats
+  - Filter includes 🍀 in "2+ matches" threshold
+  - Best-ticket inline with nickname + timestamp + type + days_from_bd
+  - Lucky-Jack nicknames generator
+  - Limit configurable (default 100, up from 20)
 - Frontend: Per-Draw Pulse row enhanced with window_label, 4+ counter, best-ticket card
-- **NEW archive endpoints** (every ticket ever generated, with timestamp + hit status):
-  - `GET /api/tickets-archive` — all tickets (swiss/euro/all), filters: target_date,
-    from_date, to_date, limit, offset, min_hits, group_by_date. Deduped across
-    generations + prediction_history. Includes Lucky-Jack nickname, window_label,
-    draw_known, hits, star_hits, total_match per ticket.
-  - `GET /api/tickets-archive/dates` — list of every target_date with ticket counts.
-- Frontend: Per-Draw Pulse rows now expose a "📦 Show all N tickets" toggle that
-  lazy-loads the full archive for that draw date with generation time stamps +
-  hit highlighting.
-
-### Archive live data (at save-time 22.04.2026 21:25 UTC)
-- Swiss tickets archived: **725** across 6 target dates (oldest 28.03.2026)
-- Euro tickets archived: **574** across 5 target dates
-- Total archive dates: **11**
+- **Archive endpoints** (every ticket with real generation time + TRUE-target scoring):
+  - `GET /api/tickets-archive` — all tickets (swiss/euro/all), TRUE-target scoring,
+    filters: target_date (TRUE), from_date, to_date, limit, offset, min_hits,
+    group_by_date. Deduped across generations + prediction_history.
+  - `GET /api/tickets-archive/dates` — list of TRUE-target dates with counts.
+- Frontend: Per-Draw Pulse rows expose "📦 Show all N tickets" toggle that
+  lazy-loads the full archive for that draw date.
 
 ### Tonight's Lucky Jack (best ticket in the app)
 ```
