@@ -232,6 +232,20 @@ and become the additive conductor (all other mains ± 28 → HUGE or silent echo
   - Lucky-Jack nicknames generator (`_lucky_nickname`)
   - Limit configurable (default 100, was 20)
 - Frontend: Per-Draw Pulse row enhanced with window_label, 4+ counter, best-ticket card
+- **NEW archive endpoints** (every ticket ever generated, with timestamp + hit status):
+  - `GET /api/tickets-archive` — all tickets (swiss/euro/all), filters: target_date,
+    from_date, to_date, limit, offset, min_hits, group_by_date. Deduped across
+    generations + prediction_history. Includes Lucky-Jack nickname, window_label,
+    draw_known, hits, star_hits, total_match per ticket.
+  - `GET /api/tickets-archive/dates` — list of every target_date with ticket counts.
+- Frontend: Per-Draw Pulse rows now expose a "📦 Show all N tickets" toggle that
+  lazy-loads the full archive for that draw date with generation time stamps +
+  hit highlighting.
+
+### Archive live data (at save-time 22.04.2026 21:25 UTC)
+- Swiss tickets archived: **725** across 6 target dates (oldest 28.03.2026)
+- Euro tickets archived: **574** across 5 target dates
+- Total archive dates: **11**
 
 ### Tonight's Lucky Jack (best ticket in the app)
 ```

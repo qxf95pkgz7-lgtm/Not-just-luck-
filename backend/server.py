@@ -5454,6 +5454,282 @@ def _lucky_nickname(visitor_id: str, ticket_num: int, generated_at: str) -> str:
     return f"{tag}-Jack-{hour_label}-#{ticket_num}"
 
 
+@api_router.get("/tickets-archive")
+async def get_tickets_archive(
+    mode: str = "swiss",
+    target_date: Optional[str] = None,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+    limit: int = 500,
+    offset: int = 0,
+    min_hits: int = 0,
+    group_by_date: bool = False,
+):
+    """
+    🎻 FULL ARCHIVE — every ticket ever generated, with generated_at timestamp,
+    target_date, hit status (when draw known), and Lucky-Jack nickname.
+
+    Filters:
+      · mode: 'swiss' | 'euro' | 'all'
+      · target_date: exact dd.mm.yyyy match
+      · from_date / to_date: filter by ticket generated_at (ISO)
+      · min_hits: only return tickets with ≥ N total matches
+      · group_by_date: if true, return grouped {target_date: [tickets]}
+
+    Returns: list of tickets sorted by generated_at desc, with:
+      ticket_num_global · target_date · generated_at · generation_type ·
+      numbers · lucky/stars/replay · hits · lucky_hit · total_match ·
+      nickname · visitor_id · archive_window (BD → target when draw known)
+    """
+    from datetime import datetime as dtc
+
+    def parse_d(s):
+        try: return dtc.strptime(s, '%d.%m.%Y')
+        except: return dtc.min
+
+    # Build ticket list from both Swiss and Euro collections
+    tickets_out: List[dict] = []
+
+    # Map target_date -> actual draw (for hit calc)
+    swiss_draws = await db.draws.find({}, {"_id": 0}).to_list(5000)
+    swiss_by_date = {d['date']: d for d in swiss_draws if d.get('date')}
+    euro_draws = await db.euromillions_draws.find({}, {"_id": 0}).to_list(5000)
+    euro_by_date = {d['date']: d for d in euro_draws if d.get('date')}
+
+    # BD map (previous draw date) per mode
+    def build_bd(by_date):
+        sorted_keys = sorted(by_date.keys(), key=parse_d)
+        bd = {}
+        for i, dt_key in enumerate(sorted_keys):
+            if i > 0:
+                bd[dt_key] = sorted_keys[i-1]
+        return bd
+    swiss_bd = build_bd(swiss_by_date)
+    euro_bd = build_bd(euro_by_date)
+
+    # --- SWISS ---
+    if mode in ("swiss", "all"):
+        q: dict = {}
+        if target_date:
+            q["target_date"] = target_date
+        cursor = db.generations.find(q, {
+            "_id": 0, "tickets": 1, "target_date": 1, "generated_at": 1,
+            "generation_type": 1, "visitor_id": 1,
+        })
+        async for g in cursor:
+            td = g.get("target_date", "")
+            ga = g.get("generated_at", "")
+            if from_date and ga < from_date: continue
+            if to_date and ga > to_date: continue
+            actual = swiss_by_date.get(td)
+            actual_nums = set(actual.get('numbers', [])) if actual else set()
+            actual_lucky = actual.get('lucky_number') if actual else None
+            bd_date = swiss_bd.get(td)
+            for t in g.get("tickets", []):
+                nums = sorted(t.get("numbers", []))
+                if len(nums) != 6: continue
+                lucky = t.get("lucky") or t.get("lucky_number")
+                hits = sorted(set(nums) & actual_nums) if actual else []
+                lucky_hit = (lucky == actual_lucky) if actual else False
+                total_match = len(hits) + (1 if lucky_hit else 0)
+                if total_match < min_hits: continue
+                tickets_out.append({
+                    "mode": "swiss",
+                    "target_date": td,
+                    "bd_date": bd_date,
+                    "window_label": f"{bd_date} → {td}" if bd_date else td,
+                    "generated_at": ga,
+                    "generation_type": g.get("generation_type", "story"),
+                    "visitor_id": g.get("visitor_id") or "",
+                    "numbers": nums,
+                    "lucky": lucky,
+                    "story": t.get("story", ""),
+                    "hits": hits,
+                    "lucky_hit": lucky_hit,
+                    "total_match": total_match,
+                    "draw_known": actual is not None,
+                    "actual_numbers": sorted(actual_nums) if actual else None,
+                    "actual_lucky": actual_lucky,
+                })
+
+        # ALSO include prediction_history (master-predictor)
+        pred_q: dict = {"lottery_type": "swiss"}
+        if target_date:
+            pred_q["target_draw_date"] = target_date
+        async for p in db.prediction_history.find(pred_q, {"_id": 0}):
+            ga = p.get("created_at") or p.get("generated_at") or ""
+            if from_date and ga < from_date: continue
+            if to_date and ga > to_date: continue
+            td = p.get("target_draw_date", "")
+            actual = swiss_by_date.get(td)
+            actual_nums = set(actual.get('numbers', [])) if actual else set()
+            actual_lucky = actual.get('lucky_number') if actual else None
+            bd_date = swiss_bd.get(td)
+            nums = sorted(p.get("numbers", []))
+            if len(nums) != 6: continue
+            lucky = p.get("lucky_number")
+            hits = sorted(set(nums) & actual_nums) if actual else []
+            lucky_hit = (lucky == actual_lucky) if actual else False
+            total_match = len(hits) + (1 if lucky_hit else 0)
+            if total_match < min_hits: continue
+            tickets_out.append({
+                "mode": "swiss",
+                "target_date": td,
+                "bd_date": bd_date,
+                "window_label": f"{bd_date} → {td}" if bd_date else td,
+                "generated_at": ga,
+                "generation_type": "master-predictor",
+                "visitor_id": p.get("visitor_id") or "",
+                "numbers": nums,
+                "lucky": lucky,
+                "story": "master-predictor",
+                "hits": hits,
+                "lucky_hit": lucky_hit,
+                "total_match": total_match,
+                "draw_known": actual is not None,
+                "actual_numbers": sorted(actual_nums) if actual else None,
+                "actual_lucky": actual_lucky,
+            })
+
+    # --- EURO ---
+    if mode in ("euro", "all"):
+        q = {}
+        if target_date:
+            q["target_date"] = target_date
+        cursor = db.euromillions_generations.find(q, {
+            "_id": 0, "tickets": 1, "target_date": 1, "generated_at": 1,
+            "mode": 1, "visitor_id": 1,
+        })
+        async for g in cursor:
+            td = g.get("target_date", "")
+            ga = g.get("generated_at", "")
+            if from_date and ga < from_date: continue
+            if to_date and ga > to_date: continue
+            actual = euro_by_date.get(td)
+            actual_nums = set(actual.get('numbers', [])) if actual else set()
+            actual_stars = set(actual.get('stars', [])) if actual else set()
+            bd_date = euro_bd.get(td)
+            for t in g.get("tickets", []):
+                nums = sorted(t.get("numbers", []))
+                if len(nums) != 5: continue
+                stars = sorted(t.get("stars", []))
+                hits = sorted(set(nums) & actual_nums) if actual else []
+                star_hits = sorted(set(stars) & actual_stars) if actual else []
+                total_match = len(hits) + len(star_hits)
+                if total_match < min_hits: continue
+                tickets_out.append({
+                    "mode": "euro",
+                    "target_date": td,
+                    "bd_date": bd_date,
+                    "window_label": f"{bd_date} → {td}" if bd_date else td,
+                    "generated_at": ga,
+                    "generation_type": g.get("mode", "story"),
+                    "visitor_id": g.get("visitor_id") or "",
+                    "numbers": nums,
+                    "stars": stars,
+                    "story": t.get("story", ""),
+                    "hits": hits,
+                    "star_hits": star_hits,
+                    "total_match": total_match,
+                    "draw_known": actual is not None,
+                    "actual_numbers": sorted(actual_nums) if actual else None,
+                    "actual_stars": sorted(actual_stars) if actual else None,
+                })
+
+    # Sort newest first
+    tickets_out.sort(key=lambda t: t.get("generated_at", ""), reverse=True)
+
+    # Dedupe: master-predictor saves to BOTH generations AND prediction_history.
+    # Key = (numbers, lucky/stars, generated_at truncated to minute, mode)
+    def _dedupe_key(t):
+        if t.get("mode") == "euro":
+            stars = tuple(t.get("stars", []) or [])
+        else:
+            stars = ()
+        return (
+            tuple(t.get("numbers", [])),
+            t.get("lucky"),
+            stars,
+            (t.get("generated_at") or "")[:16],  # minute precision
+            t.get("mode"),
+        )
+    seen_keys = set()
+    deduped = []
+    for t in tickets_out:
+        k = _dedupe_key(t)
+        if k in seen_keys:
+            continue
+        seen_keys.add(k)
+        # Drop entries with no target_date (orphan prediction_history rows)
+        if not t.get("target_date"):
+            continue
+        deduped.append(t)
+    tickets_out = deduped
+
+    # Assign global sequential ticket_num (oldest=#1 → newest=#N)
+    total_all = len(tickets_out)
+    for idx, t in enumerate(tickets_out):
+        t["ticket_num_global"] = total_all - idx
+        t["nickname"] = _lucky_nickname(
+            t.get("visitor_id") or "",
+            t["ticket_num_global"],
+            t.get("generated_at", ""),
+        )
+
+    # Apply limit + offset
+    sliced = tickets_out[offset:offset + limit]
+
+    # Group by target_date if requested
+    if group_by_date:
+        grouped: dict = {}
+        for t in sliced:
+            grouped.setdefault(t["target_date"], []).append(t)
+        grouped_list = [
+            {"target_date": td, "window_label": v[0]["window_label"],
+             "count": len(v), "tickets": v}
+            for td, v in grouped.items()
+        ]
+        grouped_list.sort(key=lambda x: parse_d(x["target_date"]), reverse=True)
+        return {
+            "mode": mode,
+            "total_tickets": total_all,
+            "offset": offset,
+            "limit": limit,
+            "returned": len(sliced),
+            "groups": grouped_list,
+        }
+
+    return {
+        "mode": mode,
+        "total_tickets": total_all,
+        "offset": offset,
+        "limit": limit,
+        "returned": len(sliced),
+        "tickets": sliced,
+    }
+
+
+@api_router.get("/tickets-archive/dates")
+async def get_archive_date_index(mode: str = "swiss"):
+    """List all target_dates that have generations, with counts. Used for
+    archive navigation (DJ can pick a draw to drill into)."""
+    out = []
+    if mode in ("swiss", "all"):
+        pipeline = [{"$group": {"_id": "$target_date", "count": {"$sum": {"$size": "$tickets"}}}}]
+        async for row in db.generations.aggregate(pipeline):
+            out.append({"mode": "swiss", "target_date": row["_id"], "count": row["count"]})
+    if mode in ("euro", "all"):
+        pipeline = [{"$group": {"_id": "$target_date", "count": {"$sum": {"$size": "$tickets"}}}}]
+        async for row in db.euromillions_generations.aggregate(pipeline):
+            out.append({"mode": "euro", "target_date": row["_id"], "count": row["count"]})
+    from datetime import datetime as dtc
+    def pk(row):
+        try: return dtc.strptime(row["target_date"], '%d.%m.%Y')
+        except: return dtc.min
+    out.sort(key=pk, reverse=True)
+    return {"mode": mode, "total_dates": len(out), "dates": out}
+
+
 
 @api_router.get("/generation-history")
 async def get_generation_history(limit: int = 50):

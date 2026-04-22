@@ -548,6 +548,9 @@ function App() {
   const [pendingTotal, setPendingTotal] = useState(0);
   const [archiveFiles, setArchiveFiles] = useState([]);
   const [openArchive, setOpenArchive] = useState(null);
+  // 📦 Full ticket archive (per target_date, loaded on demand)
+  const [archiveByDate, setArchiveByDate] = useState({});       // { 'dd.mm.yyyy': { tickets: [], loading: bool } }
+  const [archiveDateOpen, setArchiveDateOpen] = useState(null);  // which draw date is expanded
   const [rareSeed, setRareSeed] = useState(null);
   const [djCalls, setDjCalls] = useState(null);
   const [jackPicks, setJackPicks] = useState({ mains: [], stars: [] });
@@ -703,6 +706,32 @@ function App() {
       console.error("Error fetching generation history:", e);
     } finally {
       setHitTrackerLoading(false);
+    }
+  };
+
+  // 📦 Load the FULL archive for a specific target_date (lazy on first expand)
+  const loadArchiveForDate = async (targetDate) => {
+    if (archiveByDate[targetDate]?.tickets) return;
+    setArchiveByDate((prev) => ({ ...prev, [targetDate]: { tickets: [], loading: true } }));
+    try {
+      const mode = lotteryMode === 'euro' ? 'euro' : 'swiss';
+      const res = await axios.get(`${API}/tickets-archive?mode=${mode}&target_date=${encodeURIComponent(targetDate)}&limit=1000`);
+      setArchiveByDate((prev) => ({
+        ...prev,
+        [targetDate]: { tickets: res.data.tickets || [], loading: false, total: res.data.total_tickets || 0 },
+      }));
+    } catch (e) {
+      console.error('Archive load error:', e);
+      setArchiveByDate((prev) => ({ ...prev, [targetDate]: { tickets: [], loading: false, error: true } }));
+    }
+  };
+
+  const toggleArchiveDate = (td) => {
+    if (archiveDateOpen === td) {
+      setArchiveDateOpen(null);
+    } else {
+      setArchiveDateOpen(td);
+      loadArchiveForDate(td);
     }
   };
   
@@ -3556,6 +3585,62 @@ function App() {
                             <div className="text-[10px] text-slate-400 mt-1">
                               🕐 {s.best_ticket.generated_at ? new Date(s.best_ticket.generated_at).toLocaleString() : '—'} · {s.best_ticket.generation_type}
                             </div>
+                          </div>
+                        )}
+                        {/* 📦 FULL ARCHIVE TOGGLE — DJ wants every ticket with date */}
+                        <button
+                          onClick={() => toggleArchiveDate(s.date)}
+                          className="mt-2 w-full text-left text-[10px] text-slate-400 hover:text-amber-300 transition-colors flex items-center justify-between px-1"
+                          data-testid={`archive-toggle-${idx}`}
+                        >
+                          <span>📦 {archiveDateOpen === s.date ? 'Hide' : 'Show'} all {s.total_generated} tickets</span>
+                          <span className="text-slate-600">{archiveDateOpen === s.date ? '▲' : '▼'}</span>
+                        </button>
+                        {archiveDateOpen === s.date && (
+                          <div className="mt-2 p-2 rounded bg-slate-950/60 border border-slate-700/40 max-h-64 overflow-y-auto">
+                            {archiveByDate[s.date]?.loading ? (
+                              <div className="text-[10px] text-slate-500 text-center py-2">Loading archive…</div>
+                            ) : !archiveByDate[s.date]?.tickets?.length ? (
+                              <div className="text-[10px] text-slate-500 text-center py-2">No tickets.</div>
+                            ) : (
+                              <div className="space-y-1">
+                                <div className="text-[10px] text-slate-500 mb-1">
+                                  {archiveByDate[s.date].total} total · sorted newest first
+                                </div>
+                                {archiveByDate[s.date].tickets.map((t) => (
+                                  <div key={`${t.ticket_num_global}-${t.generated_at}`} className={`flex items-center gap-1 text-[10px] px-1 py-0.5 rounded ${
+                                    t.total_match >= 3 ? 'bg-emerald-500/10' : t.total_match >= 2 ? 'bg-amber-500/5' : ''
+                                  }`}>
+                                    <span className="text-slate-500 w-8">#{t.ticket_num_global}</span>
+                                    <div className="flex items-center gap-0.5">
+                                      {t.numbers?.map((n, i) => {
+                                        const isHit = (t.hits || []).includes(n);
+                                        return (
+                                          <div key={i} className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold ${
+                                            isHit ? 'bg-emerald-500 text-white' : 'bg-slate-700 text-slate-300'
+                                          }`}>{n}</div>
+                                        );
+                                      })}
+                                    </div>
+                                    {lotteryMode === 'euro' ? (
+                                      <span className="text-yellow-400/80 ml-0.5">⭐{(t.stars || []).join(',')}</span>
+                                    ) : (
+                                      <span className={`ml-0.5 ${t.lucky_hit ? 'text-emerald-300 font-bold' : 'text-amber-400/60'}`}>
+                                        🍀{t.lucky}{t.lucky_hit ? '✓' : ''}
+                                      </span>
+                                    )}
+                                    {t.draw_known && t.total_match > 0 && (
+                                      <span className={`text-[9px] ml-0.5 ${t.total_match >= 3 ? 'text-emerald-400 font-bold' : 'text-slate-400'}`}>
+                                        {t.total_match}pc
+                                      </span>
+                                    )}
+                                    <span className="text-slate-600 ml-auto text-[9px]">
+                                      {t.generated_at ? new Date(t.generated_at).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : ''}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
