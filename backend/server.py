@@ -5797,55 +5797,56 @@ async def get_tickets_archive(
 @api_router.get("/tickets-archive/dates")
 async def get_archive_date_index(mode: str = "swiss"):
     """List all target_dates (by TRUE target = first draw after generation)
-    that have generations, with counts. Used for archive navigation."""
+    that have generations, with counts. Used for archive navigation.
+    🎧 Tuned with bisect — drops lookup from O(n*m) → O(n log m). Deploy-safe."""
     from datetime import datetime as dtc
+    import bisect
 
     def parse_d(s):
         try: return dtc.strptime(s, '%d.%m.%Y')
         except: return dtc.min
 
-    # Load draw dates to compute TRUE target
-    def _find_true_target(ga, dates_sorted):
-        if not ga or not dates_sorted:
+    async def _load_sorted_dates(collection):
+        """Return (date_strings_sorted, dt19_sorted_list) — cached once per request."""
+        raw = [d['date'] async for d in collection.find({}, {'_id': 0, 'date': 1}) if d.get('date')]
+        parsed = sorted([(parse_d(s).replace(hour=19), s) for s in raw], key=lambda x: x[0])
+        dt19_arr = [p[0] for p in parsed]
+        date_strs = [p[1] for p in parsed]
+        return date_strs, dt19_arr
+
+    def _find_true_target_fast(ga, date_strs, dt19_arr):
+        if not ga or not dt19_arr:
             return None
         try:
             gen_dt = dtc.fromisoformat(ga.replace('Z', '+00:00')).replace(tzinfo=None)
         except Exception:
             return None
-        for d in dates_sorted:
-            if parse_d(d).replace(hour=19) > gen_dt:
-                return d
-        return None
+        # bisect: find leftmost draw-at-19:00 strictly greater than gen_dt
+        idx = bisect.bisect_right(dt19_arr, gen_dt)
+        return date_strs[idx] if idx < len(date_strs) else None
 
-    from collections import Counter
     out_counts: dict = {}
 
     if mode in ("swiss", "all"):
-        swiss_dates = sorted(
-            [d['date'] async for d in db.draws.find({}, {'_id': 0, 'date': 1}) if d.get('date')],
-            key=parse_d,
-        )
+        swiss_strs, swiss_dt19 = await _load_sorted_dates(db.draws)
         async for g in db.generations.find({}, {'_id': 0, 'tickets': 1, 'generated_at': 1}):
             ga = g.get('generated_at', '')
-            true_td = _find_true_target(ga, swiss_dates)
+            true_td = _find_true_target_fast(ga, swiss_strs, swiss_dt19)
             if not true_td: continue
             key = ('swiss', true_td)
             out_counts[key] = out_counts.get(key, 0) + len(g.get('tickets', []))
         async for p in db.prediction_history.find({'lottery_type': 'swiss'}, {'_id': 0, 'created_at': 1, 'generated_at': 1}):
             ga = p.get('created_at') or p.get('generated_at') or ''
-            true_td = _find_true_target(ga, swiss_dates)
+            true_td = _find_true_target_fast(ga, swiss_strs, swiss_dt19)
             if not true_td: continue
             key = ('swiss', true_td)
             out_counts[key] = out_counts.get(key, 0) + 1
 
     if mode in ("euro", "all"):
-        euro_dates = sorted(
-            [d['date'] async for d in db.euromillions_draws.find({}, {'_id': 0, 'date': 1}) if d.get('date')],
-            key=parse_d,
-        )
+        euro_strs, euro_dt19 = await _load_sorted_dates(db.euromillions_draws)
         async for g in db.euromillions_generations.find({}, {'_id': 0, 'tickets': 1, 'generated_at': 1}):
             ga = g.get('generated_at', '')
-            true_td = _find_true_target(ga, euro_dates)
+            true_td = _find_true_target_fast(ga, euro_strs, euro_dt19)
             if not true_td: continue
             key = ('euro', true_td)
             out_counts[key] = out_counts.get(key, 0) + len(g.get('tickets', []))
