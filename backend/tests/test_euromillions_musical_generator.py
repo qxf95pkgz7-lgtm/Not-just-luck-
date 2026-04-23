@@ -21,7 +21,7 @@ from collections import Counter
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
-    BASE_URL = "https://cosmic-dj-lotto-1.preview.emergentagent.com"
+    BASE_URL = "https://lotto-frequency-tune.preview.emergentagent.com"
 
 
 class TestEndpointStability:
