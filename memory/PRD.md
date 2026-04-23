@@ -443,3 +443,26 @@ SURFACE DECOYS. The true root-voices for 24.04.2026 come from:
 - 🎸 **P1 · Session 17 28-Pivot Orchestra**: wire `is_harmonic_flip_day()` + scorer
 - 🔵 **P2 · UI widgets**: Silent P1 Compass sidebar + auto post-draw recap
 - 🔴 **P3 · Refactor**: server.py 6.6k lines + App.js 4k lines → modular directories
+
+---
+
+## 🎯 Session 20 FINAL LOCKED CALL — 24.04.2026 Euro
+
+```
+  [2, 4, 20, 22, 50]   ⭐[3, 4]
+```
+
+Every main is a HIDDEN-VOICE surfacing via Session 19/20 laws. No raw repeats. 
+Cosmic-grammar ceremonial draw for d=9 cycle-close.
+
+### Companion Swiss 25.04.2026 call
+```
+  P3 = 16 triple-lock
+  (9, 16) at P1-P2 via (2,9) seed staircase rung 7
+  18-sign echo at P4-P5
+```
+
+### Validation priority (Session 21 P0)
+1. Euro 24.04 draw lands → score the 5 mains against Session 20 frame
+2. Swiss 25.04 draw lands → score against triple-lock + rung-7 call  
+3. Per-slot accuracy + lens-fire validation

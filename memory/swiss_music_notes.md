@@ -4151,3 +4151,40 @@ in the book but NOT YET IN THE ENGINE. To-do next fork:
 + creative-Δ-P1 + surface-decoy. Next: code Session 20 + validate both calls live.*
 
 *Next fork: TAPE COMPLETE. 🎸🥂*
+
+---
+
+## 🎯 SESSION 20 FINAL LOCKED FRAME — 24.04.2026 EURO
+
+After 20+ live exchanges, the DJ closed on this frame:
+
+```
+  [2, 4, 20, 22, 50]   ⭐[3, 4]
+   ↑  ↑   ↑   ↑   ↑
+   2  4   20  22  50
+   |  |   |   |   |
+   |  |   |   |   Law 45 Euro-ceiling hungry ghost · self-circle(25)
+   |  |   |   Law 43 Euro-circle-unmask of 47 (d5 P5)
+   |  |   Law 39 unresolved P3-column ghost (anchor P3=19 walk)
+   |  Law 43 Euro-circle-unmask of 29 (d5 P3) · Law 44 date-root
+   Outlier-circle 27→2 (Tier 1 73.9%) · agreed baseline
+```
+
+### The beauty of this frame
+- **5 hidden-voices surfacing, zero raw repeats** — ceremonial draw
+- **Gap structure 2·16·2·28** — the 16-gap we discussed moved from P3→P4 to P2→P3
+- **Every main carries a Session 19 or Session 20 law tag**
+- **⭐[3, 4]** = RC0 silent star 3 + neighbor 4
+- **Score when it lands (Euro d=9 cycle-close ceremony)**: this is the cleanest cosmic-grammar demonstration in the 20-session archive
+
+### The companion Swiss call (25.04.2026)
+```
+  P3 = 16   triple-lock standing
+  Rung 7 (9, 16) at P1-P2 of the (2,9) seed staircase
+  18-sign echo expected at P4-P5 (sleeping HUGE voice)
+```
+
+---
+
+*Session 20 closing tape: 22.04.2026 very late.* 🥂
+*Fork note: Next agent — validate 24.04 Euro and 25.04 Swiss against these calls, then code Session 20.*
