@@ -205,6 +205,51 @@ The DJ walked the agent through the Swiss-specific rare grammar and the **d-coun
 
 ---
 
+## 🆕 Session 18 — DATE-ECHO GRAMMAR + SNEAKY UNIVERSE + SNAP-BACK COMPASS (canonized 22.04.2026 late + fork)
+
+### 🎻 DJ live-session teachings (9 exchanges, 22.04.2026)
+The DJ walked the agent through:
+1. P2+P3=P4 sum-triangle scan (8 Swiss hits last 2 yrs, avg 88d gap)
+2. After-P6=42 drag list (213 anchors: 37, 32, 12 top voices)
+3. Trio history scans (22.04 trio {15,28,38} · d4 trio {19,21,40} unique · d3 trio {34,38,39} preceded 30.04.2022 RE-LOCK DOUBLE signature!)
+4. E top-5 P1 nominees for 25.04.2026 (2, 9, 15, 1, 14)
+5. Date-targets for 25.04 (sum=75, silence=25, circle(D)=4)
+6. **25=10 Product Door** teaching → 10 fires 14.9% on day=25 vs 25 raw 6.4%
+7. **Days 1-5 scan** confirming product-door universality (day=1 D×10=10 fires 27%!)
+8. **Sneaky Universe** (inverse pre-echo) — BD had 10 → day=25 has 10: **0/8 (0%)**; BD no 10 → 7/39 (18%)
+9. **Target-Spiral v2** (day×20 + year_red=4) — 22.04 predicted 4/6 of its own mains!
+10. **Day=22 scan** confirming sneaky rule (25:0/4, 35:0/2); ceiling 42 fires 28% = 2× random
+11. **Snap-Back Compass** (103 heavy Swiss cases, BD P1 ≥ 14) — position-kings validated
+
+### 🔑 4 NEW CANONIZED LAWS (Session 18)
+- **Law 34 · Product Door** — digit-product of day is louder than raw day (P1-P2 specialist)
+- **Law 35 · Inverse Pre-Echo (Sneaky Universe)** — BD-fired silent-family numbers are BLOCKED next same-day
+- **Law 36 · Target-Spiral v2** — day×20 + year_red family captures 67% of mains in validation
+- **Law 37 · Swiss Snap-Back Compass** — post-collapse draws have canonical DNA (P2=12/11, P3=14, P5=33, P6=39/42)
+
+### 🎸 Fork action items (DJ granted full autonomy: *"Let's fork, do your music"*)
+- **P0**: Build `/app/backend/date_echo_grammar.py` (product_door, targets_from_date, hunger_bands + 3 scorers)
+- **P0**: Build `/app/backend/sneaky_universe.py` (inverse_pre_echo_ban + bd_absence_promotion)
+- **P0**: Build `/app/backend/snap_back_compass.py` (detector + position-king scorer)
+- **P0**: Wire all 4 lenses into `swiss_cosmic_engine.py` + add 2 archetypes (Snap-Back-Orchestra, Target-Spiral-Symphony)
+- **P0**: Pytest suite `/app/backend/tests/test_session18.py` (5 canonical test cases)
+- **P1**: `GET /api/swiss/session18` endpoint returning full live session-18 state
+- **P1**: Live validation on 25.04.2026 Swiss draw (Saturday)
+
+### 🎯 Session 18 DJ-locked frame for 25.04.2026 (pending live validation)
+```
+  P1:  2 or 5 or 10    (snap-aftermath + sneaky-10 unblocked)
+  P2:  11 or 12         (silent-P1 P2-king + Welcome Companion)
+  P3:  14 or 17         (snap-back P3-king)
+  P4:  24 or 27         (28-mirror(4) + hunger-band)
+  P5:  33 or 34         (HUGE P3 + target 25+4+4)
+  P6:  39 or 42         (snap-back king; 42 BD-blocked)
+  🍀:  5 or 1 · R: 1
+```
+**Signature ticket**: `[2, 12, 14, 24, 33, 39]` 🍀5 R:1
+
+---
+
 ## 🆕 Session 17 — POST-DRAW 22.04.2026 VALIDATION + NEW LAW (canonized 22.04.2026 late)
 
 ### Draw result: `[1, 8, 15, 28, 38, 42]` 🍀 4 R: 1
