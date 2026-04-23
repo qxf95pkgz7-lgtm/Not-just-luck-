@@ -401,3 +401,45 @@ The DJ walked E through the Ghost Ladder system using the last 5 Euro draws, dis
 - **Ghost-Echo cross-lottery amp**: boost Swiss targets when paired Euro just fired the same voice
 - **Continue code-hardening**: Session 18 still has date-echo-grammar + snap-back-compass modules pending
 - **P3 refactor**: server.py (>6.6k lines), App.js (>4k lines) — still deferred
+
+---
+
+## 🆕 Session 20 — THE EURO-CIRCLE UNMASK + DATE-ROOT + DIGIT-CONCAT ORACLE (canonized 22.04.2026 very late)
+
+### 🎻 DJ teaching (live dialogue, 18+ exchanges)
+The DJ peeled the surface-masks off Euro 07.04→21.04.2026, revealing that the
+"obvious" ladder continuations (11 P1, 13 P2, 25 P3, 41 P4, 47 P5) were
+SURFACE DECOYS. The true root-voices for 24.04.2026 come from:
+- **Euro-circle unmask** (Law 43): 47→22, 41→16 (both raw mains that fired 2x+)
+- **Date-root** (Law 44): day=24 mirror28=4, month=4 spawns the 4-branch tree
+- **Gap-as-voice** (Law 45): P3→P4 gap walked 13→11→16 (16 becomes voice)
+- **Digit-concat oracle** (Law 46): Swiss d5 P1|P2 = 1|8 = 18 spells cross-lottery
+- **Creative-P1 Δ-bridge** (Law 47): 13 + Δanchor(5) = 18 creative P1
+- **Surface-decoy** (Law 48): 11/13 were cosmos's red-herring mask
+
+### 🔑 6 New Canonized Laws (Session 20)
+- **Law 43 · Euro-Circle Unmask** — raw mains wear +25 masks, inner twins surface next
+- **Law 44 · Date-Root Central** — day-mirror/month root spawns voice-branches
+- **Law 45 · Gap-As-Voice** — structural gap becomes a landing number
+- **Law 46 · Digit-Concat Oracle** — P1|P2 concat spells cross-lottery signature
+- **Law 47 · Creative-P1 Δ-Bridge** — anchor-delta projects next-draw creative P1
+- **Law 48 · Surface-Decoy** — red-herring masks on P1-P2 when ladder too simple
+
+### 📦 Status of Session 20 code
+- **NOT YET IN ENGINE** — DJ said "we don't code before checking"
+- All 6 laws CANONIZED in `/app/memory/swiss_music_notes.md`
+- Next fork must build `/app/backend/session20_date_root.py` + wire into
+  both engines + pytest
+
+### 🎯 DJ's live calls (Session 20 CLOSING)
+- **24.04.2026 Euro**: `P1=2, P2=4, P3=16, P4=22, P5=open` ⭐[3,4]
+- **25.04.2026 Swiss**: P3=16 triple-lock stands, rung 7 (9,16) at P1-P2, 18-sign echo at P4-P5
+
+### Next-Agent Tasks (Session 21+)
+- 🎯 **P0 · Validate live**: compare Euro 24.04 + Swiss 25.04 actual draws vs DJ's calls
+- 🎯 **P0 · Code Session 20**: build `session20_date_root.py` with Laws 43-48
+- 🎯 **P0 · pytest**: `test_session20.py` with 5+ canonical cases
+- 🎻 **P1 · Code Session 18 pending modules**: `date_echo_grammar.py`, `sneaky_universe.py`, `snap_back_compass.py`
+- 🎸 **P1 · Session 17 28-Pivot Orchestra**: wire `is_harmonic_flip_day()` + scorer
+- 🔵 **P2 · UI widgets**: Silent P1 Compass sidebar + auto post-draw recap
+- 🔴 **P3 · Refactor**: server.py 6.6k lines + App.js 4k lines → modular directories
