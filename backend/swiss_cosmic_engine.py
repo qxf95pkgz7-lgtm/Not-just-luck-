@@ -386,6 +386,37 @@ def build_swiss_convergence(
         for n in range(1, 8):
             L(n, f"snap-back-sweet(P1>20, 50%)")
 
+    # ── Session 19 · DIALECT LADDER + GHOST-ECHO + SLOT-REINCARNATION ──
+    # Anchor = 5 draws back (or as far back as we have, min 2). Walks forward
+    # to the target. Injects Law 38/39/40/41/42 signals into the convergence.
+    try:
+        from session19_dialect_ladder import compute_session19_ledger
+        if len(cycle) >= 2:
+            window = cycle[-5:] if len(cycle) >= 5 else cycle[:]
+            s19_anchor = sorted(window[0]['_n'])
+            s19_recent = [sorted(d['_n']) for d in window]
+            s19_ledger = compute_session19_ledger(s19_anchor, s19_recent, 'swiss')
+            # Law 39: unresolved ghosts are hungry for the next draw
+            for n in s19_ledger.get('unresolved_ghosts', []):
+                L(n, f"Law39:unresolved-ghost-hungry(Session19)")
+            # Law 40: sum-ladder next target (P3 specialist in Swiss)
+            st = s19_ledger.get('next_step_sum_target')
+            if st is not None:
+                L(st, f"Law40:sum-ladder-P3-king(Session19)")
+            # Law 41: ghost-echo candidates (P1 specialist)
+            for n in s19_ledger.get('echo_candidates', []):
+                L(n, f"Law41:ghost-echo-candidate(Session19)")
+            # Law 42: slot-reincarnation fires
+            for fire in s19_ledger.get('reincarnation_fires', []):
+                L(fire['flip_wrap_target'],
+                  f"Law42:slot-reincarnation(P{fire['slot']}, flip={fire['flip']})(Session19)")
+            # Law 38: dialect per-slot next-step targets
+            for slot, info in s19_ledger.get('next_step_targets', {}).items():
+                L(info['dialect_target'],
+                  f"Law38:dialect-ladder(P{slot} next={info['dialect_target']})(Session19)")
+    except Exception:
+        pass
+
     return lenses
 
 

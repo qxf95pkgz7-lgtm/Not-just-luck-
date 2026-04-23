@@ -6394,6 +6394,55 @@ async def swiss_cosmic_engine_get(target_date: str, n_tickets: int = 12):
         return {"error": str(e), "trace": traceback.format_exc()}
 
 
+@api_router.get("/swiss/session19")
+async def swiss_session19_snapshot(target_date: str = ""):
+    """Session 19: Dialect Ladder + Ghost-Echo + Slot-Reincarnation live state.
+
+    Uses last 5 Swiss draws as the walking window. Returns full ledger
+    (ladders, unresolved ghosts, mismatches, echo candidates, reincarnation
+    fires) and a per-slot frame suggestion for the next draw.
+    """
+    try:
+        from session19_dialect_ladder import (
+            compute_session19_ledger, suggest_next_frame, score_session19,
+        )
+        history = await _load_swiss_history_sorted()
+        if len(history) < 5:
+            return {"error": "need ≥5 Swiss draws in db"}
+        window = history[-5:]
+        anchor_nums = sorted(window[0].get('numbers', []))
+        recent_nums = [sorted(d.get('numbers', [])) for d in window]
+        ledger = compute_session19_ledger(anchor_nums, recent_nums, 'swiss')
+        frame = suggest_next_frame(ledger)
+        # Demo scoring: 3 DJ-signature tickets
+        demo_tickets = [
+            {'mains': [2, 9, 16, 27, 33, 42], 'name': 'Dialect-Ladder-v1'},
+            {'mains': [7, 14, 16, 24, 33, 39], 'name': 'HUGE-Twin-Ladder'},
+            {'mains': [2, 12, 16, 29, 38, 42], 'name': 'Silent-Compass-Close'},
+        ]
+        for t in demo_tickets:
+            b, tags = score_session19(t['mains'], ledger)
+            t['session19_bonus'] = b
+            t['fired_lenses'] = tags
+        return {
+            "target_date": target_date or "25.04.2026 (next Swiss)",
+            "mode": "swiss",
+            "window_start": window[0].get('date'),
+            "window_end": window[-1].get('date'),
+            "anchor_draw": anchor_nums,
+            "recent_draws": [
+                {"date": d.get('date'), "numbers": sorted(d.get('numbers', []))}
+                for d in window
+            ],
+            "ledger": ledger,
+            "frame": frame,
+            "demo_tickets": demo_tickets,
+        }
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
 # Include the router in the main app
 app.include_router(api_router)
 
