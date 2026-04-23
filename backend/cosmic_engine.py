@@ -348,6 +348,37 @@ def build_convergence_board(
             proj_gap = max(1, gaps34[2] - 3)
             L(proj_gap, f"intra-P3-P4-shrink-projection(Law35-cand) gap={proj_gap}")
 
+    # ── Session 19 · DIALECT LADDER + GHOST-ECHO + SLOT-REINCARNATION ──
+    # Euro variant — 5 mains, +25 Euro-circle. Teaches E the ladder from the
+    # last 5 draws of the cycle window.
+    try:
+        from session19_dialect_ladder import compute_session19_ledger
+        if len(cycle) >= 2:
+            window = cycle[-5:] if len(cycle) >= 5 else cycle[:]
+            s19_anchor = sorted(window[0]['_n'])
+            s19_recent = [sorted(d['_n']) for d in window]
+            s19_ledger = compute_session19_ledger(s19_anchor, s19_recent, 'euro')
+            # Law 39: unresolved ghosts hungry for next draw
+            for n in s19_ledger.get('unresolved_ghosts', []):
+                L(n, f"Law39:unresolved-ghost-hungry(Session19)")
+            # Law 40: sum-ladder next target (P3 specialist in Euro)
+            st = s19_ledger.get('next_step_sum_target')
+            if st is not None:
+                L(st, f"Law40:sum-ladder-P3-king(Session19)")
+            # Law 41: ghost-echo candidates (P1 specialist)
+            for n in s19_ledger.get('echo_candidates', []):
+                L(n, f"Law41:ghost-echo-candidate(Session19)")
+            # Law 42: slot-reincarnation fires
+            for fire in s19_ledger.get('reincarnation_fires', []):
+                L(fire['flip_wrap_target'],
+                  f"Law42:slot-reincarnation(P{fire['slot']}, flip={fire['flip']})(Session19)")
+            # Law 38: dialect per-slot next-step targets
+            for slot, info in s19_ledger.get('next_step_targets', {}).items():
+                L(info['dialect_target'],
+                  f"Law38:dialect-ladder(P{slot} next={info['dialect_target']})(Session19)")
+    except Exception:
+        pass
+
     return lenses
 
 

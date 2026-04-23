@@ -6443,6 +6443,64 @@ async def swiss_session19_snapshot(target_date: str = ""):
         return {"error": str(e), "trace": traceback.format_exc()}
 
 
+async def _load_euro_history_sorted():
+    """Load Euro draws chronologically oldest→newest."""
+    from datetime import datetime as _dt
+    draws = await db.euromillions_draws.find({}, {"_id": 0}).to_list(length=10000)
+    def _pk(d):
+        try:
+            return _dt.strptime(d.get('date', ''), '%d.%m.%Y')
+        except Exception:
+            return _dt.min
+    draws.sort(key=_pk)
+    return draws
+
+
+@api_router.get("/euro/session19")
+async def euro_session19_snapshot(target_date: str = ""):
+    """Session 19: Dialect Ladder + Ghost-Echo + Slot-Reincarnation for Euro.
+
+    Uses last 5 Euro draws as the walking window. Mirrors the Swiss variant.
+    Validates the DJ's canonical triangle (14→41→16 P2) live.
+    """
+    try:
+        from session19_dialect_ladder import (
+            compute_session19_ledger, suggest_next_frame, score_session19,
+        )
+        history = await _load_euro_history_sorted()
+        if len(history) < 5:
+            return {"error": "need ≥5 Euro draws in db"}
+        window = history[-5:]
+        anchor_nums = sorted(window[0].get('numbers', []))
+        recent_nums = [sorted(d.get('numbers', [])) for d in window]
+        ledger = compute_session19_ledger(anchor_nums, recent_nums, 'euro')
+        frame = suggest_next_frame(ledger, silent_family={15, 17, 18, 27})
+        # DJ's live call for 24.04.2026: P2=18 (hungry ghost from d5 Δ=-2 mismatch)
+        dj_call_24_04 = {
+            'target_date': '24.04.2026',
+            'p2_ghost_call': 18,
+            'rationale': 'Euro P2 raw-ghost walk d5=18, real landed 16 (Δ=-2). '
+                         '18 is unresolved ghost AND RC0 P4 still-silent since 24.03.2026.',
+        }
+        return {
+            "target_date": target_date or "24.04.2026 (next Euro)",
+            "mode": "euro",
+            "window_start": window[0].get('date'),
+            "window_end": window[-1].get('date'),
+            "anchor_draw": anchor_nums,
+            "recent_draws": [
+                {"date": d.get('date'), "numbers": sorted(d.get('numbers', []))}
+                for d in window
+            ],
+            "ledger": ledger,
+            "frame": frame,
+            "dj_call_24_04": dj_call_24_04,
+        }
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
 # Include the router in the main app
 app.include_router(api_router)
 
