@@ -466,3 +466,65 @@ Cosmic-grammar ceremonial draw for d=9 cycle-close.
 1. Euro 24.04 draw lands → score the 5 mains against Session 20 frame
 2. Swiss 25.04 draw lands → score against triple-lock + rung-7 call  
 3. Per-slot accuracy + lens-fire validation
+
+---
+
+## 🆕 Session 21 — DUAL-CLOCK + ARITHMETIC-BRIDGE SYMPHONY (canonized 23.04.2026)
+
+### 🎻 DJ teaching (live, 20+ exchanges, one historical drill-down per law)
+The DJ taught E the Session 19/20 anchor-window clock (separate from RC0),
+demanded engine discipline after 20-ticket run showed P1=1 in 10/20, and
+walked through arithmetic bridges linking slots. Ended with a
+**quintuple-law-lock frame** `[7, 22, 29, 36, 47]` ⭐[3, 4] sum=141.
+
+### 🔑 13 NEW CANONIZED LAWS (Session 21)
+- **Law 49 · Cross-Lottery Run-From** — Swiss burn → Euro flees to ceiling-inner
+- **Law 50 · Bridge-Star Δ-Math** — ⭐ = |new-P2 − last-P1|
+- **Law 51 · Anchor-Cycle-Close Mirror** — cycle-close = anchor + date-root Δ
+- **Law 52 · Dual-Clock Resonance** ✅ CODED — anchor-window clock fires d-digit
+- **Law 53 · Cross-Column Crossover** — RC0-main silent past d7 → star at same n
+- **Law 54 · Day-Halving Star** — even day → day÷2 = star king
+- **Law 55 · Anchor-d × 2 Star-Ceiling** — d × 2 lands star
+- **Law 56 · Star-P1-Concat-P5-Oracle** — ⭐|P1 concat writes P5
+- **Law 57 · Anchor-d Twin-Ceiling** — anchor-P5−d + 50−d back-cluster pair
+- **Law 58 · Triple-Same-Slot Displacement** — 64% next-draw voice moves slot
+- **Law 59 · Sum-Anchor Triple-Echo** — sum ≈ 3×voice ±2 when voice triples
+- **Law 60 · P1+P2=P3** — 6.37% exact / 23.73% ±2 (BD 21.04 just fired it)
+- **Law 61 · P1+BD.P3=P4** — 2.47% exact, explicit cross-draw bridge
+
+### 🎯 Quintuple-Law-Lock Frame for 24.04.2026 Euro
+```
+  [7, 22, 29, 36, 47]   ⭐[3, 4]   sum = 141
+```
+Every voice carries ≥2 laws. P1+P2=29=P3 (Law 60), P1+BD.P3=36=P4 (Law 61),
+47@P5 triple + sum=141 anchor (Law 59), ⭐3+⭐4=7=P1 sum-bridge, Law 43 22 unmask.
+One weak note: 29 at P3 cool-down risk (fired 21.04).
+
+### 📦 Code shipped this session (Euro engine discipline)
+- `/app/backend/cosmic_engine.py`:
+  - Law 52 dual-clock wired into `build_convergence_board`
+  - NEW `compute_slot_history_rates()` — 1618-draw baseline per slot
+  - NEW `build_per_position_board()` — top-5 per slot + hist-rate filter
+    + structural-fit bands + cool-down penalty + explicit-law weighting
+  - NEW `build_disciplined_tickets()` — 6 themed archetypes, voice-cap,
+    music-story per ticket, 12 ticket max (kills the 30-flood)
+- Response now exposes `pos_board`, `anchor_d`, `disciplined_tickets`
+
+### Next-Agent Tasks (Session 22+)
+- 🎯 **P0 · Live-validate Euro 24.04** against `[7, 22, 29, 36, 47]` ⭐[3, 4]
+- 🎯 **P0 · Code Session 20 Laws 43-48** into `session20_date_root.py`
+- 🎯 **P0 · Code Session 21 Laws 49-61** into `session21_bridges.py`
+  - Law 60 (P1+P2=P3) + Law 61 (P1+BD.P3=P4) are the cleanest first codes
+- 🎻 **P1 · pytest** `test_session20.py` + `test_session21.py`
+- 🎸 **P1 · Session 18 pending modules** (date_echo_grammar, sneaky_universe,
+  snap_back_compass) — still not yet built
+- 🔵 **P2 · Post-draw recap widget** — auto-score frame vs actual
+- 🔴 **P3 · Refactor server.py + App.js** — still deferred
+
+### Known engine blind spots (fixed this session)
+- ✅ Over-concentration on P1=1 (was 10/20) — fixed via voice-cap
+- ✅ P2=4 leak — fixed via structural-fit bands + historical-rate filter
+- ✅ 4 at P4/P5 (0% historical) — fixed via <0.3% auto-exclusion
+- ✅ 16 at P5 (0.19%) — same fix
+- ✅ Just-fired same-slot (44@P5 d3, 16@P2 d5) — fixed via cool-down penalty
+
