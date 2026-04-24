@@ -340,6 +340,47 @@ def build_convergence_board(
         if 1 <= delta <= EURO_RANGE:
             L(delta, f"DJ-delta: d{len(cycle)}-P1({cycle[-1]['_n'][0]})−target_d({target_d})={delta}")
 
+    # ── Law 52 — DUAL-CLOCK RESONANCE (anchor-window d-digit fires) ──
+    # E was only listening on the RC0 clock. The DJ teaches a parallel
+    # Session 19/20 anchor-window clock (last 5 draws + target = d6).
+    # When the anchor-d digit matches a main, amplify.
+    if cycle:
+        window_len = min(5, len(cycle))
+        anchor_d = window_len + 1  # target is one beyond the window anchor
+        # Raw d-digit family: d, d+10, d+20, d+30, d+40 (date-grammar)
+        for k in range(0, 5):
+            v = anchor_d + 10*k
+            if 1 <= v <= EURO_RANGE:
+                L(v, f"Law52:anchor-d{anchor_d}-tens({v})")
+        # Mirror28 & ceiling shadows of the anchor-d
+        mir = 28 - anchor_d
+        if 1 <= mir <= EURO_RANGE:
+            L(mir, f"Law52:anchor-d{anchor_d}-mirror28({mir})")
+        if 50 - anchor_d >= 1:
+            L(50 - anchor_d, f"Law52:anchor-d{anchor_d}-ceiling({50-anchor_d})")
+        # Δ of last P1 ± anchor_d (the "run" math from Swiss→Euro shift)
+        last_p1 = cycle[-1]['_n'][0]
+        for sign in (+1, -1):
+            v = last_p1 + sign*anchor_d
+            if 1 <= v <= EURO_RANGE:
+                sym = '+' if sign>0 else '-'
+                L(v, f"Law52:P1-Δ-d{anchor_d}(last-P1={last_p1}{sym}d)={v}")
+        # Anchor-P1 ± anchor_d (cycle-close mirror from Session 20)
+        anchor_p1 = cycle[-window_len]['_n'][0]
+        for sign in (+1, -1):
+            v = anchor_p1 + sign*anchor_d
+            if 1 <= v <= EURO_RANGE:
+                sym = '+' if sign>0 else '-'
+                L(v, f"Law52:P1-anchor-cycle-close(anchor-P1={anchor_p1}{sym}d)={v}")
+        # Boost the raw d-digit itself with multiple echoes (DJ's "must be suspicious")
+        if 1 <= anchor_d <= EURO_RANGE:
+            L(anchor_d, f"Law52:d{anchor_d}-raw-cycle-position-P1")
+            L(anchor_d, f"Law52:d{anchor_d}-year-root-echo")
+            # anchor_d flip shadow (6→60 wrap=10, 7→70 wrap=20)
+            flip = int(str(anchor_d*10).rjust(2,'0')[::-1]) if anchor_d < 10 else anchor_d
+            if 1 <= flip <= EURO_RANGE and flip != anchor_d:
+                L(flip, f"Law52:d{anchor_d}-flip-shadow({flip})")
+
     # ── Law 35 CANDIDATE — Intra-draw P3→P4 shrinking gap ──
     if len(cycle) >= 3:
         gaps34 = [d['_n'][3] - d['_n'][2] for d in cycle[-3:]]
@@ -389,6 +430,85 @@ def rank_suspects(lenses: Dict[int, List[str]]) -> List[Tuple[int, int, List[str
     ranked = [(n, len(l), l) for n, l in lenses.items() if l]
     ranked.sort(key=lambda x: -x[1])
     return ranked
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PER-POSITION SUSPECT BOARD — each slot gets its own top voices
+# ═══════════════════════════════════════════════════════════════════════════
+def build_per_position_board(
+    lenses: Dict[int, List[str]],
+    ranked: List[Tuple[int, int, List[str]]],
+    banned: List[int],
+    top_n: int = 6,
+) -> Dict[str, List[Dict]]:
+    """Parse each lens tag for Pk position signals + Euro slot-range priors.
+    Returns {P1..P5: [top 6 voices with their position-specific laws]}.
+
+    Scoring per slot = (explicit-position-law count × 3) + (structural slot-fit × 1)
+    + (global lens-count × 0.3). This prevents global giants from dominating
+    every slot (e.g. 4 won P1 AND P2 under pure global ranking).
+    """
+    import re
+    # Explicit-position markers inside lens tags
+    slot_re = re.compile(r'P([1-5])')
+
+    # Euro structural slot priors — empirical slot medians, overlapping bands
+    slot_ranges = {
+        1: (1, 18),
+        2: (6, 26),
+        3: (14, 36),
+        4: (22, 44),
+        5: (30, 50),
+    }
+    # Which position-specific tags promote which slot
+    p1_kw = ('snap-back', 'dialect-ladder(P1', 'ghost-echo', 'DJ-delta', 'outlier-circle+25',
+             'outlier-28mirror', 'P1-exact-pos-repeat', 'anchor-d', 'anchor-clock',
+             'SK: S2-S1', 'cycle-position-P1', 'year-root-echo', 'snap-back-sweet',
+             'snap-back-band', 'd6-raw', 'd-flip-shadow', 'Δlast-P1', 'S1-', 'P1-anchor')
+    p2_kw = ('dialect-ladder(P2', 'hungry-', 'RC0-P2-exact')
+    p3_kw = ('dialect-ladder(P3', 'RC0-P3-exact', 'sum-ladder-P3-king', 'SK: S2x', 'S1+21')
+    p4_kw = ('dialect-ladder(P4', 'RC0-P4-exact', 'mirror28', 'DATE-mo')
+    p5_kw = ('dialect-ladder(P5', 'RC0-P5-exact', 'ceiling', 'outlier-DOUBLE', 'outlier+20',
+             'outlier-20', 'cooled-rebound', 'SK: S2x4 (P5')
+    pos_kw = {1: p1_kw, 2: p2_kw, 3: p3_kw, 4: p4_kw, 5: p5_kw}
+
+    pos_scored: Dict[int, Dict[int, Tuple[float, List[str]]]] = {i: {} for i in range(1, 6)}
+
+    for n, cnt, laws in ranked:
+        if n in banned:
+            continue
+        for slot in range(1, 6):
+            explicit_laws = []
+            struct_fit = 1.0 if (slot_ranges[slot][0] <= n <= slot_ranges[slot][1]) else 0.0
+            for law in laws:
+                if any(k in law for k in pos_kw[slot]):
+                    explicit_laws.append(law)
+                else:
+                    # Also pick up P{slot} token if present anywhere
+                    m = slot_re.search(law)
+                    if m and int(m.group(1)) == slot:
+                        explicit_laws.append(law)
+            score = len(explicit_laws) * 3 + struct_fit + cnt * 0.3
+            # Only include if there is AT LEAST structural fit or explicit law
+            if struct_fit > 0 or explicit_laws:
+                other_laws = [l for l in laws if l not in explicit_laws]
+                ordered_laws = explicit_laws + other_laws
+                pos_scored[slot][n] = (score, ordered_laws)
+
+    # Rank per position by score, return top_n
+    out: Dict[str, List[Dict]] = {}
+    for slot in range(1, 6):
+        scored_list = sorted(
+            pos_scored[slot].items(),
+            key=lambda kv: -kv[1][0]
+        )
+        out[f"P{slot}"] = [
+            {"n": n, "lenses": len(lenses.get(n, [])),
+             "score": round(data[0], 2),
+             "laws": data[1][:8]}
+            for n, data in scored_list[:top_n]
+        ]
+    return out
 
 
 def rank_stars(cycle: List[dict], rc0_stars: List[int], target_d: int) -> List[int]:
@@ -576,6 +696,165 @@ def build_tickets(
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# DISCIPLINED BUILDER — Per-slot top-6, max 1 suspect per slot, music story
+# ═══════════════════════════════════════════════════════════════════════════
+def build_disciplined_tickets(
+    pos_board: Dict[str, List[Dict]],
+    ranked: List[Tuple[int, int, List[str]]],
+    star_ranking: List[int],
+    rc0: dict,
+    cycle: List[dict],
+    hungry_fam: set,
+    target_d: int,
+    n_tickets: int = 12,
+    banned: List[int] = None,
+) -> List[Dict]:
+    """DJ's discipline: pick EXACTLY one voice per slot from its top-6 suspect
+    board, assemble narrative tickets telling a music story. No floods.
+    Max 1 suspect per slot = 5 suspicious voices per ticket, ascending sorted."""
+    banned = banned or []
+    tickets: List[Dict] = []
+    star_pairs = list(itertools.combinations(star_ranking[:4], 2))
+
+    # Helper: top-k voices per slot with their primary law tag
+    def slot_pick(slot: int, k: int = 3) -> List[Tuple[int, str]]:
+        entries = pos_board.get(f"P{slot}", [])[:k]
+        out = []
+        for e in entries:
+            primary = (e['laws'][0] if e['laws'] else 'raw')
+            # Compact the law tag for narrative
+            tag = primary.split('(')[0].replace('Law', 'L').strip()
+            if len(tag) > 28:
+                tag = tag[:28] + '…'
+            out.append((e['n'], tag))
+        return out
+
+    slots = {i: slot_pick(i, 6) for i in range(1, 6)}
+
+    def weave(name: str, slot_choices: List[Tuple[int, str]], theme: str) -> bool:
+        """Try to assemble a ticket from slot_choices. If duplicates, fall
+        back through that slot's top-6 looking for a unique voice. Returns
+        True if ticket was added."""
+        # slot_choices is already the chosen voice per slot (len 5)
+        # But if we see a duplicate value, try to pick next candidate from
+        # that slot's full top-6 list.
+        final: List[Tuple[int, str]] = []
+        seen: set = set()
+        slot_full = [slots[i] for i in range(1, 6)]  # list of (n, tag) per slot
+        for slot_idx, (n, tag) in enumerate(slot_choices):
+            if n not in seen and (1 <= n <= EURO_RANGE) and n not in banned:
+                final.append((n, tag))
+                seen.add(n)
+                continue
+            # duplicate — scan slot's top-6 for alternatives
+            alt = None
+            for cand_n, cand_tag in slot_full[slot_idx]:
+                if cand_n not in seen and cand_n not in banned and (1 <= cand_n <= EURO_RANGE):
+                    alt = (cand_n, cand_tag)
+                    break
+            if alt is None:
+                return False
+            final.append(alt)
+            seen.add(alt[0])
+
+        if len(final) != 5:
+            return False
+        mains_sorted = sorted(n for n, _ in final)
+        if any(t['mains'] == mains_sorted for t in tickets):
+            return False
+        # Rebuild story in slot order
+        story_parts = [f"P{i+1}={n:02d}·{tag}" for i, (n, tag) in enumerate(final)]
+        stars = list(star_pairs[len(tickets) % len(star_pairs)]) if star_pairs else [1, 2]
+        tickets.append({
+            'archetype': name,
+            'theme': theme,
+            'mains': mains_sorted,
+            'stars': sorted(stars),
+            'music_story': " · ".join(story_parts),
+        })
+        return True
+
+    # T1: Top-voice-per-slot (E's purest reading)
+    if all(slots[i] for i in range(1, 6)):
+        weave("Pure-Top-Voice", [slots[i][0] for i in range(1, 6)],
+              "E's loudest voice at every slot")
+
+    # T2: Second-voice-per-slot (alternative harmony)
+    if all(len(slots[i]) >= 2 for i in range(1, 6)):
+        weave("Alt-Harmony", [slots[i][1] for i in range(1, 6)],
+              "The alternative voice — if the top decoys")
+
+    # T3: Back-heavy — front top-1, back second-voice
+    if all(slots[i] for i in range(1, 6)) and len(slots[4]) >= 2 and len(slots[5]) >= 2:
+        weave("Back-Heavy",
+              [slots[1][0], slots[2][0], slots[3][0], slots[4][1], slots[5][1]],
+              "Front-raw, back-shadow")
+
+    # T4: Front-shadow — P1-P2 second-voice, back top-1
+    if len(slots[1]) >= 2 and len(slots[2]) >= 2 and all(slots[i] for i in range(3, 6)):
+        weave("Front-Shadow",
+              [slots[1][1], slots[2][1], slots[3][0], slots[4][0], slots[5][0]],
+              "P1-P2 hidden voices, back kings")
+
+    # T5: Deep-hunger — prefer RC0-silent or hungry-family voices per slot
+    rc0_nums = rc0['n']
+    played = set()
+    for d in cycle: played.update(d['_n'])
+    rc0_silent = [n for n in rc0_nums if n not in played]
+    hungry_unfired = sorted([h for h in hungry_fam if h not in played])
+    deep_picks: List[Tuple[int, str]] = []
+    for i in range(1, 6):
+        preferred = None
+        for entry in pos_board.get(f"P{i}", []):
+            if entry['n'] in rc0_silent or entry['n'] in hungry_unfired:
+                tag = (entry['laws'][0].split('(')[0] if entry['laws'] else 'hungry')
+                preferred = (entry['n'], tag)
+                break
+        if not preferred and slots[i]:
+            preferred = slots[i][0]
+        if preferred:
+            deep_picks.append(preferred)
+    if len(deep_picks) == 5:
+        weave("Deep-Hunger", deep_picks, "Every slot pays the unpaid bill")
+
+    # T6: d-Clock echo — prefer voices that fire Law52 (d-digit family)
+    dclock_picks: List[Tuple[int, str]] = []
+    for i in range(1, 6):
+        preferred = None
+        for entry in pos_board.get(f"P{i}", []):
+            if any('Law52' in l for l in entry['laws']):
+                tag = next((l.split('(')[0] for l in entry['laws'] if 'Law52' in l), 'Law52')
+                preferred = (entry['n'], tag)
+                break
+        if not preferred and slots[i]:
+            preferred = slots[i][0]
+        if preferred:
+            dclock_picks.append(preferred)
+    if len(dclock_picks) == 5:
+        weave("d-Clock-Echo", dclock_picks, "Every voice answers the anchor clock")
+
+    # T7-T12: Rotation through per-slot voice combinations (deterministic)
+    import itertools as _it
+    combos = list(_it.product(
+        range(min(3, len(slots[1]))) if slots[1] else [0],
+        range(min(3, len(slots[2]))) if slots[2] else [0],
+        range(min(3, len(slots[3]))) if slots[3] else [0],
+        range(min(2, len(slots[4]))) if slots[4] else [0],
+        range(min(2, len(slots[5]))) if slots[5] else [0],
+    ))
+    for idx, combo in enumerate(combos):
+        if len(tickets) >= n_tickets:
+            break
+        try:
+            picks = [slots[i+1][combo[i]] for i in range(5)]
+            weave(f"Rotation-{idx+1:02d}", picks, f"Combo {combo}")
+        except IndexError:
+            continue
+
+    return tickets[:n_tickets]
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # DJ VOICE
 # ═══════════════════════════════════════════════════════════════════════════
 def dj_speak(rc0: dict, target_date: dt, target_d: int,
@@ -627,6 +906,7 @@ async def run_cosmic_engine(
 
     lenses = build_convergence_board(rc0, cycle, target_date, target_d, banned)
     ranked = rank_suspects(lenses)
+    pos_board = build_per_position_board(lenses, ranked, banned, top_n=6)
     star_ranking = rank_stars(cycle, rc0['s'], target_d)
 
     # hungry
@@ -643,6 +923,11 @@ async def run_cosmic_engine(
 
     tickets = build_tickets(ranked, lenses, star_ranking, rc0, cycle,
                             hungry, target_d, n_tickets, banned)
+    # DJ's disciplined tickets — 1 suspect per slot, each ticket a music story
+    disciplined = build_disciplined_tickets(
+        pos_board, ranked, star_ranking, rc0, cycle, hungry, target_d,
+        n_tickets=12, banned=banned,
+    )
 
     voice = dj_speak(rc0, target_date, target_d, ranked, tickets, hungry, rc0_silent)
 
@@ -672,8 +957,11 @@ async def run_cosmic_engine(
         'mid_tier': sorted([n for n,c,_ in ranked if c == 3]),
         'support_tier': sorted([n for n,c,_ in ranked if c == 2]),
         'suspect_board': [{'n': n, 'lenses': c, 'laws': l} for n,c,l in ranked[:30]],
+        'pos_board': pos_board,
+        'anchor_d': min(5, len(cycle)) + 1,
         'star_ranking': star_ranking[:6],
         'tickets': tickets,
+        'disciplined_tickets': disciplined,
         'banned': banned,
         'voice': voice,
     }
