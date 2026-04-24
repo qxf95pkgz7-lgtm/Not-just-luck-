@@ -94,6 +94,22 @@ async def load_euro_draws(db) -> List[dict]:
     return valid
 
 
+def compute_slot_history_rates(all_draws: List[dict]) -> Dict[int, Dict[int, float]]:
+    """Returns {slot(1-5): {n: percentage-rate-at-this-slot}}."""
+    total = len(all_draws)
+    if total == 0:
+        return {i: {} for i in range(1, 6)}
+    counts: Dict[int, Counter] = {i: Counter() for i in range(1, 6)}
+    for d in all_draws:
+        for i, v in enumerate(sorted(d['_n'])):
+            if i < 5:
+                counts[i+1][v] += 1
+    return {
+        slot: {n: 100.0 * c / total for n, c in cnt.items()}
+        for slot, cnt in counts.items()
+    }
+
+
 def find_last_family_rare(draws: List[dict], before_date: dt) -> Optional[Tuple[int, dict]]:
     """Family-rare = 4+ numbers in same decade family (Session 6 canon)."""
     for i in range(len(draws) - 1, -1, -1):
@@ -439,28 +455,22 @@ def build_per_position_board(
     lenses: Dict[int, List[str]],
     ranked: List[Tuple[int, int, List[str]]],
     banned: List[int],
-    top_n: int = 6,
+    top_n: int = 5,
+    cycle: Optional[List[dict]] = None,
+    slot_history_rates: Optional[Dict[int, Dict[int, float]]] = None,
 ) -> Dict[str, List[Dict]]:
-    """Parse each lens tag for Pk position signals + Euro slot-range priors.
-    Returns {P1..P5: [top 6 voices with their position-specific laws]}.
-
-    Scoring per slot = (explicit-position-law count × 3) + (structural slot-fit × 1)
-    + (global lens-count × 0.3). This prevents global giants from dominating
-    every slot (e.g. 4 won P1 AND P2 under pure global ranking).
+    """Per-slot suspect board with FOUR filters:
+    1. Explicit-position-law count × 3
+    2. Structural slot-fit (overlapping bands)
+    3. Historical slot-fit penalty (kill sub-0.5% candidates at that slot)
+    4. Just-fired cool-down (penalize voices that fired this slot in last 3 draws)
     """
     import re
-    # Explicit-position markers inside lens tags
     slot_re = re.compile(r'P([1-5])')
 
-    # Euro structural slot priors — empirical slot medians, overlapping bands
     slot_ranges = {
-        1: (1, 18),
-        2: (6, 26),
-        3: (14, 36),
-        4: (22, 44),
-        5: (30, 50),
+        1: (1, 18), 2: (6, 26), 3: (14, 36), 4: (22, 44), 5: (30, 50),
     }
-    # Which position-specific tags promote which slot
     p1_kw = ('snap-back', 'dialect-ladder(P1', 'ghost-echo', 'DJ-delta', 'outlier-circle+25',
              'outlier-28mirror', 'P1-exact-pos-repeat', 'anchor-d', 'anchor-clock',
              'SK: S2-S1', 'cycle-position-P1', 'year-root-echo', 'snap-back-sweet',
@@ -471,6 +481,15 @@ def build_per_position_board(
     p5_kw = ('dialect-ladder(P5', 'RC0-P5-exact', 'ceiling', 'outlier-DOUBLE', 'outlier+20',
              'outlier-20', 'cooled-rebound', 'SK: S2x4 (P5')
     pos_kw = {1: p1_kw, 2: p2_kw, 3: p3_kw, 4: p4_kw, 5: p5_kw}
+
+    # Just-fired penalty — last 3 cycle draws at same slot
+    recent_same_slot: Dict[int, set] = {s: set() for s in range(1, 6)}
+    if cycle:
+        for d in cycle[-3:]:
+            nums_sorted = sorted(d.get('_n', []))
+            for i, v in enumerate(nums_sorted):
+                if i < 5:
+                    recent_same_slot[i+1].add(v)
 
     pos_scored: Dict[int, Dict[int, Tuple[float, List[str]]]] = {i: {} for i in range(1, 6)}
 
@@ -484,18 +503,31 @@ def build_per_position_board(
                 if any(k in law for k in pos_kw[slot]):
                     explicit_laws.append(law)
                 else:
-                    # Also pick up P{slot} token if present anywhere
                     m = slot_re.search(law)
                     if m and int(m.group(1)) == slot:
                         explicit_laws.append(law)
+
+            # Historical-fit penalty: kill if < 0.5% at this slot
+            hist_rate = 0.0
+            if slot_history_rates:
+                hist_rate = slot_history_rates.get(slot, {}).get(n, 0.0)
+            # Skip voices that have < 0.3% historical rate at this slot
+            # UNLESS they have 2+ explicit-position laws (cosmic override)
+            if slot_history_rates is not None and hist_rate < 0.3 and len(explicit_laws) < 2:
+                continue
+
             score = len(explicit_laws) * 3 + struct_fit + cnt * 0.3
-            # Only include if there is AT LEAST structural fit or explicit law
+            # Historical rate bonus (up to +3 at 7% rate)
+            score += min(hist_rate * 0.4, 3.0)
+            # Just-fired cool-down penalty (−2 if voice fired this slot in last 3 draws)
+            if n in recent_same_slot.get(slot, set()):
+                score -= 2.0
+
             if struct_fit > 0 or explicit_laws:
                 other_laws = [l for l in laws if l not in explicit_laws]
                 ordered_laws = explicit_laws + other_laws
                 pos_scored[slot][n] = (score, ordered_laws)
 
-    # Rank per position by score, return top_n
     out: Dict[str, List[Dict]] = {}
     for slot in range(1, 6):
         scored_list = sorted(
@@ -729,40 +761,56 @@ def build_disciplined_tickets(
             out.append((e['n'], tag))
         return out
 
-    slots = {i: slot_pick(i, 6) for i in range(1, 6)}
+    slots = {i: slot_pick(i, 5) for i in range(1, 6)}
+
+    # Per-slot voice-usage cap: no voice may appear at the SAME SLOT in more
+    # than 40% of tickets (e.g. max 4 of 10). This is the DJ's "don't let 1
+    # land P1 in 10/20 tickets" discipline.
+    max_slot_reuse = max(2, int(n_tickets * 0.4))
+    slot_usage: Dict[Tuple[int, int], int] = {}  # (slot, voice) -> count
 
     def weave(name: str, slot_choices: List[Tuple[int, str]], theme: str) -> bool:
-        """Try to assemble a ticket from slot_choices. If duplicates, fall
-        back through that slot's top-6 looking for a unique voice. Returns
-        True if ticket was added."""
-        # slot_choices is already the chosen voice per slot (len 5)
-        # But if we see a duplicate value, try to pick next candidate from
-        # that slot's full top-6 list.
+        """Assemble a ticket from per-slot choices with duplicate-safe fallback
+        AND per-slot voice-cap. If a chosen voice already hit its cap at that
+        slot, fall through the top-5 for a cooler alternative."""
         final: List[Tuple[int, str]] = []
         seen: set = set()
-        slot_full = [slots[i] for i in range(1, 6)]  # list of (n, tag) per slot
+        slot_full = [slots[i] for i in range(1, 6)]
         for slot_idx, (n, tag) in enumerate(slot_choices):
-            if n not in seen and (1 <= n <= EURO_RANGE) and n not in banned:
-                final.append((n, tag))
-                seen.add(n)
-                continue
-            # duplicate — scan slot's top-6 for alternatives
-            alt = None
-            for cand_n, cand_tag in slot_full[slot_idx]:
-                if cand_n not in seen and cand_n not in banned and (1 <= cand_n <= EURO_RANGE):
-                    alt = (cand_n, cand_tag)
-                    break
-            if alt is None:
+            slot_num = slot_idx + 1
+            # Try primary pick first
+            pick: Optional[Tuple[int, str]] = None
+            if (n not in seen and (1 <= n <= EURO_RANGE) and n not in banned
+                and slot_usage.get((slot_num, n), 0) < max_slot_reuse):
+                pick = (n, tag)
+            if pick is None:
+                # Scan slot's top-5 for alternative
+                for cand_n, cand_tag in slot_full[slot_idx]:
+                    if (cand_n not in seen and cand_n not in banned
+                        and 1 <= cand_n <= EURO_RANGE
+                        and slot_usage.get((slot_num, cand_n), 0) < max_slot_reuse):
+                        pick = (cand_n, cand_tag)
+                        break
+            if pick is None:
+                # Last resort: accept any non-duplicate from slot top-5
+                for cand_n, cand_tag in slot_full[slot_idx]:
+                    if (cand_n not in seen and cand_n not in banned
+                        and 1 <= cand_n <= EURO_RANGE):
+                        pick = (cand_n, cand_tag)
+                        break
+            if pick is None:
                 return False
-            final.append(alt)
-            seen.add(alt[0])
+            final.append(pick)
+            seen.add(pick[0])
 
         if len(final) != 5:
             return False
         mains_sorted = sorted(n for n, _ in final)
         if any(t['mains'] == mains_sorted for t in tickets):
             return False
-        # Rebuild story in slot order
+        # Commit slot-usage
+        for slot_idx, (n, _) in enumerate(final):
+            slot_usage[(slot_idx+1, n)] = slot_usage.get((slot_idx+1, n), 0) + 1
         story_parts = [f"P{i+1}={n:02d}·{tag}" for i, (n, tag) in enumerate(final)]
         stars = list(star_pairs[len(tickets) % len(star_pairs)]) if star_pairs else [1, 2]
         tickets.append({
@@ -906,7 +954,12 @@ async def run_cosmic_engine(
 
     lenses = build_convergence_board(rc0, cycle, target_date, target_d, banned)
     ranked = rank_suspects(lenses)
-    pos_board = build_per_position_board(lenses, ranked, banned, top_n=6)
+    # Historical slot rates for structural-fit + cool-down penalties
+    slot_rates = compute_slot_history_rates(draws)
+    pos_board = build_per_position_board(
+        lenses, ranked, banned, top_n=5,
+        cycle=cycle, slot_history_rates=slot_rates,
+    )
     star_ranking = rank_stars(cycle, rc0['s'], target_d)
 
     # hungry
