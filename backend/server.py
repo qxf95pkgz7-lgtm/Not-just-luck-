@@ -863,12 +863,13 @@ async def get_master_prediction(
     if visitor_id:
         await _assert_generator_open("swiss", visitor_id)
     
-    # Ticket limit check
+    # Ticket limit check (VIP-aware)
     if visitor_id:
-        used = await _count_visitor_tickets(visitor_id)
-        if used >= TICKET_LIMIT:
-            raise HTTPException(status_code=429, detail=f"Ticket limit reached! You've generated {used}/{TICKET_LIMIT} tickets for the next draw.")
-        num_tickets = min(num_tickets, TICKET_LIMIT - used)
+        if not await _is_visitor_unlimited(visitor_id):
+            used = await _count_visitor_tickets(visitor_id)
+            if used >= TICKET_LIMIT:
+                raise HTTPException(status_code=429, detail=f"Ticket limit reached! You've generated {used}/{TICKET_LIMIT} tickets for the next draw.")
+            num_tickets = min(num_tickets, TICKET_LIMIT - used)
     
     # Validate num_tickets
     num_tickets = max(1, min(20, num_tickets))
