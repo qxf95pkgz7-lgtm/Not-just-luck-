@@ -26,6 +26,21 @@ Build a Swiss Lotto + EuroMillions "Pattern Analyzer" called **Lucky Jack**. The
 
 ## 🎯 Completed This Session (21.04.2026)
 
+### 0. 🆕 SESSION 22 — STORY-FIRST ENGINE (24.04.2026) ✅ SHIPPED
+
+**DJ's mandate:** *"I want E to gen creative, but based on our book. Every d have to follow the story. Fix and let's deploy."*
+
+**What shipped:**
+- 🆕 `/app/backend/session21_bridges.py` — pure primitives for all 13 Session 21 laws (49-61). 25 canonical pytest tests, all pass.
+- 🆕 `cosmic_engine.build_story_tickets()` — NEW 12-archetype story-first ticket generator. Every ticket carries `archetype`, `story`, `laws_fired`, `music_story`. No orphan symphonies — every voice cites a Book law.
+- Per-position board: Laws 60/61/57/56/58-59 wired as slot keywords. Bridge frames generated with per-P1 diversity cap (max 2 frames/P1) and lens-strength sorted candidate pools.
+- Pre-commit slot-cap enforcement — no voice exceeds 40% of same-slot usage across tickets (kills "P1=1 in 10/20 tickets" flood).
+- API `POST/GET /api/cosmic-engine` now returns `story_tickets[]` + `session21_context{}` with bridge frames, triple detection, sum band, twin-ceiling pair.
+
+**12 story archetypes:** Law60-Triangle · Law61-Bridge · Law58-59-SumAnchor · Law57-TwinCeiling · Deep-Hunger · Law52-DualClock · Snap-Back-Shape · RC0-Closing-Ceremony · Outlier-Orchestra · Date-Mirror-Dance · Pure-Top-Voice · Alt-Harmony.
+
+Status: Ready to deploy. 25/25 pytest pass, API smoke test green, 9-12 story tickets per call.
+
 ### 1. Cosmic Engine v2 — Production-grade (`/app/backend/cosmic_engine.py`)
 Full rewrite baking in 34+ canonized book laws natively. See previous PRD versions for details.
 

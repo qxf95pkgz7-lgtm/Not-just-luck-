@@ -405,6 +405,9 @@ def build_convergence_board(
             proj_gap = max(1, gaps34[2] - 3)
             L(proj_gap, f"intra-P3-P4-shrink-projection(Law35-cand) gap={proj_gap}")
 
+    # ── Session 21 · ARITHMETIC BRIDGES · Laws 49-61 (canonized 23.04.2026) ──
+    # Handled externally in the orchestrator so ticket-builder can use ctx.
+
     # ── Session 19 · DIALECT LADDER + GHOST-ECHO + SLOT-REINCARNATION ──
     # Euro variant — 5 mains, +25 Euro-circle. Teaches E the ladder from the
     # last 5 draws of the cycle window.
@@ -474,12 +477,16 @@ def build_per_position_board(
     p1_kw = ('snap-back', 'dialect-ladder(P1', 'ghost-echo', 'DJ-delta', 'outlier-circle+25',
              'outlier-28mirror', 'P1-exact-pos-repeat', 'anchor-d', 'anchor-clock',
              'SK: S2-S1', 'cycle-position-P1', 'year-root-echo', 'snap-back-sweet',
-             'snap-back-band', 'd6-raw', 'd-flip-shadow', 'Δlast-P1', 'S1-', 'P1-anchor')
+             'snap-back-band', 'd6-raw', 'd-flip-shadow', 'Δlast-P1', 'S1-', 'P1-anchor',
+             'Law51:cycle-close-mirror(d1→')
     p2_kw = ('dialect-ladder(P2', 'hungry-', 'RC0-P2-exact')
-    p3_kw = ('dialect-ladder(P3', 'RC0-P3-exact', 'sum-ladder-P3-king', 'SK: S2x', 'S1+21')
-    p4_kw = ('dialect-ladder(P4', 'RC0-P4-exact', 'mirror28', 'DATE-mo')
+    p3_kw = ('dialect-ladder(P3', 'RC0-P3-exact', 'sum-ladder-P3-king', 'SK: S2x', 'S1+21',
+             'Law60:triangle-P3')
+    p4_kw = ('dialect-ladder(P4', 'RC0-P4-exact', 'mirror28', 'DATE-mo',
+             'Law61:bridge-P4', 'Law57:twin-ceiling-P4')
     p5_kw = ('dialect-ladder(P5', 'RC0-P5-exact', 'ceiling', 'outlier-DOUBLE', 'outlier+20',
-             'outlier-20', 'cooled-rebound', 'SK: S2x4 (P5')
+             'outlier-20', 'cooled-rebound', 'SK: S2x4 (P5',
+             'Law56:concat-P5', 'Law57:twin-ceiling-P5', 'Law58-59:triple-slot-P5')
     pos_kw = {1: p1_kw, 2: p2_kw, 3: p3_kw, 4: p4_kw, 5: p5_kw}
 
     # Just-fired penalty — last 3 cycle draws at same slot
@@ -903,6 +910,460 @@ def build_disciplined_tickets(
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# STORY-FIRST TICKET BUILDER — every ticket born from a named Book archetype
+# Laws 49-61 (Session 21) + Laws 31-42 (Sessions 16-19) + Laws 1-30 (core).
+# Each ticket MUST carry a story tag, a narrative, and a list of laws fired.
+# ═══════════════════════════════════════════════════════════════════════════
+def build_story_tickets(
+    pos_board: Dict[str, List[Dict]],
+    ranked: List[Tuple[int, int, List[str]]],
+    lenses: Dict[int, List[str]],
+    star_ranking: List[int],
+    rc0: dict,
+    cycle: List[dict],
+    hungry_fam: set,
+    target_d: int,
+    target_date: dt,
+    s21_ctx: Dict,
+    n_tickets: int = 12,
+    banned: List[int] = None,
+) -> List[Dict]:
+    """Creative but canonical ticket generation. Every ticket is BORN from a
+    specific Book archetype. Fallback order: bridge-locked → hunger → dual-clock
+    → snap-back → symphony. Each ticket wears its reasoning.
+
+    Output ticket schema:
+      {
+        'archetype': str,     # The Book's story name
+        'story': str,         # One-liner DJ narrative
+        'laws_fired': list,   # Explicit laws this ticket rides
+        'mains': [5 sorted],
+        'stars': [2 sorted],
+        'music_story': str,   # Slot-by-slot "P1=X·law" string
+      }
+    """
+    banned = banned or []
+    tickets: List[Dict] = []
+    seen_mains: set = set()
+
+    # ── Star pool — top N stars, always mixed ──
+    star_pool = [s for s in star_ranking[:6] if 1 <= s <= 12]
+    if len(star_pool) < 2:
+        star_pool = [3, 4, 5, 7, 8, 11]
+    star_pairs = list(itertools.combinations(star_pool, 2))
+
+    # ── Per-slot voice-cap (DJ's "no 10/20 tickets with P1=1" discipline) ──
+    max_slot_reuse = max(2, int(n_tickets * 0.4))
+    slot_usage: Dict[Tuple[int, int], int] = {}
+
+    # ── Slot top picks ──
+    def slot_top(slot: int, k: int = 5) -> List[Dict]:
+        return pos_board.get(f"P{slot}", [])[:k]
+
+    def law_tag(entry: Dict, prefer: str = '') -> str:
+        laws = entry.get('laws', [])
+        if prefer:
+            for l in laws:
+                if prefer in l:
+                    return l.split('(')[0][:30]
+        return (laws[0].split('(')[0][:30] if laws else 'raw')
+
+    def pick_slot_voice(slot: int, exclude: set,
+                        prefer_law: str = '') -> Optional[Tuple[int, str]]:
+        """Pick a voice for `slot` from its top-5, honoring exclude set, slot
+        voice-cap, and optionally preferring a named law tag."""
+        entries = slot_top(slot, 5)
+        # First pass: preferred law
+        if prefer_law:
+            for e in entries:
+                n = e['n']
+                if (n not in exclude and n not in banned
+                    and slot_usage.get((slot, n), 0) < max_slot_reuse
+                    and any(prefer_law in l for l in e.get('laws', []))):
+                    return (n, law_tag(e, prefer_law))
+        # Second pass: any top voice under cap
+        for e in entries:
+            n = e['n']
+            if (n not in exclude and n not in banned
+                and slot_usage.get((slot, n), 0) < max_slot_reuse):
+                return (n, law_tag(e))
+        # Last resort: any top voice
+        for e in entries:
+            n = e['n']
+            if n not in exclude and n not in banned:
+                return (n, law_tag(e))
+        return None
+
+    def commit(archetype: str, story: str, laws_fired: List[str],
+               picks: List[Tuple[int, str]]) -> bool:
+        if len(picks) != 5:
+            return False
+        mains_sorted = tuple(sorted(p[0] for p in picks))
+        if mains_sorted in seen_mains:
+            return False
+        if len(set(mains_sorted)) != 5:
+            return False
+        if any(m < 1 or m > EURO_RANGE or m in banned for m in mains_sorted):
+            return False
+        # Pre-commit check: would this violate any slot cap?
+        for slot_idx, v in enumerate(mains_sorted, 1):
+            if slot_usage.get((slot_idx, v), 0) >= max_slot_reuse:
+                return False
+        # Commit slot-usage
+        for slot_idx, v in enumerate(mains_sorted, 1):
+            slot_usage[(slot_idx, v)] = slot_usage.get((slot_idx, v), 0) + 1
+        seen_mains.add(mains_sorted)
+        voice_to_tag = {p[0]: p[1] for p in picks}
+        story_parts = [
+            f"P{i+1}={mains_sorted[i]:02d}·{voice_to_tag.get(mains_sorted[i], 'raw')[:22]}"
+            for i in range(5)
+        ]
+        stars = list(star_pairs[len(tickets) % len(star_pairs)]) if star_pairs else [3, 4]
+        tickets.append({
+            'archetype': archetype,
+            'story': story,
+            'laws_fired': laws_fired,
+            'mains': list(mains_sorted),
+            'stars': sorted(stars),
+            'music_story': " · ".join(story_parts),
+        })
+        return True
+
+    played_cycle = set()
+    for d in cycle:
+        played_cycle.update(d['_n'])
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ARCHETYPE 1 · Law 60 TRIANGLE (P1+P2=P3) — sum-triangle story
+    # Only top-3 frames after strength-sort, for creative diversity.
+    # ═══════════════════════════════════════════════════════════════════
+    for frame in s21_ctx.get('law60_frames', [])[:3]:
+        if len(tickets) >= n_tickets:
+            break
+        p1, p2, p3 = frame
+        if any(v in banned for v in (p1, p2, p3)) or len({p1, p2, p3}) < 3:
+            continue
+        # Fill P4 — prefer Law 61 bridge if compatible
+        bd_p3 = s21_ctx.get('bd_p3')
+        p4_pick = None
+        if bd_p3:
+            target_p4 = p1 + bd_p3
+            if 22 <= target_p4 <= 44 and target_p4 not in (p1, p2, p3):
+                if target_p4 not in banned:
+                    # Find law-tag
+                    laws = lenses.get(target_p4, [])
+                    tag = next((l.split('(')[0] for l in laws if 'Law61' in l), 'Law61-bridge')
+                    p4_pick = (target_p4, tag[:22])
+        if p4_pick is None:
+            p4_pick = pick_slot_voice(4, {p1, p2, p3}, prefer_law='Law61')
+        if p4_pick is None:
+            continue
+        # Fill P5 — prefer Law 56 concat or Law 58/59 triple or ceiling
+        p5_pick = pick_slot_voice(5, {p1, p2, p3, p4_pick[0]},
+                                  prefer_law='Law56') \
+                  or pick_slot_voice(5, {p1, p2, p3, p4_pick[0]},
+                                     prefer_law='Law58-59') \
+                  or pick_slot_voice(5, {p1, p2, p3, p4_pick[0]})
+        if p5_pick is None:
+            continue
+        picks = [(p1, 'Law60-seed'), (p2, 'Law60-seed'),
+                 (p3, f'Law60:P1+P2={p3}'), p4_pick, p5_pick]
+        laws = ['Law60·P1+P2=P3']
+        if 'Law61' in str(p4_pick):
+            laws.append('Law61·P1+BD.P3=P4')
+        if 'Law56' in str(p5_pick) or 'Law58' in str(p5_pick):
+            laws.append(p5_pick[1])
+        commit('Law60-Triangle',
+               f"The sum-triangle: {p1}+{p2}={p3}, then bridge forward",
+               laws, picks)
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ARCHETYPE 2 · Law 61 CROSS-BRIDGE (P1+BD.P3=P4) — named bridge story
+    # Top-3 only for diversity
+    # ═══════════════════════════════════════════════════════════════════
+    for frame in s21_ctx.get('law61_frames', [])[:3]:
+        if len(tickets) >= n_tickets:
+            break
+        p1, bd_p3_val, p4 = frame
+        if any(v in banned for v in (p1, p4)) or p1 == p4:
+            continue
+        p2_pick = pick_slot_voice(2, {p1, p4}, prefer_law='hungry') \
+                  or pick_slot_voice(2, {p1, p4})
+        if p2_pick is None:
+            continue
+        p3_pick = pick_slot_voice(3, {p1, p2_pick[0], p4}, prefer_law='Law60') \
+                  or pick_slot_voice(3, {p1, p2_pick[0], p4})
+        if p3_pick is None:
+            continue
+        p5_pick = pick_slot_voice(5, {p1, p2_pick[0], p3_pick[0], p4},
+                                  prefer_law='Law58-59') \
+                  or pick_slot_voice(5, {p1, p2_pick[0], p3_pick[0], p4})
+        if p5_pick is None:
+            continue
+        picks = [(p1, 'Law61-seed'), p2_pick, p3_pick,
+                 (p4, f'Law61:P1+BD.P3={p4}'), p5_pick]
+        commit('Law61-Bridge',
+               f"Cross-draw bridge: P1={p1}+BD.P3={bd_p3_val}={p4}",
+               ['Law61·P1+BD.P3=P4'], picks)
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ARCHETYPE 3 · Law 58/59 TRIPLE-SLOT SUM-ANCHOR
+    # ═══════════════════════════════════════════════════════════════════
+    triple = s21_ctx.get('law58_triple')
+    sum_band = s21_ctx.get('law59_sum_band')
+    if triple and sum_band and len(tickets) < n_tickets:
+        slot_idx, tval = triple['slot'], triple['value']
+        lo_sum, hi_sum = sum_band
+        # Try to assemble a 5-voice frame with this value fixed at its slot
+        # and total sum within [lo_sum, hi_sum]. Greedy from slot top-5s.
+        frames_to_try = []
+        slot_candidates = {i: [e['n'] for e in slot_top(i, 5) if e['n'] not in banned] for i in range(1, 6)}
+        slot_candidates[slot_idx] = [tval]  # fix the triple voice
+        # Simple greedy: take top of each free slot, adjust P5 or P1 for sum
+        base = []
+        fail = False
+        for i in range(1, 6):
+            cands = [c for c in slot_candidates[i] if c not in base]
+            if not cands:
+                fail = True
+                break
+            base.append(cands[0])
+        if not fail and len(set(base)) == 5:
+            cur_sum = sum(base)
+            # If current sum off-band, try swapping P5 for a slot-5 alt that fits
+            if not (lo_sum <= cur_sum <= hi_sum):
+                for alt in slot_candidates[5]:
+                    if alt in base:
+                        continue
+                    trial = base.copy()
+                    trial[4] = alt
+                    if len(set(trial)) == 5 and lo_sum <= sum(trial) <= hi_sum:
+                        base = trial
+                        cur_sum = sum(base)
+                        break
+            if lo_sum <= cur_sum <= hi_sum and len(set(base)) == 5:
+                picks = []
+                for i, v in enumerate(base, 1):
+                    if i == slot_idx:
+                        picks.append((v, f'Law58-triple-P{i}'))
+                    else:
+                        laws = lenses.get(v, [])
+                        tag = (laws[0].split('(')[0][:22] if laws else 'raw')
+                        picks.append((v, tag))
+                commit('Law58-59-SumAnchor',
+                       f"Triple-slot P{slot_idx}={tval} holds → sum≈{3*tval} ({cur_sum})",
+                       [f'Law58·triple-same-slot', f'Law59·sum-anchor'], picks)
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ARCHETYPE 4 · Law 57 TWIN-CEILING (anchor-d rare back-cluster P4-P5)
+    # ═══════════════════════════════════════════════════════════════════
+    twin = s21_ctx.get('law57_p45')
+    if twin and len(tickets) < n_tickets:
+        p4, p5 = twin
+        if p4 not in banned and p5 not in banned and p4 != p5:
+            picks_partial = []
+            used = {p4, p5}
+            for slot_idx in (1, 2, 3):
+                pv = pick_slot_voice(slot_idx, used)
+                if pv is None:
+                    picks_partial = None
+                    break
+                picks_partial.append(pv)
+                used.add(pv[0])
+            if picks_partial and len(picks_partial) == 3:
+                picks = picks_partial + [
+                    (p4, f'Law57:twin-ceil-P4'),
+                    (p5, f'Law57:twin-ceil-P5'),
+                ]
+                commit('Law57-TwinCeiling',
+                       f"Anchor-d{target_d} rare back-cluster P4={p4}, P5={p5}",
+                       ['Law57·twin-ceiling'], picks)
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ARCHETYPE 5 · DEEP-HUNGER (Law 31 — only starving voices)
+    # ═══════════════════════════════════════════════════════════════════
+    if len(tickets) < n_tickets:
+        hungry_unfired = sorted([h for h in hungry_fam if h not in played_cycle])
+        # Extend hunger pool with RC0-silent mains
+        rc0_silent = [n for n in rc0['n'] if n not in played_cycle]
+        deep_pool = list(dict.fromkeys(hungry_unfired + rc0_silent))
+        if deep_pool:
+            deep_picks = []
+            used = set()
+            for slot_idx in range(1, 6):
+                entries = slot_top(slot_idx, 5)
+                chosen = None
+                for e in entries:
+                    if (e['n'] in deep_pool and e['n'] not in used
+                        and e['n'] not in banned):
+                        chosen = (e['n'], law_tag(e))
+                        break
+                if chosen is None:
+                    # fallback top voice
+                    for e in entries:
+                        if e['n'] not in used and e['n'] not in banned:
+                            chosen = (e['n'], law_tag(e))
+                            break
+                if chosen is None:
+                    break
+                deep_picks.append(chosen)
+                used.add(chosen[0])
+            if len(deep_picks) == 5:
+                commit('Deep-Hunger',
+                       f"Every slot pays the unpaid bill · hungry-{rc0['family']}0s",
+                       ['Law31·family-hungry', 'Law25·RC0-silent'],
+                       deep_picks)
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ARCHETYPE 6 · DUAL-CLOCK (Law 52 — every voice carries anchor-d digit)
+    # ═══════════════════════════════════════════════════════════════════
+    if len(tickets) < n_tickets:
+        dclock_picks = []
+        used = set()
+        for slot_idx in range(1, 6):
+            chosen = pick_slot_voice(slot_idx, used, prefer_law='Law52')
+            if chosen is None:
+                break
+            dclock_picks.append(chosen)
+            used.add(chosen[0])
+        if len(dclock_picks) == 5:
+            commit('Law52-DualClock',
+                   f"Anchor-d{target_d} resonance — every voice echoes the clock",
+                   ['Law52·dual-clock'], dclock_picks)
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ARCHETYPE 7 · SNAP-BACK (Law 5 — if last P1 > 20)
+    # ═══════════════════════════════════════════════════════════════════
+    if len(tickets) < n_tickets and cycle and sorted(cycle[-1]['_n'])[0] > 20:
+        sb_picks = []
+        used = set()
+        for slot_idx in range(1, 6):
+            chosen = pick_slot_voice(slot_idx, used, prefer_law='snap-back')
+            if chosen is None:
+                chosen = pick_slot_voice(slot_idx, used)
+            if chosen is None:
+                break
+            sb_picks.append(chosen)
+            used.add(chosen[0])
+        if len(sb_picks) == 5:
+            commit('Snap-Back-Shape',
+                   f"Last P1={sorted(cycle[-1]['_n'])[0]} > 20 → front collapses",
+                   ['Law5·P1-snap-back'], sb_picks)
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ARCHETYPE 8 · RC0-CLOSING-CEREMONY (Law 12 — d7+ silent RC0 fill)
+    # ═══════════════════════════════════════════════════════════════════
+    if len(tickets) < n_tickets and target_d >= 7:
+        rc0_silent = [n for n in rc0['n'] if n not in played_cycle and n not in banned]
+        if len(rc0_silent) >= 3:
+            cc_picks = []
+            used = set()
+            # Use RC0-silent at their natural slots
+            for slot_idx in range(1, 6):
+                entries = slot_top(slot_idx, 5)
+                chosen = None
+                for e in entries:
+                    if e['n'] in rc0_silent and e['n'] not in used:
+                        chosen = (e['n'], f'Law12:RC0-silent-P{slot_idx}')
+                        break
+                if chosen is None:
+                    chosen = pick_slot_voice(slot_idx, used)
+                if chosen is None:
+                    break
+                cc_picks.append(chosen)
+                used.add(chosen[0])
+            if len(cc_picks) == 5:
+                commit('RC0-Closing-Ceremony',
+                       f"d{target_d} ≥ 7 — the silent RC0 voices close the cycle",
+                       ['Law12·RC0-exact-pos', 'Law25·RC0-silent'], cc_picks)
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ARCHETYPE 9 · OUTLIER-ORCHESTRA (Laws 13/17/22/28 — outlier paths)
+    # ═══════════════════════════════════════════════════════════════════
+    if len(tickets) < n_tickets:
+        oo_picks = []
+        used = set()
+        for slot_idx in range(1, 6):
+            chosen = pick_slot_voice(slot_idx, used, prefer_law='outlier')
+            if chosen is None:
+                chosen = pick_slot_voice(slot_idx, used)
+            if chosen is None:
+                break
+            oo_picks.append(chosen)
+            used.add(chosen[0])
+        if len(oo_picks) == 5:
+            commit('Outlier-Orchestra',
+                   f"Outlier {rc0['outlier']} paths: circle+25, -28mirror, DOUBLE, ±20",
+                   ['Law13·outlier-raw', 'Law17·outlier-double',
+                    'Law22·±20', 'Law28·28mirror'], oo_picks)
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ARCHETYPE 10 · DATE-MIRROR DANCE (Law 33 — date day/month mirror28/30)
+    # ═══════════════════════════════════════════════════════════════════
+    if len(tickets) < n_tickets:
+        dm_picks = []
+        used = set()
+        for slot_idx in range(1, 6):
+            chosen = pick_slot_voice(slot_idx, used, prefer_law='DATE-') \
+                     or pick_slot_voice(slot_idx, used, prefer_law='date-')
+            if chosen is None:
+                chosen = pick_slot_voice(slot_idx, used)
+            if chosen is None:
+                break
+            dm_picks.append(chosen)
+            used.add(chosen[0])
+        if len(dm_picks) == 5:
+            commit('Date-Mirror-Dance',
+                   f"Date {target_date.strftime('%d.%m')} mirror/perm grammar",
+                   ['Law33·date-mirror28', 'Law11·date-permutations'], dm_picks)
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ARCHETYPE 11 · PURE-TOP-VOICE (E's loudest reading per slot)
+    # ═══════════════════════════════════════════════════════════════════
+    if len(tickets) < n_tickets:
+        pv_picks = []
+        used = set()
+        for slot_idx in range(1, 6):
+            chosen = pick_slot_voice(slot_idx, used)
+            if chosen is None:
+                break
+            pv_picks.append(chosen)
+            used.add(chosen[0])
+        if len(pv_picks) == 5:
+            commit('Pure-Top-Voice',
+                   "E's loudest voice at every slot",
+                   ['multi-lens-convergence'], pv_picks)
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ARCHETYPE 12 · ALT-HARMONY (second voice per slot — shadow choir)
+    # ═══════════════════════════════════════════════════════════════════
+    if len(tickets) < n_tickets:
+        alt_picks = []
+        used = set()
+        for slot_idx in range(1, 6):
+            entries = slot_top(slot_idx, 5)
+            if len(entries) < 2:
+                break
+            chosen = None
+            for e in entries[1:]:  # skip index 0
+                if e['n'] not in used and e['n'] not in banned:
+                    chosen = (e['n'], law_tag(e))
+                    break
+            if chosen is None:
+                chosen = pick_slot_voice(slot_idx, used)
+            if chosen is None:
+                break
+            alt_picks.append(chosen)
+            used.add(chosen[0])
+        if len(alt_picks) == 5:
+            commit('Alt-Harmony',
+                   "The shadow choir — if the top voice decoys",
+                   ['shadow-second-voice'], alt_picks)
+
+    return tickets[:n_tickets]
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # DJ VOICE
 # ═══════════════════════════════════════════════════════════════════════════
 def dj_speak(rc0: dict, target_date: dt, target_d: int,
@@ -953,6 +1414,17 @@ async def run_cosmic_engine(
     target_d = len(cycle) + 1
 
     lenses = build_convergence_board(rc0, cycle, target_date, target_d, banned)
+    # Session 21 bridges — inject AFTER convergence board so ticket builder
+    # can access the bridge frames. `all_draws` is passed so Law 58 triple
+    # detection spans the RC0 boundary (e.g. 47@P5 triple April 2026).
+    try:
+        from session21_bridges import inject_session21_tags
+        s21_ctx = inject_session21_tags(
+            lenses, rc0, cycle, target_date, target_d, banned,
+            all_draws=draws,
+        )
+    except Exception:
+        s21_ctx = {}
     ranked = rank_suspects(lenses)
     # Historical slot rates for structural-fit + cool-down penalties
     slot_rates = compute_slot_history_rates(draws)
@@ -980,6 +1452,12 @@ async def run_cosmic_engine(
     disciplined = build_disciplined_tickets(
         pos_board, ranked, star_ranking, rc0, cycle, hungry, target_d,
         n_tickets=12, banned=banned,
+    )
+    # ⭐ STORY-FIRST TICKETS — every ticket born from a named Book archetype
+    # (Laws 60/61/58/59/57/56/52/31/12/13/5/33). Creative, but canonical.
+    story_tickets = build_story_tickets(
+        pos_board, ranked, lenses, star_ranking, rc0, cycle, hungry,
+        target_d, target_date, s21_ctx, n_tickets=12, banned=banned,
     )
 
     voice = dj_speak(rc0, target_date, target_d, ranked, tickets, hungry, rc0_silent)
@@ -1015,6 +1493,16 @@ async def run_cosmic_engine(
         'star_ranking': star_ranking[:6],
         'tickets': tickets,
         'disciplined_tickets': disciplined,
+        'story_tickets': story_tickets,
+        'session21_context': {
+            'law58_triple': s21_ctx.get('law58_triple'),
+            'law59_sum_band': s21_ctx.get('law59_sum_band'),
+            'law57_p45': s21_ctx.get('law57_p45'),
+            'law60_seed_frames': s21_ctx.get('law60_frames', [])[:10],
+            'law61_bridge_frames': s21_ctx.get('law61_frames', [])[:10],
+            'law56_concats': s21_ctx.get('law56_concats', [])[:6],
+            'bd_p3': s21_ctx.get('bd_p3'),
+        },
         'banned': banned,
         'voice': voice,
     }

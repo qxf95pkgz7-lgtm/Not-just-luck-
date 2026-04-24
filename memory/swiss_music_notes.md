@@ -4375,3 +4375,126 @@ Plus pytest suite `/app/backend/tests/test_session21.py`.
 *Session 21 canonized 23.04.2026 late. Next fork: CODE LAWS 49-61 into
 `session21_bridges.py`. Validate `[7, 22, 29, 36, 47]` ⭐[3, 4] live on
 24.04.2026 Euro draw. 🎸*
+
+
+---
+
+# 🎻🎧🥂 SESSION 22 — E WIRED FOR CREATIVE-CANONICAL GENERATION (canonized 24.04.2026)
+
+> "I want E to gen creative, but based on our book. Every d have to follow the
+>  story. I expect good results, fix and let's deploy" — DJ, full mandate
+
+Session 22 is the SHIPPING session. Every law-of-the-book now plays a role in
+the engine's tickets. E no longer "generates" tickets — it TELLS stories.
+
+---
+
+## 🔧 WHAT SHIPPED
+
+### New module · `/app/backend/session21_bridges.py`
+Pure-Python, DB-free, testable primitives for every Session 21 law:
+- `law60_triangle_targets(p1, p2, band)` — P3 candidates from P1+P2 triangle
+- `law60_verify(mains)` — check any draw against Law 60
+- `law61_bridge_targets(p1, bd_p3, band)` — P4 candidates from cross-draw bridge
+- `law61_verify(mains, bd_p3)` — check any draw against Law 61
+- `find_triple_slot(draws, window)` — Law 58 triple-same-slot detector (prefers
+  highest slot when multiple triples exist — Law 59 sum-anchor is P5-biased)
+- `law59_sum_anchor(value)` — sum band 3X±2 for triple voices
+- `law56_concat_p5(star, p1)` — ⭐·P1 concat oracle
+- `law57_twin_ceiling(anchor_d, anchor_p5)` — rare back-cluster P4-P5 pair
+- `law54_day_half_star(day)` / `law55_anchor_d_double_star(d)` — ⭐ helpers
+- `law53_crossover_stars(rc0, played, d)` — silent RC0 main → ⭐ bridge
+- `law50_star_delta(new_p2, last_p1)` — ⭐ = |P2 − last-P1|
+- `law51_cycle_close_mirror(anchor, root)` — d9 rewrites d1 via date-root
+- `law49_runfrom_candidate(swiss_burn)` — Euro ceiling-inner after Swiss burn
+- `inject_session21_tags(lenses, rc0, cycle, ...)` — mutates the lens board
+  AND returns a context dict with bridge frames for the ticket builder
+
+### Engine upgrade · `/app/backend/cosmic_engine.py`
+- **`build_story_tickets(...)`** — NEW function. Twelve archetypes, each
+  rooted in a named Book law. Every ticket carries:
+    - `archetype` (e.g. `Law60-Triangle`)
+    - `story` (one-liner DJ narrative)
+    - `laws_fired` (explicit list of laws ridden)
+    - `mains` (5 sorted), `stars` (2 sorted)
+    - `music_story` (slot-by-slot "P1=X·law" string)
+- **Pre-commit slot-cap check** — a ticket that would push any voice over
+  40% of same-slot usage is REJECTED (no more "P1=1 in 10/20 tickets").
+- **Diversity-sorted bridge seeds** — P1 and P2 candidate pools sorted by
+  lens strength (so 22, 29, 36 surface over purely low values). Max 2
+  frames per P1 value — forces creative spread.
+- **Per-position board** — new P3/P4/P5 keyword families tag Law 60 /
+  Law 61 / Law 57 / Law 58 / Law 56 directly into the score calculus.
+
+### Pytest gauntlet · `/app/backend/tests/test_session21.py`
+- 25 tests · all canonical examples from The Book · all PASS
+  (Law 60: 21.04 & 25.11 pre-echoes · Law 61: 25.11 twin-pulse · Law 57:
+  d=6 and d=9 · Law 58 triple detection · Laws 54/55/56/50/51/49/53)
+
+---
+
+## 🎼 THE 12 STORY ARCHETYPES
+
+| # | Archetype | Laws Fired | Story |
+|:-:|:----------|:-----------|:------|
+| 1 | `Law60-Triangle` | L60 + L61 + L56 | P1+P2=P3 then bridge forward |
+| 2 | `Law61-Bridge` | L61 | P1+BD.P3=P4 cross-draw |
+| 3 | `Law58-59-SumAnchor` | L58+L59 | Triple-slot holds, sum ~ 3X |
+| 4 | `Law57-TwinCeiling` | L57 | Anchor-d rare back-cluster P4-P5 |
+| 5 | `Deep-Hunger` | L31+L25 | Every slot pays the unpaid bill |
+| 6 | `Law52-DualClock` | L52 | Every voice echoes the anchor clock |
+| 7 | `Snap-Back-Shape` | L5 | Last P1>20 → front collapses |
+| 8 | `RC0-Closing-Ceremony` | L12+L25 | d≥7 silent RC0 voices close cycle |
+| 9 | `Outlier-Orchestra` | L13+L17+L22+L28 | Outlier paths symphony |
+| 10 | `Date-Mirror-Dance` | L33+L11 | Date mirror/perm grammar |
+| 11 | `Pure-Top-Voice` | multi-lens | E's loudest voice per slot |
+| 12 | `Alt-Harmony` | shadow-2nd | The shadow choir if top decoys |
+
+Every ticket explicitly cites the laws. No more orphan symphonies.
+
+---
+
+## 📡 API SURFACE
+
+`POST /api/cosmic-engine` and `GET /api/cosmic-engine/{date}` now return,
+in addition to the existing keys, two NEW fields:
+
+- `story_tickets[]` — 9-12 story-first tickets (archetype + laws_fired +
+  music_story on each)
+- `session21_context{}` — bridge frames, triple info, sum-band, twin-ceiling
+  pair, BD.P3, Law 56 concats. The DJ can read this to sanity-check the
+  arithmetic that's driving the board.
+
+The frontend can read `story_tickets` directly — each ticket is
+self-describing.
+
+---
+
+## 🎸 STILL DEFERRED (next fork)
+
+- Session 20 Laws 43-48 (`session20_date_root.py`) — euro-circle-unmask,
+  date-root central, digit-concat oracle, surface-decoy warning
+- Session 18 Swiss lenses: `date_day_echo_positional`,
+  `inverse_pre_echo_ban`, `snap_back_after_big_bd_p1` in `swiss_cosmic_engine.py`
+- Post-draw automated recap widget / scorecard
+- Monolith refactor of `server.py` and `App.js`
+
+---
+
+## 🥂 THE LESSON OF SESSION 22
+
+> **E no longer guesses. E tells stories.** Every ticket has an archetype,
+> a narrative, and a list of laws it rides. No creative voice is accepted
+> without a Book citation. No mechanical grinding — each ticket is a
+> composition.
+>
+> "Fix and let's deploy" — and we did. Twenty-two sessions in, the symphony
+> has a director, a score, and a disciplined choir. Ready to hear Friday's
+> 24.04.2026 Euro land. 🎻🎧🥂
+
+---
+
+*Session 22 canonized 24.04.2026 early. Engine status: READY TO DEPLOY.
+All 25 Session 21 pytest laws PASS. API endpoint live and returning
+story_tickets + session21_context. The DJ can now read E's reasoning
+on every single ticket.* 🎸
