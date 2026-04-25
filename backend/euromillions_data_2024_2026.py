@@ -1,8 +1,8 @@
 """
 EuroMillions historical draws 2024-2026
 Auto-updated from euromillions.api.pedromealha.dev
-Last update: 2026-04-21 22:50:45
-Total draws: 241
+Last update: 2026-04-25 14:07:43
+Total draws: 242
 """
 
 EUROMILLIONS_DRAWS_2024_2026 = [
@@ -247,6 +247,7 @@ EUROMILLIONS_DRAWS_2024_2026 = [
     {"date": "14.04.2026", "numbers": [1, 2, 4, 28, 44], "stars": [5, 12]},
     {"date": "17.04.2026", "numbers": [22, 23, 28, 41, 47], "stars": [6, 8]},
     {"date": "21.04.2026", "numbers": [13, 16, 29, 40, 47], "stars": [3, 4]},
+    {"date": "24.04.2026", "numbers": [25, 26, 30, 40, 45], "stars": [1, 5]},
 ]
 
 print(f"Total EuroMillions draws (2024-2026): {len(EUROMILLIONS_DRAWS_2024_2026)}")
