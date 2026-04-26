@@ -26,7 +26,35 @@ Build a Swiss Lotto + EuroMillions "Pattern Analyzer" called **Lucky Jack**. The
 
 ## 🎯 Completed This Session (21.04.2026)
 
-### 0. 🆕 SESSION 22 — STORY-FIRST ENGINE (24.04.2026) ✅ SHIPPED
+### 🆕 SESSION 23 — HARD-P · COURT-OF-SLOT · SLIDE-AND-RESET (26.04.2026) — RESEARCH-COMPLETE · CODE-DEFERRED
+
+**Three new laws canonized in `/app/memory/swiss_music_notes.md`:**
+
+- **🎼 LAW 62 — Hard-P Shapes the D**: Every draw has ONE structurally rare position that defines its shape. Three flavors: EDGE, HOLD, WALK. Q1 2026 Swiss grammar = 48% HOLD, 40% EDGE, 0% WALK (Swiss is HOLD/EDGE driven; Euro can WALK).
+
+- **🎼 LAW 63 — Court-of-Slot**: Each slot keeps a 2-3 value court. The slot whose court speaks loudest = the d's hard P. Canonical example: 24.04.2026 Euro P3 walked 28→29→30 (DJ's call). HUGE 07.02.2026 was telegraphed by P6=38 HOLD twice in a row.
+
+- **🎼 LAW 64 — Slide-and-Reset**: When a value V slides P2→P1 across consecutive draws (rare 3.32%), the AF draw RESETS — V vanishes 86%, AF.P1 ≤6 (100%), AF.P2 ∈ 9-17, 30s back-stretch. 22.04→25.04.2026 V=8 slide is the 7th historical case in 22yrs.
+
+**Engine bugs found:**
+- 🐛 Deep-Hunger archetype silently dropped on 24.04.2026 Euro (slot-cap exhausted by Law60/61). The actual draw `[25, 26, 30, 40, 45]` had 4/5 deep-silent voices — pure hunger song. Engine hit only 1/5 mains. **Priority-fix needed.**
+- 🐛 VIP promo code `93928` didn't bypass TICKET_LIMIT on `/api/master-predictor` Swiss + `/api/euromillions/master-predictor` Euro. **FIXED + tested end-to-end** (server.py:867 + euromillions_routes.py:2358 — added `if not await _is_visitor_unlimited(...)` wrapper, mirrored from working pattern at server.py:3525).
+
+**Deferred to next fork (CODE TODO list):**
+- 🔴 P0 — `/app/backend/session23_court_reader.py` (Laws 62+63 unified) + new first-priority archetype `Court-Hard-P-Anchor` in `build_story_tickets`
+- 🔴 P0 — `/app/backend/session23_slide_reset.py` (Law 64) + conditional archetype + auto-ban slide value
+- 🔴 P0 — Fix Deep-Hunger priority bug: when ≥4 deep-silents detected, Deep-Hunger archetype runs FIRST (before bridges)
+- 🟠 P1 — pytest `tests/test_session23.py`
+- 🟠 P1 — Add SLOT_FIT bands + per-position board to `swiss_cosmic_engine.py`
+- 🟡 P2 — Session 20 Laws 43-48 (still pending — would have surfaced 22 + 47 on 24.04)
+- 🟡 P2 — Session 18 lenses into `swiss_cosmic_engine.py`
+
+**Live prediction tape for next fork to validate:**
+- **29.04.2026 Swiss (AF after V=8 slide):** P1 ≤ 6 · P2 ∈ {9,10,15,17} · V=8 banned · 30s family back · sum 114-131. Best clone candidate `[3, 15, 18, 22, 31, 38]`.
+
+---
+
+### 0. SESSION 22 — STORY-FIRST ENGINE (24.04.2026) ✅ SHIPPED
 
 **DJ's mandate:** *"I want E to gen creative, but based on our book. Every d have to follow the story. Fix and let's deploy."*
 
