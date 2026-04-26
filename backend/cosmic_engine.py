@@ -952,9 +952,21 @@ def build_story_tickets(
         star_pool = [3, 4, 5, 7, 8, 11]
     star_pairs = list(itertools.combinations(star_pool, 2))
 
-    # ── Per-slot voice-cap (DJ's "no 10/20 tickets with P1=1" discipline) ──
-    max_slot_reuse = max(2, int(n_tickets * 0.4))
+    # ── Per-slot voice-cap — Session 23 bumped 0.40 → 0.50 so Deep-Hunger
+    # ── doesn't get squeezed out by Law60/61 archetypes (24.04.2026 bug fix).
+    max_slot_reuse = max(2, int(n_tickets * 0.5))
     slot_usage: Dict[Tuple[int, int], int] = {}
+
+    # ── Session 23 cycle-context detection: who's the loudest voice tonight?
+    # Count deep-silent voices (silent ≥30 draws within the cycle).
+    played_count: Dict[int, int] = {}
+    for d in cycle:
+        for v in d.get('_n', []):
+            played_count[v] = played_count.get(v, 0) + 1
+    deep_silents = [n for n in range(1, EURO_RANGE + 1)
+                    if n not in played_count and n not in banned]
+    deep_hunger_priority = len(deep_silents) >= 4 and len(cycle) >= 6
+    triple_active = bool(s21_ctx.get('law58_triple'))
 
     # ── Slot top picks ──
     def slot_top(slot: int, k: int = 5) -> List[Dict]:
@@ -1032,6 +1044,72 @@ def build_story_tickets(
     played_cycle = set()
     for d in cycle:
         played_cycle.update(d['_n'])
+
+    # ═══════════════════════════════════════════════════════════════════
+    # ARCHETYPE 0 · COURT-HARD-P-ANCHOR (Law 62 + 63 — Session 23)
+    # Read every slot's court, pin the loudest voice first, cascade rest.
+    # ═══════════════════════════════════════════════════════════════════
+    try:
+        from session23_court_reader import find_hard_p, EURO_SLOT_BANDS
+        hard_p = find_hard_p(cycle, bands=EURO_SLOT_BANDS, n_slots=5)
+    except Exception:
+        hard_p = None
+    if hard_p and hard_p.get('predicted_value'):
+        hp_slot = hard_p['slot']
+        hp_value = hard_p['predicted_value']
+        hp_flavor = hard_p['flavor']
+        if (1 <= hp_value <= EURO_RANGE and hp_value not in banned):
+            hp_picks: List[Tuple[int, str]] = []
+            used = {hp_value}
+            for slot_idx in range(1, 6):
+                if slot_idx == hp_slot:
+                    hp_picks.append((hp_value,
+                                     f'Court-{hp_flavor}-P{hp_slot}'))
+                    continue
+                chosen = pick_slot_voice(slot_idx, used)
+                if chosen is None:
+                    break
+                hp_picks.append(chosen)
+                used.add(chosen[0])
+            if len(hp_picks) == 5:
+                commit('Court-Hard-P-Anchor',
+                       f"Hard P{hp_slot}={hp_value} ({hp_flavor}) — court speaks loudest",
+                       [f'Law62·hard-P', f'Law63·court-{hp_flavor}'], hp_picks)
+
+    # ═══════════════════════════════════════════════════════════════════
+    # PRIORITY DEEP-HUNGER PRE-PASS (Session 23 fix — 24.04.2026 Euro bug)
+    # When ≥4 deep-silents (silent ≥cycle_len draws), Deep-Hunger goes FIRST
+    # to avoid being squeezed out by Law60/61 bridges at the slot voice-cap.
+    # ═══════════════════════════════════════════════════════════════════
+    if deep_hunger_priority and len(tickets) < n_tickets:
+        hungry_unfired = sorted([h for h in hungry_fam if h not in played_cycle])
+        rc0_silent = [n for n in rc0['n'] if n not in played_cycle]
+        deep_pool = list(dict.fromkeys(hungry_unfired + rc0_silent + deep_silents))
+        if len(deep_pool) >= 5:
+            deep_picks = []
+            used = set()
+            for slot_idx in range(1, 6):
+                entries = slot_top(slot_idx, 5)
+                chosen = None
+                for e in entries:
+                    if (e['n'] in deep_pool and e['n'] not in used
+                        and e['n'] not in banned):
+                        chosen = (e['n'], law_tag(e))
+                        break
+                if chosen is None:
+                    for e in entries:
+                        if e['n'] not in used and e['n'] not in banned:
+                            chosen = (e['n'], law_tag(e))
+                            break
+                if chosen is None:
+                    break
+                deep_picks.append(chosen)
+                used.add(chosen[0])
+            if len(deep_picks) == 5:
+                commit('Deep-Hunger-Priority',
+                       f"≥4 deep-silents detected — hunger leads the song",
+                       ['Law31·family-hungry', 'Law25·RC0-silent',
+                        'Session23·hunger-priority'], deep_picks)
 
     # ═══════════════════════════════════════════════════════════════════
     # ARCHETYPE 1 · Law 60 TRIANGLE (P1+P2=P3) — sum-triangle story
@@ -1360,6 +1438,70 @@ def build_story_tickets(
                    "The shadow choir — if the top voice decoys",
                    ['shadow-second-voice'], alt_picks)
 
+    # ═══════════════════════════════════════════════════════════════════
+    # SESSION 23 · 4 × 10% HARD-P GUESS ARCHETYPES (DJ's pool grammar)
+    # Each archetype bets that a specific PAIR of slots is the d's hard P.
+    # Builds frames from the top-3×top-3 pool of pos_board and commits.
+    # ═══════════════════════════════════════════════════════════════════
+    try:
+        from suspect_pool import (build_suspect_pool, hard_pair_frames,
+                                  compute_hard_p_shares)
+        pool = build_suspect_pool(pos_board, n_slots=5, per_slot=5)
+        shares = compute_hard_p_shares(n_tickets)
+        # Euro: replace P6<34 with P5<40 (low Euro back-seal). Run only the
+        # three pair archetypes here (Swiss-side runs the P6 archetype).
+        for pair_label, pair_slots in [
+            ('p1_p2', (1, 2)),
+            ('p2_p3', (2, 3)),
+            ('p3_p4', (3, 4)),
+        ]:
+            if len(tickets) >= n_tickets:
+                break
+            n_frames = shares[pair_label]
+            frames = hard_pair_frames(pool, pair_slots, n_frames,
+                                      n_slots=5, banned=banned)
+            for f in frames:
+                if len(tickets) >= n_tickets:
+                    break
+                commit(f.get('archetype', 'HardP-Pair'),
+                       f.get('story', 'Hard P-pair guess'),
+                       f.get('laws_fired', ['Law62·hard-P-pair']),
+                       f.get('picks', []))
+        # Euro low-back-seal — P5 < 40 (rare; replaces Swiss P6<34)
+        if len(tickets) < n_tickets:
+            p5_low = [e for e in pool.get('P5', [])
+                      if e['n'] < 40 and e['n'] not in banned]
+            for ep5 in p5_low[:shares['p6_lt_34']]:
+                if len(tickets) >= n_tickets:
+                    break
+                used = {ep5['n']}
+                picks: List[Tuple[int, str]] = []
+                ok = True
+                for slot_idx in range(1, 5):
+                    chosen = pick_slot_voice(slot_idx, used)
+                    if chosen is None or chosen[0] >= ep5['n']:
+                        # find a smaller alternative
+                        alt = None
+                        for e in pool.get(f'P{slot_idx}', []):
+                            if (e['n'] not in used and e['n'] not in banned
+                                and e['n'] < ep5['n']):
+                                alt = (e['n'], law_tag(e))
+                                break
+                        if alt is None:
+                            ok = False
+                            break
+                        chosen = alt
+                    picks.append(chosen)
+                    used.add(chosen[0])
+                if not ok:
+                    continue
+                picks.append((ep5['n'], law_tag(ep5) + '·low-P5-seal'))
+                commit('HardP-Low-P5',
+                       f"P5={ep5['n']} < 40 — rare Euro low back-seal",
+                       ['Law62·hard-P-edge', 'P5<40·rare-low-seal'], picks)
+    except Exception:
+        pass  # Pool grammar is additive — never break the engine
+
     return tickets[:n_tickets]
 
 
@@ -1462,6 +1604,15 @@ async def run_cosmic_engine(
 
     voice = dj_speak(rc0, target_date, target_d, ranked, tickets, hungry, rc0_silent)
 
+    # Session 23 — persist suspect pool for next-d carry-over
+    try:
+        from suspect_pool import build_suspect_pool, save_pool_snapshot
+        euro_pool = build_suspect_pool(pos_board, n_slots=5, per_slot=5)
+        await save_pool_snapshot(db, 'euro', target_date, euro_pool,
+                                 target_d=target_d)
+    except Exception:
+        euro_pool = {}
+
     # Tablet for response
     tablet = []
     tablet.append({
@@ -1494,6 +1645,7 @@ async def run_cosmic_engine(
         'tickets': tickets,
         'disciplined_tickets': disciplined,
         'story_tickets': story_tickets,
+        'suspect_pool': euro_pool,
         'session21_context': {
             'law58_triple': s21_ctx.get('law58_triple'),
             'law59_sum_band': s21_ctx.get('law59_sum_band'),

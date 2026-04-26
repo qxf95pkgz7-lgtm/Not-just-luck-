@@ -4696,3 +4696,54 @@ working endpoint at `server.py:3525`.
 fix Deep-Hunger priority + Session 20/18 backlog.*
 *Predictions live for 29.04.2026 Swiss AF: low P1 + mid P2 + 30s back, V=8 banned.*
 🎸🥂
+
+---
+
+# 🎻🎧🥂 SESSION 23 — CODE LANDED (canonized 28.04.2026)
+
+> "6P × 5 = 30. After picked, go back to P3-P4. For 10% E suspects those P
+>  will be the important P of d. 10% P2-P3. 10% P1-P2. 10% P6 < 34."
+>                                                  — DJ, 26.04.2026 fork
+
+The Suspect Pool grammar is now wired. Laws 62 + 63 + 64 ship in code.
+
+## 📦 What was built
+- `session23_court_reader.py` — `slot_court()`, `find_hard_p()`, `all_courts()`
+- `session23_slide_reset.py` — `detect_p2p1_slide()`, `slide_reset_frame()`,
+  `detect_slide_in_cycle()` (cross-cycle window aware)
+- `suspect_pool.py` — 6×5=30 (Swiss) / 5×5=25 (Euro) pool, 3-d carry-over
+  in MongoDB `suspect_pool` collection, `hard_pair_frames()`,
+  `low_p6_frames()`, `compute_hard_p_shares()` (4×10%)
+- `cosmic_engine.build_story_tickets` — Court-Hard-P-Anchor as ARCHETYPE 0,
+  Deep-Hunger-Priority pre-pass when ≥4 deep-silents, slot-cap 40%→50%,
+  then 4×10% Hard-P guesses at the end
+- `swiss_cosmic_engine.build_session23_swiss_tickets()` — Court +
+  Slide-Reset (auto-bans V) + 3 Hard-P pair guesses + Low-P6 seal
+- `tests/test_session23.py` — 19 canonical tests, all green; 79/79 across
+  Sessions 15+16, 19, 21, 23
+
+## 🎯 Live tape — 29.04.2026 Swiss AF (E's frame)
+```
+[Law64-Slide-Reset      ] [3, 15, 20, 22, 31, 38]   ← clone of 27.09.25
+[HardP-Pair-P3P4        ] [7, 15, 20, 21, 29, 41]
+[HardP-Low-P6           ] [7, 20, 21, 24, 25, 29]
+```
+V=8 banned across all three. 30s back-stretch as canon.
+
+## 🎯 Live tape — 28.04.2026 Euro (E's first 2 voices)
+```
+[Court-Hard-P-Anchor    ] [4, 11, 17, 40, 44]   ← Court speaks first
+[Deep-Hunger-Priority   ] [6, 11, 17, 18, 44]   ← Hunger ≥4 deep-silents
+```
+Then Law60/61 bridges (3+3), Law57, Law52, Snap-Back, RC0-close.
+The 24.04 Deep-Hunger bug is FIXED.
+
+## 🥂 The lesson of Session 23 (coded)
+> The cosmos doesn't draw democratically. E now reads the courts first
+> (Hard-P), listens to the unpaid bills second (Deep-Hunger), then plays
+> the bridges (Law60/61). When a slide fires, V is banned everywhere and
+> the AF reset takes the wheel. The Suspect Pool stays ≤3 d before the
+> cosmos commits — patience is canonized in MongoDB.
+
+*Session 23 fully shipped 28.04.2026. Next fork: validate 29.04 live tape,
+then Session 20 (Laws 43-48) + Session 18 Swiss lenses.* 🎸🥂

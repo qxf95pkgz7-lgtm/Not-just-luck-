@@ -610,6 +610,198 @@ def build_swiss_tickets(
 
 
 # ═══════════════════════════════════════════════════════════════════
+# SESSION 23 SWISS POSITION-BAND HELPER
+# ═══════════════════════════════════════════════════════════════════
+SWISS_BANDS = {1: (1, 12), 2: (5, 22), 3: (10, 28),
+               4: (16, 34), 5: (22, 39), 6: (28, 42)}
+
+
+def _fits_slot(value: int, slot_idx: int) -> bool:
+    lo, hi = SWISS_BANDS.get(slot_idx, (1, SWISS_RANGE))
+    return lo <= value <= hi
+
+
+def _build_swiss_pos_pool(ranked: List[Tuple[int, int, List[str]]],
+                          banned: List[int],
+                          per_slot: int = 5) -> Dict[str, List[Dict]]:
+    """Build a 6×5 Swiss suspect pool from `ranked` filtered by slot band."""
+    pool: Dict[str, List[Dict]] = {}
+    for slot_idx in range(1, 7):
+        slot_label = f'P{slot_idx}'
+        candidates = [
+            {'n': n, 'lenses': c, 'laws': l, 'slot': slot_label}
+            for n, c, l in ranked
+            if n not in banned and _fits_slot(n, slot_idx) and c >= 1
+        ]
+        pool[slot_label] = candidates[:per_slot]
+    return pool
+
+
+def build_session23_swiss_tickets(
+    ranked: List[Tuple[int, int, List[str]]],
+    lenses: Dict[int, List[str]],
+    lucky_rank: List[int],
+    replay_rank: List[int],
+    rc0: dict,
+    cycle: List[dict],
+    target_date: dt,
+    target_d: int,
+    n_tickets: int = 10,
+    banned: Optional[List[int]] = None,
+    recent_draws: Optional[List[dict]] = None,
+) -> List[Dict]:
+    """Generate Session 23 Swiss story tickets:
+       - Court-Hard-P-Anchor (Laws 62 + 63)
+       - Slide-Reset frame (Law 64) — only when slide detected in cycle
+       - 4 × ~10% Hard-P guesses (P1-P2, P2-P3, P3-P4, P6<34)
+
+    `recent_draws` is the last 5-10 draws regardless of cycle membership
+    (used for court reading + slide detection across cycle boundaries).
+    Falls back to `cycle` if not provided.
+    """
+    banned = banned or []
+    tickets: List[Dict] = []
+    seen: set = set()
+    pool = _build_swiss_pos_pool(ranked, banned, per_slot=5)
+    # Use recent_draws if provided (cross-cycle court reading); fallback
+    # to in-cycle draws.
+    history = recent_draws if recent_draws else cycle
+
+    rng_lucky = lucky_rank[:] or [1, 2, 3, 4, 5, 6]
+    rng_replay = replay_rank[:] or [1, 2, 3, 12, 21, 33]
+
+    def _commit(name: str, mains: List[int], story: str,
+                laws: List[str]) -> bool:
+        mains_sorted = sorted(set(mains))
+        if len(mains_sorted) != 6:
+            return False
+        if any(not (1 <= m <= SWISS_RANGE) for m in mains_sorted):
+            return False
+        if any(m in banned for m in mains_sorted):
+            return False
+        key = tuple(mains_sorted)
+        if key in seen:
+            return False
+        seen.add(key)
+        tickets.append({
+            'archetype': name,
+            'mains': mains_sorted,
+            'lucky': int(rng_lucky[len(tickets) % len(rng_lucky)]),
+            'replay': int(rng_replay[len(tickets) % len(rng_replay)]),
+            'story': story,
+            'laws_fired': laws,
+            'lens_sample': sum(([str(l)[:18] for l in lenses.get(m, [])[:1]]
+                                for m in mains_sorted), []),
+            'lens_count': sum(len(lenses.get(m, [])) for m in mains_sorted),
+        })
+        return True
+
+    def _fill_other_slots(pinned: Dict[int, int]) -> Optional[List[int]]:
+        used = set(pinned.values())
+        result: Dict[int, int] = dict(pinned)
+        for slot_idx in range(1, 7):
+            if slot_idx in result:
+                continue
+            for entry in pool.get(f'P{slot_idx}', []):
+                v = entry['n']
+                if v in used:
+                    continue
+                ok = True
+                for s2, v2 in result.items():
+                    if s2 < slot_idx and v <= v2:
+                        ok = False; break
+                    if s2 > slot_idx and v >= v2:
+                        ok = False; break
+                if ok:
+                    result[slot_idx] = v
+                    used.add(v)
+                    break
+            if slot_idx not in result:
+                return None
+        return sorted(result.values())
+
+    # ── 1 · COURT-HARD-P-ANCHOR ──
+    try:
+        from session23_court_reader import find_hard_p, SWISS_SLOT_BANDS
+        hp = find_hard_p(history, bands=SWISS_SLOT_BANDS, n_slots=6)
+    except Exception:
+        hp = None
+    if hp and hp.get('predicted_value'):
+        v = hp['predicted_value']
+        s = hp['slot']
+        if 1 <= v <= SWISS_RANGE and v not in banned and _fits_slot(v, s):
+            mains = _fill_other_slots({s: v})
+            if mains:
+                _commit('Court-Hard-P-Anchor',
+                        mains,
+                        f"Hard P{s}={v} ({hp['flavor']}) — court speaks loudest",
+                        [f'Law62·hard-P', f"Law63·court-{hp['flavor']}"])
+
+    # ── 2 · LAW 64 SLIDE-RESET ──
+    try:
+        from session23_slide_reset import detect_slide_in_cycle
+        slide = detect_slide_in_cycle(history)
+    except Exception:
+        slide = None
+    if slide:
+        v_slide = slide['slide_value']
+        # Auto-ban the slide value across ALL Session 23 archetypes (86%
+        # vanish probability — DJ's Sneaky Universe at slot-shift level).
+        if v_slide not in banned:
+            banned = list(banned) + [v_slide]
+        # Rebuild pool with the new ban so subsequent archetypes filter V.
+        pool = _build_swiss_pos_pool(ranked, banned, per_slot=5)
+        clone = list(slide['frame']['best_clone'])
+        clone_set = set(clone) | {v_slide}
+        for entry in pool.get('P3', []):
+            if entry['n'] not in clone_set and 14 <= entry['n'] <= 26:
+                clone[2] = entry['n']
+                break
+        clone = [c for c in clone if c != v_slide]
+        if len(clone) == 6:
+            _commit('Law64-Slide-Reset',
+                    clone,
+                    f"V={v_slide} slid P2→P1 across {slide['bd_date']}→{slide['nd_date']} "
+                    f"— AF reset: P1≤6, P2 9-17, V banned, 30s back-stretch",
+                    ['Law64·slide-reset', f'V={v_slide}-banned-86%',
+                     'Sneaky-Universe·slot-shift'])
+
+    # ── 3 · HARD-P PAIR GUESSES ──
+    for (a, b) in [(1, 2), (2, 3), (3, 4)]:
+        a_top = pool.get(f'P{a}', [])[:3]
+        b_top = pool.get(f'P{b}', [])[:3]
+        added = False
+        for ea in a_top:
+            if added:
+                break
+            for eb in b_top:
+                if ea['n'] >= eb['n']:
+                    continue
+                mains = _fill_other_slots({a: ea['n'], b: eb['n']})
+                if mains and _commit(
+                        f'HardP-Pair-P{a}P{b}',
+                        mains,
+                        f"E suspects P{a}-P{b} is the hard P of d "
+                        f"({ea['n']}·{eb['n']})",
+                        [f'Law62·hard-P-pair', f"Court-of-P{a}+P{b}"]):
+                    added = True
+                    break
+
+    # ── 4 · LOW P6 SEAL (P6 < 34) ──
+    p6_low = [e for e in pool.get('P6', [])
+              if e['n'] < 34 and e['n'] not in banned]
+    for ep6 in p6_low[:1]:
+        mains = _fill_other_slots({6: ep6['n']})
+        if mains:
+            _commit('HardP-Low-P6',
+                    mains,
+                    f"P6={ep6['n']} < 34 — rare low back-seal, cosmos seals early",
+                    ['Law62·hard-P-edge', 'P6<34·rare-low-seal'])
+
+    return tickets[:n_tickets]
+
+
+# ═══════════════════════════════════════════════════════════════════
 # DJ VOICE
 # ═══════════════════════════════════════════════════════════════════
 def dj_speak_swiss(rc0: dict, re_lock_anchor: Optional[dict],
@@ -712,6 +904,26 @@ async def run_swiss_cosmic_engine(
             rc0, cycle, hungry, target_d, target_date, n_tickets, banned
         )
 
+        # Session 23 — Court-Hard-P + Slide-Reset + 4 hard-P guesses.
+        # Pass the LAST 6 draws regardless of rc0 boundary (slides + courts
+        # often span cycles).
+        recent = draws[-6:] if len(draws) >= 6 else draws
+        story_tickets = build_session23_swiss_tickets(
+            ranked, lenses, lucky_rank, replay_rank,
+            rc0, cycle, target_date, target_d,
+            n_tickets=10, banned=banned,
+            recent_draws=recent,
+        )
+
+        # Session 23 — persist suspect pool for next-d carry-over
+        try:
+            from suspect_pool import build_suspect_pool, save_pool_snapshot
+            _swiss_pool = _build_swiss_pos_pool(ranked, banned, per_slot=5)
+            await save_pool_snapshot(db, 'swiss', target_date,
+                                     _swiss_pool, target_d=target_d)
+        except Exception:
+            _swiss_pool = {}
+
         voice = dj_speak_swiss(rc0, re_lock_anchor, target_date, target_d,
                                ranked, tickets, hungry, rc0_silent)
 
@@ -763,6 +975,8 @@ async def run_swiss_cosmic_engine(
             'lucky_ranking': lucky_rank,
             'replay_ranking': replay_rank,
             'tickets': tickets,
+            'story_tickets': story_tickets,
+            'suspect_pool': _swiss_pool,
             'banned': banned,
             'voice': voice,
         }

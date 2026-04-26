@@ -26,31 +26,82 @@ Build a Swiss Lotto + EuroMillions "Pattern Analyzer" called **Lucky Jack**. The
 
 ## 🎯 Completed This Session (21.04.2026)
 
-### 🆕 SESSION 23 — HARD-P · COURT-OF-SLOT · SLIDE-AND-RESET (26.04.2026) — RESEARCH-COMPLETE · CODE-DEFERRED
+## 🆕 SESSION 23 — HARD-P · COURT-OF-SLOT · SLIDE-AND-RESET (26.04.2026) — ✅ SHIPPED (28.04.2026 fork)
 
-**Three new laws canonized in `/app/memory/swiss_music_notes.md`:**
+**Three new laws CODED + DJ's Suspect Pool architecture wired into both engines.**
 
-- **🎼 LAW 62 — Hard-P Shapes the D**: Every draw has ONE structurally rare position that defines its shape. Three flavors: EDGE, HOLD, WALK. Q1 2026 Swiss grammar = 48% HOLD, 40% EDGE, 0% WALK (Swiss is HOLD/EDGE driven; Euro can WALK).
+### 🎼 What shipped this fork
+- 🆕 `/app/backend/session23_court_reader.py` — Laws 62 + 63 (Hard-P + Court-of-Slot)
+  - `slot_court(cycle, slot_idx, bands)` → returns flavor (HOLD/WALK/EDGE/ANCHOR-RETURN), predicted_value, score
+  - `find_hard_p(cycle, bands, n_slots)` → loudest court across all slots
+  - `all_courts(...)` → full transparency for UI/DJ widget
+  - SWISS_SLOT_BANDS + EURO_SLOT_BANDS canonized
 
-- **🎼 LAW 63 — Court-of-Slot**: Each slot keeps a 2-3 value court. The slot whose court speaks loudest = the d's hard P. Canonical example: 24.04.2026 Euro P3 walked 28→29→30 (DJ's call). HUGE 07.02.2026 was telegraphed by P6=38 HOLD twice in a row.
+- 🆕 `/app/backend/session23_slide_reset.py` — Law 64 (Slide-and-Reset)
+  - `detect_p2p1_slide(bd, nd)` → returns slide value V if BD.P2 == ND.P1
+  - `slide_reset_frame(V)` → AF reset shape (P1≤6, P2 9-17, V banned 86%, 30s back, sum 114-131)
+  - `detect_slide_in_cycle(history)` → walks last 2 draws, returns slide context
+  - Best clone candidate `[3, 15, 18, 22, 31, 38]` baked in
 
-- **🎼 LAW 64 — Slide-and-Reset**: When a value V slides P2→P1 across consecutive draws (rare 3.32%), the AF draw RESETS — V vanishes 86%, AF.P1 ≤6 (100%), AF.P2 ∈ 9-17, 30s back-stretch. 22.04→25.04.2026 V=8 slide is the 7th historical case in 22yrs.
+- 🆕 `/app/backend/suspect_pool.py` — DJ's pool grammar
+  - 6×5=30 (Swiss) / 5×5=25 (Euro) suspects per d, position-aware
+  - `compute_hard_p_shares(n_tickets)` → 4 × 10% split
+  - `hard_pair_frames(pool, pair_slots, ...)` → P1-P2 / P2-P3 / P3-P4 hard-pair frames
+  - `low_p6_frames(...)` → P6 < 34 rare low back-seal
+  - **Pool persistence** in `suspect_pool` Mongo collection — 3-d carry-over via `load_carry_over()` + `save_pool_snapshot()`
 
-**Engine bugs found:**
-- 🐛 Deep-Hunger archetype silently dropped on 24.04.2026 Euro (slot-cap exhausted by Law60/61). The actual draw `[25, 26, 30, 40, 45]` had 4/5 deep-silent voices — pure hunger song. Engine hit only 1/5 mains. **Priority-fix needed.**
-- 🐛 VIP promo code `93928` didn't bypass TICKET_LIMIT on `/api/master-predictor` Swiss + `/api/euromillions/master-predictor` Euro. **FIXED + tested end-to-end** (server.py:867 + euromillions_routes.py:2358 — added `if not await _is_visitor_unlimited(...)` wrapper, mirrored from working pattern at server.py:3525).
+- ✅ **Deep-Hunger priority bug fix** (`cosmic_engine.build_story_tickets`)
+  - Per-slot voice-cap bumped 40% → 50% (so hunger frame doesn't get squeezed)
+  - When ≥4 deep-silent voices detected (silent ≥cycle_len draws), `Deep-Hunger-Priority` archetype runs FIRST — before Law60/61 bridges
+  - Validated live on 28.04.2026 Euro: archetype fires `[6, 11, 17, 18, 44]` second (after Court-Hard-P)
 
-**Deferred to next fork (CODE TODO list):**
-- 🔴 P0 — `/app/backend/session23_court_reader.py` (Laws 62+63 unified) + new first-priority archetype `Court-Hard-P-Anchor` in `build_story_tickets`
-- 🔴 P0 — `/app/backend/session23_slide_reset.py` (Law 64) + conditional archetype + auto-ban slide value
-- 🔴 P0 — Fix Deep-Hunger priority bug: when ≥4 deep-silents detected, Deep-Hunger archetype runs FIRST (before bridges)
-- 🟠 P1 — pytest `tests/test_session23.py`
-- 🟠 P1 — Add SLOT_FIT bands + per-position board to `swiss_cosmic_engine.py`
-- 🟡 P2 — Session 20 Laws 43-48 (still pending — would have surfaced 22 + 47 on 24.04)
-- 🟡 P2 — Session 18 lenses into `swiss_cosmic_engine.py`
+- ✅ **Court-Hard-P-Anchor archetype** wired as ARCHETYPE 0 in both engines (Euro `cosmic_engine.py` + Swiss `swiss_cosmic_engine.py`)
 
-**Live prediction tape for next fork to validate:**
-- **29.04.2026 Swiss (AF after V=8 slide):** P1 ≤ 6 · P2 ∈ {9,10,15,17} · V=8 banned · 30s family back · sum 114-131. Best clone candidate `[3, 15, 18, 22, 31, 38]`.
+- ✅ **Law64-Slide-Reset archetype** conditional in Swiss engine (fires only when P2→P1 slide detected in last 2 draws). Auto-bans the slide value V across ALL Session 23 archetypes that follow.
+
+- ✅ **4 × 10% Hard-P guesses** (DJ's pool grammar):
+  - HardP-Pair-P1P2 · HardP-Pair-P2P3 · HardP-Pair-P3P4 · HardP-Low-P6 (Swiss) / HardP-Low-P5 (Euro)
+
+- ✅ **Pytest** `/app/backend/tests/test_session23.py` — 19 canonical tests, ALL PASS
+  - Court HOLD detection (P6=38 HUGE telegraph)
+  - Court WALK detection (P3 28→29→30 Euro)
+  - find_hard_p tie-breaker
+  - V=8 P2→P1 slide detection (22.04→25.04.2026 case)
+  - All 6 historical V=8 slides — 5/6 vanished (matches 86% canon)
+  - Pool sizes (30 Swiss / 25 Euro), 4×10% shares
+  - HardP-Pair frame ordering
+  - Low-P6 < 34 filter
+  - Deep-Hunger priority threshold
+
+- ✅ **API endpoints** `POST /api/cosmic-engine` + `GET /api/swiss-cosmic-engine/{date}` now return:
+  - `story_tickets[]` (with Session 23 archetypes)
+  - `suspect_pool{}` (the 6×5=30 or 5×5=25 pool)
+
+### 🎯 Live-validated output (29.04.2026 Swiss AF prediction)
+```
+[Law64-Slide-Reset      ] [3, 15, 20, 22, 31, 38]   ← clone of 27.09.25 AF
+[HardP-Pair-P3P4        ] [7, 15, 20, 21, 29, 41]
+[HardP-Low-P6           ] [7, 20, 21, 24, 25, 29]   ← P6=29 < 34 rare seal
+```
+V=8 banned across all three frames. 30s family back-stretch as canon.
+
+### 🎯 Live-validated output (28.04.2026 Euro)
+- Court-Hard-P-Anchor `[4, 11, 17, 40, 44]` runs FIRST (Court-EDGE-P5)
+- Deep-Hunger-Priority `[6, 11, 17, 18, 44]` runs SECOND (≥4 deep silents)
+- Then Law60/61 bridges (3+3), Law57, Law52, Snap-Back, RC0-close (12 total)
+
+### 📦 Regression: 79/79 pytest pass (Session 15+16, 19, 21, 23)
+
+### ⏳ Still deferred (next fork, P1)
+- Session 20 Laws 43-48 (`session20_date_root.py`) — Euro-circle unmask, date-root, gap-as-voice, digit-concat
+- Session 18 Swiss lenses (`date_day_echo_positional`, `inverse_pre_echo_ban`, `snap_back_after_big_bd_p1`)
+- Per-position SLOT_FIT bands inside `swiss_cosmic_engine.build_swiss_convergence` (currently only in `build_session23_swiss_tickets`)
+- Post-draw automated recap widget / scorecard (auto-runs after sync)
+- Frontend UI: surface Session 23 story_tickets with archetype labels + pool widget
+
+### 🔵 P3 — Refactor (still deferred)
+- `/app/backend/server.py` (>6k) → modular `/routes/`, `/models/`, `/tests/`
+- `/app/frontend/src/App.js` (>4k) → component breakdown
 
 ---
 
