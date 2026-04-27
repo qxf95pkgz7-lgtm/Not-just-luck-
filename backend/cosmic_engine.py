@@ -472,7 +472,10 @@ def build_per_position_board(
     slot_re = re.compile(r'P([1-5])')
 
     slot_ranges = {
-        1: (1, 18), 2: (6, 26), 3: (14, 36), 4: (22, 44), 5: (30, 50),
+        # DJ's canonical Euro bands (Session 23 fork 28.04.2026, validated
+        # on 1619-draw distribution scan). Wider than internal structural
+        # ranges to honour the DJ's "walk every value in band" grammar.
+        1: (1, 35), 2: (2, 38), 3: (5, 43), 4: (9, 49), 5: (16, 50),
     }
     p1_kw = ('snap-back', 'dialect-ladder(P1', 'ghost-echo', 'DJ-delta', 'outlier-circle+25',
              'outlier-28mirror', 'P1-exact-pos-repeat', 'anchor-d', 'anchor-clock',
@@ -506,6 +509,10 @@ def build_per_position_board(
         for slot in range(1, 6):
             explicit_laws = []
             struct_fit = 1.0 if (slot_ranges[slot][0] <= n <= slot_ranges[slot][1]) else 0.0
+            # DJ's bands are HARD bounds — out-of-band values are forbidden
+            # at this slot (Session 23 fork canon, e.g. Euro P5 ≥ 16).
+            if struct_fit < 1.0:
+                continue
             for law in laws:
                 if any(k in law for k in pos_kw[slot]):
                     explicit_laws.append(law)
@@ -1467,11 +1474,11 @@ def build_story_tickets(
                        f.get('story', 'Hard P-pair guess'),
                        f.get('laws_fired', ['Law62·hard-P-pair']),
                        f.get('picks', []))
-        # Euro low-back-seal — P5 < 40 (rare; replaces Swiss P6<34)
+        # Euro low-back-seal — P5 < 25 (≤2% canon, ultra-rare)
         if len(tickets) < n_tickets:
             p5_low = [e for e in pool.get('P5', [])
-                      if e['n'] < 40 and e['n'] not in banned]
-            for ep5 in p5_low[:shares['p6_lt_34']]:
+                      if e['n'] < 25 and e['n'] not in banned]
+            for ep5 in p5_low[:1]:
                 if len(tickets) >= n_tickets:
                     break
                 used = {ep5['n']}
@@ -1480,7 +1487,6 @@ def build_story_tickets(
                 for slot_idx in range(1, 5):
                     chosen = pick_slot_voice(slot_idx, used)
                     if chosen is None or chosen[0] >= ep5['n']:
-                        # find a smaller alternative
                         alt = None
                         for e in pool.get(f'P{slot_idx}', []):
                             if (e['n'] not in used and e['n'] not in banned
@@ -1495,10 +1501,48 @@ def build_story_tickets(
                     used.add(chosen[0])
                 if not ok:
                     continue
-                picks.append((ep5['n'], law_tag(ep5) + '·low-P5-seal'))
+                picks.append((ep5['n'], law_tag(ep5) + '·rare-low-P5'))
                 commit('HardP-Low-P5',
-                       f"P5={ep5['n']} < 40 — rare Euro low back-seal",
-                       ['Law62·hard-P-edge', 'P5<40·rare-low-seal'], picks)
+                       f"P5={ep5['n']} < 25 — ultra-rare Euro low back-seal (≤2%)",
+                       ['Law62·hard-P-edge', 'P5<25·rare-low-seal'], picks)
+
+        # ── LAW 66 · EURO P4-P5 KING-PAIR (gap collapse signature) ──
+        try:
+            from session23_euro_p4p5_gap import P4_P5_KING_PAIRS
+            for p4_v, p5_v in P4_P5_KING_PAIRS[:6]:
+                if len(tickets) >= n_tickets:
+                    break
+                if p4_v in banned or p5_v in banned:
+                    continue
+                used = {p4_v, p5_v}
+                picks: List[Tuple[int, str]] = []
+                ok = True
+                for slot_idx in range(1, 4):
+                    chosen = pick_slot_voice(slot_idx, used)
+                    if chosen is None or chosen[0] >= p4_v:
+                        alt = None
+                        for e in pool.get(f'P{slot_idx}', []):
+                            if (e['n'] not in used and e['n'] not in banned
+                                and e['n'] < p4_v):
+                                alt = (e['n'], law_tag(e))
+                                break
+                        if alt is None:
+                            ok = False
+                            break
+                        chosen = alt
+                    picks.append(chosen)
+                    used.add(chosen[0])
+                if not ok:
+                    continue
+                picks.append((p4_v, f'Law66:king-P4'))
+                picks.append((p5_v, f'Law66:king-P5'))
+                if commit(f'Law66-KingPair-{p4_v}-{p5_v}',
+                          f"P4={p4_v}+P5={p5_v} king pair (gap={p5_v-p4_v}, top-12 historical)",
+                          ['Law66·P4-P5-gap-collapse',
+                           'King-pair-historical-top12'], picks):
+                    break  # only one king-pair ticket per d
+        except Exception:
+            pass
     except Exception:
         pass  # Pool grammar is additive — never break the engine
 

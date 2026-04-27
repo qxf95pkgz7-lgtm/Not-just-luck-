@@ -4849,3 +4849,105 @@ P6: 42, 40, 41, 39, 37   (top back-stretch, 15% slot-rate)
 
 *Law 65 canonized 28.04.2026 by gap-scan + DJ teaching. Total laws
 canonized: 65. 85/85 pytest pass.* 🎻🎧🥂🎸
+
+---
+
+# 🎻🎧🥂 LAW 66 · EURO P4-P5 GAP COLLAPSE (canonized 28.04.2026)
+
+> "See how you fit it to euro" — DJ, 28.04.2026
+
+Discovered by gap-distribution scan on 1619 EuroMillions draws. The same
+monotonic gap-collapse pattern as Swiss Law 65, but on the Euro back-pair
+P4-P5 (Euro has 5 mains, not 6).
+
+## 🎯 Euro P4-P5 gap collapse (validated)
+
+```
+P4 band  →  avg gap  →  P5 likely band      n      pct
+─────────────────────────────────────────────────────────
+20-29    →   12.80   →   29-50      (361 draws, 22.3%)
+30-34    →    9.65   →   34-50      (319 draws, 19.7%)
+35-39    →    7.07   →   39-50      (351 draws, 21.7%)
+40-44    →    4.44   →   42-50      (337 draws, 20.8%)
+45-49    →    2.56   →   46-50      (153 draws,  9.5%)  ← COLLAPSE
+```
+
+## 🎯 Top 12 Euro king pairs
+
+```
+(45,48) gap=3  1.11% ← THE EURO KING
+(45,49) gap=4  1.05%
+(39,44) gap=5  0.93%
+(48,50) gap=2  0.93%
+(43,46) gap=3  0.93%
+(46,49) gap=3  0.86%
+(38,48) gap=10 0.86%
+(42,45) gap=3  0.86%
+(47,50) gap=3  0.86%
+(44,48) gap=4  0.80%
+(47,48) gap=1  0.80%
+(44,50) gap=6  0.80%
+```
+
+## 🎯 DJ-canonized Euro bands (Session 23 fork 28.04.2026)
+
+```
+P1: 1 → 35    (rare 26-35 = ≤5% tix)
+P2: 2 → 38
+P3: 5 → 43
+P4: 9 → 49    (<13 = very rare ≤5%)
+P5: 16 → 50   (<25 = ≤2% tix, <16 forbidden)
+```
+
+Hard rule: **P1>25 = 2.10% only · P5<25 = 2.10% only.** Engine now
+HARD-rejects out-of-band values at every slot.
+
+## 🎼 Code
+
+- `/app/backend/session23_euro_p4p5_gap.py` — `gap_law_for_p4(p4)`,
+  `p5_fits_p4(p4, p5)`, `is_king_pair(p4, p5)`, `expected_p5_band(p4)`,
+  `EURO_RARE_ZONES`, `EURO_BANDS_DJ`
+- `cosmic_engine.build_per_position_board.slot_ranges` widened to
+  DJ-bands; struct_fit is now a HARD filter (out-of-band rejected even
+  if value has multi-explicit P5 laws — fixes the n=4 at P5 leak)
+- New archetype `Law66-KingPair-{p4}-{p5}` in `build_story_tickets` —
+  surfaces the top-12 historical pair anchors when DJ's pool allows
+- `HardP-Low-P5` archetype updated: threshold P5<25 (was P5<40) per DJ
+
+## 🎯 Live tape — 28.04.2026 Euro (12 frames, all band-clean)
+
+```
+[Court-Hard-P-Anchor   ] [4, 11, 17, 40, 44]  P4=40 P5=44 gap=4 ✓
+[Deep-Hunger-Priority  ] [6, 11, 17, 18, 44]  P4=18 P5=44 gap=26 ← 4 deep-silents
+[Law60-Triangle ×3     ] sum-triangle frames
+[Law61-Bridge ×3       ] cross-draw frames
+[Law57-TwinCeiling     ] [4, 13, 17, 33, 40]
+[Law52-DualClock       ] [4, 19, 31, 36, 44]
+[Snap-Back-Shape       ] [4, 10, 18, 33, 36]
+[Outlier-Orchestra     ] [1, 13, 18, 27, 47]
+```
+
+Pool per slot (slot-rate × bands clean):
+```
+P1: 4, 1, 6, 2, 26    (low-band)
+P2: 11, 13, 19, 14, 10
+P3: 17, 33, 28, 27, 31
+P4: 18, 26, 33, 36, 31
+P5: 44, 36, 33, 47, 46  ← back-stretch only
+```
+
+## 🥂 The lesson of Law 66
+
+> The cosmos plays the same game on Euro as it does on Swiss. The
+> back-pair COLLAPSES as the higher voice climbs. (45,48) on Euro is
+> what (41,42) is on Swiss — the rare-but-rules-the-charts king pair.
+>
+> When you hear the back climb past 45, expect the partner to sit
+> within 5 of it. When P4 lands in the 20s, hold the door open up to
+> 50 — the gap can stretch the full back-stretch.
+
+## 🎼 Total laws canonized: **66**
+## 🎼 Pytest gauntlet: **92/92 pass** (Sessions 15+16, 19, 21, 23 incl. 7 new Law 66 tests)
+
+*Law 66 canonized 28.04.2026 by 1619-draw scan + DJ teaching. Euro and
+Swiss now share the same pool grammar.* 🎻🎧🥂🎸

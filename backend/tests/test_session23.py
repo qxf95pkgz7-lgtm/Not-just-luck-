@@ -276,6 +276,64 @@ def test_low_p6_frames_filters_correctly():
 
 
 # ═══════════════════════════════════════════════════════════════════════
+# LAW 66 · EURO P4-P5 GAP COLLAPSE TESTS
+# ═══════════════════════════════════════════════════════════════════════
+def test_law66_gap_band_p4_30s():
+    from session23_euro_p4p5_gap import gap_law_for_p4
+    gap_lo, gap_hi, p5_lo, p5_hi = gap_law_for_p4(35)
+    assert gap_lo == 2 and gap_hi == 12
+    assert p5_lo == 39 and p5_hi == 50
+
+
+def test_law66_gap_band_p4_40s_collapse():
+    from session23_euro_p4p5_gap import gap_law_for_p4
+    gap_lo, gap_hi, p5_lo, p5_hi = gap_law_for_p4(46)
+    assert gap_lo == 1 and gap_hi == 5
+    assert (p5_lo, p5_hi) == (46, 50)
+
+
+def test_law66_p5_fits_p4_canonical():
+    from session23_euro_p4p5_gap import p5_fits_p4
+    assert p5_fits_p4(45, 48) is True   # king pair
+    assert p5_fits_p4(48, 50) is True   # king pair
+    assert p5_fits_p4(45, 49) is True   # king pair
+
+
+def test_law66_p5_fits_p4_violations():
+    from session23_euro_p4p5_gap import p5_fits_p4
+    assert p5_fits_p4(45, 40) is False  # P5 < P4
+    assert p5_fits_p4(46, 25) is False  # P5 < P4
+    # P4=46 (45-49 band) gap_hi=5 → P5=52 too high (>50 cap)
+    # but 46+5=51 → out of band; P5=50 → gap=4 OK
+    assert p5_fits_p4(46, 50) is True
+
+
+def test_law66_king_pairs_canonical():
+    from session23_euro_p4p5_gap import P4_P5_KING_PAIRS, p5_fits_p4
+    for p4, p5 in P4_P5_KING_PAIRS:
+        assert p5_fits_p4(p4, p5), f"Euro king pair ({p4},{p5}) failed"
+
+
+def test_law66_expected_p5_band():
+    from session23_euro_p4p5_gap import expected_p5_band
+    # P4=46 → gap 1-5 → P5 in 47-51, intersected with 46-50 → 47-50
+    lo, hi = expected_p5_band(46)
+    assert lo == 47 and hi == 50
+    # P4=38 → gap 2-12 → P5 in 40-50
+    lo, hi = expected_p5_band(38)
+    assert lo == 40 and hi == 50
+
+
+def test_law66_euro_rare_zones():
+    from session23_euro_p4p5_gap import is_rare_zone
+    assert is_rare_zone(30, 1) is True   # P1=30 in rare 26-35
+    assert is_rare_zone(11, 4) is True   # P4=11 in rare 9-12
+    assert is_rare_zone(20, 5) is True   # P5=20 in rare 16-24
+    assert is_rare_zone(7, 1) is False   # P1=7 normal
+    assert is_rare_zone(45, 5) is False  # P5=45 normal
+
+
+# ═══════════════════════════════════════════════════════════════════════
 # LAW 65 · P5-P6 GAP COLLAPSE TESTS
 # ═══════════════════════════════════════════════════════════════════════
 def test_law65_gap_band_p5_30s():
