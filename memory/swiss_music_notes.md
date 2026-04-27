@@ -5153,35 +5153,54 @@ AF P1 ≤ 6:          11/17  (64.7%)  ← P1 falls to low-edge 2/3 of time
 ## 🎼 What the law says
 
 A number that lands WITHOUT full Book-clue support is NOT a cosmic
-voice — even if it sits in a "family-echo" position to a deeper voice.
+voice. The depth of a number's voice is measured by how many
+INDEPENDENT CIRCLE-AWARE Book lenses fire on it.
 
-Family echoes the engine has been over-weighting:
-- 25 ≈ 2  (tens-digit-2 / 20s clan / digit-root echo)
-- 47 ≈ 7  (units-digit echo)
-- 38 ≈ 38-mirror (2× cycle 19)
-- 16 ≈ 7  (digit-root 1+6)
-- 41 ≈ 5  (4+1)
+**Circle is the Book's true grammar — not digit-family / numerology:**
+- **Swiss circle** = `n + 21 mod 42` (half-range pivot)
+- **Euro circle** = `n + 25 mod 50` (half-range pivot)
+- circle(2) = 27 · circle(25) = 50 · circle(30) = 5 · circle(8) = 33
 
-Each of these is a SHALLOW echo. A deep cosmic voice fires only when
-MANY independent Book clues stack on the same value:
-  silent-P1 compass · welcome-companion · twin-pulse · +21 circle
-  · 28-mirror · hungry-family · RC0-silent · BD pre-echo · date echo
-  · slot-court · sum-bridge · slide-reset · etc.
+**WRONG echo (the trap):** treating 25 as a "2-family echo" (digit-tens
+or numerological reduction). This is the lazy heuristic that tricks the
+engine into rewarding shallow same-tens overlaps.
 
-A candidate with **1-2 clues** = noise/echo · NOT a real signal.
-A candidate with **5+ clues stacked** = the cosmos is genuinely
-calling that voice.
+**RIGHT echo (Book canon):** treating circle(2) = 27 as the deep echo
+of 2. If 27 lands when 2 was the deep silent, that's the cosmos firing
+the 2-song through its circle twin. If 25 lands instead, that's NOT a
+2-echo at all — 25 has its own circle pair (50) and must be judged on
+its own clue stack.
 
-## 🎯 The Euro 24.04.2026 verification (the test case)
+Other circle pairs the engine should track (Euro):
+- 2 ↔ 27 · 5 ↔ 30 · 7 ↔ 32 · 8 ↔ 33 · 13 ↔ 38
+- 18 ↔ 43 · 19 ↔ 44 · 21 ↔ 46 · 25 ↔ 50
+
+Other circle pairs the engine should track (Swiss, +21 mod 42):
+- 1 ↔ 22 · 4 ↔ 25 · 8 ↔ 29 · 12 ↔ 33 · 16 ↔ 37 · 21 ↔ 42
+
+**A candidate's clue depth must be counted on:**
+1. Its OWN raw appearances
+2. Its CIRCLE PAIR's recent activity (back-door entry — Law 69b/circle-shadow)
+3. Its date-digit / d-count overlap (raw or via circle)
+4. Its slot-court position (Law 62/63)
+5. Its sum-bridge participation (Law 60/61)
+
+A candidate with **1-2 circle-aware clues** = noise / shallow echo.
+A candidate with **5+ stacked circle-aware clues** = the cosmos
+genuinely calling that voice.
+
+## 🎯 The Euro 24.04.2026 verification (the test case — corrected)
 
 ```
 Engine deep-silent expected:    P1 = 2  (mass clue support)
-Engine fired weakly at:         P1 = 25 (thin clue, "2-family echo")
-What landed:                    P1 = 25 (top of 1-25 normal zone)
+True circle-echo of P1=2:       circle(2) = 27 (would have been a hit)
+What landed:                    P1 = 25 (its own number; circle pair = 50)
 ```
 
-**This is not a hit, it's an echo landing.** The engine called the
-right family but the wrong magnitude. P1=25 ≠ a deep P1=2 song.
+P1=25 was NOT the cosmic 2-song landing — neither raw nor via circle.
+It was 25 firing on its own merits (whatever those were — likely thin
+Book support). **The engine should not have credited the 2-prediction as
+"close" — it was a clean miss of a 2-song with a separate 25-event landing.**
 
 ## 🥂 Why this connects to Law 67 (The Combinatorial Gap)
 
