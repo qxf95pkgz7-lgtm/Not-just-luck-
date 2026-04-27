@@ -276,6 +276,62 @@ def test_low_p6_frames_filters_correctly():
 
 
 # ═══════════════════════════════════════════════════════════════════════
+# LAW 65 · P5-P6 GAP COLLAPSE TESTS
+# ═══════════════════════════════════════════════════════════════════════
+def test_law65_gap_band_p5_30s():
+    """P5 in 30-39 → gap 1-8, P6 in 33-42."""
+    from session23_p5p6_gap import gap_law_for_p5
+    gap_lo, gap_hi, p6_lo, p6_hi = gap_law_for_p5(35)
+    assert gap_lo == 1 and gap_hi == 8
+    assert p6_lo == 33 and p6_hi == 42
+
+
+def test_law65_gap_band_p5_40s_collapse():
+    """P5 in 40-42 → gap collapses to 1-2."""
+    from session23_p5p6_gap import gap_law_for_p5
+    gap_lo, gap_hi, p6_lo, p6_hi = gap_law_for_p5(41)
+    assert gap_lo == 1 and gap_hi == 2
+    assert (p6_lo, p6_hi) == (41, 42)
+
+
+def test_law65_p6_fits_p5_canonical():
+    """(41, 42) is the king pair — must fit."""
+    from session23_p5p6_gap import p6_fits_p5
+    assert p6_fits_p5(41, 42) is True
+    assert p6_fits_p5(32, 39) is True   # canonical
+    assert p6_fits_p5(33, 38) is True   # canonical
+
+
+def test_law65_p6_fits_p5_violations():
+    """Wide-gap pairs that violate the law."""
+    from session23_p5p6_gap import p6_fits_p5
+    assert p6_fits_p5(41, 35) is False  # P6 < P5
+    assert p6_fits_p5(40, 42) is True   # gap=2, OK
+    assert p6_fits_p5(35, 22) is False  # P6 < P5
+    # P5=35, gap=8 → P6=43 invalid (>42); but raw gap=8 fits P5 30s band
+    # Test boundary
+    assert p6_fits_p5(35, 36) is True
+
+
+def test_law65_king_pairs_are_canonical():
+    """Top-12 king pairs all pass the gap-fit test."""
+    from session23_p5p6_gap import P5_P6_KING_PAIRS, p6_fits_p5
+    for p5, p6 in P5_P6_KING_PAIRS:
+        assert p6_fits_p5(p5, p6), f"King pair ({p5},{p6}) failed gap-fit"
+
+
+def test_law65_expected_p6_band():
+    """Given P5, the derived P6 band intersects gap-law and band."""
+    from session23_p5p6_gap import expected_p6_band
+    # P5=35 → gap 1-8 → P6 in 36-43, intersected with band 33-42 → 36-42
+    lo, hi = expected_p6_band(35)
+    assert lo == 36 and hi == 42
+    # P5=41 → gap 1-2 → P6 in 42-43, intersected with 41-42 → 42-42
+    lo, hi = expected_p6_band(41)
+    assert lo == 42 and hi == 42
+
+
+# ═══════════════════════════════════════════════════════════════════════
 # DEEP-HUNGER PRIORITY REORDERING SMOKE TEST
 # ═══════════════════════════════════════════════════════════════════════
 def test_deep_hunger_priority_threshold_logic():

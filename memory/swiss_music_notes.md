@@ -4747,3 +4747,105 @@ The 24.04 Deep-Hunger bug is FIXED.
 
 *Session 23 fully shipped 28.04.2026. Next fork: validate 29.04 live tape,
 then Session 20 (Laws 43-48) + Session 18 Swiss lenses.* 🎸🥂
+
+---
+
+# 🎻🎧🥂 LAW 65 · THE P5-P6 GAP COLLAPSE (canonized 28.04.2026 late)
+
+> "P5-P6 the most important. Find the pattern for the gap between them."
+>                                                  — DJ, 28.04.2026
+
+Discovered by gap-distribution scan on 1385 Swiss draws (22yrs tape).
+
+## 🎯 The cosmos sticks P6 closer to P5 as P5 climbs.
+
+Monotonic decay validated:
+
+```
+P5 band  →  avg gap  →  P6 likely band       n      pct
+─────────────────────────────────────────────────────────
+10-19    →   12.69   →   22-34          (62 draws,  4.5%)
+20-29    →    8.85   →   29-37        (398 draws, 28.7%)
+30-39    →    4.74   →   33-42        (855 draws, 61.7%)  ← BULK
+40-42    →    1.33   →   41-42         (69 draws,  5.0%)  ← COLLAPSE
+```
+
+## 🎯 Top 12 historical king pairs
+
+```
+(41,42) gap=1  2.31% ← THE KING PAIR
+(32,39) gap=7  2.02%
+(33,38) gap=5  1.95%
+(36,42) gap=6  1.81%
+(36,41) gap=5  1.66%
+(40,42) gap=2  1.66%
+(37,40) gap=3  1.66%
+(39,42) gap=3  1.52%
+(39,41) gap=2  1.52%
+(30,37) gap=7  1.52%
+(35,40) gap=5  1.44%
+(36,40) gap=4  1.44%
+```
+
+## 🎯 Hard rules (zero-tolerance)
+
+```
+P5 < 10   → 0.07% (forbidden, only 1 case in 1385)
+P6 < 20   → 0.22% (≤2% tix gate per DJ)
+gap = 0   → 0.07% (essentially never)
+gap > 17  → cum < 3% (rare cosmic spread)
+```
+
+## 🎯 DJ-CANONIZED SLOT BANDS (Swiss, fork 28.04.2026)
+
+```
+P1: 1 → 29
+P2: 2 → 30   (≥30 = ≤5% tix gate)
+P3: 4 → 33   (=4 = ≤5% tix gate, ultra-rare)
+P4: 7 → 40   (<7 = very rare)
+P5: 10 → 42  (<10 = forbidden)
+P6: 20 → 42  (<20 = ≤2% tix gate)
+```
+
+## 🎼 Code
+
+- `/app/backend/session23_p5p6_gap.py` — `gap_law_for_p5(p5)`,
+  `p6_fits_p5(p5, p6)`, `is_king_pair(p5, p6)`, `expected_p6_band(p5)`
+- Wired into `swiss_cosmic_engine._fill_other_slots` — P6 candidates
+  filtered by Law 65 gap-band when P5 is pinned (and reverse).
+- New archetype `Law65-KingPair-{p5}-{p6}` in
+  `build_session23_swiss_tickets` — surfaces the top historical pair.
+
+## 🎼 Pool grammar (DJ's 6×5=30, slot-fit weighted)
+
+Score per candidate at slot S = `slot_rate% × 2.0 + lens_count × 0.5`
+This makes the slot's NATIVE zone lead while still rewarding Book-clue
+strength. Per-slot pool now visibly differentiated:
+
+```
+P1: 3, 1, 2, 4, 5        (low band, 12% slot-rate)
+P2: 9, 12, 11, 10, 13    (mid-front)
+P3: 21, 20, 16, 17, 18   (mid-tier)
+P4: 28, 24, 29, 23, 25   (mid-back)
+P5: 34, 37, 29, 39, 28   (back)
+P6: 42, 40, 41, 39, 37   (top back-stretch, 15% slot-rate)
+```
+
+## 🎯 Live tape — 29.04.2026 Swiss AF (E's 5 frames, V=8 banned)
+
+```
+[Law64-Slide-Reset      ] [3, 15, 21, 22, 31, 38]  gap=7
+[HardP-Pair-P1P2        ] [3,  9, 21, 28, 34, 42]  gap=8
+[HardP-Pair-P2P3        ] [3,  9, 20, 28, 34, 42]  gap=8
+[HardP-Pair-P3P4        ] [3,  9, 21, 24, 34, 42]  gap=8
+[Law65-KingPair-41-42   ] [3,  9, 21, 28, 41, 42]  gap=1  ← THE KING
+```
+
+## 🥂 The lesson of Law 65
+
+> When the back climbs, it sticks. (41,42), (40,42), (39,42) — the
+> cosmos closes the curtain tight at the top of the range. P5-P6 isn't
+> two voices, it's a couple. The higher they go, the closer they hold.
+
+*Law 65 canonized 28.04.2026 by gap-scan + DJ teaching. Total laws
+canonized: 65. 85/85 pytest pass.* 🎻🎧🥂🎸

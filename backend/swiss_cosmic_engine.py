@@ -610,10 +610,21 @@ def build_swiss_tickets(
 
 
 # ═══════════════════════════════════════════════════════════════════
-# SESSION 23 SWISS POSITION-BAND HELPER
+# SESSION 23 SWISS POSITION-BAND HELPER (DJ's pool grammar 28.04.2026)
 # ═══════════════════════════════════════════════════════════════════
-SWISS_BANDS = {1: (1, 12), 2: (5, 22), 3: (10, 28),
-               4: (16, 34), 5: (22, 39), 6: (28, 42)}
+# DJ-canonized bands per slot. Hard min/max + soft rare-zone exceptions.
+SWISS_BANDS = {1: (1, 29),  2: (2, 30),  3: (4, 33),
+               4: (7, 40),  5: (10, 42), 6: (20, 42)}
+
+# Rare-zone gates — values inside these zones are tagged "rare" and
+# capped at the share listed. The pool may surface them but the ticket
+# generator only commits them in `share_pct` of the n_tickets pass.
+SWISS_RARE_ZONES = {
+    'P2_high':  {'slot': 2, 'lo': 30, 'hi': 30, 'share_pct': 0.05},  # P2≥30
+    'P3_low':   {'slot': 3, 'lo': 4,  'hi': 4,  'share_pct': 0.05},  # P3=4
+    'P4_low':   {'slot': 4, 'lo': 1,  'hi': 6,  'share_pct': 0.05},  # P4<7
+    'P6_low':   {'slot': 6, 'lo': 1,  'hi': 19, 'share_pct': 0.02},  # P6<20
+}
 
 
 def _fits_slot(value: int, slot_idx: int) -> bool:
@@ -621,20 +632,75 @@ def _fits_slot(value: int, slot_idx: int) -> bool:
     return lo <= value <= hi
 
 
+def _is_rare_zone(value: int, slot_idx: int) -> bool:
+    """True if (value, slot) lands in a rare-zone gate (DJ's exceptions)."""
+    for zone in SWISS_RARE_ZONES.values():
+        if zone['slot'] == slot_idx and zone['lo'] <= value <= zone['hi']:
+            return True
+    return False
+
+
 def _build_swiss_pos_pool(ranked: List[Tuple[int, int, List[str]]],
                           banned: List[int],
-                          per_slot: int = 5) -> Dict[str, List[Dict]]:
-    """Build a 6×5 Swiss suspect pool from `ranked` filtered by slot band."""
+                          per_slot: int = 5,
+                          slot_history_rates: Optional[Dict[int, Dict[int, float]]] = None) -> Dict[str, List[Dict]]:
+    """Build a 6×5 Swiss suspect pool from `ranked` filtered by slot band.
+
+    When `slot_history_rates` is provided, candidates are scored as
+    (lens_count × 1.0) + (slot_rate% × 0.4) so each slot prefers its
+    natural zone (P1 → low values, P6 → high values) instead of every
+    slot grabbing the same top-lens picks.
+    """
     pool: Dict[str, List[Dict]] = {}
     for slot_idx in range(1, 7):
         slot_label = f'P{slot_idx}'
-        candidates = [
-            {'n': n, 'lenses': c, 'laws': l, 'slot': slot_label}
-            for n, c, l in ranked
-            if n not in banned and _fits_slot(n, slot_idx) and c >= 1
-        ]
+        candidates = []
+        for n, c, l in ranked:
+            if n in banned:
+                continue
+            if c < 1:
+                continue
+            if not _fits_slot(n, slot_idx):
+                continue
+            slot_rate = 0.0
+            if slot_history_rates and slot_idx in slot_history_rates:
+                slot_rate = slot_history_rates[slot_idx].get(n, 0.0)
+            # DJ's grammar: walk every value in band, score by Book clues
+            # AT THAT SLOT. Slot-fit (historical landing rate %) leads the
+            # score so each slot's pool reflects its native zone. Lens
+            # count is secondary — voices must EARN the slot.
+            score = slot_rate * 2.0 + float(c) * 0.5
+            candidates.append({
+                'n': n, 'lenses': c, 'laws': l,
+                'slot': slot_label,
+                'slot_rate': round(slot_rate, 2),
+                'score': round(score, 2),
+            })
+        candidates.sort(key=lambda e: (e['score'], e['lenses']), reverse=True)
         pool[slot_label] = candidates[:per_slot]
     return pool
+
+
+def compute_swiss_slot_history_rates(draws: List[Dict]) -> Dict[int, Dict[int, float]]:
+    """For each (slot 1-6, value 1-42), return the historical % of draws
+    in which that value landed at that slot.
+
+    Used to weight the pool — P1 prefers 1-8, P6 prefers 35-42, etc.
+    """
+    counts = {i: {n: 0 for n in range(1, SWISS_RANGE + 1)} for i in range(1, 7)}
+    total = 0
+    for d in draws:
+        mains = sorted(d.get('_n', d.get('numbers', [])))
+        if len(mains) < 6:
+            continue
+        for i, v in enumerate(mains[:6], 1):
+            counts[i][v] += 1
+        total += 1
+    if total == 0:
+        return {}
+    rates = {i: {n: counts[i][n] / total * 100 for n in counts[i]}
+             for i in counts}
+    return rates
 
 
 def build_session23_swiss_tickets(
@@ -649,20 +715,18 @@ def build_session23_swiss_tickets(
     n_tickets: int = 10,
     banned: Optional[List[int]] = None,
     recent_draws: Optional[List[dict]] = None,
-) -> List[Dict]:
-    """Generate Session 23 Swiss story tickets:
-       - Court-Hard-P-Anchor (Laws 62 + 63)
-       - Slide-Reset frame (Law 64) — only when slide detected in cycle
-       - 4 × ~10% Hard-P guesses (P1-P2, P2-P3, P3-P4, P6<34)
+    slot_history_rates: Optional[Dict[int, Dict[int, float]]] = None,
+) -> Tuple[List[Dict], Dict[str, List[Dict]], List[int]]:
+    """Generate Session 23 Swiss story tickets.
 
-    `recent_draws` is the last 5-10 draws regardless of cycle membership
-    (used for court reading + slide detection across cycle boundaries).
-    Falls back to `cycle` if not provided.
+    Returns (tickets, final_pool, final_banned). Final pool & banned reflect
+    Slide-Reset auto-bans so the caller can persist the post-ban pool.
     """
     banned = banned or []
     tickets: List[Dict] = []
     seen: set = set()
-    pool = _build_swiss_pos_pool(ranked, banned, per_slot=5)
+    pool = _build_swiss_pos_pool(ranked, banned, per_slot=5,
+                                 slot_history_rates=slot_history_rates)
     # Use recent_draws if provided (cross-cycle court reading); fallback
     # to in-cycle draws.
     history = recent_draws if recent_draws else cycle
@@ -699,6 +763,12 @@ def build_session23_swiss_tickets(
     def _fill_other_slots(pinned: Dict[int, int]) -> Optional[List[int]]:
         used = set(pinned.values())
         result: Dict[int, int] = dict(pinned)
+        # Law 65 — when P5 is pinned, filter P6 candidates by gap-band first.
+        # When P6 is pinned, filter P5 candidates by reverse gap-band.
+        try:
+            from session23_p5p6_gap import p6_fits_p5
+        except Exception:
+            p6_fits_p5 = None
         for slot_idx in range(1, 7):
             if slot_idx in result:
                 continue
@@ -712,6 +782,14 @@ def build_session23_swiss_tickets(
                         ok = False; break
                     if s2 > slot_idx and v >= v2:
                         ok = False; break
+                if ok and p6_fits_p5 is not None:
+                    # Law 65 gap-band check
+                    if slot_idx == 6 and 5 in result:
+                        if not p6_fits_p5(result[5], v):
+                            ok = False
+                    elif slot_idx == 5 and 6 in result:
+                        if not p6_fits_p5(v, result[6]):
+                            ok = False
                 if ok:
                     result[slot_idx] = v
                     used.add(v)
@@ -750,7 +828,8 @@ def build_session23_swiss_tickets(
         if v_slide not in banned:
             banned = list(banned) + [v_slide]
         # Rebuild pool with the new ban so subsequent archetypes filter V.
-        pool = _build_swiss_pos_pool(ranked, banned, per_slot=5)
+        pool = _build_swiss_pos_pool(ranked, banned, per_slot=5,
+                                     slot_history_rates=slot_history_rates)
         clone = list(slide['frame']['best_clone'])
         clone_set = set(clone) | {v_slide}
         for entry in pool.get('P3', []):
@@ -787,18 +866,36 @@ def build_session23_swiss_tickets(
                     added = True
                     break
 
-    # ── 4 · LOW P6 SEAL (P6 < 34) ──
+    # ── 4 · LOW P6 SEAL (P6 < 20 — only ≤2% of tickets per DJ) ──
     p6_low = [e for e in pool.get('P6', [])
-              if e['n'] < 34 and e['n'] not in banned]
-    for ep6 in p6_low[:1]:
+              if e['n'] < 20 and e['n'] not in banned]
+    # share gate: only 1 ticket max if n_tickets≥10, else skip
+    if n_tickets >= 10 and p6_low:
+        ep6 = p6_low[0]
         mains = _fill_other_slots({6: ep6['n']})
         if mains:
             _commit('HardP-Low-P6',
                     mains,
-                    f"P6={ep6['n']} < 34 — rare low back-seal, cosmos seals early",
-                    ['Law62·hard-P-edge', 'P6<34·rare-low-seal'])
+                    f"P6={ep6['n']} < 20 — ultra-rare low back-seal (≤2% historical)",
+                    ['Law62·hard-P-edge', 'P6<20·rare-low-seal'])
 
-    return tickets[:n_tickets]
+    # ── 5 · LAW 65 · P5-P6 KING-PAIR (the gap-collapse signature) ──
+    try:
+        from session23_p5p6_gap import P5_P6_KING_PAIRS, expected_p6_band
+        for p5_v, p6_v in P5_P6_KING_PAIRS[:6]:
+            if p5_v in banned or p6_v in banned:
+                continue
+            mains = _fill_other_slots({5: p5_v, 6: p6_v})
+            if mains and _commit(
+                    f'Law65-KingPair-{p5_v}-{p6_v}',
+                    mains,
+                    f"P5={p5_v}+P6={p6_v} king pair (gap={p6_v-p5_v}, top-12 historical)",
+                    ['Law65·P5-P6-gap-collapse', 'King-pair-historical-top12']):
+                break  # only one king-pair ticket per d
+    except Exception:
+        pass
+
+    return tickets[:n_tickets], pool, banned
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -906,23 +1003,24 @@ async def run_swiss_cosmic_engine(
 
         # Session 23 — Court-Hard-P + Slide-Reset + 4 hard-P guesses.
         # Pass the LAST 6 draws regardless of rc0 boundary (slides + courts
-        # often span cycles).
+        # often span cycles). Slot-history rates weight the per-slot pool.
         recent = draws[-6:] if len(draws) >= 6 else draws
-        story_tickets = build_session23_swiss_tickets(
+        slot_rates = compute_swiss_slot_history_rates(draws)
+        story_tickets, _swiss_pool, _post_ban = build_session23_swiss_tickets(
             ranked, lenses, lucky_rank, replay_rank,
             rc0, cycle, target_date, target_d,
             n_tickets=10, banned=banned,
             recent_draws=recent,
+            slot_history_rates=slot_rates,
         )
 
         # Session 23 — persist suspect pool for next-d carry-over
         try:
-            from suspect_pool import build_suspect_pool, save_pool_snapshot
-            _swiss_pool = _build_swiss_pos_pool(ranked, banned, per_slot=5)
+            from suspect_pool import save_pool_snapshot
             await save_pool_snapshot(db, 'swiss', target_date,
                                      _swiss_pool, target_d=target_d)
         except Exception:
-            _swiss_pool = {}
+            pass
 
         voice = dj_speak_swiss(rc0, re_lock_anchor, target_date, target_d,
                                ranked, tickets, hungry, rc0_silent)
