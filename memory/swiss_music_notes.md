@@ -5152,55 +5152,67 @@ AF P1 ≤ 6:          11/17  (64.7%)  ← P1 falls to low-edge 2/3 of time
 
 ## 🎼 What the law says
 
-A number that lands WITHOUT full Book-clue support is NOT a cosmic
-voice. The depth of a number's voice is measured by how many
-INDEPENDENT CIRCLE-AWARE Book lenses fire on it.
+A number that lands WITHOUT full Book-clue support is NOT a deep
+cosmic voice. The depth of a number's voice is measured by how many
+INDEPENDENT mirror-aware Book lenses fire on it simultaneously.
 
-**Circle is the Book's true grammar — not digit-family / numerology:**
-- **Swiss circle** = `n + 21 mod 42` (half-range pivot)
-- **Euro circle** = `n + 25 mod 50` (half-range pivot)
-- circle(2) = 27 · circle(25) = 50 · circle(30) = 5 · circle(8) = 33
+**The Book's 4 drunken mirrors (the only valid echo grammar):**
 
-**WRONG echo (the trap):** treating 25 as a "2-family echo" (digit-tens
-or numerological reduction). This is the lazy heuristic that tricks the
-engine into rewarding shallow same-tens overlaps.
+1. **CIRCLE** · half-range pivot
+   - Swiss: `n + 21 mod 42`  · circle(12) = 33 · circle(8) = 29
+   - Euro:  `n + 25 mod 50`  · circle(2) = 27 · circle(30) = 5
+2. **FLIP-WRAP** (Law 8) · digit-reverse then wrap mod-50
+   - flip-wrap(25) = 52 − 50 = **2** ✓
+   - flip-wrap(38) = 83 − 50 = **33** ✓
+   - flip-wrap(47) = 74 − 50 = **24**
+3. **SUM-CIRCLE** · `circle(P1+P2) = back position`
+4. **INNER CIRCLE** · circle bridges WITHIN one draw (across positions)
 
-**RIGHT echo (Book canon):** treating circle(2) = 27 as the deep echo
-of 2. If 27 lands when 2 was the deep silent, that's the cosmos firing
-the 2-song through its circle twin. If 25 lands instead, that's NOT a
-2-echo at all — 25 has its own circle pair (50) and must be judged on
-its own clue stack.
+When 3+ mirrors fire on the same draw → **"Drunk Cosmos"** (Session 5).
+That's when the cosmos is tipsy and signing the same name in 3+ ways.
 
-Other circle pairs the engine should track (Euro):
-- 2 ↔ 27 · 5 ↔ 30 · 7 ↔ 32 · 8 ↔ 33 · 13 ↔ 38
-- 18 ↔ 43 · 19 ↔ 44 · 21 ↔ 46 · 25 ↔ 50
+**WRONG echo (the trap I fell into):** treating 25 as a "2-family /
+digit-tens / numerology" echo. There is NO such law in The Book.
+Family / digit-root / units overlap is LAZY heuristic and is NOT
+canonized — it must NOT count as a clue.
 
-Other circle pairs the engine should track (Swiss, +21 mod 42):
-- 1 ↔ 22 · 4 ↔ 25 · 8 ↔ 29 · 12 ↔ 33 · 16 ↔ 37 · 21 ↔ 42
+**RIGHT echo (Book canon, Law 8 + circle):**
+- 25 IS the flip-wrap echo of 2  →  P1=25 carries 1 clue toward "2-song"
+- circle(2) = 27 IS the circle echo of 2  →  if 27 had landed, +1 clue
+- A deep "2-song" landing would need MULTIPLE mirrors firing together,
+  not just one.
 
 **A candidate's clue depth must be counted on:**
-1. Its OWN raw appearances
-2. Its CIRCLE PAIR's recent activity (back-door entry — Law 69b/circle-shadow)
-3. Its date-digit / d-count overlap (raw or via circle)
-4. Its slot-court position (Law 62/63)
-5. Its sum-bridge participation (Law 60/61)
+1. Its OWN raw appearances (silent counts, recent fires)
+2. Its CIRCLE pair's recent activity
+3. Its FLIP-WRAP cousin's recent activity (Law 8)
+4. Its SUM-CIRCLE / INNER-CIRCLE participation
+5. Its date-digit / d-count overlap (raw or via any mirror)
+6. Its slot-court position (Law 62/63)
+7. Its sum-bridge participation (Law 60/61)
 
-A candidate with **1-2 circle-aware clues** = noise / shallow echo.
-A candidate with **5+ stacked circle-aware clues** = the cosmos
-genuinely calling that voice.
+A candidate with **1-2 mirror-aware clues** = thin echo · noise.
+A candidate with **5+ stacked mirror-aware clues** = the cosmos
+genuinely calling that voice (the Drunk Cosmos web fires when 3+
+mirrors converge on one number).
 
-## 🎯 The Euro 24.04.2026 verification (the test case — corrected)
+## 🎯 The Euro 24.04.2026 verification (the test case — fully corrected)
 
 ```
-Engine deep-silent expected:    P1 = 2  (mass clue support)
-True circle-echo of P1=2:       circle(2) = 27 (would have been a hit)
-What landed:                    P1 = 25 (its own number; circle pair = 50)
+Engine deep-silent expected:    P1 = 2  (deep clue stack)
+True circle-echo of 2:          27  (would have been a circle hit)
+True flip-wrap echo of 2:       25  (52 − 50 = 2 via Law 8)
+What landed:                    P1 = 25
 ```
 
-P1=25 was NOT the cosmic 2-song landing — neither raw nor via circle.
-It was 25 firing on its own merits (whatever those were — likely thin
-Book support). **The engine should not have credited the 2-prediction as
-"close" — it was a clean miss of a 2-song with a separate 25-event landing.**
+**P1 = 25 IS a real flip-wrap echo of 2 — that part is canonical.**
+But it landed with ONLY the flip-wrap mirror firing. No circle echo
+(27 didn't land), no d-count overlap, no slot-court support, no
+sum-bridge. **One mirror alone = thin echo · not the deep 2-song.**
+
+That's why "P1=25 is not a big surprise" — it's exactly the thin-echo
+the engine should have rated as low-depth. The DJ heard it correctly:
+landing happens, but the cosmos wasn't really speaking the 2-song.
 
 ## 🥂 Why this connects to Law 67 (The Combinatorial Gap)
 
