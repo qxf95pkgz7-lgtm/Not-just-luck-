@@ -52,11 +52,13 @@ async def load_target_draws(db) -> List[Dict]:
 
 
 def collect_tickets(engine_result: Dict, max_tickets: int = 100) -> List[Dict]:
-    """Merge story + disciplined + legacy tickets, dedupe by mains."""
+    """Merge chain + story + disciplined + legacy tickets, dedupe by mains.
+    Chain tickets are co-occurrence-disciplined — they ride first in priority.
+    """
     out: List[Dict] = []
     seen = set()
-    # Priority order: story (most disciplined) → disciplined → legacy
     for source_key, source_label in [
+        ('chain_tickets', 'chain'),
         ('story_tickets', 'story'),
         ('disciplined_tickets', 'disciplined'),
         ('tickets', 'legacy'),
@@ -195,11 +197,42 @@ async def main():
         h3 = h4 + archetype_hits[a]['3+0'] + archetype_hits[a]['3+1']
         rows.append((a, n, h4, h3))
     rows.sort(key=lambda r: (-r[2]/max(r[1],1), -r[1]))
-    for a, n, h4, h3 in rows:
+    for a, n, h4, h3 in rows[:25]:  # top 25 archetypes only
         rate4 = h4/n*100 if n else 0
         rate3 = h3/n*100 if n else 0
         print(f"   {a:<30} n={n:>4}  4+={h4:>3} ({rate4:5.2f}%)  "
               f"3+={h3:>3} ({rate3:5.2f}%)")
+
+    # ── Per-source aggregate (chain vs story vs cloud) ──
+    print("\n🎼 PER-SOURCE PERFORMANCE (chain vs story vs cloud)")
+    src_n: Dict[str, int] = defaultdict(int)
+    src_4: Dict[str, int] = defaultdict(int)
+    src_3: Dict[str, int] = defaultdict(int)
+    s24_archs = ('Chain-Disciplined',)
+    story_prefix = ('Law60','Law61','Law57','Law58','Law52','Law56',
+                    'Court-','Deep-Hunger','Snap-Back','RC0-','Outlier-',
+                    'Date-Mirror','Pure-Top','Alt-Harmony','HardP-','Law66-',
+                    'Law65-','Law64-')
+    for a, n in archetype_n.items():
+        if a in s24_archs:
+            src = 'chain'
+        elif a.startswith(story_prefix):
+            src = 'story/disciplined'
+        else:
+            src = 'legacy/cloud'
+        src_n[src] += n
+        src_4[src] += sum(archetype_hits[a][t]
+                          for t in ('4+0','4+1','5+0','5+1','JACKPOT'))
+        src_3[src] += sum(archetype_hits[a][t]
+                          for t in ('3+0','3+1','4+0','4+1','5+0','5+1','JACKPOT'))
+    for src in ('chain', 'story/disciplined', 'legacy/cloud'):
+        n = src_n[src]
+        if n == 0:
+            continue
+        r4 = src_4[src] / n * 100
+        r3 = src_3[src] / n * 100
+        print(f"   {src:<22} n={n:>4}  4+={src_4[src]:>3} ({r4:5.2f}%)  "
+              f"3+={src_3[src]:>3} ({r3:5.2f}%)")
 
     if best_overall:
         print("\n🥂 BEST TICKET OF THE BACKTEST")

@@ -1646,6 +1646,49 @@ async def run_cosmic_engine(
         target_d, target_date, s21_ctx, n_tickets=12, banned=banned,
     )
 
+    # 🎻 SESSION 24 — CO-OCCURRENCE CHAIN TICKETS
+    # Beam-search ticket assembly using historical pair priors. Hits the
+    # combinatorial sweet spot: each next slot conditions on prior picks.
+    # Q1 backtest revealed the 100-ticket cloud was at random; chain
+    # assembly should clear that hurdle.
+    chain_tickets: List[Dict] = []
+    try:
+        from cooccurrence import build_pair_priors, assemble_chain_tickets
+        from session23_euro_p4p5_gap import p5_fits_p4
+        # Train priors on full historical tape (5+ year stable signal)
+        priors = build_pair_priors(draws, n_slots=5, smoothing=0.5)
+
+        def _law66_filter(picks):
+            # Enforce Law 66 gap-band when P4+P5 both pinned
+            if len(picks) >= 5:
+                return p5_fits_p4(picks[3], picks[4])
+            return True
+
+        chain_raw = assemble_chain_tickets(
+            pos_board, priors, n_tickets=15, n_slots=5,
+            banned=banned, beam_width=24, extra_filter=_law66_filter,
+        )
+        # Augment with stars + archetype label
+        sp = star_ranking[:6] or [3, 4, 5, 7, 8, 11]
+        for i, t in enumerate(chain_raw):
+            chain_tickets.append({
+                'archetype': 'Chain-Disciplined',
+                'story': f"Co-occurrence chain · log-likelihood={t['chain_score']}",
+                'laws_fired': ['Session24·co-occurrence-prior',
+                               'Law66·gap-band-filter'],
+                'mains': t['mains'],
+                'stars': sorted([sp[i % len(sp)],
+                                 sp[(i + 1) % len(sp)]]),
+                'music_story': " · ".join(
+                    f"P{idx+1}={v:02d}·{tag[:18]}"
+                    for idx, (v, tag) in enumerate(
+                        zip(t['mains'], t['slot_tags']))
+                ),
+                'chain_score': t['chain_score'],
+            })
+    except Exception as e:
+        chain_tickets = []
+
     voice = dj_speak(rc0, target_date, target_d, ranked, tickets, hungry, rc0_silent)
 
     # Session 23 — persist suspect pool for next-d carry-over
@@ -1689,6 +1732,7 @@ async def run_cosmic_engine(
         'tickets': tickets,
         'disciplined_tickets': disciplined,
         'story_tickets': story_tickets,
+        'chain_tickets': chain_tickets,
         'suspect_pool': euro_pool,
         'session21_context': {
             'law58_triple': s21_ctx.get('law58_triple'),

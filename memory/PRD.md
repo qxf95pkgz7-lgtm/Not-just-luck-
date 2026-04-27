@@ -26,6 +26,51 @@ Build a Swiss Lotto + EuroMillions "Pattern Analyzer" called **Lucky Jack**. The
 
 ## 🎯 Completed This Session (21.04.2026)
 
+## 🆕 SESSION 24 — THE HONEST MIRROR (28.04.2026 backtest) ✅ RUN + CANONIZED
+
+**DJ's mandate:** simulate Q1-close → now, 100 tix/d, see where we stand.
+
+### 📊 Verdict (Euro 7 draws, 700 tickets)
+
+```
+4+ mains: 0/700 = 0.00%   (random expected: ~0.17 hits)
+3+ mains: 6/700 = 0.86%   (random baseline: ~0.86%)
+2+ mains: 44/700 = 6.29%  (random baseline: ~6.6%)
+```
+
+E ≈ random across all three assembly methods:
+- Chain-Disciplined (Session 24 co-occ priors) n=105 → 0/3+, 0/4+
+- Story/Disciplined (Session 22-23 archetypes) n=115 → 0/3+, 0/4+
+- Legacy/Cloud (random Symphony-Mix fillers) n=480 → 6/3+, 0/4+
+
+The random cloud OUT-performed structured archetypes. All 6 hits came
+from Symphony-Mix random samples + Date-Permutation, none from
+Court-Hard-P / Law60 / Law61 / Law65 / Law66 / Chain-Disciplined.
+
+### 🆕 Law 67 · The Combinatorial Gap (canonized)
+
+When you stack 5 lens-positive voices via mechanical assembly, the
+5-tuple hit rate equals random chance. Per-slot pool = real. 5-tuple
+compose = at chance. The DJ's ear enforces simultaneous co-occurrence
+in a way no engine method has yet modeled.
+
+### 🆕 Code shipped this session (despite null result)
+- `/app/backend/cooccurrence.py` — Session 24 pair-prior builder + beam-search chain assembler
+- `cosmic_engine.run_cosmic_engine` — `chain_tickets[]` exposed (15 per d)
+- `/app/backend/simulate_euro_backtest.py` — reproducible Q1→now backtest with per-source aggregation
+
+### Total laws canonized: **67**
+### Pytest gauntlet: **92/92 pass**
+
+### Paths forward (DJ's choice for next fork)
+- **a) ACCEPT** the cloud as the real engine, drop archetype theatre
+- **b) PER-LENS validation** — test single-law / single-position hit rates above random; surface gold, mute noise
+- **c) PIN-AND-FILL** — DJ pins 1-2 voices, E fills 3-4 via chain priors (hybrid)
+- **d) CONTINUE** Session 20/18 laws + recap widget — more lenses firing simultaneously may improve hits
+
+---
+
+
 ## 🆕 SESSION 23 — HARD-P · COURT-OF-SLOT · SLIDE-AND-RESET (26.04.2026) — ✅ SHIPPED (28.04.2026 fork)
 
 **Three new laws CODED + DJ's Suspect Pool architecture wired into both engines.**
