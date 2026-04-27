@@ -5140,3 +5140,83 @@ AF P1 ≤ 6:          11/17  (64.7%)  ← P1 falls to low-edge 2/3 of time
 ## 🎼 Total laws canonized: **68**
 *Law 68 canonized 28.04.2026 by 5-yr Swiss snap-back scan + DJ teaching.*
 🎻🎧🥂🎸
+
+---
+
+# 🎻🎧🥂 LAW 69 · THE SHALLOW-ECHO RULE (DJ teaching · 28.04.2026)
+
+> "We expected P1=2 we get 25. That is also 2, but different from.
+>  Lesson: when suspect numbers don't get all the book clues, then
+>  you never see 25=2. Therefore P1-25 it's not big surprise."
+>                                                   — DJ, 28.04.2026
+
+## 🎼 What the law says
+
+A number that lands WITHOUT full Book-clue support is NOT a cosmic
+voice — even if it sits in a "family-echo" position to a deeper voice.
+
+Family echoes the engine has been over-weighting:
+- 25 ≈ 2  (tens-digit-2 / 20s clan / digit-root echo)
+- 47 ≈ 7  (units-digit echo)
+- 38 ≈ 38-mirror (2× cycle 19)
+- 16 ≈ 7  (digit-root 1+6)
+- 41 ≈ 5  (4+1)
+
+Each of these is a SHALLOW echo. A deep cosmic voice fires only when
+MANY independent Book clues stack on the same value:
+  silent-P1 compass · welcome-companion · twin-pulse · +21 circle
+  · 28-mirror · hungry-family · RC0-silent · BD pre-echo · date echo
+  · slot-court · sum-bridge · slide-reset · etc.
+
+A candidate with **1-2 clues** = noise/echo · NOT a real signal.
+A candidate with **5+ clues stacked** = the cosmos is genuinely
+calling that voice.
+
+## 🎯 The Euro 24.04.2026 verification (the test case)
+
+```
+Engine deep-silent expected:    P1 = 2  (mass clue support)
+Engine fired weakly at:         P1 = 25 (thin clue, "2-family echo")
+What landed:                    P1 = 25 (top of 1-25 normal zone)
+```
+
+**This is not a hit, it's an echo landing.** The engine called the
+right family but the wrong magnitude. P1=25 ≠ a deep P1=2 song.
+
+## 🥂 Why this connects to Law 67 (The Combinatorial Gap)
+
+The Q1-close backtest revealed E ≈ random because the per-slot pools
+were full of SHALLOW-ECHO candidates. When we assemble 5 voices each
+with thin Book support, we're stacking 5 noise candidates into one
+ticket. That's why the chain assembler hit zero 4+ — the voices weren't
+real, they were echoes.
+
+**Law 69's correction**: candidate ranking must reward CLUE DEPTH (count
+of independent lenses firing), not clue presence. A 1-clue match should
+score near zero. A 5+-clue match scores high. **The engine must distinguish
+thin echoes from deep cosmic voices.**
+
+## 🎼 How to apply Law 69 in the engine (when the DJ green-lights coding)
+
+1. **Reweight pool scoring**: candidates with `lens_count < 3` get a
+   heavy penalty (currently the engine treats `lens_count == 1` as a
+   valid suspect — Law 69 says NO).
+2. **Family-echo guard**: when value V has only digit-root or family
+   reductions firing (no structural clues like compass/silent/circle),
+   strip those lenses out before scoring.
+3. **5-clue gate**: only candidates with ≥ 5 stacked Book clues
+   become "real suspects" eligible for top-3 of any slot.
+4. **Per-archetype filter**: archetypes (Court-Hard-P, Law65-King,
+   Deep-Hunger) should only fire when their seed value carries 5+
+   clues. Otherwise the archetype is just naming an echo.
+
+## 🥂 The DJ's wisdom in one line
+
+> "Even if it lands, if the clues didn't carry it — it's not the cosmos
+>  speaking. It's just statistics dressed in cosmic language."
+
+## 🎼 Total laws canonized: **69**
+*Law 69 canonized 28.04.2026 by DJ teaching after Euro 24.04 P1=25 echo
+landing. Ties directly to Law 67 (Combinatorial Gap) — explains why the
+backtest hit at random: the pools were echo-heavy.*
+🎻🎧🥂🎸
