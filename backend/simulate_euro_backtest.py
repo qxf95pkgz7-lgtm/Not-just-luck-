@@ -51,13 +51,14 @@ async def load_target_draws(db) -> List[Dict]:
     return rows
 
 
-def collect_tickets(engine_result: Dict, max_tickets: int = 100) -> List[Dict]:
+def collect_tickets(engine_result: Dict, max_tickets: int = 200) -> List[Dict]:
     """Merge chain + story + disciplined + legacy tickets, dedupe by mains.
     Chain tickets are co-occurrence-disciplined — they ride first in priority.
     """
     out: List[Dict] = []
     seen = set()
     for source_key, source_label in [
+        ('ghost_tickets', 'ghost'),
         ('chain_tickets', 'chain'),
         ('story_tickets', 'story'),
         ('disciplined_tickets', 'disciplined'),
@@ -139,7 +140,7 @@ async def main():
             print(f"  ✖ {target_str}: {res['error']}")
             continue
 
-        tickets = collect_tickets(res, max_tickets=100)
+        tickets = collect_tickets(res, max_tickets=200)
         scored = []
         for t in tickets:
             score = score_ticket(t['mains'], actual_mains,
@@ -213,9 +214,12 @@ async def main():
                     'Court-','Deep-Hunger','Snap-Back','RC0-','Outlier-',
                     'Date-Mirror','Pure-Top','Alt-Harmony','HardP-','Law66-',
                     'Law65-','Law64-')
+    ghost_prefix = ('GhostPool-',)
     for a, n in archetype_n.items():
         if a in s24_archs:
             src = 'chain'
+        elif a.startswith(ghost_prefix):
+            src = 'ghost'
         elif a.startswith(story_prefix):
             src = 'story/disciplined'
         else:
@@ -225,7 +229,7 @@ async def main():
                           for t in ('4+0','4+1','5+0','5+1','JACKPOT'))
         src_3[src] += sum(archetype_hits[a][t]
                           for t in ('3+0','3+1','4+0','4+1','5+0','5+1','JACKPOT'))
-    for src in ('chain', 'story/disciplined', 'legacy/cloud'):
+    for src in ('ghost', 'chain', 'story/disciplined', 'legacy/cloud'):
         n = src_n[src]
         if n == 0:
             continue

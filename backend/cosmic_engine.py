@@ -1689,6 +1689,49 @@ async def run_cosmic_engine(
     except Exception as e:
         chain_tickets = []
 
+    # 🎻 SESSION 25 — GHOST POOL TICKETS (Laws 69, 70, 71, 72)
+    # Built strictly from the GHOSTS of last d's mains walked through the
+    # 5 mirror doors, gated by mirror-stack depth ≥3, ≤20 suspects/d with
+    # max 4 per P slot, rotated every 30 tickets across 3 batches = 90 tix.
+    ghost_tickets: List[Dict] = []
+    ghost_meta: Dict = {}
+    try:
+        from ghost_pool import build_ghost_tickets
+        # Source last-draw from the full draws array so we don't depend
+        # on rc0 boundaries (cycle can be empty when target is right after
+        # a fresh family-rare anchor).
+        last_d = None
+        for d in reversed(draws):
+            if d['_dt'] < target_date:
+                last_d = d
+                break
+        if last_d is not None:
+            extra_lens_map: Dict[int, List[str]] = {}
+            for n_, c_, l_ in ranked[:30]:
+                if l_:
+                    extra_lens_map[n_] = [str(x)[:24] for x in l_[:3]]
+            gp_out = build_ghost_tickets(
+                last_mains=last_d['_n'],
+                last_stars=last_d.get('_s') or [],
+                target_date=target_date,
+                lottery='euro',
+                extra_lens_map=extra_lens_map,
+                n_total=90,
+                batch_size=30,
+                banned=banned,
+                wildcard_fraction=0.10,
+                min_depth=3,
+            )
+            sp = star_ranking[:6] or [3, 4, 5, 7, 8, 11]
+            for i, t in enumerate(gp_out['tickets']):
+                t['stars'] = sorted([sp[i % len(sp)],
+                                     sp[(i + 1) % len(sp)]])
+                ghost_tickets.append(t)
+            ghost_meta = gp_out.get('meta', {})
+    except Exception as e:
+        ghost_tickets = []
+        ghost_meta = {'error': str(e)}
+
     voice = dj_speak(rc0, target_date, target_d, ranked, tickets, hungry, rc0_silent)
 
     # Session 23 — persist suspect pool for next-d carry-over
@@ -1733,6 +1776,8 @@ async def run_cosmic_engine(
         'disciplined_tickets': disciplined,
         'story_tickets': story_tickets,
         'chain_tickets': chain_tickets,
+        'ghost_tickets': ghost_tickets,
+        'ghost_meta': ghost_meta,
         'suspect_pool': euro_pool,
         'session21_context': {
             'law58_triple': s21_ctx.get('law58_triple'),

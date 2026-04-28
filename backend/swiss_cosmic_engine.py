@@ -1022,6 +1022,47 @@ async def run_swiss_cosmic_engine(
         except Exception:
             pass
 
+        # 🎻 SESSION 25 — GHOST POOL TICKETS (Laws 69-72) for Swiss
+        ghost_tickets: List[Dict] = []
+        ghost_meta: Dict = {}
+        try:
+            from ghost_pool import build_ghost_tickets
+            # Source last-draw from the full draws array (Swiss family-rare
+            # anchors can be sparse, so cycle may be empty even when many
+            # recent draws exist).
+            last_d = None
+            for d in reversed(draws):
+                if d['_dt'] < target_date:
+                    last_d = d
+                    break
+            if last_d is not None:
+                extra_lens_map: Dict[int, List[str]] = {}
+                for n_, c_, l_ in ranked[:30]:
+                    if l_:
+                        extra_lens_map[n_] = [str(x)[:24] for x in l_[:3]]
+                gp_out = build_ghost_tickets(
+                    last_mains=last_d['_n'],
+                    last_stars=[],  # Swiss has 🍀+R, not stars
+                    target_date=target_date,
+                    lottery='swiss',
+                    extra_lens_map=extra_lens_map,
+                    n_total=90,
+                    batch_size=30,
+                    banned=banned,
+                    wildcard_fraction=0.10,
+                    min_depth=3,
+                )
+                rng_lucky = lucky_rank[:] or [1, 2, 3, 4, 5, 6]
+                rng_replay = replay_rank[:] or [1, 2, 3, 12, 21, 33]
+                for i, t in enumerate(gp_out['tickets']):
+                    t['lucky'] = int(rng_lucky[i % len(rng_lucky)])
+                    t['replay'] = int(rng_replay[i % len(rng_replay)])
+                    ghost_tickets.append(t)
+                ghost_meta = gp_out.get('meta', {})
+        except Exception as e:
+            ghost_tickets = []
+            ghost_meta = {'error': str(e)}
+
         voice = dj_speak_swiss(rc0, re_lock_anchor, target_date, target_d,
                                ranked, tickets, hungry, rc0_silent)
 
@@ -1074,6 +1115,8 @@ async def run_swiss_cosmic_engine(
             'replay_ranking': replay_rank,
             'tickets': tickets,
             'story_tickets': story_tickets,
+            'ghost_tickets': ghost_tickets,
+            'ghost_meta': ghost_meta,
             'suspect_pool': _swiss_pool,
             'banned': banned,
             'voice': voice,
