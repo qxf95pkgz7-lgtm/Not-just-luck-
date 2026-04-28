@@ -2512,11 +2512,25 @@ def create_euromillions_router(db):
         price_per_ticket = 3.50
         total_price = len(tickets) * price_per_ticket
         
-        # Auto-save to hit tracker
+        # Auto-save to hit tracker (and try to compute hits immediately
+        # if the actual draw is already in the DB — fixes the silent-tracker
+        # bug DJ caught on 29.04.2026).
+        saved_id = None
         try:
-            await _save_to_tracker(tickets, target_date, mode="dreaming", visitor_id=request.visitor_id or "", has_locked=bool(request.locked_positions), locked_positions=request.locked_positions or {})
-        except Exception:
-            pass  # Don't fail the prediction if save fails
+            saved_id = await _save_to_tracker(
+                tickets, target_date, mode="dreaming",
+                visitor_id=request.visitor_id or "",
+                has_locked=bool(request.locked_positions),
+                locked_positions=request.locked_positions or {},
+            )
+        except Exception as e:
+            logger.warning(f"euro save_to_tracker failed: {e}")
+
+        if saved_id:
+            try:
+                await calculate_euro_hits_for_generation(saved_id)
+            except Exception:
+                pass  # Draw not yet available — will be picked up by recalc
         
         return {
             "tickets": tickets,
@@ -2524,6 +2538,8 @@ def create_euromillions_router(db):
             "price_per_ticket": price_per_ticket,
             "total_price": total_price,
             "currency": "CHF",
+            "target_date": target_date,
+            "generation_id": saved_id,
             "engine": "🎧 DJ Pattern Engine 🎻"
         }
     
@@ -2563,7 +2579,8 @@ def create_euromillions_router(db):
         if visitor_id:
             generation["visitor_id"] = visitor_id
         
-        await db.euromillions_generations.insert_one(generation)
+        result = await db.euromillions_generations.insert_one(generation)
+        return str(result.inserted_id)
     
     # ═══════════════════════════════════════════════════════════════════════
     # 💰 MONEY MODE - Focus on 3+ numbers for consistent small wins! 💰
@@ -2687,15 +2704,28 @@ def create_euromillions_router(db):
         price_per_ticket = 3.50
         total_price = round(len(tickets) * price_per_ticket, 2)
         
-        # Auto-save to hit tracker
+        # Auto-save to hit tracker (with auto-recalc when actual draw exists)
+        saved_id = None
         try:
-            await _save_to_tracker(tickets, target_date, mode="money", visitor_id=request.visitor_id or "", has_locked=bool(request.locked_positions), locked_positions=request.locked_positions or {})
-        except Exception:
-            pass
-        
+            saved_id = await _save_to_tracker(
+                tickets, target_date, mode="money",
+                visitor_id=request.visitor_id or "",
+                has_locked=bool(request.locked_positions),
+                locked_positions=request.locked_positions or {},
+            )
+        except Exception as e:
+            logger.warning(f"euro money-mode save_to_tracker failed: {e}")
+
+        if saved_id:
+            try:
+                await calculate_euro_hits_for_generation(saved_id)
+            except Exception:
+                pass
+
         return {
             "mode": "💰 MONEY MODE",
             "target_date": target_date,
+            "generation_id": saved_id,
             "strategy": "Focus on 3+ numbers + stars for consistent small wins",
             "target_prizes": {
                 "3+2⭐": "~€50-100",
@@ -3249,16 +3279,24 @@ def create_euromillions_router(db):
     
     @router.post("/recalculate-all-hits")
     async def recalculate_all_euro_hits():
-        """Recalculate hits for all pending EuroMillions generations"""
+        """Recalculate hits for all pending EuroMillions generations.
+
+        🎻 DJ fix 29.04.2026 — also include legacy docs that have no
+        `hits_calculated` field at all (only `False` was matched before),
+        and lift the 100-cap to process the full backlog.
+        """
         from bson import ObjectId
-        
+
         pending = await db.euromillions_generations.find(
-            {"hits_calculated": False}
-        ).to_list(length=100)
-        
+            {"$or": [
+                {"hits_calculated": False},
+                {"hits_calculated": {"$exists": False}},
+            ]}
+        ).to_list(length=10000)
+
         calculated = 0
         still_pending = 0
-        
+
         for gen in pending:
             gen_id = str(gen["_id"])
             result = await calculate_euro_hits_for_generation(gen_id)
@@ -3266,7 +3304,7 @@ def create_euromillions_router(db):
                 calculated += 1
             else:
                 still_pending += 1
-        
+
         return {
             "calculated": calculated,
             "still_pending": still_pending,

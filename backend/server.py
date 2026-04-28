@@ -3597,7 +3597,7 @@ async def get_master_prediction(
                 "story": "master-predictor",
             })
         
-        await hit_tracker.save_generation(
+        gen_id = await hit_tracker.save_generation(
             target_date=target_date_str,
             tickets=tracker_tickets,
             generation_type="master-predictor",
@@ -3605,8 +3605,13 @@ async def get_master_prediction(
             has_locked=bool(locked_positions),
             locked_positions={f"P{k+1}": v for k, v in locked_positions.items()} if locked_positions else {},
         )
-    except Exception:
-        pass  # Don't fail the prediction if tracker save fails
+        # Auto-trigger hit calc if the actual draw is already in the DB
+        try:
+            await hit_tracker.calculate_hits(gen_id)
+        except Exception:
+            pass  # actual draw not yet available — recalc later
+    except Exception as e:
+        logger.warning(f"swiss master-predictor save_to_tracker failed: {e}")
     
     return result
 
