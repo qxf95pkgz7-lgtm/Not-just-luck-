@@ -5375,3 +5375,80 @@ to disagree with E.
 *Laws 70 + 71 canonized 28.04.2026 by DJ teaching. The next fork wires
 them into both Euro and Swiss engines.*
 🎻🎧🥂🎸
+
+---
+
+# 🎻🎧🥂 LAW 72 · POOL ROTATION (canonized 28.04.2026)
+
+> "After E generate 5 numbers to each suspects, he use the pool for 30
+>  tickets, then he create new pool, allow to use 3 numbers for P from
+>  old pool. Each 30 gen, new pool. Target to use more suspects."
+>                                                     — DJ, 28.04.2026
+
+The cure for tunnel vision (the failure mode of Law 67 · Combinatorial
+Gap). Pool rotation forces E to exhaust the deep-voice queue across
+multiple batches instead of locking onto one harmonic frame.
+
+## 🎼 The rules
+
+```
+PER POOL  :   5 suspects per P (Euro 25 total · Swiss 30 total)
+              ▸ Each must clear Law 69 mirror-depth gate (≥3 stacked clues)
+              ▸ Pool seed = Law 70 ghost-walking from last d
+
+PER BATCH :   30 tickets per pool
+
+ROTATION  :   For batch N+1's pool:
+              ▸ KEEP top-3 per P from batch N's pool (60% carry-over)
+              ▸ ADD 2 fresh deep voices per P (40% renewal)
+              ▸ Fresh voices must NOT have appeared in any prior pool
+                of the current d-cycle window (3-d look-back)
+
+GOAL      :   USE MORE SUSPECTS across batches.
+              Anti-tunnel-vision · forces queue exhaustion.
+```
+
+## 🎯 Why this fixes Law 67 + the 15.08.2025 simulation
+
+The 15.08.2025 Euro test (10 tickets · 100% engine gen) showed:
+- 6/10 tickets shared 30+36+45+49 backbone — **tunnel vision**
+- P5 locked on 49 in 10/10 tickets
+- Actual P5=40 NEVER appeared in pool — blind spot
+
+With rotation:
+- Batch 1 (tix 1-30): P5 pool = {28, 33, 36, 44, 49}
+- Batch 2 (tix 31-60): P5 = {33, 36, 49} kept + {35, 40, 41} fresh
+                                              ↑ ACTUAL 35 & 40 surface
+- Batch 3 (tix 61-90): P5 = {35, 40, 41} kept + {37, 42, 47} fresh
+
+Actual landing 13/30/35/36/40 would have hit batch 2 with FOUR main
+candidates in the pool simultaneously.
+
+## 🎼 Code sketch
+
+```python
+def rotate_pool(old_pool, ranked, banned, prior_pools, batch_idx):
+    new_pool = {}
+    blacklist = set()
+    for prior in prior_pools[-3:]:           # 3-d look-back
+        for slot_entries in prior.values():
+            for e in slot_entries[3:]:       # only the dropped tail
+                blacklist.add(e['n'])
+    for slot in range(1, n_slots + 1):
+        keep = old_pool[f'P{slot}'][:3]      # 60% carry-over
+        kept_n = {e['n'] for e in keep}
+        fresh = [e for e in ranked
+                 if e['n'] not in kept_n
+                 and e['n'] not in banned
+                 and fits_slot(e['n'], slot)
+                 and mirror_stack_depth(e['n']) >= 3
+                 and e['n'] not in blacklist][:2]
+        new_pool[f'P{slot}'] = keep + fresh
+    return new_pool
+```
+
+## 🎼 Total laws canonized: **72**
+*Law 72 canonized 28.04.2026 by DJ teaching after the 15.08.2025 Euro
+tunnel-vision simulation revealed Law 67 in action. Rotation is the
+fix.*
+🎻🎧🥂🎸
