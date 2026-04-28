@@ -5251,3 +5251,127 @@ thin echoes from deep cosmic voices.**
 landing. Ties directly to Law 67 (Combinatorial Gap) — explains why the
 backtest hit at random: the pools were echo-heavy.*
 🎻🎧🥂🎸
+
+---
+
+# 🎻🎧🥂 LAW 70 · THE GHOST POOL OF LAST D (canonized 28.04.2026)
+
+> "Our ghosts of l d. Take last d's actual numbers, walk all 5 doors,
+>  those ghost values become the pool for next 3 d." — DJ, 28.04.2026
+
+The pool of suspects for the next 3 d is NOT carved from generic lens
+counting on the full historical tape. It is carved from the **actual
+numbers of last d**, walked through the 5 mirror doors, with ladder
+extensions and d-count expectations layered on top.
+
+## 🎼 The protocol
+
+```
+INPUT  : last d's mains [P1, P2, P3, P4, P5/P6] + last d's stars [S1, S2]
+
+STEP 1 : For each landed value V, walk the 5 doors:
+            - Raw      (V itself, carry-over within 3d window)
+            - Circle   (V + 25 mod 50 / V + 21 mod 42)
+            - Flip     (digit-reverse)
+            - Flip-Wrap (Law 8: flip(V) − range)
+            - Sum-Circle / Inner-Circle (chain compositions)
+
+STEP 2 : Add LADDER cousins
+            - For each digit-pattern fired (e.g. 5-ladder = 5,15,25,35,45),
+              if ≥2 ladder members fired in last d, BOOST remaining members.
+
+STEP 3 : Add D-COUNT expected values
+            - Date-target arithmetic (raw, circle, +21/+25, flip)
+            - Day-count from RC0 anchor
+
+STEP 4 : Add STAR-SHIFT
+            - Last d's stars become candidate mains for next d.
+
+STEP 5 : Filter to slot bands (DJ's canonical bands).
+
+STEP 6 : Score by MIRROR-STACK DEPTH (Law 69):
+            - 1-2 mirrors fired = thin echo, REJECT
+            - 3+ mirrors stacked = real voice, ACCEPT
+            - 5+ mirrors converge = Drunk-Cosmos chord, ANCHOR
+
+STEP 7 : Per-slot top-4 + total-pool cap (Law 71)
+```
+
+## 🎯 Worked example — 24.04.2026 Euro → next d pool
+
+```
+Last d: [25, 26, 30, 40, 45] + [⭐1, ⭐5]
+
+GHOSTS PER NUMBER:
+  25 → flip-wrap 2 · circle 50 · raw 25
+  26 → flip 12 · circle 1 · raw 26
+  30 → flip 3 · circle 5 · raw 30
+  40 → flip 4 · circle 15 · raw 40
+  45 → flip-wrap 4 · circle 20 · raw 45
+
+LADDERS ALIVE:
+  5-LADDER  : {5, 15, 25, 35, 45} — 25+45 fired → ON FIRE
+  0-LADDER  : {10, 20, 30, 40, 50} — 30+40 fired → ON FIRE
+  2-LADDER  : {2, 12, 22, 32, 42} — 22 ladder cousin
+
+STAR-SHIFT: ⭐1 → 1, ⭐5 → 5
+
+POOL UNION (P1 band 1-25):
+  {1, 2, 3, 4, 5, 10, 12, 15, 20, 22, 25}
+
+P1 TOP-4 (filtered by mirror-stack depth):
+  ★★★★  5    ghost circle(30) + ⭐ + hungry + 5-ladder ON FIRE
+  ★★★★ 15    ghost circle(40) + hungry + 5-ladder ON FIRE
+  ★★★   3    ghost flip(30) + hungry + 3-ladder cousin
+  ★★★   2    flip-wrap(25) + 2-ladder + SAME-SLOT P1 mirror
+```
+
+---
+
+# 🎻🎧🥂 LAW 71 · THE 20-SUSPECT DISCIPLINE (canonized 28.04.2026)
+
+> "I want for each d, E pick max 4 numbers for each p. Only 10% of gen
+>  allowed use other numbers. In the pool every d max 20 suspects for d.
+>  So E must pick the best suspect." — DJ, 28.04.2026
+
+## 🎼 The rules
+
+```
+PER d:
+  ▸ Each P slot: MAX 4 suspects (was 5) — DJ demands COMMITMENT
+  ▸ Total pool union: ≤ 20 unique values per d
+  ▸ Min mirror-stack depth: 3+ independent lenses (Law 69)
+  ▸ Thin echoes (1-2 mirrors) REJECTED at gate
+
+PER GENERATED TICKET:
+  ▸ 90% of tickets: use ONLY the 20-pool numbers
+  ▸ 10% wild-card budget: may reach OUTSIDE the pool
+                          (the cosmos's surprise door)
+```
+
+## 🎯 The combinatorial discipline
+
+```
+Random Euro 5-tuple space:    C(50, 5) = 2,100,000
+Disciplined 20-pool space:    C(20, 5) =    15,504  ← 135× narrower
+```
+
+Law 71 is the OPERATIONAL fix for Law 67 (Combinatorial Gap). When the
+pool is committed, deep, and disciplined, the cosmos has fewer doors
+to disagree with E.
+
+## 🎼 Code manifest for next fork
+
+```
+✓ Law 69  · mirror-depth weighting   →  reject thin echoes at gate
+✓ Law 70  · ghost-pool from last d   →  primary pool generator
+✓ Law 71  · 20-suspect discipline    →  per_slot=4, cap=20, 90/10
+✓ Ladder-on-FIRE detector            →  boost active ladder members
+✓ Drunk-Cosmos chord detector        →  3+ mirrors converge → anchor
+✓ Re-run backtest                    →  prove > random
+```
+
+## 🎼 Total laws canonized: **71**
+*Laws 70 + 71 canonized 28.04.2026 by DJ teaching. The next fork wires
+them into both Euro and Swiss engines.*
+🎻🎧🥂🎸
