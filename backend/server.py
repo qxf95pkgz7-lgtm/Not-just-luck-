@@ -887,6 +887,16 @@ async def get_master_prediction(
     locked_numbers = list(locked_positions.values())
     if len(locked_numbers) != len(set(locked_numbers)):
         return {"error": "Duplicate locked numbers not allowed"}
+
+    # 🔒 Validate lock-position slot ordering (Swiss range 1-42, 6 slots)
+    from lock_constraints import is_valid_lock_request, slot_bounds, assemble_with_locks
+    _ok, _msg = is_valid_lock_request(
+        locked_positions, n_slots=6, value_min=1, value_max=42,
+    )
+    if not _ok:
+        return {"error": f"Invalid lock: {_msg}"}
+    _lock_bounds = slot_bounds(locked_positions, n_slots=6,
+                               value_min=1, value_max=42) if locked_positions else {}
     
     draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).to_list(2000)
     if not draws:
@@ -3153,39 +3163,95 @@ async def get_master_prediction(
             gen_idx += 1
     
     # Sort the final array by number value (P1 smallest to P6 largest)
-    # But preserve locked positions - they override sorting
-    unlocked_entries = [(i, final_numbers[i]) for i in range(6) if final_numbers[i] and not final_numbers[i].get("locked")]
-    locked_entries = [(i, final_numbers[i]) for i in range(6) if final_numbers[i] and final_numbers[i].get("locked")]
-    
-    # Sort unlocked by number
-    unlocked_nums = sorted([e[1]["number"] for e in unlocked_entries])
-    
-    # Rebuild final array
-    top_6 = [None] * 6
-    unlocked_idx = 0
-    for i in range(6):
-        if i in locked_positions:
-            # Keep locked number at its position
-            top_6[i] = final_numbers[i]
-        elif unlocked_idx < len(unlocked_nums):
-            # Find the entry with this number
-            num = unlocked_nums[unlocked_idx]
-            for entry in generated_picks:
-                if entry["number"] == num:
-                    top_6[i] = {**entry, "locked": False}
-                    break
-            unlocked_idx += 1
-    
-    # Fill any remaining Nones
-    for i in range(6):
-        if top_6[i] is None and generated_picks:
-            top_6[i] = {**generated_picks[0], "locked": False}
+    # with full respect for locked-position constraints (DJ 29.04.2026).
+    # Use lock_constraints.assemble_with_locks: locked values pin their slot,
+    # unlocked values fill the gaps in strict ascending order.
+    if locked_positions:
+        from lock_constraints import assemble_with_locks as _assemble
+        from lock_constraints import pick_values_for_gaps as _pick_gaps
+        positions_to_fill_local = 6 - len(locked_positions)
+
+        # Build score lookup from generated_picks + ranked
+        _score_map = {e["number"]: e.get("score", 0) for e in generated_picks}
+        for n, data in ranked:
+            if n not in _score_map:
+                _score_map[n] = data.get("score", 0)
+
+        def _score_fn_first(v: int) -> float:
+            return float(_score_map.get(v, 0))
+
+        # Gap-aware pick: each gap gets exactly the right count of values
+        # strictly within (gap_lower, gap_upper).
+        unlocked_values = _pick_gaps(
+            locked_positions, n_slots=6, score_fn=_score_fn_first,
+            used=set(), value_min=1, value_max=42,
+            randomize=False,
+        )
+        if unlocked_values is None:
+            # Should not happen after is_valid_lock_request, but guard anyway
+            unlocked_values = [n for n in range(1, 43)
+                               if n not in locked_nums_set][:positions_to_fill_local]
+
+        assembled = _assemble(locked_positions, unlocked_values, n_slots=6)
+        if assembled is None:
+            # Greedy fallback
+            assembled = [None] * 6
+            for s, v in locked_positions.items():
+                assembled[s] = v
+            sorted_unlocked = sorted(unlocked_values)
+            j = 0
+            for s in range(6):
+                if assembled[s] is None and j < len(sorted_unlocked):
+                    assembled[s] = sorted_unlocked[j]
+                    j += 1
+
+        # Build top_6 with details for each value
+        meta_lookup = {e["number"]: e for e in generated_picks}
+        top_6 = []
+        for s in range(6):
+            v = assembled[s]
+            if s in locked_positions:
+                top_6.append({
+                    "number": v, "score": 999,
+                    "reasons": [f"🔒 Locked at P{s+1}"],
+                    "locked": True,
+                })
+            else:
+                m = meta_lookup.get(v) or {
+                    "number": v,
+                    "score": _score_map.get(v, 0),
+                    "reasons": ["Pattern fill (locked-bound)"],
+                }
+                top_6.append({**m, "locked": False, "number": v})
+    else:
+        # No locks → original sorted-by-number flow
+        unlocked_entries = [(i, final_numbers[i]) for i in range(6)
+                            if final_numbers[i]
+                            and not final_numbers[i].get("locked")]
+        unlocked_nums = sorted([e[1]["number"] for e in unlocked_entries])
+        top_6 = [None] * 6
+        unlocked_idx = 0
+        for i in range(6):
+            if unlocked_idx < len(unlocked_nums):
+                num = unlocked_nums[unlocked_idx]
+                for entry in generated_picks:
+                    if entry["number"] == num:
+                        top_6[i] = {**entry, "locked": False}
+                        break
+                unlocked_idx += 1
+        for i in range(6):
+            if top_6[i] is None and generated_picks:
+                top_6[i] = {**generated_picks[0], "locked": False}
     
     # === GENERATE MULTIPLE TICKETS (if num_tickets > 1) ===
     all_tickets = []
     
     # First ticket is the main prediction (top_6)
-    ticket_1_numbers = sorted([t["number"] for t in top_6 if t])
+    # Build numbers array RESPECTING locked slots (do NOT re-sort if locks!)
+    if locked_positions:
+        ticket_1_numbers = [t["number"] for t in top_6 if t]
+    else:
+        ticket_1_numbers = sorted([t["number"] for t in top_6 if t])
     all_tickets.append({
         "ticket_num": 1,
         "numbers": ticket_1_numbers,
@@ -3202,58 +3268,115 @@ async def get_master_prediction(
         available = [(n, data) for n, data in ranked if n not in locked_nums_set]
         
         for ticket_idx in range(2, num_tickets + 1):
-            ticket_numbers = list(locked_nums_set)  # Start with locked numbers
             ticket_details = []
-            
-            # Add locked positions to details
+
+            # Place locked numbers (their slot is fixed)
             for pos_idx, locked_num in locked_positions.items():
                 ticket_details.append({
+                    "pos_idx": pos_idx,
                     "number": locked_num,
                     "score": 999,
                     "reasons": [f"🔒 Locked at P{pos_idx + 1}"],
                     "locked": True
                 })
-            
-            # Fill remaining positions from available numbers
-            # Use weighted random selection with decreasing weights for variety
-            remaining_available = [(n, data) for n, data in available if n not in ticket_numbers]
-            
-            while len(ticket_numbers) < 6 and remaining_available:
-                # Weight by score but add variety factor based on ticket number
-                weights = [max(1, data["score"] - (ticket_idx - 1) * 5) for n, data in remaining_available]
-                total_weight = sum(weights)
-                
-                if total_weight <= 0:
-                    # Fallback: just pick sequentially
-                    pick = remaining_available[0]
+
+            # GAP-AWARE picking — each gap between locks gets exactly the
+            # right number of distinct values from its valid value range.
+            score_lookup = {n: data.get("score", 0) for n, data in available}
+
+            def _score_fn(v: int) -> float:
+                base = score_lookup.get(v, 0)
+                # Slight de-emphasis based on ticket_idx for variety
+                return max(1, base - (ticket_idx - 1) * 5)
+
+            from lock_constraints import pick_values_for_gaps
+            picked_unlocked = None
+            if locked_positions:
+                picked_unlocked = pick_values_for_gaps(
+                    locked_positions, n_slots=6, score_fn=_score_fn,
+                    used=set(), value_min=1, value_max=42,
+                    randomize=True, rng=random,
+                )
+            if picked_unlocked is None:
+                # No locks (or rare exhaustion) — fall back to weighted pick
+                positions_to_fill_local = 6 - len(locked_positions)
+                pool = [(n, d) for n, d in available
+                        if n not in locked_nums_set]
+                picks_so_far_pairs = []
+                while (len(picks_so_far_pairs) < positions_to_fill_local
+                       and pool):
+                    weights = [max(1, d.get("score", 0) - (ticket_idx - 1) * 5)
+                               for n, d in pool]
+                    total_weight = sum(weights)
+                    if total_weight <= 0:
+                        n, data = pool[0]
+                    else:
+                        r = random.random() * total_weight
+                        cumulative = 0
+                        n, data = pool[0]
+                        for (nn, dd), w in zip(pool, weights):
+                            cumulative += w
+                            if r <= cumulative:
+                                n, data = nn, dd
+                                break
+                    picks_so_far_pairs.append((n, data))
+                    pool = [(nn, dd) for nn, dd in pool if nn != n]
+                picked_unlocked = sorted(n for n, _ in picks_so_far_pairs)
+
+            # Assemble using lock_constraints
+            assembled = assemble_with_locks(
+                locked_positions, picked_unlocked, n_slots=6,
+            ) if locked_positions else sorted(picked_unlocked)
+
+            if assembled is None:
+                # Greedy fallback: place locked, sort unlocked into gaps
+                assembled = [None] * 6
+                for s, v in locked_positions.items():
+                    assembled[s] = v
+                sorted_unlocked = sorted(picked_unlocked)
+                j = 0
+                for s in range(6):
+                    if assembled[s] is None and j < len(sorted_unlocked):
+                        assembled[s] = sorted_unlocked[j]
+                        j += 1
+
+            # Build final ticket details with correct ordering
+            details_by_value = {n: {"score": score_lookup.get(n, 0),
+                                    "reasons": next(
+                                        (d.get("reasons", []) for nn, d in available
+                                         if nn == n), [])}
+                                for n in (picked_unlocked or [])}
+            full_details = []
+            for s in range(6):
+                v = assembled[s]
+                if v is None:
+                    continue
+                if s in locked_positions:
+                    full_details.append({
+                        "number": v, "score": 999,
+                        "reasons": [f"🔒 Locked at P{s+1}"],
+                        "locked": True,
+                    })
                 else:
-                    r = random.random() * total_weight
-                    cumulative = 0
-                    pick = remaining_available[0]
-                    for i, ((n, data), w) in enumerate(zip(remaining_available, weights)):
-                        cumulative += w
-                        if r <= cumulative:
-                            pick = (n, data)
-                            break
-                
-                n, data = pick
-                ticket_numbers.append(n)
-                ticket_details.append({
-                    "number": n,
-                    "score": data["score"],
-                    "reasons": data["reasons"][:3],
-                    "locked": False
-                })
-                remaining_available = [(nn, dd) for nn, dd in remaining_available if nn != n]
-            
-            # Sort ticket numbers
-            ticket_numbers_sorted = sorted(ticket_numbers)
-            confidence = sum(d["score"] for d in ticket_details if not d.get("locked")) / max(1, len([d for d in ticket_details if not d.get("locked")]))
-            
+                    d = details_by_value.get(v, {"score": 0, "reasons": []})
+                    full_details.append({
+                        "number": v,
+                        "score": d.get("score", 0),
+                        "reasons": d.get("reasons", [])[:3],
+                        "locked": False,
+                    })
+
+            # Numbers in final SLOT order (NOT re-sorted when locks present)
+            final_numbers_ordered = [v for v in assembled if v is not None]
+            confidence_vals = [d["score"] for d in full_details
+                               if not d.get("locked")]
+            confidence = (sum(confidence_vals) / max(1, len(confidence_vals))
+                          if confidence_vals else 0)
+
             all_tickets.append({
                 "ticket_num": ticket_idx,
-                "numbers": ticket_numbers_sorted,
-                "details": ticket_details,
+                "numbers": final_numbers_ordered,
+                "details": full_details,
                 "confidence": round(confidence, 1)
             })
     
@@ -3479,7 +3602,8 @@ async def get_master_prediction(
             tickets=tracker_tickets,
             generation_type="master-predictor",
             visitor_id=visitor_id,
-            has_locked=bool(locked_positions)
+            has_locked=bool(locked_positions),
+            locked_positions={f"P{k+1}": v for k, v in locked_positions.items()} if locked_positions else {},
         )
     except Exception:
         pass  # Don't fail the prediction if tracker save fails
@@ -4307,7 +4431,9 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
     """
     Get tickets generated for the NEXT upcoming draw.
     
-    🎻 Tickets with LOCKED positions are EXCLUDED (user manual picks, not engine predictions).
+    🎻 ALL tickets are included, including those with LOCKED positions.
+        Locked tickets are tagged with `locked_positions` so the user can
+        recognise their own pinned slots in the pending widget.
     🎧 Returns the TOP 10 best tickets (ranked by V2 Detective conviction for the next draw)
        plus "archive files" grouped by 50 tickets (sorted by generation time, newest first).
     """
@@ -4322,19 +4448,23 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
         next_draw = today + timedelta(days=min(days_tue, days_fri))
         next_date = next_draw.strftime("%d.%m.%Y")
         
-        # Collect (ticket, generated_at) from generations WITHOUT locked positions
-        q = {"target_date": next_date, "$or": [{"has_locked": {"$ne": True}}, {"has_locked": {"$exists": False}}]}
+        # Collect ALL tickets (incl. locked) so user's own picks show up
+        q = {"target_date": next_date}
         if visitor_id:
             q["visitor_id"] = visitor_id
         all_tickets = []
-        async for g in db.euromillions_generations.find(q, {"_id": 0, "tickets": 1, "mode": 1, "generated_at": 1}):
+        async for g in db.euromillions_generations.find(q, {"_id": 0, "tickets": 1, "mode": 1, "generated_at": 1, "has_locked": 1, "locked_positions": 1}):
             ga = g.get("generated_at", "")
+            g_locked = g.get("has_locked", False)
+            g_lock_pos = g.get("locked_positions") or {}
             for t in g.get("tickets", []):
                 all_tickets.append({
                     "numbers": t.get("numbers", []),
                     "stars": t.get("stars", []),
                     "story": t.get("story", g.get("mode", "")),
                     "generated_at": ga,
+                    "has_locked": bool(g_locked),
+                    "locked_positions": g_lock_pos if g_locked else {},
                 })
         
         # 🎧 Score by V2 Detective conviction for the upcoming draw
@@ -4496,18 +4626,22 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
         next_draw = today + timedelta(days=min(days_wed, days_sat))
         next_date = next_draw.strftime("%d.%m.%Y")
         
-        q = {"target_date": next_date, "$or": [{"has_locked": {"$ne": True}}, {"has_locked": {"$exists": False}}]}
+        q = {"target_date": next_date}
         if visitor_id:
             q["visitor_id"] = visitor_id
         all_tickets = []
-        async for g in db.generations.find(q, {"_id": 0, "tickets": 1, "generation_type": 1, "generated_at": 1}):
+        async for g in db.generations.find(q, {"_id": 0, "tickets": 1, "generation_type": 1, "generated_at": 1, "has_locked": 1, "locked_positions": 1}):
             ga = g.get("generated_at", "")
+            g_locked = g.get("has_locked", False)
+            g_lock_pos = g.get("locked_positions") or {}
             for t in g.get("tickets", []):
                 all_tickets.append({
                     "numbers": t.get("numbers", []),
                     "lucky": t.get("lucky") or t.get("lucky_number"),
                     "story": t.get("story", g.get("generation_type", "")),
                     "generated_at": ga,
+                    "has_locked": bool(g_locked),
+                    "locked_positions": g_lock_pos if g_locked else {},
                 })
         
         # 🎧 Score by Swiss Lotto previous-draw pattern conviction

@@ -2094,7 +2094,18 @@ def create_euromillions_router(db):
         # Build final numbers - SCENARIO P1/P2 MUST BE INCLUDED!
         final_numbers = [0] * 5
         used = set()
-        
+
+        # Pre-compute slot bounds when user has locked positions so each
+        # generated value at slot `pos` strictly respects the global
+        # ascending order (DJ 29.04.2026).
+        try:
+            from lock_constraints import slot_bounds as _slot_bounds_fn
+            _euro_lock_bounds = (_slot_bounds_fn(
+                locked, n_slots=5, value_min=1, value_max=50,
+            ) if locked else {})
+        except Exception:
+            _euro_lock_bounds = {}
+
         # First, lock user-specified positions
         for pos, num in locked.items():
             final_numbers[pos] = num
@@ -2116,16 +2127,26 @@ def create_euromillions_router(db):
             # Add some randomness based on ticket index
             for num in rnd.sample(range(1, 51), 5):
                 scored[num] += ticket_index * 0.1
-            
+
+            # Apply lock-bounds filter when applicable
+            if pos in _euro_lock_bounds:
+                lo, hi = _euro_lock_bounds[pos]
+            else:
+                lo, hi = 1, 50
+
             selected = None
             for num, _ in scored.most_common():
-                if num not in used and 1 <= num <= 50:
+                if num not in used and lo <= num <= hi:
                     selected = num
                     break
             
             if selected is None:
-                available = [n for n in range(1, 51) if n not in used]
-                selected = rnd.choice(available) if available else 1
+                available = [n for n in range(lo, hi + 1) if n not in used]
+                selected = rnd.choice(available) if available else None
+                if selected is None:
+                    # No legal value left — back-off to global range
+                    available = [n for n in range(1, 51) if n not in used]
+                    selected = rnd.choice(available) if available else 1
             
             final_numbers[pos] = selected
             used.add(selected)
@@ -2175,8 +2196,30 @@ def create_euromillions_router(db):
                 used.add(scenario_p2)
                 position_reasons[f"P{min_pos+1}"] = f"Scenario {scenario} P2={scenario_p2}"
         
-        # Sort for display (EuroMillions requirement)
-        final_numbers = sorted(final_numbers)
+        # Sort for display, but RESPECT locked slot positions (DJ 29.04.2026).
+        if locked:
+            from lock_constraints import assemble_with_locks
+            unlocked_vals = [final_numbers[s] for s in range(5)
+                             if s not in locked]
+            assembled = assemble_with_locks(
+                locked, unlocked_vals, n_slots=5,
+            )
+            if assembled is not None:
+                final_numbers = assembled
+            else:
+                # Greedy fallback: pin locked, sort unlocked into gaps
+                tmp = [None] * 5
+                for s, v in locked.items():
+                    tmp[s] = v
+                sorted_un = sorted(unlocked_vals)
+                j = 0
+                for s in range(5):
+                    if tmp[s] is None and j < len(sorted_un):
+                        tmp[s] = sorted_un[j]
+                        j += 1
+                final_numbers = [v for v in tmp if v is not None]
+        else:
+            final_numbers = sorted(final_numbers)
         
         # ═══════════════════════════════════════════════════════════════════
         # P1+P2 CONSECUTIVE SUM PATTERN (OBSERVATION, NOT ENFORCEMENT!)
@@ -2406,7 +2449,50 @@ def create_euromillions_router(db):
             
             # Generate using DJ Engine - THE CORE!
             dj_result = dj_generate_ticket(dj_draws, target_date=target_date, locked=locked, swiss_draws=swiss_draws)
-            
+
+            # 🔒 ENFORCE lock positions on the result (DJ canon 29.04.2026)
+            # dj_generate_ticket returns SORTED numbers; we need to ensure
+            # locked values stay at their pinned slots and unlocked values
+            # are distributed in valid ascending order.
+            if locked:
+                from lock_constraints import (
+                    assemble_with_locks, pick_values_for_gaps,
+                    is_valid_lock_request,
+                )
+                _ok, _msg = is_valid_lock_request(
+                    locked, n_slots=5, value_min=1, value_max=50,
+                )
+                if not _ok:
+                    raise HTTPException(status_code=400,
+                                        detail=f"Invalid lock: {_msg}")
+                gen_nums = [int(x) for x in dj_result.get("numbers", [])
+                            if 1 <= int(x) <= 50]
+                gen_unlocked = [v for v in gen_nums
+                                if v not in locked.values()]
+                # Try direct assembly first
+                assembled = assemble_with_locks(
+                    locked, gen_unlocked, n_slots=5,
+                )
+                if assembled is None:
+                    # Fall back to gap-aware pick using gen ordering as score
+                    score_map = {v: 100 - i for i, v in enumerate(gen_nums)}
+
+                    def _sf(v: int) -> float:
+                        return float(score_map.get(v, 1))
+
+                    new_unlocked = pick_values_for_gaps(
+                        locked, n_slots=5, score_fn=_sf,
+                        value_min=1, value_max=50,
+                    )
+                    if new_unlocked is not None:
+                        assembled = assemble_with_locks(
+                            locked, new_unlocked, n_slots=5,
+                        )
+                if assembled is None:
+                    # Hard fallback — should never happen due to validator
+                    assembled = sorted(set(list(locked.values()) + gen_nums))[:5]
+                dj_result["numbers"] = assembled
+
             tickets.append({
                 "ticket_number": ticket_idx + 1,
                 "numbers": dj_result["numbers"],
@@ -2428,7 +2514,7 @@ def create_euromillions_router(db):
         
         # Auto-save to hit tracker
         try:
-            await _save_to_tracker(tickets, target_date, mode="dreaming", visitor_id=request.visitor_id or "", has_locked=bool(request.locked_positions))
+            await _save_to_tracker(tickets, target_date, mode="dreaming", visitor_id=request.visitor_id or "", has_locked=bool(request.locked_positions), locked_positions=request.locked_positions or {})
         except Exception:
             pass  # Don't fail the prediction if save fails
         
@@ -2442,7 +2528,7 @@ def create_euromillions_router(db):
         }
     
     # Helper: auto-save generated tickets to hit tracker
-    async def _save_to_tracker(tickets_data, target_date, mode="dreaming", visitor_id="", has_locked=False):
+    async def _save_to_tracker(tickets_data, target_date, mode="dreaming", visitor_id="", has_locked=False, locked_positions=None):
         """Save generated tickets to euromillions_generations for hit tracking"""
         from datetime import datetime as dt, timedelta
         
@@ -2472,6 +2558,7 @@ def create_euromillions_router(db):
             "star_hits": 0,
             "best_ticket_hits": 0,
             "has_locked": has_locked,
+            "locked_positions": locked_positions or {},
         }
         if visitor_id:
             generation["visitor_id"] = visitor_id
@@ -2549,7 +2636,44 @@ def create_euromillions_router(db):
                 swiss_draws=swiss_draws,
                 locked=locked
             )
-            
+
+            # 🔒 ENFORCE lock positions on the result (DJ canon 29.04.2026)
+            if locked:
+                from lock_constraints import (
+                    assemble_with_locks, pick_values_for_gaps,
+                    is_valid_lock_request,
+                )
+                _ok, _msg = is_valid_lock_request(
+                    locked, n_slots=5, value_min=1, value_max=50,
+                )
+                if not _ok:
+                    raise HTTPException(status_code=400,
+                                        detail=f"Invalid lock: {_msg}")
+                gen_nums = [int(x) for x in dj_result.get("numbers", [])
+                            if 1 <= int(x) <= 50]
+                gen_unlocked = [v for v in gen_nums
+                                if v not in locked.values()]
+                assembled = assemble_with_locks(
+                    locked, gen_unlocked, n_slots=5,
+                )
+                if assembled is None:
+                    score_map = {v: 100 - i for i, v in enumerate(gen_nums)}
+
+                    def _sf(v: int) -> float:
+                        return float(score_map.get(v, 1))
+
+                    new_unlocked = pick_values_for_gaps(
+                        locked, n_slots=5, score_fn=_sf,
+                        value_min=1, value_max=50,
+                    )
+                    if new_unlocked is not None:
+                        assembled = assemble_with_locks(
+                            locked, new_unlocked, n_slots=5,
+                        )
+                if assembled is None:
+                    assembled = sorted(set(list(locked.values()) + gen_nums))[:5]
+                dj_result["numbers"] = assembled
+
             tickets.append({
                 "ticket_number": ticket_idx + 1,
                 "numbers": dj_result["numbers"],
@@ -2565,7 +2689,7 @@ def create_euromillions_router(db):
         
         # Auto-save to hit tracker
         try:
-            await _save_to_tracker(tickets, target_date, mode="money", visitor_id=request.visitor_id or "", has_locked=bool(request.locked_positions))
+            await _save_to_tracker(tickets, target_date, mode="money", visitor_id=request.visitor_id or "", has_locked=bool(request.locked_positions), locked_positions=request.locked_positions or {})
         except Exception:
             pass
         

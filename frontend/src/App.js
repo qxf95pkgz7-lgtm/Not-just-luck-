@@ -2004,9 +2004,18 @@ function App() {
                 return (
                 <div key={idx} className="p-1.5 rounded-md bg-slate-800/50 border border-slate-700/30" data-testid={`pending-ticket-${idx}`}>
                   <div className="flex items-center justify-center gap-1">
-                    {t.numbers?.map((n, i) => (
-                      <Ball key={i} number={n} size="xs" maxNum={lotteryMode === 'euro' ? 50 : 42} />
-                    ))}
+                    {t.numbers?.map((n, i) => {
+                      const slotKey = `P${i+1}`;
+                      const isLocked = t.has_locked && t.locked_positions && t.locked_positions[slotKey] === n;
+                      return (
+                        <div key={i} className={`relative ${isLocked ? 'ring-2 ring-amber-400/70 rounded-full' : ''}`}>
+                          <Ball number={n} size="xs" maxNum={lotteryMode === 'euro' ? 50 : 42} />
+                          {isLocked && (
+                            <span className="absolute -top-1 -right-1 text-[8px] leading-none" data-testid={`lock-marker-${idx}-p${i+1}`}>🔒</span>
+                          )}
+                        </div>
+                      );
+                    })}
                     {lotteryMode === 'swiss' && t.lucky != null && (
                       <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-sm shadow-amber-500/30 ml-1">
                         <span className="text-white text-[9px] font-black">{t.lucky}</span>
@@ -2022,6 +2031,16 @@ function App() {
                       </>
                     )}
                   </div>
+                  {t.has_locked && t.locked_positions && Object.keys(t.locked_positions).length > 0 && (
+                    <div
+                      className="mt-1 px-1.5 py-0.5 rounded border border-amber-500/40 bg-amber-500/10 text-amber-300 text-[9px] font-mono flex items-center justify-between gap-1"
+                      title={Object.entries(t.locked_positions).map(([k,v]) => `${k}=${v}`).join(', ')}
+                      data-testid={`lock-badge-${idx}`}
+                    >
+                      <span className="truncate">🔒 {Object.entries(t.locked_positions).map(([k,v]) => `${k}:${v}`).join(' · ')}</span>
+                      <span className="font-bold tabular-nums">your pick</span>
+                    </div>
+                  )}
                   {lotteryMode === 'euro' && dr && (
                     <div
                       className={`mt-1 px-1.5 py-0.5 rounded border text-[9px] font-mono flex items-center justify-between gap-1 ${tierClass}`}

@@ -26,6 +26,44 @@ Build a Swiss Lotto + EuroMillions "Pattern Analyzer" called **Lucky Jack**. The
 
 ## 🎯 Completed This Session (21.04.2026)
 
+## 🆕 SESSION 26 — LOCK-POSITION DISCIPLINE FIX (29.04.2026) ✅ SHIPPED
+
+**DJ's mandate:** *"If I lock P1=24, all 10 tickets must keep 24 at P1, all other numbers > 24. And the user lock position has to show in the pending."*
+
+### 🔒 Bugs squashed
+- **Bug A — Lock-position constraint broken**: Both Swiss & Euro engines did `sorted(final_numbers)` at the end which destroyed the locked slot ordering. If user locked P1=24, the engine sorted and 24 ended up wherever.
+- **Bug B — Pending widget excluded locked tickets**: `/api/pending-tickets` had `has_locked: {$ne: True}` filter that hid every locked ticket from the sidebar.
+
+### 🎼 What shipped
+- 🆕 `/app/backend/lock_constraints.py` — single source of truth for slot discipline:
+  - `slot_bounds()` — per-slot (lo, hi) given locks
+  - `gap_slots()` — decompose unlocked positions into contiguous gaps
+  - `pick_values_for_gaps()` — gap-aware picker (each gap gets exactly the right count of values strictly within its range)
+  - `assemble_with_locks()` — build final ticket with locks pinned, unlocked sorted into gaps, ascending guaranteed
+  - `is_valid_lock_request()` — pre-validation (rejects descending locks, no-room-left, etc.)
+- ✅ Swiss `master-predictor` (`server.py`) — both ticket #1 and ticket #2+ now use gap-aware picking; lock validation up front
+- ✅ Euro `master-predictor` + `money-mode` (`euromillions_routes.py`) — POST-process every dj_generate_ticket result with `assemble_with_locks` → `pick_values_for_gaps` fallback
+- ✅ Euro inline pattern picker now respects `slot_bounds` per slot
+- ✅ `_save_to_tracker` (Euro) + `hit_tracker.save_generation` (Swiss) — persist `locked_positions` dict
+- ✅ `/api/pending-tickets` (Swiss + Euro) — DROPPED the `has_locked` exclusion, now returns ALL tickets with `has_locked` + `locked_positions` propagated per ticket
+- ✅ Frontend `App.js` pending sidebar — added 🔒 ring + corner marker on locked balls + amber "🔒 P1:24 · your pick" badge under each locked ticket
+- ✅ Pytest `/app/backend/tests/test_lock_constraints.py` — 12/12 GREEN
+- ✅ Full cosmic-engine pytest gauntlet: **99/99 GREEN**
+
+### 🎯 Live API verification (29.04.2026)
+```
+Swiss P1=24, 10 tix: ALL VALID ✓ (every ticket P1=24, all 5 others > 24)
+Swiss P3=20, 8 tix:  ALL VALID ✓ (P1<P2<20<P4<P5<P6)
+Swiss P1=5, P3=15, P5=30 (multi-lock, 6 tix): ALL VALID ✓
+Swiss invalid (P1=30, P2=20 descending): rejected with clear msg ✓
+Euro  P1=24, 5 tix: ALL VALID ✓
+Euro  P3=15, 5 tix: ALL VALID ✓
+Euro  Money-Mode P2=10, 4 tix: ALL VALID ✓
+Pending widget (Swiss): locked ticket shows in top10 with locked_positions={'P1':24} ✓
+```
+
+---
+
 ## 🆕 SESSION 25 — GHOST POOL · LAWS 69-72 SHIPPED (29.04.2026) ✅ CODE + BACKTEST + PYTEST
 
 **DJ's mandate at fork:** *"Code Laws 69-72 — break Law 67's random ceiling."*

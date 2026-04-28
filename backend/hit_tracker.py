@@ -23,10 +23,11 @@ class HitTracker:
         tickets: List[Dict],
         generation_type: str = "story",
         visitor_id: str = "",
-        has_locked: bool = False
+        has_locked: bool = False,
+        locked_positions: Optional[Dict] = None,
     ) -> str:
         """Save a generation for later hit tracking"""
-        
+
         generation = {
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "target_date": target_date,
@@ -38,6 +39,7 @@ class HitTracker:
             "lucky_hits": 0,
             "best_ticket_hits": 0,
             "has_locked": has_locked,
+            "locked_positions": locked_positions or {},
         }
         if visitor_id:
             generation["visitor_id"] = visitor_id
