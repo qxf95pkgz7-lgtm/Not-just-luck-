@@ -43,7 +43,22 @@ class HitTracker:
         }
         if visitor_id:
             generation["visitor_id"] = visitor_id
-        
+
+        # 🎫 Attach serials to every ticket (DJ canon 29.04.2026)
+        serials = []
+        try:
+            from serials import attach_serials
+            serials = await attach_serials(
+                self.db, "swiss", target_date, generation["tickets"],
+            )
+            generation["serials"] = serials
+            # Propagate serials back to caller's source list (same length)
+            for src_t, saved_t in zip(tickets, generation["tickets"]):
+                if isinstance(src_t, dict) and "serial" in saved_t:
+                    src_t["serial"] = saved_t["serial"]
+        except Exception:
+            pass
+
         result = await self.generations_collection.insert_one(generation)
         return str(result.inserted_id)
     

@@ -2588,7 +2588,21 @@ def create_euromillions_router(db):
         }
         if visitor_id:
             generation["visitor_id"] = visitor_id
-        
+
+        # 🎫 Attach serials to every ticket (DJ canon 29.04.2026)
+        try:
+            from serials import attach_serials
+            serials = await attach_serials(
+                db, "euro", target_date, generation["tickets"],
+            )
+            # propagate back to the live tickets list returned to the user
+            for src_t, saved_t in zip(tickets_data, generation["tickets"]):
+                if isinstance(src_t, dict) and "serial" in saved_t:
+                    src_t["serial"] = saved_t["serial"]
+            generation["serials"] = serials
+        except Exception as e:
+            logger.warning(f"euro serial attach failed: {e}")
+
         result = await db.euromillions_generations.insert_one(generation)
         return str(result.inserted_id)
     

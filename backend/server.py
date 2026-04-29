@@ -3616,6 +3616,16 @@ async def get_master_prediction(
             has_locked=bool(locked_positions),
             locked_positions={f"P{k+1}": v for k, v in locked_positions.items()} if locked_positions else {},
         )
+        # 🎫 Propagate serials from tracker_tickets back to the response
+        for src_t, tracker_t in zip(tickets_to_save, tracker_tickets):
+            if isinstance(src_t, dict) and "serial" in tracker_t:
+                src_t["serial"] = tracker_t["serial"]
+        # Mirror to result['all_tickets'] / result['tickets'] if present
+        for key in ("all_tickets", "tickets"):
+            for r_t, tr_t in zip(result.get(key, []) or [], tracker_tickets):
+                if isinstance(r_t, dict) and "serial" in tr_t:
+                    r_t["serial"] = tr_t["serial"]
+        result["target_date"] = target_date_str
         # Auto-trigger hit calc if the actual draw is already in the DB
         try:
             await hit_tracker.calculate_hits(gen_id)
@@ -4496,6 +4506,7 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
             g_lock_pos = g.get("locked_positions") or {}
             for t in g.get("tickets", []):
                 all_tickets.append({
+                    "serial": t.get("serial"),
                     "numbers": t.get("numbers", []),
                     "stars": t.get("stars", []),
                     "story": t.get("story", g.get("mode", "")),
@@ -4669,6 +4680,7 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
             g_lock_pos = g.get("locked_positions") or {}
             for t in g.get("tickets", []):
                 all_tickets.append({
+                    "serial": t.get("serial"),
                     "numbers": t.get("numbers", []),
                     "lucky": t.get("lucky") or t.get("lucky_number"),
                     "story": t.get("story", g.get("generation_type", "")),
@@ -6293,6 +6305,70 @@ async def random_vs_engine(mode: str = "euro", date: str = ""):
         }
 
 
+@api_router.post("/history/archive-now")
+async def history_archive_now():
+    """🎻 Snapshot every hit-calculated generation into historical_tickets.
+    Idempotent — keyed by serial+target_date, safe to call multiple times.
+    """
+    from historical_archive import archive_completed_draws
+    return await archive_completed_draws(db)
+
+
+@api_router.get("/history/dates")
+async def history_dates(mode: str = "swiss"):
+    """List of past draw dates with archive stats (count, max hits, etc.)."""
+    from historical_archive import fetch_historical_dates
+    dates = await fetch_historical_dates(db, mode=mode)
+    return {"mode": mode, "dates": dates}
+
+
+@api_router.get("/history/tickets")
+async def history_tickets(
+    mode: str = "swiss",
+    target_date: str = "",
+    limit: int = 200,
+    skip: int = 0,
+    min_hits: int = 0,
+):
+    """Paginated archive read."""
+    from historical_archive import fetch_historical
+    docs = await fetch_historical(
+        db, mode=mode, limit=limit, skip=skip,
+        target_date=target_date or None,
+        min_hits=min_hits,
+    )
+    return {
+        "mode": mode,
+        "target_date": target_date or None,
+        "count": len(docs),
+        "tickets": docs,
+    }
+
+
+@api_router.get("/history/export.csv")
+async def history_export_csv(
+    mode: str = "swiss",
+    target_date: str = "",
+    min_hits: int = 0,
+):
+    """CSV download of the archive (stream as text/csv)."""
+    from historical_archive import export_csv
+    from fastapi.responses import Response
+    csv_text = await export_csv(
+        db, mode=mode, target_date=target_date or None,
+        min_hits=min_hits,
+    )
+    fn_date = target_date or "all"
+    filename = f"luckyjack_{mode}_history_{fn_date}.csv"
+    return Response(
+        content=csv_text,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+
+
 
 
 
@@ -7005,12 +7081,23 @@ async def scheduled_sync_job():
         logger.error(f"❌ Scheduled sync error: {e}")
 
 async def scheduled_prune_job():
-    """🎻 DJ-canon (29.04.2026): every day at 04:00 UTC, prune old gens.
-    After D+3 (3 days past the draw), only tickets with ≥2 total hits
-    survive — everything else is purged to free RAM/storage.
+    """🎻 DJ-canon (29.04.2026): every day at 04:00 UTC, archive every
+    hit-calculated generation into `historical_tickets`, THEN prune the
+    live collections. Survives forever in the archive, lean in live.
     """
     logger.info("🧹 Scheduled prune triggered!")
     try:
+        # Archive first so nothing is ever lost
+        try:
+            from historical_archive import archive_completed_draws
+            arch = await archive_completed_draws(db)
+            logger.info(
+                "📜 Archived: swiss=%d euro=%d (skipped %d already-known)",
+                arch["archived_swiss"], arch["archived_euro"],
+                arch["skipped_already_archived"],
+            )
+        except Exception as ex:
+            logger.error(f"❌ Archive step failed: {ex}")
         report = await _prune_all_generations(db, days=3, threshold=2)
         s = report["swiss"]; e = report["euro"]
         logger.info(

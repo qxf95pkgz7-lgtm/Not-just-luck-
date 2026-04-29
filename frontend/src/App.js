@@ -173,6 +173,108 @@ const RandomVsEBox = ({ data, mode }) => {
 
 
 // EuroMillions Star Ball - Gold star design
+
+// 📜 HISTORY PANEL — past draws archive (DJ canon 29.04.2026)
+// Compact dropdown showing past target dates + ticket counts; click to expand.
+const HistoryPanel = ({ mode, api }) => {
+  const [open, setOpen] = useState(false);
+  const [dates, setDates] = useState([]);
+  const [activeDate, setActiveDate] = useState(null);
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  React.useEffect(() => {
+    if (!open) return;
+    setLoading(true);
+    axios.get(`${api}/history/dates?mode=${mode}`)
+      .then(r => setDates(r.data?.dates || []))
+      .catch(() => setDates([]))
+      .finally(() => setLoading(false));
+  }, [open, mode, api]);
+
+  const openDate = async (d) => {
+    setActiveDate(d);
+    setLoading(true);
+    try {
+      const r = await axios.get(`${api}/history/tickets?mode=${mode}&target_date=${d}&limit=200`);
+      setTickets(r.data?.tickets || []);
+    } catch { setTickets([]); }
+    setLoading(false);
+  };
+
+  const downloadCsv = (d) => {
+    const url = `${api}/history/export.csv?mode=${mode}${d ? `&target_date=${d}` : ''}`;
+    window.open(url, '_blank');
+  };
+
+  return (
+    <div className="mb-2 p-1.5 rounded-lg border border-slate-700/40 bg-slate-900/50" data-testid="history-panel">
+      <button
+        className="w-full flex items-center justify-between text-[10px] font-bold text-amber-300 hover:text-amber-200"
+        onClick={() => setOpen(!open)}
+        data-testid="history-panel-toggle"
+      >
+        <span>📜 History · past draws</span>
+        <span className="text-[9px] text-slate-500">{open ? '▼' : '▶'}</span>
+      </button>
+      {open && (
+        <div className="mt-1.5">
+          <button
+            onClick={() => downloadCsv(activeDate)}
+            className="text-[9px] px-1.5 py-0.5 rounded border border-emerald-600/40 text-emerald-300 hover:bg-emerald-700/20 mb-1"
+            data-testid="history-download-csv"
+          >⬇ CSV {activeDate ? `(${activeDate})` : '(all)'}</button>
+          <div className="grid grid-cols-2 gap-1 max-h-32 overflow-y-auto">
+            {(dates || []).map(d => (
+              <button
+                key={d.target_date}
+                onClick={() => openDate(d.target_date)}
+                className={`text-left px-1.5 py-0.5 rounded text-[9px] font-mono ${activeDate === d.target_date ? 'bg-amber-500/20 border border-amber-400/50 text-amber-200' : 'bg-slate-800/40 hover:bg-slate-700/40 text-slate-300'}`}
+                data-testid={`history-date-${d.target_date}`}
+                title={`${d.count} tickets · max ${d.max_hits} hits · ${d.n_2plus}/2+ · ${d.n_3plus}/3+`}
+              >
+                {d.target_date}
+                <span className="text-[8px] text-slate-500 ml-1">{d.count}</span>
+                {d.n_3plus > 0 && <span className="text-[8px] text-emerald-400 ml-1">★{d.n_3plus}</span>}
+              </button>
+            ))}
+          </div>
+          {activeDate && (
+            <div className="mt-1.5 max-h-48 overflow-y-auto">
+              <div className="text-[9px] text-slate-400 mb-1">
+                {tickets.length} tickets for {activeDate}
+              </div>
+              {(tickets || []).slice(0, 50).map((t, i) => {
+                const total = (t.hits || {}).total || 0;
+                const cls = total >= 3 ? 'border-emerald-500/40 bg-emerald-500/5'
+                          : total >= 2 ? 'border-amber-500/40 bg-amber-500/5'
+                          : 'border-slate-700/30';
+                return (
+                  <div key={t.serial || i} className={`mb-1 p-1 rounded border ${cls}`} data-testid={`history-ticket-${i}`}>
+                    <div className="text-[8px] font-mono text-amber-400/80">🎫 {t.serial || '—'}</div>
+                    <div className="text-[10px] font-mono text-slate-200">
+                      [{(t.numbers || []).join(', ')}]
+                      {mode === 'swiss' && t.lucky != null && <span className="ml-1 text-amber-300">🍀{t.lucky}</span>}
+                      {mode === 'euro' && t.stars && <span className="ml-1 text-yellow-300">⭐[{t.stars.join(', ')}]</span>}
+                    </div>
+                    {t.hits && (
+                      <div className="text-[9px] text-slate-400">
+                        {t.hits.mains}m{mode === 'euro' ? `+${t.hits.stars}s` : (t.hits.lucky_hit ? '+🍀' : '')} = <span className={total >= 2 ? 'text-emerald-300 font-bold' : ''}>{total}h</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {loading && <div className="text-[9px] text-slate-500 mt-1">loading...</div>}
+        </div>
+      )}
+    </div>
+  );
+};
+
+
 const StarBall = ({ number, size = "sm", isWinner = false, isSpinning = false }) => {
   const sizeConfig = {
     xs: { ball: 'w-6 h-6', text: 'text-[8px]' },
@@ -1882,6 +1984,10 @@ function App() {
             {randomVsE && randomVsE.actual_draw && (
               <RandomVsEBox data={randomVsE} mode={lotteryMode} />
             )}
+
+            {/* 📜 History — past draws archive (DJ canon 29.04.2026) */}
+            <HistoryPanel mode={lotteryMode} api={API} />
+
             {lotteryMode === 'euro' && isUnlimited && diagnostics && Array.isArray(diagnostics.narrative) && diagnostics.narrative.length > 0 && (
               <div className="mb-2 p-1.5 rounded-md border border-cyan-500/40 bg-gradient-to-br from-cyan-900/25 to-slate-900/20" data-testid="diagnostics-panel">
                 <div className="flex items-center justify-between mb-1">
@@ -2119,6 +2225,11 @@ function App() {
                 ) : '';
                 return (
                 <div key={idx} className="p-1.5 rounded-md bg-slate-800/50 border border-slate-700/30" data-testid={`pending-ticket-${idx}`}>
+                  {t.serial && (
+                    <div className="text-[8px] font-mono text-amber-400/80 mb-0.5 truncate" data-testid={`pending-serial-${idx}`}>
+                      🎫 {t.serial}
+                    </div>
+                  )}
                   <div className="flex items-center justify-center gap-1">
                     {t.numbers?.map((n, i) => {
                       const slotKey = `P${i+1}`;

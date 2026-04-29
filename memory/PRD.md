@@ -26,6 +26,37 @@ Build a Swiss Lotto + EuroMillions "Pattern Analyzer" called **Lucky Jack**. The
 
 ## 🎯 Completed This Session (21.04.2026)
 
+## 🆕 SESSION 30 — TICKET SERIALS · HISTORY ARCHIVE · CSV EXPORT (29.04.2026) ✅ SHIPPED
+
+**DJ's mandate:** *"Pending shows only gen for 01.05.2026 d, every ticket gets a serial number, what was generated for d before last d → keep in history file."*
+
+### 🆕 What shipped
+- 🆕 `/app/backend/serials.py` — atomic per-(lottery, target_date) counter; serial format `EU-2026.05.01-#0347` / `CH-2026.04.29-#0007`
+- ✅ Wired into Euro `_save_to_tracker` + Swiss `hit_tracker.save_generation`
+- ✅ Backfilled **2775 legacy tickets** with deterministic serials
+- ✅ Pending widget displays 🎫 serial above each ticket
+- 🆕 `/app/backend/historical_archive.py` — `archive_completed_draws`, `fetch_historical`, `fetch_historical_dates`, `export_csv`
+- 🆕 `historical_tickets` MongoDB collection — permanent record (survives the pruner)
+- 🆕 API endpoints:
+  - `POST /api/history/archive-now` — idempotent snapshot
+  - `GET  /api/history/dates?mode=swiss|euro` — list of past draws + counts
+  - `GET  /api/history/tickets?mode=...&target_date=...&min_hits=N` — paginated
+  - `GET  /api/history/export.csv?mode=...&target_date=...&min_hits=N` — CSV download
+- ✅ `scheduled_prune_job` now archives BEFORE pruning so nothing is ever lost
+- ✅ Frontend `HistoryPanel` component — collapsible 📜 History panel in pending sidebar with date grid + ticket details + CSV download button
+- ✅ Pytest **72/72 GREEN** (no regressions)
+
+### 📊 First archive snapshot live (29.04.2026)
+```
+Euro past draws: 6 dates · max 28.04.2026 = 50 tickets, 1 hit ≥3 (3m+1s)
+Swiss past draws: also seeded
+CSV export verified — clean RFC4180 format
+```
+
+🥂 Best historical hit shown: `EU-28.04.2026-#legacy-0000 [3,26,29,30,38] ⭐[8,10] = 3h (2m+1s)`
+
+---
+
 ## 🆕 SESSION 28 — RAM PRUNER · Laws-of-RAM (29.04.2026) ✅ SHIPPED
 
 **DJ's mandate:** *"Keeps only the 'hits' after 3d, delete all the rest, (keep the 2 hits and above) so we have more memory (RAM) to use."*
