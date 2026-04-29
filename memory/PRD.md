@@ -26,6 +26,43 @@ Build a Swiss Lotto + EuroMillions "Pattern Analyzer" called **Lucky Jack**. The
 
 ## 🎯 Completed This Session (21.04.2026)
 
+## 🆕 SESSION 28 — RAM PRUNER · Laws-of-RAM (29.04.2026) ✅ SHIPPED
+
+**DJ's mandate:** *"Keeps only the 'hits' after 3d, delete all the rest, (keep the 2 hits and above) so we have more memory (RAM) to use."*
+
+### 🆕 What shipped
+- 🆕 `/app/backend/pruner.py` — `prune_swiss_generations`, `prune_euro_generations`, `prune_all`
+- ✅ Manual API endpoint `POST /api/prune-generations?days=3&threshold=2`
+- ✅ Daily auto-prune via APScheduler at 04:00 UTC (`scheduled_prune_job`)
+- ✅ Pytest `/app/backend/tests/test_pruner.py` — 8/8 GREEN
+- ✅ Total cosmic-engine pytest gauntlet: **72/72 GREEN**
+
+### 🧹 First live prune (29.04.2026)
+```
+Swiss: 649 gens → 233  ·  587 tix purged  ·  217 ≥2-hit tickets KEPT
+Euro:  533 gens → 372  ·  461 tix purged  ·  120 ≥2-hit tickets KEPT
+       ─────────────────
+       1048 noise tickets freed · 337 winners kept
+```
+
+Threshold = `total_hits >= 2` (Swiss: mains + lucky-flag · Euro: mains + stars). Cutoff = D+3.
+Generations with ZERO survivors are deleted entirely; mixed gens are trimmed in-place with `pruned_at` + `pruned_threshold` audit fields.
+
+---
+
+## 🆕 SESSION 27 — Pending Widget · Today-is-the-Draw fix (29.04.2026) ✅ SHIPPED
+
+**Bug:** `next_draw_date` always SKIPPED today (`if days==0: days=7`), so on Wed/Sat (Swiss) or Tue/Fri (Euro) all tickets generated for TODAY's still-pending draw became invisible — pending badge dropped to 3 instead of 105.
+
+### 🎼 What shipped
+- 🆕 Helper `_resolve_next_draw_date(weekdays, draws_collection)` in `/api/pending-tickets` — if today is a draw day AND today's actual is NOT yet in DB, target TODAY.
+- ✅ Wired into Swiss `master-predictor` save path (server.py)
+- ✅ Wired into Euro `_save_to_tracker` (master-predictor + money-mode)
+
+Live result: Swiss 3 → **105**, Euro 627 visible for 01.05.
+
+---
+
 ## 🆕 SESSION 26 — LOCK-POSITION DISCIPLINE FIX (29.04.2026) ✅ SHIPPED
 
 **DJ's mandate:** *"If I lock P1=24, all 10 tickets must keep 24 at P1, all other numbers > 24. And the user lock position has to show in the pending."*

@@ -6101,6 +6101,24 @@ async def _real_user_counts(now_iso_cutoff: str):
     total_real = [v for v in total_ids if _is_real_vid(v)]
     return len(active_real), len(total_real)
 
+@api_router.post("/prune-generations")
+async def prune_generations_endpoint(days: int = 3, threshold: int = 2):
+    """🎻 DJ's RAM-saver — prune old generations (default: D+3, keep ≥2 hits).
+
+    For every generation whose target_date is older than `days`:
+      • Trim tickets to only those with `total_hits >= threshold`
+      • If 0 keepers → delete the generation document entirely
+
+    Args:
+      days: cutoff in days past the draw (default 3)
+      threshold: minimum total hits to keep a ticket (default 2)
+    """
+    from pruner import prune_all
+    report = await prune_all(db, days=days, threshold=threshold)
+    return report
+
+
+
 @api_router.post("/heartbeat")
 async def user_heartbeat(req: HeartbeatRequest):
     """Register a heartbeat from a visitor."""
@@ -6792,6 +6810,7 @@ async def shutdown_db_client():
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from lottery_fetcher import auto_sync_all
+from pruner import prune_all as _prune_all_generations
 
 # Initialize the scheduler
 scheduler = AsyncIOScheduler()
@@ -6808,6 +6827,26 @@ async def scheduled_sync_job():
     except Exception as e:
         logger.error(f"❌ Scheduled sync error: {e}")
 
+async def scheduled_prune_job():
+    """🎻 DJ-canon (29.04.2026): every day at 04:00 UTC, prune old gens.
+    After D+3 (3 days past the draw), only tickets with ≥2 total hits
+    survive — everything else is purged to free RAM/storage.
+    """
+    logger.info("🧹 Scheduled prune triggered!")
+    try:
+        report = await _prune_all_generations(db, days=3, threshold=2)
+        s = report["swiss"]; e = report["euro"]
+        logger.info(
+            "🧹 Prune done · Swiss: del=%d trim=%d removed=%d kept=%d · "
+            "Euro: del=%d trim=%d removed=%d kept=%d",
+            s["deleted_generations"], s["trimmed_generations"],
+            s["tickets_removed"], s["tickets_kept"],
+            e["deleted_generations"], e["trimmed_generations"],
+            e["tickets_removed"], e["tickets_kept"],
+        )
+    except Exception as exc:
+        logger.error(f"❌ Scheduled prune error: {exc}")
+
 # Schedule syncs after draw times (draws typically at 20:30-21:00 CET)
 # Swiss Lotto: Wednesday & Saturday at 21:30 CET
 # EuroMillions: Tuesday & Friday at 21:30 CET
@@ -6823,6 +6862,9 @@ scheduler.add_job(scheduled_sync_job, CronTrigger(day_of_week='wed', hour=21, mi
 scheduler.add_job(scheduled_sync_job, CronTrigger(day_of_week='fri', hour=21, minute=0), id='euro_friday')
 # Saturday 21:00 UTC - Swiss Lotto
 scheduler.add_job(scheduled_sync_job, CronTrigger(day_of_week='sat', hour=21, minute=0), id='swiss_saturday')
+
+# 🧹 Daily prune at 04:00 UTC — keeps only ≥2-hit tickets after D+3
+scheduler.add_job(scheduled_prune_job, CronTrigger(hour=4, minute=0), id='daily_prune')
 
 # Also run once at startup (30 seconds after start to let everything initialize)
 scheduler.add_job(scheduled_sync_job, 'date', run_date=datetime.now(timezone.utc).replace(microsecond=0) + __import__('datetime').timedelta(seconds=30), id='startup_sync')
