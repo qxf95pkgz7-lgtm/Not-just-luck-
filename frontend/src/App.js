@@ -1115,7 +1115,12 @@ function App() {
   };
   const fetchPendingTickets = async () => {
     try {
-      const res = await axios.get(`${API}/pending-tickets?mode=${lotteryMode}`);
+      // 🎻 Pass visitor_id so backend can pin user's own locked tickets first
+      const vid = localStorage.getItem('lj_visitor_id') || '';
+      const url = vid
+        ? `${API}/pending-tickets?mode=${lotteryMode}&visitor_id=${encodeURIComponent(vid)}`
+        : `${API}/pending-tickets?mode=${lotteryMode}`;
+      const res = await axios.get(url);
       setPendingTickets(res.data.tickets || []);
       setPendingTotal(res.data.count || 0);
       setArchiveFiles(res.data.archive_files || []);
@@ -2260,12 +2265,16 @@ function App() {
                   </div>
                   {t.has_locked && t.locked_positions && Object.keys(t.locked_positions).length > 0 && (
                     <div
-                      className="mt-1 px-1.5 py-0.5 rounded border border-amber-500/40 bg-amber-500/10 text-amber-300 text-[9px] font-mono flex items-center justify-between gap-1"
+                      className={`mt-1 px-1.5 py-0.5 rounded border text-[9px] font-mono flex items-center justify-between gap-1 ${
+                        t.is_mine
+                          ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-300'
+                          : 'border-amber-500/40 bg-amber-500/10 text-amber-300'
+                      }`}
                       title={Object.entries(t.locked_positions).map(([k,v]) => `${k}=${v}`).join(', ')}
                       data-testid={`lock-badge-${idx}`}
                     >
                       <span className="truncate">🔒 {Object.entries(t.locked_positions).map(([k,v]) => `${k}:${v}`).join(' · ')}</span>
-                      <span className="font-bold tabular-nums">your pick</span>
+                      <span className="font-bold tabular-nums">{t.is_mine ? '🎫 your lock' : 'locked pick'}</span>
                     </div>
                   )}
                   {lotteryMode === 'euro' && dr && (

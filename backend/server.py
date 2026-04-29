@@ -4495,15 +4495,18 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
             [1, 4], db.euromillions_draws
         )
         
-        # Collect ALL tickets (incl. locked) so user's own picks show up
+        # Collect ALL tickets (incl. locked) so user's own picks show up.
+        # 🎻 DJ-rule (29.04.2026): never filter by visitor_id at the
+        # query level — we want the community top10, but tag the
+        # requesting user's own locked tickets so we can pin them first.
         q = {"target_date": next_date}
-        if visitor_id:
-            q["visitor_id"] = visitor_id
         all_tickets = []
-        async for g in db.euromillions_generations.find(q, {"_id": 0, "tickets": 1, "mode": 1, "generated_at": 1, "has_locked": 1, "locked_positions": 1}):
+        async for g in db.euromillions_generations.find(q, {"_id": 0, "visitor_id": 1, "tickets": 1, "mode": 1, "generated_at": 1, "has_locked": 1, "locked_positions": 1}):
             ga = g.get("generated_at", "")
             g_locked = g.get("has_locked", False)
             g_lock_pos = g.get("locked_positions") or {}
+            g_vid = g.get("visitor_id", "")
+            is_mine = bool(visitor_id) and g_vid == visitor_id
             for t in g.get("tickets", []):
                 all_tickets.append({
                     "serial": t.get("serial"),
@@ -4513,6 +4516,7 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
                     "generated_at": ga,
                     "has_locked": bool(g_locked),
                     "locked_positions": g_lock_pos if g_locked else {},
+                    "is_mine": is_mine,
                 })
         
         # 🎧 Score by V2 Detective conviction for the upcoming draw
@@ -4597,9 +4601,23 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
                     pass
         
         # Top 10 = best-scored. Archive = the rest, sorted by time (newest first), 50 per file.
+        # 🎻 DJ-rule: pin requesting user's own LOCKED tickets at the head
+        # of top10 so they always see their pinned slots in the pending sidebar.
         scored_sorted = sorted(all_tickets, key=lambda x: -x["_score"])
-        top10 = scored_sorted[:10]
-        rest = sorted(scored_sorted[10:], key=lambda x: x.get("generated_at", ""), reverse=True)
+        my_locked = [t for t in scored_sorted
+                     if t.get("is_mine") and t.get("has_locked")]
+        seen_ser = {t.get("serial") for t in my_locked if t.get("serial")}
+        community_pool = [t for t in scored_sorted
+                          if t.get("serial") not in seen_ser
+                          or not t.get("serial")]
+        # Re-include user's non-locked or locked-without-serial fallback
+        community_pool = [t for t in community_pool
+                          if not (t.get("is_mine") and t.get("has_locked"))]
+        top10 = (my_locked + community_pool)[:10]
+        # Build the rest from anything not in top10 (by serial-or-id)
+        in_top = {id(t) for t in top10}
+        rest_pool = [t for t in scored_sorted if id(t) not in in_top]
+        rest = sorted(rest_pool, key=lambda x: x.get("generated_at", ""), reverse=True)
         
         archive_files = []
         for idx in range(0, len(rest), 50):
@@ -4670,14 +4688,17 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
         # Swiss draws on Wed (2) and Sat (5)
         next_date = await _resolve_next_draw_date([2, 5], db.draws)
         
+        # 🎻 DJ-rule (29.04.2026): never filter by visitor_id at the
+        # query level — we want the community top10, but tag the
+        # requesting user's own locked tickets so we can pin them first.
         q = {"target_date": next_date}
-        if visitor_id:
-            q["visitor_id"] = visitor_id
         all_tickets = []
-        async for g in db.generations.find(q, {"_id": 0, "tickets": 1, "generation_type": 1, "generated_at": 1, "has_locked": 1, "locked_positions": 1}):
+        async for g in db.generations.find(q, {"_id": 0, "visitor_id": 1, "tickets": 1, "generation_type": 1, "generated_at": 1, "has_locked": 1, "locked_positions": 1}):
             ga = g.get("generated_at", "")
             g_locked = g.get("has_locked", False)
             g_lock_pos = g.get("locked_positions") or {}
+            g_vid = g.get("visitor_id", "")
+            is_mine = bool(visitor_id) and g_vid == visitor_id
             for t in g.get("tickets", []):
                 all_tickets.append({
                     "serial": t.get("serial"),
@@ -4687,6 +4708,7 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
                     "generated_at": ga,
                     "has_locked": bool(g_locked),
                     "locked_positions": g_lock_pos if g_locked else {},
+                    "is_mine": is_mine,
                 })
         
         # 🎧 Score by Swiss Lotto previous-draw pattern conviction
@@ -4731,9 +4753,17 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
                 except Exception:
                     pass
         
+        # 🎻 DJ-rule: pin requesting user's own LOCKED tickets at the head
+        # of top10 so they always see their pinned slots in the pending sidebar.
         scored_sorted = sorted(all_tickets, key=lambda x: -x["_score"])
-        top10 = scored_sorted[:10]
-        rest = sorted(scored_sorted[10:], key=lambda x: x.get("generated_at", ""), reverse=True)
+        my_locked = [t for t in scored_sorted
+                     if t.get("is_mine") and t.get("has_locked")]
+        community_pool = [t for t in scored_sorted
+                          if not (t.get("is_mine") and t.get("has_locked"))]
+        top10 = (my_locked + community_pool)[:10]
+        in_top = {id(t) for t in top10}
+        rest_pool = [t for t in scored_sorted if id(t) not in in_top]
+        rest = sorted(rest_pool, key=lambda x: x.get("generated_at", ""), reverse=True)
         
         archive_files = []
         for idx in range(0, len(rest), 50):

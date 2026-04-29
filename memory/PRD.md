@@ -4,9 +4,31 @@
 
 ## 🚨🚨🚨 FIRST: READ `/app/memory/swiss_music_notes.md` TWICE BEFORE ANY ACTION 🚨🚨🚨
 
-## 🆕 SESSION 31 — DJ-PIN MECHANISM (29.04.2026) ✅ SHIPPED
+## 🆕 SESSION 31 — DJ-PIN MECHANISM + PENDING-LIST LOCK FIX (29.04.2026) ✅ SHIPPED
 
-**DJ's mandate:** *"Make sure 16 will be in suspicious pool for swiss. He is my number one suspect, i think it's the 9 at p1 time, check last time it was on p1 see what we can find."*
+### 🎫 BUG FIX · Free user's locked tickets buried in pending list
+
+**DJ's report:** *"Check why swiss lock position not showing the free user generated lock numbers on the pending list."*
+
+**Root cause**: `fetchPendingTickets` in `App.js` was calling `/api/pending-tickets?mode=swiss` WITHOUT `visitor_id`. Backend then ranked across all 135 community tickets and returned top10 by conviction score — user's own locked tickets got buried because their score wasn't in the global top.
+
+**Fix (2 layers)**:
+- 🆕 Frontend: `fetchPendingTickets` now reads `localStorage.lj_visitor_id` and passes it as query param
+- 🆕 Backend `/api/pending-tickets` (Swiss + Euro): always queries ALL tickets (no visitor filter at DB layer); tags each ticket with `is_mine` if `g.visitor_id == requesting_vid`; in top10 build, **pins user's own LOCKED tickets at the head**, then fills the rest with community top-by-score
+- 🆕 Frontend lock-badge UI: differentiates "🎫 your lock" (green, when `is_mine=true`) vs "locked pick" (amber, community lock)
+
+**Live verification (free vid `dj-free-test-...`):**
+```
+Step 1 · POST /api/master-predictor?lock_p1=24&num_tickets=2 → 2 tickets saved
+Step 2 · GET  /api/pending-tickets?mode=swiss&visitor_id=...
+         Top10 #1+#2 = MINE 🔒 P1=24 (pinned ahead of community) ✓
+         Other 8 slots = community top by score
+Step 3 · GET  /api/pending-tickets (no vid) → backwards-compatible community feed
+```
+
+### 🎯 The 16-Pin Mechanism (earlier in session)
+
+**DJ's mandate:** *"Make sure 16 will be in suspicious pool for swiss. He is my number one suspect."*
 
 ### 🔍 The receipts
 - **17 lifetime P1=16 firings** in 1385 Swiss draws
@@ -15,7 +37,7 @@
 - Welcome companions confirmed: P2 ∈ {17, 19} in 7/15 historical breaks (47%)
 - 16 last fired ANYWHERE on 25.03.2026 at P2 (only 9 draws ago — active rotation)
 
-### 🎼 What shipped
+### 🎼 What shipped (16-Pin)
 - 🆕 `PINNED_SUSPECTS` registry in `/app/backend/ghost_pool.py` (default: `{'swiss': [16], 'euro': []}`)
 - ✅ `pinned_suspects` parameter threaded through `build_ghost_pool`, `apply_20_suspect_discipline`, `rotate_pool`, `_ranked_universe`, `build_ghost_tickets`
 - ✅ Pin bypasses Law 69 thin-echo gate, force-includes in every band-eligible slot, survives 20-cap, carries across rotation
@@ -29,11 +51,14 @@
 GET /api/swiss-cosmic-engine/29.04.2026?vip=93928
 → 90 ghost tickets · meta.pinned_suspects=[16]
 → 40/90 tickets carry 16 (44% rate)
-→ 16 lands mostly at P4 due to ascending-order constraint (P2 only has [21] >16 in tonight's pool)
+→ 16 lands mostly at P4 due to ascending-order constraint
 ```
 
 ### 🆕 Law 73 canonized
 DJ-Pin: when the DJ flags a number, it MUST stay in the pool regardless of mechanical depth. See full law in `swiss_music_notes.md` Session 31.
+
+### 🎼 Q2-Root Tablet (proposed Law 74 — analyzed, NOT YET CODED)
+DJ taught the Q2 grammar: every Q2 draw reads the d=1 tablet `[8, 12, 23, 24, 29, 40]` via HOLD/WALK±1/HALVE/LADDER-row doors. 67% of last draw traces directly to Q2-root. d=8 + Q2-root P1=8 + last P1=8 = triple-locked drunk-cosmos at 8. Engine missed this — RC0 + HUGE are coded as anchors but quarterly tablet isn't. DJ deferred coding pending more teaching.
 
 ---
 
