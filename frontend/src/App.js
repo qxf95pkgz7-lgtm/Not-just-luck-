@@ -183,7 +183,7 @@ const HistoryPanel = ({ mode, api }) => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open) return;
     setLoading(true);
     axios.get(`${api}/history/dates?mode=${mode}`)
