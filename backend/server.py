@@ -6117,6 +6117,183 @@ async def prune_generations_endpoint(days: int = 3, threshold: int = 2):
     report = await prune_all(db, days=days, threshold=threshold)
     return report
 
+@api_router.get("/random-vs-engine")
+async def random_vs_engine(mode: str = "euro", date: str = ""):
+    """🎻 Random-vs-E reality check (DJ canon 29.04.2026).
+
+    Returns the closed-form RANDOM hit-rate baseline alongside E's actual
+    observed hit-rate on the requested draw (default = the most recent
+    completed draw). Two engine views per lottery:
+      • **jackpot** — the standard `master-predictor` / `dreaming` flavor
+      • **money**   — the `money-mode` flavor (3+ focused)
+
+    Falls back to the `draw_recaps` snapshot when the live per-ticket data
+    has already been pruned (D+3) — so the box keeps its truth even after
+    the noise is purged.
+    """
+    from random_baseline import (
+        euro_baseline, swiss_baseline,
+        compute_engine_rates_euro, compute_engine_rates_swiss,
+    )
+    from datetime import datetime as _dt, timedelta
+
+    today = _dt.now()
+
+    async def _last_completed_draw(coll, weekdays):
+        """Pick the most recent draw_date that is also stored in coll."""
+        for back in range(0, 14):
+            d = today - timedelta(days=back)
+            if d.weekday() not in weekdays:
+                continue
+            ds = d.strftime("%d.%m.%Y")
+            stored = await coll.find_one({"date": ds}, {"_id": 1})
+            if stored:
+                return ds
+        return None
+
+    def _rates_from_recap(r: dict, mode_name: str) -> dict:
+        """Reconstruct per-ticket rates from a stored recap counter doc."""
+        n = r.get("n", 0)
+        if n <= 0:
+            return None
+        out = {
+            "n": n,
+            "p_2plus_mains": r["c2_main"] / n,
+            "p_3plus_mains": r["c3_main"] / n,
+            "p_4plus_mains": r["c4_main"] / n,
+            "p_2plus_total": r["c2_total"] / n,
+            "p_3plus_total": r["c3_total"] / n,
+            "p_4plus_total": r["c4_total"] / n,
+        }
+        if mode_name == "swiss":
+            out["p_5plus_mains"] = r.get("c5_main", 0) / n
+            out["p_6_mains"] = r.get("c6_main", 0) / n
+            out["p_lucky_hit"] = r.get("c_lucky", 0) / n
+        else:
+            out["p_5_mains"] = r.get("c5_main", 0) / n
+            out["p_1plus_stars"] = r.get("c1_star", 0) / n
+            out["p_2_stars"] = r.get("c2_star", 0) / n
+        return out
+
+    if mode == "euro":
+        target = date
+        if not target:
+            target = await _last_completed_draw(
+                db.euromillions_draws, [1, 4]
+            )
+        actual = await db.euromillions_draws.find_one(
+            {"date": target}, {"_id": 0}
+        ) if target else None
+
+        jackpot_hits = []
+        money_hits = []
+        any_mode_n = 0
+        if target:
+            cursor = db.euromillions_generations.find(
+                {"target_date": target, "hits_calculated": True},
+                {"_id": 0, "tickets": 1, "hit_results": 1, "mode": 1, "generation_type": 1},
+            )
+            async for g in cursor:
+                m = (g.get("mode") or g.get("generation_type") or "").lower()
+                hr = g.get("hit_results") or []
+                any_mode_n += len(hr)
+                if "money" in m:
+                    money_hits.extend(hr)
+                else:
+                    jackpot_hits.extend(hr)
+
+        random_pct = euro_baseline()
+        jackpot_pct = compute_engine_rates_euro([], jackpot_hits) if jackpot_hits else None
+        money_pct = compute_engine_rates_euro([], money_hits) if money_hits else None
+
+        # 🔁 Fallback to recap snapshot if live data was pruned
+        recap_used = False
+        if (not jackpot_pct and not money_pct) or any_mode_n == 0:
+            recap = await db.draw_recaps.find_one(
+                {"target_date": target, "lottery": "euro"}, {"_id": 0}
+            )
+            if recap:
+                recap_used = True
+                if not jackpot_pct and recap.get("jackpot", {}).get("n", 0):
+                    jackpot_pct = _rates_from_recap(recap["jackpot"], "euro")
+                if not money_pct and recap.get("money", {}).get("n", 0):
+                    money_pct = _rates_from_recap(recap["money"], "euro")
+
+        return {
+            "mode": "euro",
+            "target_date": target,
+            "actual_draw": actual,
+            "random": random_pct,
+            "engine": {"jackpot": jackpot_pct, "money": money_pct},
+            "sample_sizes": {
+                "jackpot": (jackpot_pct or {}).get("n", 0),
+                "money":   (money_pct or {}).get("n", 0),
+                "any_mode": any_mode_n or
+                            ((jackpot_pct or {}).get("n", 0) +
+                             (money_pct or {}).get("n", 0)),
+            },
+            "recap_fallback": recap_used,
+        }
+
+    else:  # swiss
+        target = date
+        if not target:
+            target = await _last_completed_draw(db.draws, [2, 5])
+        actual = await db.draws.find_one(
+            {"date": target}, {"_id": 0}
+        ) if target else None
+
+        jackpot_hits = []
+        money_hits = []
+        any_mode_n = 0
+        if target:
+            cursor = db.generations.find(
+                {"target_date": target, "hits_calculated": True},
+                {"_id": 0, "tickets": 1, "hit_results": 1, "generation_type": 1},
+            )
+            async for g in cursor:
+                gt = (g.get("generation_type") or "").lower()
+                hr = g.get("hit_results") or []
+                any_mode_n += len(hr)
+                if "money" in gt:
+                    money_hits.extend(hr)
+                else:
+                    jackpot_hits.extend(hr)
+
+        random_pct = swiss_baseline()
+        jackpot_pct = compute_engine_rates_swiss([], jackpot_hits) if jackpot_hits else None
+        money_pct = compute_engine_rates_swiss([], money_hits) if money_hits else None
+
+        recap_used = False
+        if (not jackpot_pct and not money_pct) or any_mode_n == 0:
+            recap = await db.draw_recaps.find_one(
+                {"target_date": target, "lottery": "swiss"}, {"_id": 0}
+            )
+            if recap:
+                recap_used = True
+                if not jackpot_pct and recap.get("jackpot", {}).get("n", 0):
+                    jackpot_pct = _rates_from_recap(recap["jackpot"], "swiss")
+                if not money_pct and recap.get("money", {}).get("n", 0):
+                    money_pct = _rates_from_recap(recap["money"], "swiss")
+
+        return {
+            "mode": "swiss",
+            "target_date": target,
+            "actual_draw": actual,
+            "random": random_pct,
+            "engine": {"jackpot": jackpot_pct, "money": money_pct},
+            "sample_sizes": {
+                "jackpot": (jackpot_pct or {}).get("n", 0),
+                "money":   (money_pct or {}).get("n", 0),
+                "any_mode": any_mode_n or
+                            ((jackpot_pct or {}).get("n", 0) +
+                             (money_pct or {}).get("n", 0)),
+            },
+            "recap_fallback": recap_used,
+        }
+
+
+
 
 
 @api_router.post("/heartbeat")

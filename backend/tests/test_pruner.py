@@ -58,6 +58,9 @@ def _mock_db(swiss_docs=None, euro_docs=None):
     db = MagicMock()
     db.generations = _mock_collection(swiss_docs or [])
     db.euromillions_generations = _mock_collection(euro_docs or [])
+    # draw_recaps collection — used by pruner to snapshot per-draw stats
+    db.draw_recaps = MagicMock()
+    db.draw_recaps.update_one = AsyncMock(return_value=MagicMock())
     return db
 
 

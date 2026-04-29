@@ -74,6 +74,104 @@ const Ball = ({ number, size = "sm", isWinner = false, isSpinning = false, delay
   );
 };
 
+// 🎯 Random-vs-E reality check box (DJ canon 29.04.2026)
+// Shows how the engine beats pure random chance — Jackpot vs Money mode.
+const RandomVsEBox = ({ data, mode }) => {
+  if (!data || !data.actual_draw) return null;
+  const random = data.random || {};
+  const jackpot = data.engine?.jackpot;
+  const money = data.engine?.money;
+  const target = data.target_date || '?';
+  const labelM = mode === 'euro' ? '⭐' : '🍀';
+
+  const fmt = (p) => {
+    if (p == null || p === undefined) return '—';
+    const v = p * 100;
+    if (v < 0.01) return v.toExponential(1) + '%';
+    if (v < 1) return v.toFixed(2) + '%';
+    return v.toFixed(1) + '%';
+  };
+  const mult = (e, r) => {
+    if (e == null || r == null || r === 0) return null;
+    const x = e / r;
+    if (!isFinite(x)) return null;
+    return x;
+  };
+  const multBadge = (m) => {
+    if (m == null) return <span className="text-slate-500 text-[8px]">—</span>;
+    const cls = m >= 2 ? 'text-emerald-300 bg-emerald-500/15 border-emerald-400/40'
+              : m >= 1 ? 'text-amber-300 bg-amber-500/15 border-amber-400/40'
+              : 'text-rose-300 bg-rose-500/15 border-rose-400/40';
+    return <span className={`px-1 rounded border text-[9px] font-mono font-bold ${cls}`}>{m.toFixed(1)}×</span>;
+  };
+
+  const tiers = [
+    { key: 'p_2plus_total', label: '2+ hits' },
+    { key: 'p_3plus_total', label: '3+ hits' },
+    { key: 'p_4plus_total', label: '4+ hits' },
+  ];
+
+  const Section = ({ title, engine, color }) => (
+    <div className="mb-1.5" data-testid={`rvse-section-${title.toLowerCase()}`}>
+      <div className={`flex items-center justify-between text-[9px] font-bold mb-0.5 ${color}`}>
+        <span>{title}</span>
+        <span className="text-slate-500 font-mono">n={engine?.n ?? 0}</span>
+      </div>
+      <table className="w-full text-[9px] tabular-nums">
+        <thead className="text-slate-500">
+          <tr>
+            <th className="text-left font-normal">tier</th>
+            <th className="text-right font-normal">random</th>
+            <th className="text-right font-normal">E</th>
+            <th className="text-right font-normal pl-1">×</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tiers.map(t => {
+            const r = random[t.key];
+            const e = engine ? engine[t.key] : null;
+            const m = mult(e, r);
+            return (
+              <tr key={t.key} data-testid={`rvse-row-${title.toLowerCase()}-${t.key}`}>
+                <td className="text-slate-300">{t.label}</td>
+                <td className="text-right text-slate-400 font-mono">{fmt(r)}</td>
+                <td className={`text-right font-mono font-bold ${e != null && r != null && e > r ? 'text-emerald-300' : 'text-slate-300'}`}>{fmt(e)}</td>
+                <td className="text-right pl-1">{multBadge(m)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  return (
+    <div className="mb-2 p-2 rounded-lg border border-emerald-500/30 bg-gradient-to-br from-emerald-900/20 to-slate-900/40" data-testid="random-vs-e-box">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-emerald-300 text-[10px] font-black tracking-wide">🎯 RANDOM vs E</span>
+        <span className="text-slate-500 text-[8px]">d {target}</span>
+      </div>
+      <div className="text-slate-500 text-[8px] mb-1.5">
+        Theoretical chance per ticket vs E's actual {labelM} hit rate
+        {data.recap_fallback && <span className="ml-1 text-amber-400">• recap</span>}
+      </div>
+      {jackpot && jackpot.n > 0 && (
+        <Section title="Jackpot" engine={jackpot} color="text-amber-300" />
+      )}
+      {money && money.n > 0 && (
+        <Section title="Money" engine={money} color="text-cyan-300" />
+      )}
+      {(!jackpot || jackpot.n === 0) && (!money || money.n === 0) && (
+        <div className="text-[9px] text-slate-500 italic text-center py-2">
+          No engine data yet for {target}
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+
 // EuroMillions Star Ball - Gold star design
 const StarBall = ({ number, size = "sm", isWinner = false, isSpinning = false }) => {
   const sizeConfig = {
@@ -546,6 +644,8 @@ function App() {
   const [nextDrawDate, setNextDrawDate] = useState('');
   const [pendingTickets, setPendingTickets] = useState([]);
   const [pendingTotal, setPendingTotal] = useState(0);
+  // 🎻 Random vs E reality-check box (DJ canon 29.04.2026)
+  const [randomVsE, setRandomVsE] = useState(null);
   const [archiveFiles, setArchiveFiles] = useState([]);
   const [openArchive, setOpenArchive] = useState(null);
   // 📦 Full ticket archive (per target_date, loaded on demand)
@@ -751,6 +851,17 @@ function App() {
     }
   };
   
+  // 🎻 Fetch the random-vs-engine box for current mode (last completed draw)
+  const fetchRandomVsE = async () => {
+    try {
+      const url = `${API}/random-vs-engine?mode=${lotteryMode}`;
+      const res = await axios.get(url);
+      setRandomVsE(res.data);
+    } catch (e) {
+      console.error('random-vs-engine fetch failed:', e);
+    }
+  };
+
   // Generate story tickets and save for tracking - based on lottery mode
   const generateStoryTickets = async () => {
     setStoryLoading(true);
@@ -997,7 +1108,7 @@ function App() {
       setPromoMsg({ ok: false, text: e.response?.data?.detail || 'Invalid code' });
     }
   };
-  useEffect(() => { fetchTicketCounter(); fetchPendingTickets(); fetchUnlimitedStatus(); fetchHuntBoxes(); }, [lotteryMode]);
+  useEffect(() => { fetchTicketCounter(); fetchPendingTickets(); fetchUnlimitedStatus(); fetchHuntBoxes(); fetchRandomVsE(); }, [lotteryMode]);
   // 🕒 Refresh generator open/closed status every 60s so UI flips when cutoff opens/closes
   useEffect(() => {
     const id = setInterval(fetchUnlimitedStatus, 60000);
@@ -1766,6 +1877,11 @@ function App() {
               <span className="text-emerald-400 font-mono font-bold text-sm">{pendingTickets.length}/{pendingTotal}</span>
             </div>
             <div className="text-slate-500 text-[9px] mb-2">For draw: {nextDrawDate} <span className="text-slate-600">• engine-ranked</span></div>
+
+            {/* 🎯 Random vs E reality-check box (DJ canon 29.04.2026) */}
+            {randomVsE && randomVsE.actual_draw && (
+              <RandomVsEBox data={randomVsE} mode={lotteryMode} />
+            )}
             {lotteryMode === 'euro' && isUnlimited && diagnostics && Array.isArray(diagnostics.narrative) && diagnostics.narrative.length > 0 && (
               <div className="mb-2 p-1.5 rounded-md border border-cyan-500/40 bg-gradient-to-br from-cyan-900/25 to-slate-900/20" data-testid="diagnostics-panel">
                 <div className="flex items-center justify-between mb-1">
