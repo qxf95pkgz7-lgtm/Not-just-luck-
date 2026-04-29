@@ -4029,8 +4029,12 @@ async def get_swiss_money_mode(
 
 @api_router.get("/swiss-sleepers")
 async def get_swiss_sleepers():
-    """Swiss Lotto Sleeper Analysis — numbers overdue to appear."""
-    from datetime import datetime as dt_cls
+    """Swiss Lotto Sleeper Analysis — numbers overdue to appear.
+    🌠 Also returns `pool_top_6` from the live Ghost Pool (Laws 69-72)
+    so the Celestial Radar can display the 6 best suspects for the
+    next draw, refreshed on every d.
+    """
+    from datetime import datetime as dt_cls, timedelta as _td
     swiss_draws = await db.draws.find({}, {"_id": 0}).to_list(5000)
     if not swiss_draws:
         return {"error": "No draws available"}
@@ -4055,7 +4059,37 @@ async def get_swiss_sleepers():
         sleepers.append({"number": n, "gap": gap, "ratio": ratio, "status": status})
     
     sleepers.sort(key=lambda x: -x["ratio"])
-    
+
+    # 🌠 Celestial Radar — top 6 pool suspects for the next d
+    pool_top_6: list = []
+    pool_target_date = None
+    pool_built_from = None
+    try:
+        from ghost_pool import get_top_pool_suspects
+        last_d = swiss_draws[0]
+        pool_built_from = last_d.get("date")
+        # Resolve next draw date — Wed/Sat
+        last_dt = parse_d(last_d)
+        if last_dt != dt_cls.min:
+            for delta in range(1, 8):
+                cand = last_dt + _td(days=delta)
+                if cand.weekday() in (2, 5):
+                    pool_target_date = cand.strftime("%d.%m.%Y")
+                    break
+        target_dt = (dt_cls.strptime(pool_target_date, "%d.%m.%Y")
+                     if pool_target_date else None)
+        pool_top_6 = get_top_pool_suspects(
+            last_mains=sorted(last_d.get("numbers", [])),
+            last_stars=[],
+            target_date=target_dt,
+            lottery='swiss',
+            k=6,
+            min_depth=2,
+        )
+    except Exception as e:
+        logger.warning(f"swiss-sleepers pool_top_6 failed: {e}")
+        pool_top_6 = []
+
     return {
         "expected_gap": round(expected_gap, 1),
         "last_draw": swiss_draws[0]["date"] if swiss_draws else None,
@@ -4063,6 +4097,10 @@ async def get_swiss_sleepers():
         "deep": [s for s in sleepers if s["status"] == "DEEP"],
         "wake": [s for s in sleepers if s["status"] == "WAKE"],
         "fresh": [s for s in sleepers if s["status"] == "FRESH"],
+        # 🌠 Pool radar
+        "pool_top_6": pool_top_6,
+        "pool_target_date": pool_target_date,
+        "pool_built_from": pool_built_from,
     }
 
 

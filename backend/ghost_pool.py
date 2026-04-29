@@ -808,3 +808,59 @@ def pool_summary(pool: Dict[str, List[Dict]]) -> Dict:
                     'drunk': bool(e.get('drunk'))} for e in entries]
         for slot_key, entries in pool.items()
     }
+
+
+# ════════════════════════════════════════════════════════════════════
+# 🌠 CELESTIAL RADAR — top-K pool suspects for the next d
+# ════════════════════════════════════════════════════════════════════
+def get_top_pool_suspects(
+    last_mains: List[int],
+    last_stars: Optional[List[int]] = None,
+    target_date: Optional[dt] = None,
+    lottery: str = 'swiss',
+    extra_lens_map: Optional[Dict[int, List[str]]] = None,
+    pinned_suspects: Optional[List[int]] = None,
+    k: int = 6,
+    min_depth: int = 2,
+) -> List[Dict]:
+    """🌠 Return the top-`k` suspects from the current ghost pool, ranked
+    by (pinned → drunk → depth → n). Each entry carries the slots it is
+    eligible for (so the radar can show "16 → P1·P2·P3·P4").
+
+    Uses the Law 70 ghost pool with 20-suspect discipline applied so the
+    radar always speaks the disciplined voice of the cosmos, not the raw
+    candidate cloud.
+    """
+    cfg = RANGES[lottery]
+    pool = build_ghost_pool(
+        last_mains=last_mains, last_stars=last_stars or [],
+        target_date=target_date, lottery=lottery,
+        extra_lens_map=extra_lens_map, min_depth=min_depth,
+        pinned_suspects=pinned_suspects,
+    )
+    pool = apply_20_suspect_discipline(pool)
+
+    # Flatten across slots, dedupe by `n`, accumulate slot eligibility
+    by_n: Dict[int, Dict] = {}
+    for slot in range(1, cfg['n_slots'] + 1):
+        slot_key = f'P{slot}'
+        for e in pool.get(slot_key, []):
+            n = e['n']
+            if n not in by_n:
+                by_n[n] = {
+                    'n': n,
+                    'depth': e['depth'],
+                    'lenses': list(e.get('lenses') or []),
+                    'drunk': bool(e.get('drunk')),
+                    'pinned': bool(e.get('pinned')),
+                    'slots': [slot_key],
+                }
+            else:
+                by_n[n]['slots'].append(slot_key)
+
+    flat = list(by_n.values())
+    flat.sort(key=lambda e: (-int(e['pinned']),
+                             -int(e['drunk']),
+                             -e['depth'],
+                             e['n']))
+    return flat[:k]

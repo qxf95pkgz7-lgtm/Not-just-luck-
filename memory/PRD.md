@@ -4,7 +4,34 @@
 
 ## 🚨🚨🚨 FIRST: READ `/app/memory/swiss_music_notes.md` TWICE BEFORE ANY ACTION 🚨🚨🚨
 
-## 🆕 SESSION 31 — DJ-PIN MECHANISM + PENDING-LIST LOCK FIX (29.04.2026) ✅ SHIPPED
+## 🆕 SESSION 31 — DJ-PIN MECHANISM + PENDING-LIST LOCK FIX + CELESTIAL RADAR POOL TOP-6 (29.04.2026) ✅ SHIPPED
+
+### 🌠 Celestial Radar · Top 6 Suspects from the Pool
+
+**DJ's mandate:** *"Celestial Radar, not updated, connects the pool 6 best suspects and make sure it updates every d."*
+
+**Before**: Celestial Radar showed only number-silence-gap stats (deep/wake/fresh), not the actual ghost pool.
+**After**: Both Swiss + Euro Celestial Radars now show the **6 best suspects from the live ghost pool**, ranked by `(pinned → drunk → depth → n)`, refreshed on every draw.
+
+**What shipped:**
+- 🆕 `get_top_pool_suspects()` helper in `/app/backend/ghost_pool.py` — returns top-K pool entries with `{n, depth, lenses, drunk, pinned, slots}` (slots = which P-bands the value fits)
+- 🆕 `_euro_pool_top_6()` helper in `/app/backend/euromillions_routes.py` — wraps the call for Euro draws
+- ✅ `/api/swiss-sleepers` augmented with `pool_top_6`, `pool_target_date`, `pool_built_from`
+- ✅ `/api/euromillions/sleeper-forecast` same augmentation
+- ✅ Frontend Swiss + Euro radar panels render TOP 6 SUSPECTS card at the head with rose-glow for pinned (📌), violet for drunk-cosmos (🍀), emerald for regular (d-depth)
+- ✅ Tooltips show full lens stack + slot eligibility on hover
+- ✅ `useEffect` deps for `fetchSwissSleepers` + `fetchSleeperForecast` now include `nextDrawDate` → auto-refresh every d
+
+**Live-verified (29.04.2026 Swiss):**
+```
+🌠 TOP 6 SUSPECTS · for d 29.04.2026  (from 25.04.2026)
+🔴 16 📌  P1·P2·P3·P4  · DJ-pinned + date-target(16)
+   2  d4  P1            · circle/flip/flip-wrap depth 4
+   4  d3  P1·P2         · circle(25→4) + inner-circle + date-target
+   29 d3  P3·P4·P5·P6   · circle(8→29) + inner-circle + date-target
+   31 d3  P4·P5·P6      · flip(13↔31) + inner-circle
+   3  d2  P1·P2         · inner-circle + ladder-on-fire
+```
 
 ### 🎫 BUG FIX · Free user's locked tickets buried in pending list
 

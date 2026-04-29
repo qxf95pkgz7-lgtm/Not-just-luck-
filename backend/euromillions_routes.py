@@ -61,6 +61,49 @@ def get_circle_partner(n: int) -> int:
         partner -= MAX_NUMBER
     return partner
 
+
+def _euro_pool_top_6(draws: list) -> dict:
+    """🌠 Celestial Radar — top 6 pool suspects for the next Euro draw.
+    `draws` is a list of Euro draw dicts sorted newest-first.
+    """
+    from datetime import datetime as _dt, timedelta as _td
+    if not draws:
+        return {"pool_top_6": [], "pool_target_date": None,
+                "pool_built_from": None}
+    try:
+        from ghost_pool import get_top_pool_suspects
+        last_d = draws[0]
+        pool_built_from = last_d.get("date")
+        try:
+            last_dt = _dt.strptime(pool_built_from, "%d.%m.%Y")
+        except Exception:
+            last_dt = None
+        pool_target_date = None
+        if last_dt is not None:
+            for delta in range(1, 8):
+                cand = last_dt + _td(days=delta)
+                if cand.weekday() in (1, 4):  # Tue or Fri
+                    pool_target_date = cand.strftime("%d.%m.%Y")
+                    break
+        target_dt = (_dt.strptime(pool_target_date, "%d.%m.%Y")
+                     if pool_target_date else None)
+        top_6 = get_top_pool_suspects(
+            last_mains=sorted(last_d.get("numbers", [])),
+            last_stars=sorted(last_d.get("stars", []) or []),
+            target_date=target_dt,
+            lottery='euro',
+            k=6,
+            min_depth=2,
+        )
+        return {
+            "pool_top_6": top_6,
+            "pool_target_date": pool_target_date,
+            "pool_built_from": pool_built_from,
+        }
+    except Exception as e:
+        return {"pool_top_6": [], "pool_target_date": None,
+                "pool_built_from": None, "pool_error": str(e)}
+
 def reverse_mod50(n: int) -> int:
     """Reverse digits and mod 50"""
     rev = int(str(n)[::-1])
@@ -3519,7 +3562,9 @@ def create_euromillions_router(db):
                 "proven_tease_rate": "72%",
                 "proven_star_boost": "1.8x random",
                 "simulations_run": 30,
-            }
+            },
+            # 🌠 Celestial Radar — top 6 pool suspects for the next d
+            **_euro_pool_top_6(draws),
         }
     
     # ═══════════════════════════════════════════════════════════════════════

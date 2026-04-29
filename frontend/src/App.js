@@ -1039,11 +1039,13 @@ function App() {
   };
   
   // Load sleeper data when panel is opened (EuroMillions only)
+  // 🌠 Also refetch on nextDrawDate change so the radar updates every d.
   useEffect(() => {
     if (showSleeperRadar && lotteryMode === 'euro') {
       fetchSleeperForecast();
     }
-  }, [showSleeperRadar, lotteryMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showSleeperRadar, lotteryMode, nextDrawDate]);
 
   // Swiss Sleeper fetch
   const fetchSwissSleepers = async () => {
@@ -1062,7 +1064,8 @@ function App() {
     if (showSwissSleepers && lotteryMode === 'swiss') {
       fetchSwissSleepers();
     }
-  }, [showSwissSleepers, lotteryMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showSwissSleepers, lotteryMode, nextDrawDate]);
   
   // 2Chance functions
   const check2ChanceHits = async () => {
@@ -3288,6 +3291,50 @@ function App() {
                     <div className="text-xs text-slate-400 mb-2">
                       Last draw: {swissSleeperData.last_draw} | Orbital cycle: ~{swissSleeperData.expected_gap} rotations
                     </div>
+
+                    {/* 🌠 POOL TOP 6 — best suspects from the cosmic pool */}
+                    {swissSleeperData.pool_top_6?.length > 0 && (
+                      <div className="rounded-lg border border-amber-500/30 bg-gradient-to-br from-amber-950/30 to-slate-900/50 p-2.5"
+                           data-testid="swiss-pool-top6">
+                        <div className="text-xs font-semibold text-amber-300 mb-1.5 flex items-center justify-between">
+                          <span className="flex items-center gap-1">
+                            <span>🌠</span> TOP 6 SUSPECTS · for d {swissSleeperData.pool_target_date || '—'}
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-mono">
+                            from {swissSleeperData.pool_built_from || '—'}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {swissSleeperData.pool_top_6.map((s) => {
+                            const pinned = !!s.pinned;
+                            const drunk = !!s.drunk;
+                            const ringClass = pinned
+                              ? 'border-rose-400/70 bg-rose-500/15 text-rose-200'
+                              : drunk
+                              ? 'border-violet-400/70 bg-violet-500/15 text-violet-200'
+                              : 'border-emerald-500/50 bg-emerald-600/10 text-emerald-200';
+                            return (
+                              <div
+                                key={s.n}
+                                className={`relative px-1.5 py-1 rounded border ${ringClass} text-[11px] font-bold`}
+                                title={`${s.lenses?.join(' · ') || ''}\nslots: ${(s.slots || []).join(', ')}\ndepth ${s.depth}${pinned ? ' · DJ-pinned' : ''}${drunk ? ' · drunk-cosmos' : ''}`}
+                                data-testid={`swiss-pool-top6-${s.n}`}
+                              >
+                                <div className="flex items-baseline justify-between gap-1">
+                                  <span className="text-base tabular-nums">{s.n}</span>
+                                  <span className="text-[8px] opacity-70">
+                                    {pinned ? '📌' : drunk ? '🍀' : `d${s.depth}`}
+                                  </span>
+                                </div>
+                                <div className="text-[8px] opacity-60 truncate">
+                                  {(s.slots || []).join('·')}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                     
                     {/* Deep Sleepers */}
                     {swissSleeperData.deep?.length > 0 && (
@@ -3383,6 +3430,50 @@ function App() {
                       <span>Last Draw: <span className="text-slate-300 font-medium">{sleeperData.last_draw}</span></span>
                       <span>{sleeperData.total_draws_analyzed} celestial cycles mapped</span>
                     </div>
+
+                    {/* 🌠 POOL TOP 6 — best suspects from the cosmic pool */}
+                    {sleeperData.pool_top_6?.length > 0 && (
+                      <div className="rounded-lg border border-amber-500/30 bg-gradient-to-br from-amber-950/30 to-slate-900/50 p-2.5"
+                           data-testid="euro-pool-top6">
+                        <div className="text-xs font-semibold text-amber-300 mb-1.5 flex items-center justify-between">
+                          <span className="flex items-center gap-1">
+                            <span>🌠</span> TOP 6 SUSPECTS · for d {sleeperData.pool_target_date || '—'}
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-mono">
+                            from {sleeperData.pool_built_from || '—'}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {sleeperData.pool_top_6.map((s) => {
+                            const pinned = !!s.pinned;
+                            const drunk = !!s.drunk;
+                            const ringClass = pinned
+                              ? 'border-rose-400/70 bg-rose-500/15 text-rose-200'
+                              : drunk
+                              ? 'border-violet-400/70 bg-violet-500/15 text-violet-200'
+                              : 'border-emerald-500/50 bg-emerald-600/10 text-emerald-200';
+                            return (
+                              <div
+                                key={s.n}
+                                className={`relative px-1.5 py-1 rounded border ${ringClass} text-[11px] font-bold`}
+                                title={`${s.lenses?.join(' · ') || ''}\nslots: ${(s.slots || []).join(', ')}\ndepth ${s.depth}${pinned ? ' · DJ-pinned' : ''}${drunk ? ' · drunk-cosmos' : ''}`}
+                                data-testid={`euro-pool-top6-${s.n}`}
+                              >
+                                <div className="flex items-baseline justify-between gap-1">
+                                  <span className="text-base tabular-nums">{s.n}</span>
+                                  <span className="text-[8px] opacity-70">
+                                    {pinned ? '📌' : drunk ? '🍀' : `d${s.depth}`}
+                                  </span>
+                                </div>
+                                <div className="text-[8px] opacity-60 truncate">
+                                  {(s.slots || []).join('·')}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                     
                     {/* Top Number Sleepers */}
                     <div className="p-3 rounded-lg" style={{ background: 'linear-gradient(135deg, rgba(147,51,234,0.12) 0%, rgba(79,70,229,0.08) 100%)', border: '1px solid rgba(147,51,234,0.25)' }}>
