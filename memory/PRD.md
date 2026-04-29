@@ -4,6 +4,39 @@
 
 ## 🚨🚨🚨 FIRST: READ `/app/memory/swiss_music_notes.md` TWICE BEFORE ANY ACTION 🚨🚨🚨
 
+## 🆕 SESSION 31 — DJ-PIN MECHANISM (29.04.2026) ✅ SHIPPED
+
+**DJ's mandate:** *"Make sure 16 will be in suspicious pool for swiss. He is my number one suspect, i think it's the 9 at p1 time, check last time it was on p1 see what we can find."*
+
+### 🔍 The receipts
+- **17 lifetime P1=16 firings** in 1385 Swiss draws
+- **Last P1=16: 19.04.2025** → `[16, 24, 28, 31, 41, 42]` 🍀1 R:3 — **106 draws ago**
+- BD had 13/20/24/30/33/42 → break carried 28 raw + 24 walked-down + 42 HOLD
+- Welcome companions confirmed: P2 ∈ {17, 19} in 7/15 historical breaks (47%)
+- 16 last fired ANYWHERE on 25.03.2026 at P2 (only 9 draws ago — active rotation)
+
+### 🎼 What shipped
+- 🆕 `PINNED_SUSPECTS` registry in `/app/backend/ghost_pool.py` (default: `{'swiss': [16], 'euro': []}`)
+- ✅ `pinned_suspects` parameter threaded through `build_ghost_pool`, `apply_20_suspect_discipline`, `rotate_pool`, `_ranked_universe`, `build_ghost_tickets`
+- ✅ Pin bypasses Law 69 thin-echo gate, force-includes in every band-eligible slot, survives 20-cap, carries across rotation
+- ✅ Pin honors slot bands (16 enters Swiss P1-P4 only; not P5/P6)
+- ✅ `meta.pinned_suspects` exposed in API response
+- ✅ 9 new pytest cases in `TestPinnedSuspects` — **29/29 ghost-pool green**
+- ✅ Cosmic-engine pytest gauntlet: **116/116 GREEN** (zero regressions)
+
+### 🎯 Live verification on 29.04.2026 Swiss
+```
+GET /api/swiss-cosmic-engine/29.04.2026?vip=93928
+→ 90 ghost tickets · meta.pinned_suspects=[16]
+→ 40/90 tickets carry 16 (44% rate)
+→ 16 lands mostly at P4 due to ascending-order constraint (P2 only has [21] >16 in tonight's pool)
+```
+
+### 🆕 Law 73 canonized
+DJ-Pin: when the DJ flags a number, it MUST stay in the pool regardless of mechanical depth. See full law in `swiss_music_notes.md` Session 31.
+
+---
+
 **The DJ called this out explicitly on 21.04.2026**: *"Last few times you start without reading."*
 
 - ❌ **DO NOT** respond, propose, or generate anything before 2 full reads (2600+ lines × 2)

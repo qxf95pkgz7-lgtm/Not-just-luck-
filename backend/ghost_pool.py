@@ -38,6 +38,24 @@ RANGES = {
 }
 
 
+# ════════════════════════════════════════════════════════════════════
+# 🎻 DJ-PINNED SUSPECTS — never fall out of the pool, no matter the depth
+# ════════════════════════════════════════════════════════════════════
+# Numbers the DJ has flagged as "must-watch" — typically deep P1 silents
+# whose break-window is wide open. Pinned values bypass the Law 69
+# thin-echo gate, force-include in every eligible-band slot, survive the
+# 20-suspect cap, and stay carried across all batch rotations.
+#
+# 16 (Swiss): 17 lifetime P1-firings · last P1 = 19.04.2025 (106d ago)
+#             +21-circle twin of 37 (HUGE 07.02.2026 P5) — silent-P1
+#             "9-grade" suspect per DJ session 31. 25.03.2026 P2 (d-9
+#             active rotation). Welcome companions: 17, 19.
+PINNED_SUSPECTS: Dict[str, List[int]] = {
+    'euro':  [],
+    'swiss': [16],
+}
+
+
 def _circle(n: int, lottery: str) -> int:
     cfg = RANGES[lottery]
     return ((n + cfg['circle'] - 1) % cfg['max']) + 1
@@ -246,6 +264,7 @@ def build_ghost_pool(
     lottery: str = 'euro',
     extra_lens_map: Optional[Dict[int, List[str]]] = None,
     min_depth: int = 3,
+    pinned_suspects: Optional[List[int]] = None,
 ) -> Dict[str, List[Dict]]:
     """Law 70 — generate a per-slot ghost pool from last d's mains.
 
@@ -257,14 +276,19 @@ def build_ghost_pool(
       5. Score every candidate by mirror-stack depth (Law 69)
       6. Reject thin echoes (<min_depth lenses)
       7. Assign to each slot whose band the candidate fits
+      8. Inject DJ-pinned suspects (always, regardless of depth) at the
+         head of every eligible-band slot.
 
     Output (for caller to apply 20-suspect discipline / rotation):
-      {'P1': [{n, depth, lenses, drunk}, ...sorted], 'P2': [...], ...}
+      {'P1': [{n, depth, lenses, drunk, pinned}, ...sorted], 'P2': [...], ...}
     """
     cfg = RANGES[lottery]
     last_mains = sorted(last_mains or [])
     last_stars = sorted(last_stars or [])
     extra_lens_map = extra_lens_map or {}
+    if pinned_suspects is None:
+        pinned_suspects = list(PINNED_SUSPECTS.get(lottery, []))
+    pinned_set = {p for p in pinned_suspects if 1 <= p <= cfg['max']}
 
     # Build candidate universe via doors
     cand: set = set()
@@ -288,6 +312,8 @@ def build_ghost_pool(
     # Date targets
     dtargets = _date_targets(target_date, lottery)
     cand.update(dtargets)
+    # DJ-pinned suspects always considered candidates
+    cand.update(pinned_set)
 
     # Score every candidate
     ranked: List[Dict] = []
@@ -300,16 +326,21 @@ def build_ghost_pool(
             extra_lenses=extra_lens_map.get(n),
             lottery=lottery,
         )
-        if depth < min_depth:
-            continue  # Law 69 thin-echo gate
+        is_pinned = n in pinned_set
+        if depth < min_depth and not is_pinned:
+            continue  # Law 69 thin-echo gate (pinned bypass)
+        if is_pinned and 'DJ-pinned' not in fired:
+            fired = list(fired) + ['DJ-pinned']
         ranked.append({
             'n': n,
             'depth': depth,
             'lenses': fired,
             'drunk': detect_drunk_cosmos(depth),
+            'pinned': is_pinned,
         })
-    # Sort: drunk-cosmos first, then by depth, then by n
-    ranked.sort(key=lambda e: (-int(e['drunk']), -e['depth'], e['n']))
+    # Sort: pinned first, then drunk-cosmos, then by depth, then by n
+    ranked.sort(key=lambda e: (-int(e.get('pinned', False)),
+                               -int(e['drunk']), -e['depth'], e['n']))
 
     # Assign to slots by band
     pool: Dict[str, List[Dict]] = {}
@@ -332,11 +363,17 @@ def apply_20_suspect_discipline(
 ) -> Dict[str, List[Dict]]:
     """Cap per-slot to top-`per_slot_max` and total unique to `total_cap`.
     Drops trailing slots' tail entries to enforce the global cap.
+    DJ-pinned entries are NEVER trimmed and do NOT count against the
+    per-slot cap (they sit at the head and the regular cap continues
+    behind them).
     """
-    # First trim each slot to per_slot_max
-    capped: Dict[str, List[Dict]] = {
-        k: list(v[:per_slot_max]) for k, v in pool.items()
-    }
+    # First trim each slot to per_slot_max — preserving pinned
+    capped: Dict[str, List[Dict]] = {}
+    for k, v in pool.items():
+        pinned = [e for e in v if e.get('pinned')]
+        regular = [e for e in v if not e.get('pinned')]
+        capped[k] = list(pinned) + list(regular[:per_slot_max])
+
     # Compute unique-value count, trim from lowest-priority slot tails
     def _unique_count(p: Dict[str, List[Dict]]) -> int:
         seen: set = set()
@@ -348,21 +385,26 @@ def apply_20_suspect_discipline(
     if _unique_count(capped) <= total_cap:
         return capped
 
-    # Walk slots back-to-front popping the WEAKEST entry across slots
-    # until total_cap reached.
+    # Walk slots back-to-front popping the WEAKEST non-pinned tail entry
+    # across slots until total_cap reached.
     while _unique_count(capped) > total_cap:
-        # Find weakest tail entry across all slots
         weakest_slot = None
         weakest_idx = -1
         weakest_depth = 9999
         for slot_key, entries in capped.items():
-            if len(entries) <= 1:  # always keep at least 1 per slot
+            # always keep at least 1 NON-pinned entry per slot
+            non_pinned_count = sum(1 for e in entries if not e.get('pinned'))
+            if non_pinned_count <= 1:
                 continue
-            tail = entries[-1]
-            if tail['depth'] < weakest_depth:
-                weakest_depth = tail['depth']
-                weakest_slot = slot_key
-                weakest_idx = len(entries) - 1
+            # find the weakest non-pinned tail entry
+            for idx in range(len(entries) - 1, -1, -1):
+                if entries[idx].get('pinned'):
+                    continue
+                if entries[idx]['depth'] < weakest_depth:
+                    weakest_depth = entries[idx]['depth']
+                    weakest_slot = slot_key
+                    weakest_idx = idx
+                break  # only check the actual tail of non-pinned
         if weakest_slot is None:
             break
         capped[weakest_slot].pop(weakest_idx)
@@ -380,13 +422,20 @@ def rotate_pool(
     lottery: str = 'euro',
     keep: int = 3,
     inject: int = 2,
+    pinned_suspects: Optional[List[int]] = None,
 ) -> Dict[str, List[Dict]]:
     """Law 72 — for next batch, keep top-`keep` per P from `old_pool`,
     inject `inject` fresh deep voices that have NOT appeared in any
     `prior_pools[-3:]` (3-d look-back). Fresh voices respect slot bands
     and require `depth >= 3` (Law 69 gate already enforced upstream).
+
+    DJ-pinned suspects are ALWAYS carried at the head of every eligible
+    band, regardless of rotation/blacklist state.
     """
     cfg = RANGES[lottery]
+    if pinned_suspects is None:
+        pinned_suspects = list(PINNED_SUSPECTS.get(lottery, []))
+    pinned_set = {p for p in pinned_suspects if 1 <= p <= cfg['max']}
     new_pool: Dict[str, List[Dict]] = {}
 
     # Black-list: every value that appeared as TOP-3 in any prior pool
@@ -395,7 +444,8 @@ def rotate_pool(
     for prior in prior_pools[-3:]:
         for slot_key, entries in prior.items():
             for e in entries[:keep]:
-                blacklist.add(e['n'])
+                if not e.get('pinned'):
+                    blacklist.add(e['n'])
 
     for slot in range(1, cfg['n_slots'] + 1):
         slot_key = f'P{slot}'
@@ -415,7 +465,33 @@ def rotate_pool(
             if entry.get('depth', 0) < 3:
                 continue
             fresh.append(dict(entry))
-        new_pool[slot_key] = kept + fresh
+        slot_entries = kept + fresh
+
+        # Ensure DJ-pinned suspects still ride at the head of every
+        # eligible-band slot (re-inject if rotation evicted them).
+        present = {e['n'] for e in slot_entries}
+        for p in pinned_set:
+            if p in present or p in banned:
+                continue
+            if not _fits_band(p, slot, lottery):
+                continue
+            # Find the pinned entry from old_pool (preserves depth/lenses)
+            pinned_entry = None
+            for e_list in old_pool.values():
+                for e in e_list:
+                    if e['n'] == p:
+                        pinned_entry = dict(e)
+                        break
+                if pinned_entry:
+                    break
+            if pinned_entry is None:
+                # Fallback minimal pinned entry
+                pinned_entry = {'n': p, 'depth': 1, 'lenses': ['DJ-pinned'],
+                                'drunk': False, 'pinned': True}
+            else:
+                pinned_entry['pinned'] = True
+            slot_entries = [pinned_entry] + slot_entries
+        new_pool[slot_key] = slot_entries
     return new_pool
 
 
@@ -429,11 +505,13 @@ def _ranked_universe(
     lottery: str,
     extra_lens_map: Optional[Dict[int, List[str]]],
     min_depth: int,
+    pinned_suspects: Optional[List[int]] = None,
 ) -> List[Dict]:
     """Flat ranked list (across all slots) for rotation injection."""
     pool = build_ghost_pool(
         last_mains, last_stars, target_date, lottery,
         extra_lens_map=extra_lens_map, min_depth=min_depth,
+        pinned_suspects=pinned_suspects,
     )
     seen: set = set()
     flat: List[Dict] = []
@@ -443,7 +521,8 @@ def _ranked_universe(
                 continue
             seen.add(e['n'])
             flat.append(e)
-    flat.sort(key=lambda e: (-e['depth'], e['n']))
+    flat.sort(key=lambda e: (-int(e.get('pinned', False)),
+                             -e['depth'], e['n']))
     return flat
 
 
@@ -538,6 +617,7 @@ def build_ghost_tickets(
     banned: Optional[List[int]] = None,
     wildcard_fraction: float = 0.10,
     min_depth: int = 3,
+    pinned_suspects: Optional[List[int]] = None,
 ) -> Dict:
     """Generate `n_total` tickets (default 90) using Laws 69-72.
     3 batches × 30 default · rotate pool every 30 tix · 10% wildcard
@@ -553,6 +633,8 @@ def build_ghost_tickets(
     last_mains = list(last_mains or [])
     last_stars = list(last_stars or [])
     cfg = RANGES[lottery]
+    if pinned_suspects is None:
+        pinned_suspects = list(PINNED_SUSPECTS.get(lottery, []))
 
     # Adaptive depth — try strict (≥3), fall back to ≥2 if pool is too
     # thin to fill all slots. The DJ's "5+ stacked = drunk cosmos" stays
@@ -561,24 +643,26 @@ def build_ghost_tickets(
     effective_depth = min_depth
     universe = _ranked_universe(
         last_mains, last_stars, target_date, lottery,
-        extra_lens_map, effective_depth,
+        extra_lens_map, effective_depth, pinned_suspects,
     )
     test_pool = build_ghost_pool(
         last_mains, last_stars, target_date, lottery,
         extra_lens_map=extra_lens_map, min_depth=effective_depth,
+        pinned_suspects=pinned_suspects,
     )
     if any(len(test_pool.get(f'P{s}', [])) == 0
            for s in range(1, cfg['n_slots'] + 1)) and effective_depth > 2:
         effective_depth = 2
         universe = _ranked_universe(
             last_mains, last_stars, target_date, lottery,
-            extra_lens_map, effective_depth,
+            extra_lens_map, effective_depth, pinned_suspects,
         )
 
     # Initial pool (batch 1)
     pool_1 = build_ghost_pool(
         last_mains, last_stars, target_date, lottery,
         extra_lens_map=extra_lens_map, min_depth=effective_depth,
+        pinned_suspects=pinned_suspects,
     )
     pool_1 = apply_20_suspect_discipline(pool_1)
     pools: List[Dict[str, List[Dict]]] = [pool_1]
@@ -587,6 +671,7 @@ def build_ghost_tickets(
     for b in range(1, n_batches):
         rotated = rotate_pool(
             pools[-1], universe, banned, pools[-3:], lottery,
+            pinned_suspects=pinned_suspects,
         )
         rotated = apply_20_suspect_discipline(rotated)
         pools.append(rotated)
@@ -701,6 +786,7 @@ def build_ghost_tickets(
             'last_stars': last_stars,
             'universe_size': len(universe),
             'effective_min_depth': effective_depth,
+            'pinned_suspects': sorted(pinned_suspects or []),
         },
     }
 

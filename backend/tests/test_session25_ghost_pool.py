@@ -315,6 +315,97 @@ class TestEngineIntegration:
         assert hasattr(ghost_pool, 'rotate_pool')
 
 
+# ════════════════════════════════════════════════════════════════════
+# 🔴 DJ-PINNED SUSPECTS — guarantee 16 (and any pin) lives in the pool
+# ════════════════════════════════════════════════════════════════════
+class TestPinnedSuspects:
+    def _last_swiss(self):
+        # 25.04.2026 actual Swiss draw
+        return [8, 13, 20, 21, 23, 25]
+
+    def test_pinned_registry_swiss_has_16(self):
+        from ghost_pool import PINNED_SUSPECTS
+        assert 16 in PINNED_SUSPECTS['swiss'], \
+            "16 must be the default Swiss DJ-pin (silent-P1 since 19.04.2025)"
+
+    def test_pinned_registry_euro_empty_default(self):
+        from ghost_pool import PINNED_SUSPECTS
+        assert PINNED_SUSPECTS['euro'] == []
+
+    def test_pin_force_includes_16_in_pool(self):
+        # With the actual 25.04.2026 last draw + min_depth=2, 16 would
+        # NOT survive the depth gate without pinning.
+        pool = build_ghost_pool(self._last_swiss(), [], None, 'swiss',
+                                min_depth=2, pinned_suspects=[16])
+        # 16 must appear in every band-eligible slot (Swiss bands:
+        # P1[1-18] P2[3-25] P3[8-30] P4[12-35]).
+        for slot in ['P1', 'P2', 'P3', 'P4']:
+            nums = [e['n'] for e in pool[slot]]
+            assert 16 in nums, f"16 missing from {slot}: {nums}"
+
+    def test_pin_marked_with_pinned_flag(self):
+        pool = build_ghost_pool(self._last_swiss(), [], None, 'swiss',
+                                min_depth=2, pinned_suspects=[16])
+        p1_16 = [e for e in pool['P1'] if e['n'] == 16][0]
+        assert p1_16['pinned'] is True
+        assert 'DJ-pinned' in p1_16['lenses']
+
+    def test_pin_does_not_appear_outside_eligible_band(self):
+        # 16 fits P1-P4, but NOT P5 [18-40] or P6 [25-42].
+        pool = build_ghost_pool(self._last_swiss(), [], None, 'swiss',
+                                min_depth=2, pinned_suspects=[16])
+        assert 16 not in [e['n'] for e in pool['P5']]
+        assert 16 not in [e['n'] for e in pool['P6']]
+
+    def test_pin_survives_20_suspect_discipline(self):
+        pool = build_ghost_pool(self._last_swiss(), [], None, 'swiss',
+                                min_depth=2, pinned_suspects=[16])
+        capped = apply_20_suspect_discipline(pool, per_slot_max=2,
+                                             total_cap=8)
+        # Even with very tight caps, 16 must remain in eligible slots.
+        for slot in ['P1', 'P2', 'P3', 'P4']:
+            nums = [e['n'] for e in capped[slot]]
+            assert 16 in nums, f"pin evicted by discipline: {slot}={nums}"
+
+    def test_pin_survives_rotation(self):
+        # Build full universe + initial pool, then rotate twice and
+        # ensure 16 is still there.
+        from ghost_pool import _ranked_universe
+        last = self._last_swiss()
+        universe = _ranked_universe(last, [], None, 'swiss', None,
+                                    min_depth=2, pinned_suspects=[16])
+        pool0 = build_ghost_pool(last, [], None, 'swiss',
+                                 min_depth=2, pinned_suspects=[16])
+        pool1 = rotate_pool(pool0, universe, banned=[],
+                            prior_pools=[pool0], lottery='swiss',
+                            pinned_suspects=[16])
+        pool2 = rotate_pool(pool1, universe, banned=[],
+                            prior_pools=[pool0, pool1], lottery='swiss',
+                            pinned_suspects=[16])
+        for batch_pool, name in [(pool1, 'B2'), (pool2, 'B3')]:
+            for slot in ['P1', 'P2', 'P3', 'P4']:
+                nums = [e['n'] for e in batch_pool[slot]]
+                assert 16 in nums, f"pin lost in {name}/{slot}: {nums}"
+
+    def test_build_ghost_tickets_meta_exposes_pin(self):
+        out = build_ghost_tickets(
+            self._last_swiss(), last_stars=[], target_date=None,
+            lottery='swiss', n_total=30, batch_size=10, min_depth=3,
+        )
+        # Default registry pin for Swiss = [16]
+        assert out['meta']['pinned_suspects'] == [16]
+
+    def test_pin_can_be_disabled_per_call(self):
+        pool = build_ghost_pool(self._last_swiss(), [], None, 'swiss',
+                                min_depth=2, pinned_suspects=[])
+        # When explicit empty list passed, no 16 forced in
+        # (it may still appear naturally if depth ≥ min_depth)
+        for slot_entries in pool.values():
+            for e in slot_entries:
+                assert not e.get('pinned'), \
+                    f"unexpected pinned entry when pin disabled: {e}"
+
+
 if __name__ == '__main__':
     import sys
     sys.exit(pytest.main([__file__, '-v']))
