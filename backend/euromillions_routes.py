@@ -2549,15 +2549,25 @@ def create_euromillions_router(db):
         from datetime import datetime as dt, timedelta
         
         # Calculate next draw date if not provided
+        # 🎻 DJ-rule (29.04.2026): if today IS a draw day and today's draw
+        # is NOT yet stored in the DB, today IS the next draw — generations
+        # land on today's still-pending result instead of rolling forward.
         if not target_date:
             today = dt.now()
-            days_until_tue = (1 - today.weekday()) % 7
-            days_until_fri = (4 - today.weekday()) % 7
-            if days_until_tue == 0: days_until_tue = 7
-            if days_until_fri == 0: days_until_fri = 7
-            next_draw = min(days_until_tue, days_until_fri)
-            target = today + timedelta(days=next_draw)
-            target_date = target.strftime("%d.%m.%Y")
+            today_str = today.strftime("%d.%m.%Y")
+            wd = today.weekday()
+            if wd in (1, 4):  # Tue or Fri
+                stored = await db.euromillions_draws.find_one(
+                    {"date": today_str}, {"_id": 1}
+                )
+                if not stored:
+                    target_date = today_str
+            if not target_date:
+                days_until_tue = (1 - wd) % 7 or 7
+                days_until_fri = (4 - wd) % 7 or 7
+                next_draw = min(days_until_tue, days_until_fri)
+                target = today + timedelta(days=next_draw)
+                target_date = target.strftime("%d.%m.%Y")
         
         generation = {
             "generated_at": dt.now().isoformat(),

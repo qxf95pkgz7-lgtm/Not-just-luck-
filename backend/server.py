@@ -3581,13 +3581,24 @@ async def get_master_prediction(
     try:
         from datetime import timedelta
         today = datetime.now()
-        days_until_wed = (2 - today.weekday()) % 7
-        days_until_sat = (5 - today.weekday()) % 7
-        if days_until_wed == 0: days_until_wed = 7
-        if days_until_sat == 0: days_until_sat = 7
-        next_draw = min(days_until_wed, days_until_sat)
-        target = today + timedelta(days=next_draw)
-        target_date_str = target.strftime("%d.%m.%Y")
+        # 🎻 DJ-rule (29.04.2026): if today is a draw day and today's draw
+        # is NOT yet stored, target today (still-pending). Otherwise nearest
+        # future draw day.
+        target_date_str = None
+        wd = today.weekday()
+        if wd in (2, 5):
+            today_str = today.strftime("%d.%m.%Y")
+            stored_today = await db.draws.find_one(
+                {"date": today_str}, {"_id": 1}
+            )
+            if not stored_today:
+                target_date_str = today_str
+        if not target_date_str:
+            days_until_wed = (2 - wd) % 7 or 7
+            days_until_sat = (5 - wd) % 7 or 7
+            next_draw = min(days_until_wed, days_until_sat)
+            target = today + timedelta(days=next_draw)
+            target_date_str = target.strftime("%d.%m.%Y")
         
         tracker_tickets = []
         for ticket in tickets_to_save:
@@ -4444,14 +4455,35 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
     """
     from datetime import timedelta
     today = datetime.now()
-    
+
+    async def _resolve_next_draw_date(weekdays, draws_collection):
+        """🎻 DJ-rule (29.04.2026): if today IS a draw day and today's
+        actual result is NOT yet in the DB, TODAY is the upcoming draw —
+        do NOT roll forward to the next draw day. Otherwise compute the
+        nearest future draw day.
+        """
+        wd = today.weekday()
+        today_str = today.strftime("%d.%m.%Y")
+        if wd in weekdays:
+            already_stored = await draws_collection.find_one(
+                {"date": today_str}, {"_id": 1}
+            )
+            if not already_stored:
+                return today_str
+        # Otherwise pick the nearest FUTURE draw day
+        deltas = []
+        for w in weekdays:
+            d = (w - wd) % 7
+            if d == 0:
+                d = 7
+            deltas.append(d)
+        return (today + timedelta(days=min(deltas))).strftime("%d.%m.%Y")
+
     if mode == "euro":
-        days_tue = (1 - today.weekday()) % 7
-        days_fri = (4 - today.weekday()) % 7
-        if days_tue == 0: days_tue = 7
-        if days_fri == 0: days_fri = 7
-        next_draw = today + timedelta(days=min(days_tue, days_fri))
-        next_date = next_draw.strftime("%d.%m.%Y")
+        # Euro draws on Tue (1) and Fri (4)
+        next_date = await _resolve_next_draw_date(
+            [1, 4], db.euromillions_draws
+        )
         
         # Collect ALL tickets (incl. locked) so user's own picks show up
         q = {"target_date": next_date}
@@ -4624,12 +4656,8 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
             "diagnostics": diagnostics_out,
         }
     else:
-        days_wed = (2 - today.weekday()) % 7
-        days_sat = (5 - today.weekday()) % 7
-        if days_wed == 0: days_wed = 7
-        if days_sat == 0: days_sat = 7
-        next_draw = today + timedelta(days=min(days_wed, days_sat))
-        next_date = next_draw.strftime("%d.%m.%Y")
+        # Swiss draws on Wed (2) and Sat (5)
+        next_date = await _resolve_next_draw_date([2, 5], db.draws)
         
         q = {"target_date": next_date}
         if visitor_id:
