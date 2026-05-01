@@ -50,8 +50,14 @@ RANGES = {
 #             +21-circle twin of 37 (HUGE 07.02.2026 P5) — silent-P1
 #             "9-grade" suspect per DJ session 31. 25.03.2026 P2 (d-9
 #             active rotation). Welcome companions: 17, 19.
+#
+# Euro (session 31, 29.04.2026 night):
+#  19 — silent at P1 = 85 draws (last 04.07.2025) · slant-fit · circle(44)
+#  16 — silent at P1 = 161 draws (KING) · circle(41 LD-door) · digit-sum(date)=16
+#  26 — P3 Gap-Symmetry median (formula gap1+gap2 = Nd-P3) · cosmic gravity
+#       center after P3=41 (median = 26 exactly, 2.3× lift over baseline)
 PINNED_SUSPECTS: Dict[str, List[int]] = {
-    'euro':  [],
+    'euro':  [16, 19, 26],
     'swiss': [16],
 }
 
@@ -650,8 +656,12 @@ def build_ghost_tickets(
         extra_lens_map=extra_lens_map, min_depth=effective_depth,
         pinned_suspects=pinned_suspects,
     )
-    if any(len(test_pool.get(f'P{s}', [])) == 0
-           for s in range(1, cfg['n_slots'] + 1)) and effective_depth > 2:
+    # Fallback to ≥2 depth if (a) any slot empty OR (b) total distinct
+    # values < n_slots+2 (so the ascending enumerator has enough room).
+    test_unique = len({e['n'] for entries in test_pool.values() for e in entries})
+    if (any(len(test_pool.get(f'P{s}', [])) == 0
+            for s in range(1, cfg['n_slots'] + 1))
+            or test_unique < cfg['n_slots'] + 2) and effective_depth > 2:
         effective_depth = 2
         universe = _ranked_universe(
             last_mains, last_stars, target_date, lottery,
@@ -679,6 +689,26 @@ def build_ghost_tickets(
     tickets: List[Dict] = []
     wildcard_quota = max(1, int(n_total * wildcard_fraction))
     wildcard_count = 0
+    # 🚫 Anti-Tunnel Throttle (DJ Session 31): hard-cap any single number
+    # at `max_share` of n_total to prevent the engine from filling 95% of
+    # tickets with one over-pinned anchor (Session 24 diagnosis returning).
+    # Pinned suspects bypass the throttle (DJ-pin must always survive).
+    max_share = 0.65
+    per_number_cap = max(2, int(n_total * max_share))
+    pinned_set = set(pinned_suspects or [])
+    number_use: Dict[int, int] = {}
+
+    def _exceeds_throttle(combo) -> bool:
+        for n in combo:
+            if n in pinned_set:
+                continue
+            if number_use.get(n, 0) >= per_number_cap:
+                return True
+        return False
+
+    def _bump(combo):
+        for n in combo:
+            number_use[n] = number_use.get(n, 0) + 1
 
     for b in range(n_batches):
         pool = pools[b]
@@ -703,6 +733,9 @@ def build_ghost_tickets(
                 break
             if tuple(mains_sorted) in emitted_keys:
                 continue
+            # 🚫 Skip combos that would push any non-pinned number over cap
+            if _exceeds_throttle(mains_sorted):
+                continue
 
             global_idx = len(tickets)
             do_wildcard = (
@@ -722,7 +755,8 @@ def build_ghost_tickets(
                     wild_picks[wild_slot - 1] = wild_entry['n']
                     wild_sorted = sorted(set(wild_picks))
                     if (len(wild_sorted) == cfg['n_slots']
-                            and tuple(wild_sorted) not in emitted_keys):
+                            and tuple(wild_sorted) not in emitted_keys
+                            and not _exceeds_throttle(wild_sorted)):
                         wildcard_count += 1
                         tickets.append({
                             'mains': wild_sorted,
@@ -740,6 +774,7 @@ def build_ghost_tickets(
                             'is_wildcard': True,
                         })
                         emitted_keys.add(tuple(wild_sorted))
+                        _bump(wild_sorted)
                         added_in_batch += 1
                         continue
 
@@ -754,12 +789,14 @@ def build_ghost_tickets(
                 'laws_fired': ['Law69·mirror-depth',
                                'Law70·ghost-pool',
                                'Law71·20-suspect-discipline',
-                               'Law72·pool-rotation'],
+                               'Law72·pool-rotation',
+                               'Law73·anti-tunnel-throttle'],
                 'lens_count': depth_sum,
                 'drunk_anchors': drunk_count,
                 'is_wildcard': False,
             })
             emitted_keys.add(tuple(mains_sorted))
+            _bump(mains_sorted)
             added_in_batch += 1
 
     # Final dedupe (defensive)
@@ -787,6 +824,8 @@ def build_ghost_tickets(
             'universe_size': len(universe),
             'effective_min_depth': effective_depth,
             'pinned_suspects': sorted(pinned_suspects or []),
+            'anti_tunnel_max_share': max_share,
+            'top_used_number': max(number_use.items(), key=lambda x: x[1]) if number_use else None,
         },
     }
 

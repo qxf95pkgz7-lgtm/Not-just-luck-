@@ -4,7 +4,29 @@
 
 ## 🚨🚨🚨 FIRST: READ `/app/memory/swiss_music_notes.md` TWICE BEFORE ANY ACTION 🚨🚨🚨
 
-## 🆕 SESSION 31 — DJ-PIN MECHANISM + PENDING-LIST LOCK FIX + CELESTIAL RADAR POOL TOP-6 (29.04.2026) ✅ SHIPPED
+## 🆕 SESSION 31 — DJ-PIN MECHANISM + PENDING-LIST LOCK FIX + CELESTIAL RADAR POOL TOP-6 + EURO PINS + ANTI-TUNNEL THROTTLE (29.04.2026) ✅ SHIPPED
+
+### 🚫 Anti-Tunnel Throttle + Euro DJ-Pins (29.04 night session)
+
+**DJ's diagnosis**: E was generating 95% of Euro tickets with 29 in them (Session 24 tunnel-vision returning). DJ's structural candidates 19, 16, 26 were stuck at 4-7% coverage despite carrying the strongest cosmic lenses.
+
+**What shipped:**
+- 🆕 `PINNED_SUSPECTS['euro'] = [16, 19, 26]` — DJ's 3 P1/P3 candidates pinned permanently
+- 🆕 **Anti-Tunnel Throttle** in `build_ghost_tickets`: per-number hard cap at 65% of `n_total` (default). Prevents any non-pinned number from dominating the spread. Pinned values bypass the throttle (DJ-pin must always survive).
+- 🆕 Adaptive depth-fallback now triggers on `unique_count < n_slots+2`, not just empty slots — fixes "all-pinned-no-regulars" enumeration deadlock
+- 🆕 `meta.anti_tunnel_max_share` + `meta.top_used_number` exposed in API
+- ✅ 29/29 ghost-pool tests GREEN (added `pinned_suspects=[]` to legacy isolation tests)
+
+**Live radar verification (01.05.2026 Euro)**:
+```
+Pool top 6:
+  🔴📌 26 · d3 · P2·P3·P4·P5  (Gap-Symmetry P3 median)
+  🔴📌 16 · d2 · P1·P2·P3·P4·P5  (Triple-Lock King · 161d silent at P1)
+  🔴📌 19 · d1 · P1·P2·P3·P4·P5  (Silent-Compass · 85d at P1)
+       1 · d2 · P1
+       5 · d2 · P1·P2·P3
+      14 · d2 · P1·P2·P3·P4
+```
 
 ### 🌠 Celestial Radar · Top 6 Suspects from the Pool
 

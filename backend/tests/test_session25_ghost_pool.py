@@ -150,12 +150,15 @@ class TestGhostPoolBuilder:
 
     def test_thin_echoes_rejected_at_min_depth_3(self):
         # With min_depth=3, no candidate with <3 lenses survives
+        # (explicitly disable Euro DJ-pins for this test — pinned bypass
+        # the depth gate by design)
         pool = build_ghost_pool(
             last_mains=[25, 26, 30, 40, 45],
             last_stars=[1, 5],
             target_date=dt(2026, 4, 28),
             lottery='euro',
             min_depth=3,
+            pinned_suspects=[],
         )
         for entries in pool.values():
             for e in entries:
@@ -214,6 +217,7 @@ class TestPoolRotation:
         new_pool = rotate_pool(
             old_pool, universe, banned=[], prior_pools=[old_pool],
             lottery='euro', keep=3, inject=2,
+            pinned_suspects=[],  # disable DJ pins for this isolation test
         )
         for slot_key, entries in new_pool.items():
             # Should have 3 kept + up to 2 fresh = ≤5
@@ -232,7 +236,8 @@ class TestPoolRotation:
                     for s in range(1, 6)}
         universe = [{'n': 7, 'depth': 5, 'lenses': [], 'drunk': False}]
         new_pool = rotate_pool(old_pool, universe, banned=[],
-                               prior_pools=[prior_pool], lottery='euro')
+                               prior_pools=[prior_pool], lottery='euro',
+                               pinned_suspects=[])
         # 7 should NOT appear in any slot's fresh injection
         for entries in new_pool.values():
             fresh = [e['n'] for e in entries[3:]]
@@ -328,9 +333,10 @@ class TestPinnedSuspects:
         assert 16 in PINNED_SUSPECTS['swiss'], \
             "16 must be the default Swiss DJ-pin (silent-P1 since 19.04.2025)"
 
-    def test_pinned_registry_euro_empty_default(self):
+    def test_pinned_registry_euro_default(self):
         from ghost_pool import PINNED_SUSPECTS
-        assert PINNED_SUSPECTS['euro'] == []
+        # Session 31 (29.04.2026): DJ pinned 16, 19, 26 for Euro
+        assert PINNED_SUSPECTS['euro'] == [16, 19, 26]
 
     def test_pin_force_includes_16_in_pool(self):
         # With the actual 25.04.2026 last draw + min_depth=2, 16 would
