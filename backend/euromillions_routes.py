@@ -2629,6 +2629,34 @@ def create_euromillions_router(db):
             "has_locked": has_locked,
             "locked_positions": locked_positions or {},
         }
+        # 🚫 Anti-Tunnel Throttle (DJ Session 31): drop any tickets
+        # whose non-pinned numbers would exceed 65% of the batch. Pinned
+        # values (16, 19, 26) bypass the cap and always survive.
+        try:
+            from anti_tunnel import filter_anti_tunnel, tunnel_diagnostics
+            from ghost_pool import PINNED_SUSPECTS as _PIN
+            pinned_for_lottery = _PIN.get('euro', [])
+            before = tunnel_diagnostics(generation["tickets"], pinned=pinned_for_lottery)
+            generation["tickets"] = filter_anti_tunnel(
+                generation["tickets"], pinned=pinned_for_lottery,
+                max_share=0.65, min_keep=3,
+            )
+            after = tunnel_diagnostics(generation["tickets"], pinned=pinned_for_lottery)
+            generation["anti_tunnel"] = {
+                "before_count": before["total"],
+                "after_count": after["total"],
+                "worst_before": before.get("worst"),
+                "worst_share_before": round(before.get("worst_share") or 0, 3),
+                "worst_after": after.get("worst"),
+                "worst_share_after": round(after.get("worst_share") or 0, 3),
+            }
+            # Also strip skipped tickets from the live response list
+            kept_keys = {tuple(t.get("numbers", [])) for t in generation["tickets"]}
+            tickets_data[:] = [t for t in tickets_data
+                               if tuple(t.get("numbers", [])) in kept_keys]
+        except Exception as _e:
+            logger.warning(f"euro anti-tunnel filter skipped: {_e}")
+
         if visitor_id:
             generation["visitor_id"] = visitor_id
 

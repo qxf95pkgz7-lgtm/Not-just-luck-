@@ -41,6 +41,41 @@ class HitTracker:
             "has_locked": has_locked,
             "locked_positions": locked_positions or {},
         }
+        # 🚫 Anti-Tunnel Throttle (DJ Session 31): drop tickets whose
+        # non-pinned numbers exceed 65% of the batch. Pinned (e.g. Swiss
+        # 16) bypass the cap. Locked-position tickets always survive.
+        try:
+            from anti_tunnel import filter_anti_tunnel, tunnel_diagnostics
+            from ghost_pool import PINNED_SUSPECTS as _PIN
+            pinned_for_lottery = list(_PIN.get('swiss', []))
+            # Locked-position values are also "pinned" for this batch
+            if has_locked and locked_positions:
+                pinned_for_lottery = pinned_for_lottery + [
+                    int(v) for v in locked_positions.values()
+                    if isinstance(v, (int, str)) and str(v).isdigit()
+                ]
+            before = tunnel_diagnostics(generation["tickets"],
+                                        pinned=pinned_for_lottery)
+            generation["tickets"] = filter_anti_tunnel(
+                generation["tickets"], pinned=pinned_for_lottery,
+                max_share=0.65, min_keep=3,
+            )
+            after = tunnel_diagnostics(generation["tickets"],
+                                       pinned=pinned_for_lottery)
+            generation["anti_tunnel"] = {
+                "before_count": before["total"],
+                "after_count": after["total"],
+                "worst_before": before.get("worst"),
+                "worst_share_before": round(before.get("worst_share") or 0, 3),
+                "worst_after": after.get("worst"),
+                "worst_share_after": round(after.get("worst_share") or 0, 3),
+            }
+            kept_keys = {tuple(t.get("numbers", [])) for t in generation["tickets"]}
+            tickets[:] = [t for t in tickets
+                          if tuple(t.get("numbers", [])) in kept_keys]
+        except Exception:
+            pass
+
         if visitor_id:
             generation["visitor_id"] = visitor_id
 

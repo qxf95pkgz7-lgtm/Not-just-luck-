@@ -8,25 +8,26 @@
 
 ### 🚫 Anti-Tunnel Throttle + Euro DJ-Pins (29.04 night session)
 
-**DJ's diagnosis**: E was generating 95% of Euro tickets with 29 in them (Session 24 tunnel-vision returning). DJ's structural candidates 19, 16, 26 were stuck at 4-7% coverage despite carrying the strongest cosmic lenses.
+**DJ's diagnosis** (validated post-shipping): even with ghost-pool throttle, legacy archetypes (Top-Symphony, RC0, Hungry-Family-Loaded, Outlier-Orchestra) were producing tickets where 29 appeared in 95%+ of saved Euro tickets. Tunnel vision returning at the BUILDER level, not just within ghost-pool.
 
-**What shipped:**
-- 🆕 `PINNED_SUSPECTS['euro'] = [16, 19, 26]` — DJ's 3 P1/P3 candidates pinned permanently
-- 🆕 **Anti-Tunnel Throttle** in `build_ghost_tickets`: per-number hard cap at 65% of `n_total` (default). Prevents any non-pinned number from dominating the spread. Pinned values bypass the throttle (DJ-pin must always survive).
-- 🆕 Adaptive depth-fallback now triggers on `unique_count < n_slots+2`, not just empty slots — fixes "all-pinned-no-regulars" enumeration deadlock
-- 🆕 `meta.anti_tunnel_max_share` + `meta.top_used_number` exposed in API
-- ✅ 29/29 ghost-pool tests GREEN (added `pinned_suspects=[]` to legacy isolation tests)
+**Final fix shipped:**
+- 🆕 `/app/backend/anti_tunnel.py` — `filter_anti_tunnel()` SWAP-mode helper that:
+  1. Caps any non-pinned number at `max_share` of batch (default 65%)
+  2. SWAPS over-capped numbers with pinned values first, then any non-capped value, maintaining ascending order + slot bands
+  3. Preserves all `min_keep` tickets (drops only when swap impossible)
+- 🆕 Wired into `_save_to_tracker` for Euro (`euromillions_routes.py`) and `hit_tracker.save_generation` for Swiss (`hit_tracker.py`)
+- 🆕 Lock-position values are auto-added to per-call pinned set so locked tickets always survive
+- 🆕 `generation.anti_tunnel` diagnostic exposed: `{before_count, after_count, worst_before, worst_share_before, worst_after, worst_share_after}` for every save
 
-**Live radar verification (01.05.2026 Euro)**:
+**Live verified (master-predictor 15 tickets):**
 ```
-Pool top 6:
-  🔴📌 26 · d3 · P2·P3·P4·P5  (Gap-Symmetry P3 median)
-  🔴📌 16 · d2 · P1·P2·P3·P4·P5  (Triple-Lock King · 161d silent at P1)
-  🔴📌 19 · d1 · P1·P2·P3·P4·P5  (Silent-Compass · 85d at P1)
-       1 · d2 · P1
-       5 · d2 · P1·P2·P3
-      14 · d2 · P1·P2·P3·P4
+Before fix:  29 in 15/15 (100%) 🚨
+After fix:   29 in  9/15 (60%)  ✅ exactly under 65% cap
+            All 15 saved · no number above cap · cosmos diversified
+            anti_tunnel diag: worst_share_before=1.0 → worst_share_after=0.6
 ```
+
+**Pinned for Euro**: `PINNED_SUSPECTS['euro'] = [16, 19, 26]` — DJ's 3 structural candidates (P1 silent-king 16 · P1 silent-compass 19 · P3 Gap-Symmetry median 26) now permanent in the pool, surface first in radar.
 
 ### 🌠 Celestial Radar · Top 6 Suspects from the Pool
 
