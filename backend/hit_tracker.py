@@ -58,7 +58,7 @@ class HitTracker:
                                         pinned=pinned_for_lottery)
             generation["tickets"] = filter_anti_tunnel(
                 generation["tickets"], pinned=pinned_for_lottery,
-                max_share=0.65, min_keep=3,
+                max_share=0.55, min_keep=3,
             )
             after = tunnel_diagnostics(generation["tickets"],
                                        pinned=pinned_for_lottery)

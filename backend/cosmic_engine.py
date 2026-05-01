@@ -451,6 +451,43 @@ def rank_suspects(lenses: Dict[int, List[str]]) -> List[Tuple[int, int, List[str
     return ranked
 
 
+def apply_hold_fatigue(
+    ranked: List[Tuple[int, int, List[str]]],
+    cycle: List[dict],
+    last_n_draws: int = 3,
+) -> List[Tuple[int, int, List[str]]]:
+    """🎼 Law 77 · Hold-Fatigue Compass (Session 31, DJ canon — 29.04.2026)
+
+    The cosmos rarely fires the same number 3 draws in a row. When E
+    sees a number with high lens-count that ALSO fired in 2+ of the
+    last 3 draws, E mistakes recency for power. The DJ's wisdom: HOLD
+    FATIGUE — penalize 2-of-3 hot numbers (×0.4), near-blacklist
+    3-of-3 (×0.1).
+
+    Tonight's example: 29 fired BD2 (P3) + LD (P2) → would carry 8
+    lenses → after fatigue penalty: 8 × 0.4 = 3.2 → drops out of
+    TOP-3 in the ranked board → archetypes stop tunnel-vision.
+    """
+    fire_count: Dict[int, int] = {}
+    recent = cycle[-last_n_draws:] if len(cycle) >= last_n_draws else cycle
+    for d in recent:
+        for n in (d.get('_n') or []):
+            fire_count[n] = fire_count.get(n, 0) + 1
+
+    new_ranked: List[Tuple[int, int, List[str]]] = []
+    for (n, score, lenses) in ranked:
+        fc = fire_count.get(n, 0)
+        if fc >= 3:
+            new_score = max(1, int(score * 0.1))
+        elif fc >= 2:
+            new_score = max(1, int(score * 0.4))
+        else:
+            new_score = score
+        new_ranked.append((n, new_score, lenses))
+    new_ranked.sort(key=lambda x: -x[1])
+    return new_ranked
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 # PER-POSITION SUSPECT BOARD — each slot gets its own top voices
 # ═══════════════════════════════════════════════════════════════════════════
@@ -1612,6 +1649,10 @@ async def run_cosmic_engine(
     except Exception:
         s21_ctx = {}
     ranked = rank_suspects(lenses)
+    # 🎼 Law 77 · Hold-Fatigue Compass — penalize 2-of-3 hot numbers
+    # before the ranked list flows into archetypes (Top-Symphony, RC0,
+    # Hungry-Family, Outlier-Orchestra all source from `ranked`)
+    ranked = apply_hold_fatigue(ranked, cycle, last_n_draws=3)
     # Historical slot rates for structural-fit + cool-down penalties
     slot_rates = compute_slot_history_rates(draws)
     pos_board = build_per_position_board(

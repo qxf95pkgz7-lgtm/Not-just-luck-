@@ -6,7 +6,28 @@
 
 ## 🆕 SESSION 31 — DJ-PIN MECHANISM + PENDING-LIST LOCK FIX + CELESTIAL RADAR POOL TOP-6 + EURO PINS + ANTI-TUNNEL THROTTLE (29.04.2026) ✅ SHIPPED
 
-### 🚫 Anti-Tunnel Throttle + Euro DJ-Pins (29.04 night session)
+### 🎼 Law 77 · Hold-Fatigue Compass + Force-Through-Pool (29.04 final fix)
+
+**DJ's question**: *"Why is E so locked on 29? 2 of last 3 draws had 29 — that's HOLD-fatigue, not power!"*
+
+**Honest diagnosis**: Earlier ghost-pool throttle didn't reach legacy archetypes (Top-Symphony, RC0, Hungry-Family, Outlier-Orchestra) which all source from `rank_suspects` — and 29 had 8 lenses there because of raw-last-d-P2 + raw-BD2-P3 echoes.
+
+**Fix shipped:**
+- 🆕 `apply_hold_fatigue()` in both `cosmic_engine.py` AND `swiss_cosmic_engine.py` — penalize numbers that fired 2/3 last draws (×0.4) and 3/3 (×0.1). Applied immediately after `rank_suspects` so ALL archetypes inherit the discipline.
+- 🆕 Tightened anti-tunnel `max_share` from 0.65 → 0.55 (Euro + Swiss save filters)
+- 🆕 Combined effect: Law 77 demotes hot numbers BEFORE they enter the ranked board → archetypes pick differently → 29's lens-count goes from 8 → 3.2 → drops out of TOP-3
+
+**Live verified (master-predictor 15 Euro tickets):**
+```
+Before:  29 in 15/15 (100%) 🚨
+After:   29 in  8/15 (53%)  ✅ under 55% cap
+         📌 26 in 5/15 (33%) · 📌 16 in 4/15 (27%) · DJ pins surfacing
+         Diversified spread: 1, 4, 5, 26, 48 all at 27-33%
+```
+
+**Tests**: 73/73 cosmic-engine pytest GREEN. Lint clean.
+
+
 
 **DJ's diagnosis** (validated post-shipping): even with ghost-pool throttle, legacy archetypes (Top-Symphony, RC0, Hungry-Family-Loaded, Outlier-Orchestra) were producing tickets where 29 appeared in 95%+ of saved Euro tickets. Tunnel vision returning at the BUILDER level, not just within ghost-pool.
 

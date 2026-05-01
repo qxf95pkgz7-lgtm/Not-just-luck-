@@ -429,6 +429,32 @@ def rank_suspects(lenses: Dict[int, List[str]]) -> List[Tuple[int, int, List[str
     return ranked
 
 
+def apply_hold_fatigue(
+    ranked: List[Tuple[int, int, List[str]]],
+    cycle: List[dict],
+    last_n_draws: int = 3,
+) -> List[Tuple[int, int, List[str]]]:
+    """🎼 Law 77 · Hold-Fatigue Compass (Swiss · DJ canon Session 31).
+    Penalize 2-of-3 (×0.4) and 3-of-3 (×0.1) recent firers."""
+    fire_count: Dict[int, int] = {}
+    recent = cycle[-last_n_draws:] if len(cycle) >= last_n_draws else cycle
+    for d in recent:
+        for n in (d.get('_n') or []):
+            fire_count[n] = fire_count.get(n, 0) + 1
+    new_ranked = []
+    for (n, score, lenses) in ranked:
+        fc = fire_count.get(n, 0)
+        if fc >= 3:
+            new_score = max(1, int(score * 0.1))
+        elif fc >= 2:
+            new_score = max(1, int(score * 0.4))
+        else:
+            new_score = score
+        new_ranked.append((n, new_score, lenses))
+    new_ranked.sort(key=lambda x: -x[1])
+    return new_ranked
+
+
 def rank_lucky(cycle: List[dict]) -> List[int]:
     """🍀 ranking: prefer sticky (repeat in cycle) + recent."""
     if not cycle:
@@ -976,6 +1002,8 @@ async def run_swiss_cosmic_engine(
             rc0, re_lock_anchor, cycle, target_date, target_d, banned
         )
         ranked = rank_suspects(lenses)
+        # 🎼 Law 77 · Hold-Fatigue Compass — Swiss
+        ranked = apply_hold_fatigue(ranked, cycle, last_n_draws=3)
         lucky_rank = rank_lucky(cycle)
         replay_rank = rank_replay(cycle)
 
