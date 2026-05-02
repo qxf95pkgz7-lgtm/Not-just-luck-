@@ -56,9 +56,21 @@ RANGES = {
 #  16 — silent at P1 = 161 draws (KING) · circle(41 LD-door) · digit-sum(date)=16
 #  26 — P3 Gap-Symmetry median (formula gap1+gap2 = Nd-P3) · cosmic gravity
 #       center after P3=41 (median = 26 exactly, 2.3× lift over baseline)
+#
+# Swiss (session 32, 02.05.2026 night) — DJ's P6↔P5 descending-cascade pool:
+#    P6 ladder: 42 — 39 — 34 — 28 — 27
+#    P5 ladder: 38 — 34 — 28 — 27 — 25
+#  42 — 214 lifetime P6 hits (strongest P6 ever); 42-38 couplet fired 22.04.2026
+#  39 — 135 P6 hits; silent 10 draws at P6
+#  38 — HUGE-07.02.2026 P5 echo; silent only 2 draws but cascade-primed
+#  34 — 88 draws silent at P5 (deep silent); cascade hold between P6-39 & P5-28
+#  28 — 171 P6-silent, 20 P5-silent; mirror-fold axis, flip-wrap(40<->28)
+#  27 — 200 P6-silent, 56 P5-silent — massive silence stack
+#  25 — 74 P5-silent; low-shelf cascade completer
+#  16 — KING silent (106 P1-draws); +21-twin of HUGE-P5=37
 PINNED_SUSPECTS: Dict[str, List[int]] = {
     'euro':  [16, 19, 26],
-    'swiss': [16],
+    'swiss': [16, 42, 39, 38, 34, 28, 27, 25],
 }
 
 

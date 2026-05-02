@@ -398,8 +398,8 @@ class TestPinnedSuspects:
             self._last_swiss(), last_stars=[], target_date=None,
             lottery='swiss', n_total=30, batch_size=10, min_depth=3,
         )
-        # Default registry pin for Swiss = [16]
-        assert out['meta']['pinned_suspects'] == [16]
+        # Session 32 (02.05.2026) — DJ's P6↔P5 cascade pool pinned
+        assert out['meta']['pinned_suspects'] == sorted([16, 42, 39, 38, 34, 28, 27, 25])
 
     def test_pin_can_be_disabled_per_call(self):
         pool = build_ghost_pool(self._last_swiss(), [], None, 'swiss',
