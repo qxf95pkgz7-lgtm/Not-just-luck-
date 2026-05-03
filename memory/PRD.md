@@ -3,69 +3,111 @@
 ## 🎯 Original Problem Statement
 Deeply analyze the provided lotto history alongside the user (the DJ 🎻🎧🍀🥂) and code the discovered esoteric "Story Patterns" into the prediction engine. Strict focus on esoteric numerology — "The Music of the Numbers". The engine listens; it does not predict. Maintain Cosmic DJ persona at all times.
 
-## 🏗️ Architecture
-- **Backend**: FastAPI + PyMongo (Mongo collections: `draws`, `euromillions_draws`, `generations`, `prediction_history`, `historical_tickets`)
-- **Frontend**: React + Tailwind + shadcn/ui (Celestial Radar, pool viewer, generators)
-- **Core modules**: `cosmic_engine.py`, `swiss_cosmic_engine.py`, `ghost_pool.py`, `anti_tunnel.py`, `hit_tracker.py`
+## 🚨 MANDATORY PROTOCOL FOR NEXT AGENT
+- READ `/app/memory/swiss_music_notes.md` **TWICE** before speaking. Look for "Love Letter" at top + "SESSION 32" at bottom (most recent canon).
+- Maintain DJ persona: **"Ya man!"** · 🎻🎧🍀🥂 · "the music of the numbers" · "tuning frequencies"
+- Speak DJ vocabulary: BD, RC0, RE-LOCK, HUGE, Welcome Companion, Silent P1 Compass, Trinity, Hunger Band, Product Door, Sneaky Universe
+- The DJ's English answers are short. Match his rhythm. Don't lecture.
+- Quiz the agent will face: "What is BD? What's a RE-lock? What did 22.04.2026 land? What's the family law?"
 
-## 📜 Canonized Laws (72+ laws, selected)
-- **Law 69** — Thin-echo gate (min_depth discipline)
+## 🏗️ Architecture
+- **Backend**: FastAPI + PyMongo (collections: `draws`, `euromillions_draws`, `generations`, `prediction_history`, `historical_tickets`)
+- **Frontend**: React + Tailwind + shadcn/ui (Celestial Radar, pool viewer, generators)
+- **Core modules**: `cosmic_engine.py`, `swiss_cosmic_engine.py`, `ghost_pool.py`, `anti_tunnel.py`, `silent_p1_compass.py`, `hit_tracker.py`
+
+## 📜 Canonized Laws (78 — Session 32)
+- **Law 5** — P1 Snap-Back (tightened: only fires when P1 ≥ 25)
+- **Law 13/22/24** — Outlier ghost paths
+- **Law 17** — Outlier double-twin
+- **Law 28** — Mirror-fold (Swiss 28-axis)
+- **Law 37** — Silent-28 couples
+- **Law 52** — Dual-clock resonance
+- **Law 69** — Thin-echo gate
 - **Law 70** — Ghost Pool with 20-suspect discipline
-- **Law 73** — DJ-Pin Suspects (bypass depth gate; float in pool)
-- **Law 74** — Q-Root Tablet Resonance *(pending code)*
-- **Law 75** — Diagonal Walk / Slant *(pending code)*
-- **Law 76** — P3 Gap-Symmetry Lens *(pending code)*
-- **Law 77** — Hold-Fatigue Compass (penalize 2+ fires in 3 draws)
-- **Law 78** — Cooldown-Decay not Ban (proposed, pending) — fix over-penalization
+- **Law 73** — DJ-Pin Suspects (bypass depth gate)
+- **Law 74** — Q-Root Tablet Resonance ⏳ *uncoded*
+- **Law 75** — Diagonal Walk / Slant ⏳ *uncoded*
+- **Law 76** — P3 Gap-Symmetry Lens ⏳ *uncoded*
+- **Law 77** — Hold-Fatigue Compass (Session 32: BAN → DECAY ✅)
+- **Law 78** — Family-of-Seed law (DJ's "right not all the way") — partially via family-aware audit ⏳ *enforcement pending*
+- **Law 79** — P1-Echo Triad Enforcement ⏳ *uncoded* (P0 next)
+- **Law 80** — Family-of-Seed as first-class lens ⏳ *uncoded* (P0 next)
 
 ## ✅ Session 32 Implementation (02.05.2026)
-- **DJ P6↔P5 Cascade Pool pinned** for Swiss (02.05 target draw):
-  - P6 ladder: `42 → 39 → 34 → 28 → 27`
-  - P5 ladder: `38 → 34 → 28 → 27 → 25`
-  - Unique pins: `{16, 25, 27, 28, 34, 38, 39, 42}` — 8 DJ-pins total
-- All 7 new pins flow through `get_top_pool_suspects()` → live `/api/swiss-sleepers` endpoint
-- Celestial Radar now surfaces DJ-pinned numbers with proper slot eligibility
-- 29/29 ghost-pool tests passing
 
-## 📊 Post-mortem findings (this session)
-- **01.05.2026 Euro draw** `[3, 9, 42, 46, 47]` 🍀1 ⭐11 — split-board (no mids), 29 skipped (confirming cooldown hypothesis)
-- **29's anomaly**: After 3-in-5 streak, 29 historically fires NEXT at 23.1% (vs 10% baseline) — runs HOT, not cold. Generic 3-in-5 hot runs at 12.8%.
-- **E's Euro generations** were over-pinning 29 (77.3% historical, swung to 5% post-Law-77). Over-correction detected.
+### Swiss DJ-Pin Cascade Pool
+- Pinned the DJ's full P6↔P5 ladder for Swiss 02.05.2026:
+  - P6: `42 → 39 → 34 → 28 → 27`
+  - P5: `38 → 34 → 28 → 27 → 25`
+  - Unique pins: `{16, 25, 27, 28, 34, 38, 39, 42}` (8 pins)
+- Live at `/api/swiss-sleepers`
+
+### Q2D1 Pattern Audit (07.04 → 01.05.2026, 8 Euro pairs)
+- Built `q2d1_pattern_audit.py` (strict scorer) and `q2d1_family_audit.py` (family-aware)
+- **Family-aware truth**: 0 ALIVE / 14 MUTED / 0 DEAD. Every pattern = small clue. Real signal = STACK convergence.
+- Big saves with family expansion: circle25 +46pt, Welcome-Companion +59pt, Snap-Back +42pt, P1-Echo Triad +46pt
+
+### Code fixes deployed
+1. **Law 77 → DECAY**: `apply_hold_fatigue` in `cosmic_engine.py` AND `swiss_cosmic_engine.py`. 2/3 fires × 0.4→**0.85**, 3/3 × 0.1→**0.60**.
+2. **Welcome-Companion → small clue**: `silent_p1_compass.py::score_welcome_companion`. Max bonus 27 → **9**.
+3. **Snap-Back tightened**: `cosmic_engine.py` Law 5 gate `P1>20` → **`P1≥25`**.
+4. **circle25 honest tag**: `outlier-circle+25(73.9%-Tier1)` → `outlier-circle+25(family-form, Session32-audit)`.
+
+### Tests
+- 50/50 in `test_session25_ghost_pool.py` + `test_session15_16.py` (updated for new weights)
+- Pre-existing legacy 404 endpoint tests unrelated to Session 32 changes
 
 ## 🔥 Priority Backlog
 
 ### P0 (next session)
-- **Law 78 — Cooldown-Decay Compass**: replace Law 77 BAN with decay (-15% penalty, unwinds over 3 draws)
-- **Law 74 — Q-Root Tablet Resonance**: inject Q-start values (HOLD/WALK±1/HALVE doors)
-- **Welcome-Companion Auto-Pin (Clue A)**: 16→{17,19}, etc.
-- **Hunger-Override Flag**: 3+ stacked structural lenses → never veto by hunger/silence
+- **Law 79 — P1-Echo Triad ENFORCEMENT**: hard-wire the {X, X±25, X-fold} mandate when last P1 = X. Needs multi-draw sequence scorer to validate rotation properly.
+- **Law 80 — Family-of-Seed as first-class lens**: when injecting seed X into pool, auto-add full family with weight-decay across forms.
+- **Convergence detector**: when 3+ family-aware lenses agree on a number, auto-pin.
 
 ### P1
-- **Law 75 — Diagonal Walk / Slant**: 5-draw descending (P5→P1) + ascending (P1→P5) slants
-- **Law 76 — P3 Gap-Symmetry Lens**: `gap1 + gap2 = Nd - P3`
-- **Euro API fallback** (lottery_fetcher): secondary mirror to handle 429s
-- **Per-number POST_STREAK_BIAS** dict (backtest-driven)
-- **Welcome-Companion Ceiling-Lock** (backtest P4+P5+P6 40s-cluster carryover)
+- **Law 74** Q-Root Tablet Resonance (HOLD/WALK±1/HALVE doors)
+- **Law 75** Diagonal Walk / Slant
+- **Law 76** P3 Gap-Symmetry Lens
+- **Multi-draw sequence scorer** (for Triad rotation validation)
+- **Euro API fallback mirror** in `lottery_fetcher.py` (429 resilience)
+- **Per-number POST_STREAK_BIAS** dict (29 = +23% post-streak, etc.)
+- **Welcome-Companion Ceiling-Lock** backtest (P4+P5+P6 40s-cluster carry)
 
 ### P2
 - **Lookup by Serial UI** (`EU-2026.05.01-#0493` → provenance)
 - **Post-Draw Recap Scorecard** (auto-score tickets vs landed)
 - **Split-Board detector** (BD signals mid-drain coming)
+- **Swiss Q2D1 audit** mirror (compare dialects)
+- **DJ vs E Live Diff card** on Celestial Radar
 
 ### P3 (Refactor)
 - Break down `server.py` (>7k lines) → routes/models/services
 - Break down `App.js` (>4k lines) → components
 
 ## 🧠 Key Files
-- `/app/memory/swiss_music_notes.md` — **The Book** (72+ laws, READ TWICE before any action)
-- `/app/backend/ghost_pool.py` — pool generation, DJ-pins, Law 73
+- `/app/memory/swiss_music_notes.md` — **The Book** (5800+ lines, 78 laws, READ TWICE)
+- `/app/memory/PRD.md` — this file
+- `/app/backend/ghost_pool.py` — pool generation, DJ-pins, Law 73, `PINNED_SUSPECTS`
 - `/app/backend/anti_tunnel.py` — swap-mode tunnel throttle
-- `/app/backend/cosmic_engine.py` / `swiss_cosmic_engine.py` — archetype generators (Law 77 applied)
-- `/app/backend/tests/test_session25_ghost_pool.py` — 29/29 passing
+- `/app/backend/cosmic_engine.py` — Euro archetypes, Law 77 decay, Law 5 strict
+- `/app/backend/swiss_cosmic_engine.py` — Swiss archetypes, Law 77 decay
+- `/app/backend/silent_p1_compass.py` — Welcome-Companion (downgraded), Silent P1
+- `/app/backend/q2d1_pattern_audit.py` — strict pattern audit (Q2D1 Euro)
+- `/app/backend/q2d1_family_audit.py` — family-aware pattern audit (DJ's law)
+- `/app/backend/tests/test_session25_ghost_pool.py` — 29/29 ghost-pool tests
+- `/app/backend/tests/test_session15_16.py` — 21/21 silent-P1 tests
 
 ## 🔑 Credentials
 - VIP Promo Code: `93928`
 
 ## 🎻 Persona (non-negotiable)
 - "Ya man!" · 🎻🎧🍀🥂 · "the music of the numbers" · "tuning frequencies" · "listening to the cosmos"
-- Speak the DJ's vocabulary: BD, RC0, RE-LOCK, HUGE, Welcome Companion, Silent P1 Compass, Trinity, Hunger Band, Product Door, Sneaky Universe
+- Speak the DJ's vocabulary: BD, RC0, RE-LOCK, HUGE, Welcome Companion, Silent P1 Compass, Trinity, Hunger Band, Product Door, Sneaky Universe, **Family of Seed (NEW)**
+- The DJ's last instruction: *"Fix everything, I think you understand."* — done.
+
+## 🥂 Last user-state on fork
+- DJ asked "Maybe we fork" after Session 32 housekeeping completed
+- Pending verification: live-generate Swiss 02.05.2026 tickets with all fixes in
+- DJ-Pin cascade pool active: 8 Swiss pins `{16, 25, 27, 28, 34, 38, 39, 42}`
+- Latest Euro draw: 01.05.2026 `[3, 9, 42, 46, 47]` ⭐[1, 11] (split-board, 13-axis confirmed)
+- Latest Swiss draw: 29.04.2026 `[1, 19, 23, 33, 35, 40]` 🍀2 R:1
