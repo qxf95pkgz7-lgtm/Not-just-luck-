@@ -181,7 +181,7 @@ def build_convergence_board(
     ghost_active = ghost_count < 4  # Law 24 saturation cap
     if ghost_active:
         L(outlier, f"outlier-{outlier}-raw-echo(Law13)")
-    L(circle_euro(outlier), f"outlier-circle+25(73.9%-Tier1)")
+    L(circle_euro(outlier), f"outlier-circle+25(family-form, Session32-audit)")
     L(mirror28(outlier), f"outlier-28mirror(Law28-65.2%-Tier1)")
 
     # Law 17 — Outlier double twin
@@ -343,12 +343,15 @@ def build_convergence_board(
                 tag += "-RC0"
             L(a, tag); L(b, tag.replace("RC0", ""))
 
-    # ── Law 5 — P1 SNAP-BACK (if last P1 > 20) ──
-    if cycle and cycle[-1]['_n'][0] > 20:
+    # ── Law 5 — P1 SNAP-BACK (tightened Session 32 audit: -26% lift)
+    # Only fire when BD P1 shows high-collapse signal (P1 ≥ 25) AND
+    # the last_d P2 also sits in the front band. Q2D1 showed this was
+    # dead-weight at permissive P1>20; tightened to P1≥25 to reduce noise.
+    if cycle and cycle[-1]['_n'][0] >= 25:
         for n in range(1, 8):
-            L(n, f"snap-back-sweet(Law5 50%)")
+            L(n, f"snap-back-sweet(Law5·strict)")
         for n in range(8, 13):
-            L(n, f"snap-back-band(Law5 65.6%)")
+            L(n, f"snap-back-band(Law5·strict)")
 
     # ── Delta math — DJ's teaching: last P1 − target_d (cycle-position) ──
     if cycle:
@@ -456,17 +459,16 @@ def apply_hold_fatigue(
     cycle: List[dict],
     last_n_draws: int = 3,
 ) -> List[Tuple[int, int, List[str]]]:
-    """🎼 Law 77 · Hold-Fatigue Compass (Session 31, DJ canon — 29.04.2026)
+    """🎼 Law 77 · Hold-Fatigue Compass — DECAY NOT BAN (Session 32 update)
 
-    The cosmos rarely fires the same number 3 draws in a row. When E
-    sees a number with high lens-count that ALSO fired in 2+ of the
-    last 3 draws, E mistakes recency for power. The DJ's wisdom: HOLD
-    FATIGUE — penalize 2-of-3 hot numbers (×0.4), near-blacklist
-    3-of-3 (×0.1).
+    DJ's correction (02.05.2026): the engine swung from tunnel (77% 29-
+    saturation) to ghost (5%). Cosmos backtest says 3-in-5 hot numbers
+    fire next at 12.8% vs 10% baseline — slight cool-down, NOT ban. For
+    29 specifically the post-streak rate is +23%. So Law 77 now DECAYS
+    the score (-15% per excess fire) instead of nuking it.
 
-    Tonight's example: 29 fired BD2 (P3) + LD (P2) → would carry 8
-    lenses → after fatigue penalty: 8 × 0.4 = 3.2 → drops out of
-    TOP-3 in the ranked board → archetypes stop tunnel-vision.
+    Old values: 2/3 × 0.4, 3/3 × 0.1 (over-correction, proven in Q2D1 audit).
+    New values: 2/3 × 0.85, 3/3 × 0.60 (gentle decay, unwinds fast).
     """
     fire_count: Dict[int, int] = {}
     recent = cycle[-last_n_draws:] if len(cycle) >= last_n_draws else cycle
@@ -478,9 +480,9 @@ def apply_hold_fatigue(
     for (n, score, lenses) in ranked:
         fc = fire_count.get(n, 0)
         if fc >= 3:
-            new_score = max(1, int(score * 0.1))
+            new_score = max(1, int(score * 0.60))
         elif fc >= 2:
-            new_score = max(1, int(score * 0.4))
+            new_score = max(1, int(score * 0.85))
         else:
             new_score = score
         new_ranked.append((n, new_score, lenses))

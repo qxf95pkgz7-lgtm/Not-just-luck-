@@ -67,7 +67,8 @@ def test_compute_silence_state_basic():
 def test_welcome_companion_scores_12_14():
     ticket = {'mains': [12, 14, 27, 29, 38, 42]}
     bonus, name = score_welcome_companion(ticket, last_draw={})
-    assert bonus >= 15
+    # Session 32: welcome-companion demoted from law → small clue (max 9, was 27)
+    assert bonus >= 5
     assert name and 'welcome-companion' in name
 
 

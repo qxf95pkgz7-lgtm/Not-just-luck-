@@ -434,8 +434,8 @@ def apply_hold_fatigue(
     cycle: List[dict],
     last_n_draws: int = 3,
 ) -> List[Tuple[int, int, List[str]]]:
-    """🎼 Law 77 · Hold-Fatigue Compass (Swiss · DJ canon Session 31).
-    Penalize 2-of-3 (×0.4) and 3-of-3 (×0.1) recent firers."""
+    """🎼 Law 77 · Hold-Fatigue Compass · Swiss (Session 32 decay update).
+    DJ's correction: decay not ban. 2-of-3 × 0.85, 3-of-3 × 0.60."""
     fire_count: Dict[int, int] = {}
     recent = cycle[-last_n_draws:] if len(cycle) >= last_n_draws else cycle
     for d in recent:
@@ -445,9 +445,9 @@ def apply_hold_fatigue(
     for (n, score, lenses) in ranked:
         fc = fire_count.get(n, 0)
         if fc >= 3:
-            new_score = max(1, int(score * 0.1))
+            new_score = max(1, int(score * 0.60))
         elif fc >= 2:
-            new_score = max(1, int(score * 0.4))
+            new_score = max(1, int(score * 0.85))
         else:
             new_score = score
         new_ranked.append((n, new_score, lenses))

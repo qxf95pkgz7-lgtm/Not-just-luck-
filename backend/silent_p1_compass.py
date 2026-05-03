@@ -100,12 +100,12 @@ def score_welcome_companion(ticket: dict, last_draw: dict) -> Tuple[int, Optiona
     table = WELCOME_COMPANION.get(p1, {})
     if p2 not in table:
         return 0, None
-    bonus = 15
+    bonus = 5
     top = max(table.values())
     if table[p2] == top:
-        bonus += 7
+        bonus += 2
     if p2 in SILENT_FAMILY:
-        bonus += 5  # double-silent welcome
+        bonus += 2  # double-silent welcome (small clue, not pattern)
     return bonus, f'welcome-companion(P1={p1},P2={p2})'
 
 
