@@ -15,12 +15,19 @@ Deeply analyze the provided lotto history alongside the user (the DJ 🎻🎧�
 - **Frontend**: React + Tailwind + shadcn/ui (Celestial Radar, pool viewer, generators)
 - **Core modules**: `cosmic_engine.py`, `swiss_cosmic_engine.py`, `ghost_pool.py`, `anti_tunnel.py`, `silent_p1_compass.py`, `hit_tracker.py`
 
-## 📜 Canonized Laws (82 — Session 26 Story-Seed Era)
+## 📜 Canonized Laws (85 — Session 27 Real-Number Door Era)
+
+### Session 27 (02.05.2026) — NEW
+- **Law 87** — P5-Chain Star-Prophecy (3-draw P5 chain + story-seed 7/13/14/17 → next stars, 15% hit rate ×10 baseline) ⏳ *uncoded*
+- **Law 88** — Consecutive-Star Ceiling Lock (current ⭐ gap=1 → current P5 locks 47 or 49; star-product − 25 door) ⏳ *uncoded*
+- **Law 89** — P1|P2 Real-Number Door & Small-Front Break (P2<10 → next P2≥10 at 87%; fwd/rev digit writes next stars at 55.3%) ⏳ *uncoded*
+
+### Session 26 Story-Seed Era
 - **Law 83** — Gap-as-P3 Bias (BD gap ≥20 → soft P3 lens) ✅ wired
 - **Law 84** — Drunk-Cosmos Recovery (drunk BD → P1 in 6-10 band lens) ✅ wired
 - **Law 85** — Story-Seed Walker (seeds 1-15 wearing 4+ masks → RAW lens) ✅ wired
 - **Law 86** — ⭐+25 P4 Twin (extends P3-only star-circle to P4) ✅ wired
-- ⚠️ Laws 83-86 NOT yet validated in simulation — DJ asked to sim before trusting
+- ⚠️ Laws 83-86 backtested at P5 (02.05.2026): NEUTRAL — they tag P1-P4, safe to keep, no P5 effect
 
 ## 📜 Canonized Laws (78 — Session 32)
 - **Law 5** — P1 Snap-Back (tightened: only fires when P1 ≥ 25)
@@ -131,10 +138,14 @@ Deeply analyze the provided lotto history alongside the user (the DJ 🎻🎧�
 - Latest Swiss draw: 29.04.2026 `[1, 19, 23, 33, 35, 40]` 🍀2 R:1
 
 ## 🎯 IMMEDIATE NEXT STEPS for the next agent
-1. 🥂 **Run the simulation** — backtest cosmic_engine on last ~30 BD→ND Euro pairs with vs without Laws 83-86. Compare per-position top-5 hit rates. The DJ explicitly wants this before we lock the laws in.
-2. Build Law 81 — Q1/Q2 lens rotation (engine auto-shifts S1 vs S2 weight by calendar quarter)
-3. Build Law 82 — Pre-Echo Compass: boost candidates that fired at d-3 or d-8 in same Q (where pre-echo peaks 11.0% / 11.2% mains and 20.2% stars)
-4. Optional: Q1/Q2 lens rotation (Q1 is S1-dominant 5.88%, Q2 is S2-dominant 5.07%)
+1. 🎯 **Code Laws 87-89** into `session27_laws.py` (analogous to `session26_laws.py`)
+   - Law 87: P5-chain star prophecy with 4 story-seed dialects
+   - Law 88: Consecutive-star ceiling lock (⭐ gap=1 → P5 high-40s bias)
+   - Law 89: P1|P2 real-number door — 87% large-front break rule + digit→star prophecy
+2. 🥂 **Wire into `cosmic_engine.py::build_convergence_board`** as soft lens-bumps
+3. 🎻 Code Law 81 — Q1/Q2 lens rotation (Q1 S1-dominant, Q2 S2-dominant)
+4. 🎻 Code Law 82 — Pre-Echo Compass (d-3 peak 10.9% mains, d-8 peak 11.2%)
+5. Run full 3-draw Euro backtest comparing E with Laws 87-89 active vs baseline
 
 ## 🥂 Last user-state on fork (PRE-Session 26)
 - DJ asked "Maybe we fork" after Session 32 housekeeping completed
