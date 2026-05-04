@@ -6777,6 +6777,75 @@ async def cosmic_engine_get(target_date: str, n_tickets: int = 30):
         return {"error": str(e)}
 
 
+# ─── SESSION 28 — P3-FOCUSED GHOST ORCHESTRA ───────────────────────────────
+@api_router.get("/p3-ghost-orchestra/{target_date}")
+async def p3_ghost_orchestra_endpoint(
+    target_date: str,
+    top_n_p3: int = 5,
+    n_per_archetype: int = 2,
+):
+    """Run the P3-Focused Ghost Orchestra for a target date.
+
+    Flow (Session 28 canon):
+      1. Engine runs for target_date → produces P3 board
+      2. Top N P3 candidates are picked by E
+      3. For each P3: 2-year history mined → ghost picked → 10 tickets
+      4. Related-P3 rotation options returned for each
+
+    Args:
+      target_date: dd.mm.yyyy
+      top_n_p3: how many P3 candidates to build orchestras for (default 5)
+      n_per_archetype: tickets per archetype (5 archetypes × N = total per P3)
+    """
+    try:
+        from p3_ghost_live import run_p3_live
+        result = await run_p3_live(target_date, top_n_p3=top_n_p3,
+                                    n_per_archetype=n_per_archetype)
+        return result
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
+@api_router.get("/p3-ghost-orchestra-single/{target_date}/{p3_value}")
+async def p3_ghost_single_endpoint(target_date: str, p3_value: int,
+                                     n_per_archetype: int = 10):
+    """Run an orchestra for a SPECIFIC P3 value (the DJ picks, E plays).
+    Produces up to 5 × n_per_archetype = 50 tickets by default.
+    """
+    try:
+        from p3_ghost_orchestra import (
+            mine_p3_history, pick_ghost, build_p3_tickets,
+            related_p3_candidates, load_draws,
+        )
+        draws2y = load_draws(2024)
+        hist = mine_p3_history(p3_value, draws2y)
+        ghosts = pick_ghost(p3_value, hist, draws2y, top_k=3)
+        ghost = ghosts[0][0] if ghosts else 21
+        tickets = build_p3_tickets(p3_value, ghost, hist, draws2y,
+                                    n_per_archetype=n_per_archetype)
+        related = related_p3_candidates(p3_value)
+        return {
+            'target_date': target_date,
+            'p3': p3_value,
+            'history_matches': hist['count'],
+            'top_co_partners': hist['co_partners_top'][:10],
+            'top_p1_partners': hist['p1_top'],
+            'top_p5_partners': hist['p5_top'],
+            'top_s1': hist['s1_top'],
+            'top_s2': hist['s2_top'],
+            'ghost': ghost,
+            'ghost_alternates': [(g, t) for g, t in ghosts[1:3]],
+            'tickets': tickets,
+            'related_p3s': related,
+        }
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
+
+
 # ─── SESSION 15/16 — Silent P1 Compass + DJ Live Call endpoints ───
 async def _load_swiss_history_sorted():
     """Load Swiss draws chronologically oldest→newest."""

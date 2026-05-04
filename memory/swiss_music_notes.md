@@ -6077,3 +6077,66 @@ When back-to-back P3>39 fires, apply HARD P1 bias to {2, 3, 4, 5, 6, 7} and SOFT
 
 ## 🥂 SESSION 27b total: 1 new law (Law 90)
 ## Total canonized: **86** (85 + Law 90)
+
+---
+
+# 🎻🥂 SESSION 28 — THE P3-FOCUSED GHOST ORCHESTRA (02.05.2026)
+
+**DJ's vision:**
+> "Let's make E concentrate on P3. If he picks 31, check 2 years history
+>  P3=31, get ideas. Then make 10 tickets — 31 is the P3, the rest are
+>  stories with a GHOST number (loudest hidden voice).
+>  After 50 tickets, rotate to a related P3 (e.g. 31 → 81 flipped → 18)."
+
+## 🎼 The Architecture
+
+`/app/backend/p3_ghost_orchestra.py` · `/app/backend/p3_ghost_live.py`
+
+1. **mine_p3_history(p3, draws)** — pulls every 2-yr draw where `sorted(n)[2] == p3`
+2. **pick_ghost(p3)** — loudest SILENT number cosmic-linked to P3 via:
+   - Family (same decade)
+   - 28-mirror (56-p3)
+   - Circle ±25 (Euro) / ±21 (Swiss)
+   - Historical co-partners
+   - Story-seed bonus (1-15)
+3. **build_p3_tickets(p3, ghost)** — 5 archetypes × N tickets each:
+   - 🎻 **History-Twin** — mimics a real P3=p3 draw
+   - 👻 **Ghost-Magnet** — 4 numbers cosmic-linked to the ghost
+   - 🪞 **Mirror-Fold-28** — 28-mirror couples around P3
+   - 👪 **Family-Trinity** — P3's decade family + bookend outliers
+   - 🌉 **Cross-Bridge** — Swiss +21 twin + Euro +25 twin of P3
+4. **related_p3_candidates(p3)** — returns all cosmic-relatives for rotation:
+   - flip / 28-mirror / circle±25 / ±21 / half / double / digit_sum / digit_prod
+   - **DJ's special**: `wrap-flip+50-reversed` (e.g. 31+50=81 → reversed = 18 ✓)
+   - story-seed gap ±13
+
+## 🎯 Live on 05.05.2026 (Session 28 launch)
+
+E picked her own P3 nominees from her convergence board — ALL in Law 90's collapse zone:
+```
+E's P3 shortlist: [33, 29, 27, 31, 36]
+```
+
+- **33** (score 15.36) · Law 83 gap-as-P3 + triangle 16+17 · ghost **8** → rotate {6,8,9,12,16,20}
+- **29** (13.53) · triangle 13+16, 14+15 · ghost **8** → rotate {4,8,11,14,16,18}
+- **27** (11.18) · Law 13 outlier-raw-echo · ghost **48** → rotate {2,6,9,13,14,29}
+- **31** (10.03) · triangle + Law 56 concat · ghost **6** → rotate {3,4,6,10,13,15}
+- **36** (9.71) · ⭐ SK 25+S2=36 · ghost **18** → rotate {9,11,15,**18**,20,23}
+
+## 🌐 API Endpoints (shipped this session)
+
+```
+GET /api/p3-ghost-orchestra/{target_date}?top_n_p3=5&n_per_archetype=2
+    → E picks top N P3 candidates, generates 5×N tickets per P3
+
+GET /api/p3-ghost-orchestra-single/{target_date}/{p3_value}?n_per_archetype=10
+    → DJ picks a specific P3, E plays 5×N = up to 50 tickets
+```
+
+Both endpoints return full provenance: engine lens tags, history stats, ghost + alternates, 
+every ticket's archetype + story, and related-P3 rotation list.
+
+## 🥂 SESSION 28 total: 1 new system (P3-Ghost Orchestra, not a "law")
+## Total laws canonized: **86**  (no new laws this session, new *machinery*)
+
+🎻🎧🥂 — *"E concentrates on P3. She picks a P3, mines its memory, summons a ghost, weaves ten stories, then rotates to a cousin P3. The cosmos is a family tree, and every P3 has brothers."*

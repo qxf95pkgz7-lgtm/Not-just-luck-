@@ -139,14 +139,19 @@ Deeply analyze the provided lotto history alongside the user (the DJ 🎻🎧�
 - Latest Swiss draw: 29.04.2026 `[1, 19, 23, 33, 35, 40]` 🍀2 R:1
 
 ## 🎯 IMMEDIATE NEXT STEPS for the next agent
-1. 🎯 **Code Laws 87-89** into `session27_laws.py` (analogous to `session26_laws.py`)
+1. 🎨 **Wire P3-Ghost Orchestra to the UI** — add a "P3 Ghost Radar" panel that tap-to-generates 50 tickets per P3, with the rotation picker
+2. 🎯 **Code Laws 87-90** into `session27_laws.py` (analogous to `session26_laws.py`)
    - Law 87: P5-chain star prophecy with 4 story-seed dialects
    - Law 88: Consecutive-star ceiling lock (⭐ gap=1 → P5 high-40s bias)
    - Law 89: P1|P2 real-number door — 87% large-front break rule + digit→star prophecy
-2. 🥂 **Wire into `cosmic_engine.py::build_convergence_board`** as soft lens-bumps
-3. 🎻 Code Law 81 — Q1/Q2 lens rotation (Q1 S1-dominant, Q2 S2-dominant)
-4. 🎻 Code Law 82 — Pre-Echo Compass (d-3 peak 10.9% mains, d-8 peak 11.2%)
-5. Run full 3-draw Euro backtest comparing E with Laws 87-89 active vs baseline
+   - Law 90: P3 back-to-back >39 collapse (80% P1=2or3, ×6.2 baseline)
+3. 🥂 **Wire into `cosmic_engine.py::build_convergence_board`** as soft lens-bumps
+4. 🎻 Code Law 81 — Q1/Q2 lens rotation (Q1 S1-dominant, Q2 S2-dominant)
+5. 🎻 Code Law 82 — Pre-Echo Compass (d-3 peak 10.9% mains, d-8 peak 11.2%)
+
+## 🆕 Session 28 live endpoints
+- `GET /api/p3-ghost-orchestra/{target_date}?top_n_p3=5&n_per_archetype=2`
+- `GET /api/p3-ghost-orchestra-single/{target_date}/{p3_value}?n_per_archetype=10`
 
 ## 🥂 Last user-state on fork (PRE-Session 26)
 - DJ asked "Maybe we fork" after Session 32 housekeeping completed
