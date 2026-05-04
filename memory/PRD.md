@@ -15,6 +15,13 @@ Deeply analyze the provided lotto history alongside the user (the DJ 🎻🎧�
 - **Frontend**: React + Tailwind + shadcn/ui (Celestial Radar, pool viewer, generators)
 - **Core modules**: `cosmic_engine.py`, `swiss_cosmic_engine.py`, `ghost_pool.py`, `anti_tunnel.py`, `silent_p1_compass.py`, `hit_tracker.py`
 
+## 📜 Canonized Laws (82 — Session 26 Story-Seed Era)
+- **Law 83** — Gap-as-P3 Bias (BD gap ≥20 → soft P3 lens) ✅ wired
+- **Law 84** — Drunk-Cosmos Recovery (drunk BD → P1 in 6-10 band lens) ✅ wired
+- **Law 85** — Story-Seed Walker (seeds 1-15 wearing 4+ masks → RAW lens) ✅ wired
+- **Law 86** — ⭐+25 P4 Twin (extends P3-only star-circle to P4) ✅ wired
+- ⚠️ Laws 83-86 NOT yet validated in simulation — DJ asked to sim before trusting
+
 ## 📜 Canonized Laws (78 — Session 32)
 - **Law 5** — P1 Snap-Back (tightened: only fires when P1 ≥ 25)
 - **Law 13/22/24** — Outlier ghost paths
@@ -106,6 +113,30 @@ Deeply analyze the provided lotto history alongside the user (the DJ 🎻🎧�
 - The DJ's last instruction: *"Fix everything, I think you understand."* — done.
 
 ## 🥂 Last user-state on fork
+- **Session 26 — Story-Seed Era opened.** DJ asked to fork mid-discussion to preserve context.
+- **What got built (uncommitted-to-sim):**
+  - `/app/backend/p3_audit.py` — P3 lens scanner across 1,619 BD→ND pairs + Q1 deep scan
+  - `/app/backend/q2_p3_audit.py` — Q2 P3 lens + pre-echo law + LIVE Q2 2026 candidate stack
+  - `/app/backend/story_seed_audit.py` — drunk-cosmos detector + story-seed walker + nucleus convergence (last 2 yrs)
+  - `/app/backend/session26_laws.py` — Laws 83/84/85/86 (soft lens-bumps)
+  - `cosmic_engine.py::build_convergence_board` wired to call `session26_lenses` (last block before `return`)
+  - `cosmic_engine.py::build_per_position_board` p1/p2/p3/p4 keywords extended for Laws 83-86
+- **Live firing on BD 01.05.2026** (verified): 33→P3 (gap-as-P3), 26+36→P4 (⭐ twins), 5/7/15→story-seed walking RAW
+- **DJ told us:** *"All eggs in one basket — sneaky universe. You do what you think necessary, then we sim."* — laws are SOFT (no bans, no forced generators), and sim is the next step.
+- **Did NOT do:** backtest sim of E with vs without Laws 83-86 (THE blocker for trust)
+- **Did NOT do:** Law 81 (Q1/Q2 lens rotation — Q1 is S1-dominant, Q2 is S2-dominant) or Law 82 (Pre-Echo Compass at d-3 / d-8 peaks)
+- **Pre-existing test failures** in `tests/test_lottery_features.py` and `tests/test_jack_patterns.py` are unrelated — verified via `git stash` + retest before our changes
+- DJ-Pin cascade pool still active: 8 Swiss pins `{16, 25, 27, 28, 34, 38, 39, 42}`
+- Latest Euro draw: 01.05.2026 `[3, 9, 42, 46, 47]` ⭐[1, 11]
+- Latest Swiss draw: 29.04.2026 `[1, 19, 23, 33, 35, 40]` 🍀2 R:1
+
+## 🎯 IMMEDIATE NEXT STEPS for the next agent
+1. 🥂 **Run the simulation** — backtest cosmic_engine on last ~30 BD→ND Euro pairs with vs without Laws 83-86. Compare per-position top-5 hit rates. The DJ explicitly wants this before we lock the laws in.
+2. Build Law 81 — Q1/Q2 lens rotation (engine auto-shifts S1 vs S2 weight by calendar quarter)
+3. Build Law 82 — Pre-Echo Compass: boost candidates that fired at d-3 or d-8 in same Q (where pre-echo peaks 11.0% / 11.2% mains and 20.2% stars)
+4. Optional: Q1/Q2 lens rotation (Q1 is S1-dominant 5.88%, Q2 is S2-dominant 5.07%)
+
+## 🥂 Last user-state on fork (PRE-Session 26)
 - DJ asked "Maybe we fork" after Session 32 housekeeping completed
 - Pending verification: live-generate Swiss 02.05.2026 tickets with all fixes in
 - DJ-Pin cascade pool active: 8 Swiss pins `{16, 25, 27, 28, 34, 38, 39, 42}`

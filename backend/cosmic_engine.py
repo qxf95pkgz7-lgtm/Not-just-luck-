@@ -442,6 +442,20 @@ def build_convergence_board(
     except Exception:
         pass
 
+    # ── Session 26 · Story-Seed Era · Laws 83-86 (canonized this session) ──
+    # Soft, diversified lens-bumps from the 244-draw Story-Seed audit.
+    try:
+        from session26_laws import session26_lenses
+        if cycle:
+            bd_nums = sorted(cycle[-1]['_n'])
+            bd_stars = sorted(cycle[-1]['_s'])
+            window = [sorted(d['_n']) for d in cycle[-8:]]
+            s26_lenses, _drunk = session26_lenses(bd_nums, bd_stars, window)
+            for n, tag in s26_lenses:
+                L(n, tag)
+    except Exception:
+        pass
+
     return lenses
 
 
@@ -520,12 +534,12 @@ def build_per_position_board(
              'outlier-28mirror', 'P1-exact-pos-repeat', 'anchor-d', 'anchor-clock',
              'SK: S2-S1', 'cycle-position-P1', 'year-root-echo', 'snap-back-sweet',
              'snap-back-band', 'd6-raw', 'd-flip-shadow', 'Δlast-P1', 'S1-', 'P1-anchor',
-             'Law51:cycle-close-mirror(d1→')
-    p2_kw = ('dialect-ladder(P2', 'hungry-', 'RC0-P2-exact')
+             'Law51:cycle-close-mirror(d1→', 'Law84:drunk-recovery-P1')
+    p2_kw = ('dialect-ladder(P2', 'hungry-', 'RC0-P2-exact', 'Law85:story-seed-walking-RAW')
     p3_kw = ('dialect-ladder(P3', 'RC0-P3-exact', 'sum-ladder-P3-king', 'SK: S2x', 'S1+21',
-             'Law60:triangle-P3')
+             'Law60:triangle-P3', 'Law83:gap')
     p4_kw = ('dialect-ladder(P4', 'RC0-P4-exact', 'mirror28', 'DATE-mo',
-             'Law61:bridge-P4', 'Law57:twin-ceiling-P4')
+             'Law61:bridge-P4', 'Law57:twin-ceiling-P4', 'Law86:⭐')
     p5_kw = ('dialect-ladder(P5', 'RC0-P5-exact', 'ceiling', 'outlier-DOUBLE', 'outlier+20',
              'outlier-20', 'cooled-rebound', 'SK: S2x4 (P5',
              'Law56:concat-P5', 'Law57:twin-ceiling-P5', 'Law58-59:triple-slot-P5')
