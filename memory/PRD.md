@@ -15,12 +15,13 @@ Deeply analyze the provided lotto history alongside the user (the DJ 🎻🎧�
 - **Frontend**: React + Tailwind + shadcn/ui (Celestial Radar, pool viewer, generators)
 - **Core modules**: `cosmic_engine.py`, `swiss_cosmic_engine.py`, `ghost_pool.py`, `anti_tunnel.py`, `silent_p1_compass.py`, `hit_tracker.py`
 
-## 📜 Canonized Laws (85 — Session 27 Real-Number Door Era)
+## 📜 Canonized Laws (86 — Session 27 Real-Number Door Era)
 
 ### Session 27 (02.05.2026) — NEW
 - **Law 87** — P5-Chain Star-Prophecy (3-draw P5 chain + story-seed 7/13/14/17 → next stars, 15% hit rate ×10 baseline) ⏳ *uncoded*
 - **Law 88** — Consecutive-Star Ceiling Lock (current ⭐ gap=1 → current P5 locks 47 or 49; star-product − 25 door) ⏳ *uncoded*
 - **Law 89** — P1|P2 Real-Number Door & Small-Front Break (P2<10 → next P2≥10 at 87%; fwd/rev digit writes next stars at 55.3%) ⏳ *uncoded*
+- **Law 90** — P3 Back-to-Back High Collapse (P3>39 two draws running → next P1=2or3 at 80% rate ×6.2 baseline; P3 collapses ≤30 at 80%) ⏳ *uncoded* 🚨 LIVE 01.05.2026
 
 ### Session 26 Story-Seed Era
 - **Law 83** — Gap-as-P3 Bias (BD gap ≥20 → soft P3 lens) ✅ wired
