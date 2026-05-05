@@ -834,6 +834,16 @@ function App() {
   const [showSwissSleepers, setShowSwissSleepers] = useState(false);
   const [swissSleeperData, setSwissSleeperData] = useState(null);
   const [swissSleeperLoading, setSwissSleeperLoading] = useState(false);
+
+  // 🧠 E's Cosmic Brain State (Session 30)
+  const [showCosmicBrain, setShowCosmicBrain] = useState(false);
+  const [cosmicBrainLoading, setCosmicBrainLoading] = useState(false);
+  const [cosmicBrainData, setCosmicBrainData] = useState(null);
+  const [brainTargetDate, setBrainTargetDate] = useState('05.05.2026');
+  const [brainSeedMains, setBrainSeedMains] = useState('3,9,42,46,47');
+  const [brainSeedStars, setBrainSeedStars] = useState('1,11');
+  const [brainPinMains, setBrainPinMains] = useState('');
+  const [brainPinStars, setBrainPinStars] = useState('');
   
   // 2Chance State
   const [show2Chance, setShow2Chance] = useState(false);
@@ -1066,6 +1076,28 @@ function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showSwissSleepers, lotteryMode, nextDrawDate]);
+
+  // 🧠 E's Cosmic Brain — run on demand (Session 30)
+  const runCosmicBrain = async () => {
+    setCosmicBrainLoading(true);
+    try {
+      const params = new URLSearchParams({
+        seed_mains: brainSeedMains,
+        seed_stars: brainSeedStars,
+      });
+      if (brainPinMains.trim()) params.append('pin_mains', brainPinMains);
+      if (brainPinStars.trim()) params.append('pin_stars', brainPinStars);
+      const res = await axios.get(
+        `${API}/dj-orchestra/${brainTargetDate}?${params.toString()}`
+      );
+      setCosmicBrainData(res.data);
+    } catch (e) {
+      console.error("Cosmic Brain error:", e);
+      setCosmicBrainData({ error: e.message });
+    } finally {
+      setCosmicBrainLoading(false);
+    }
+  };
   
   // 2Chance functions
   const check2ChanceHits = async () => {
@@ -3672,6 +3704,247 @@ function App() {
                 ) : (
                   <div className="text-center text-slate-500 text-sm py-4">
                     No celestial data available. Try refreshing the map.
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 🧠 E's COSMIC BRAIN — Session 30 — VIP only */}
+        {lotteryMode === 'euro' && isUnlimited && (
+          <div className="lucky-card p-4 mb-4" data-testid="cosmic-brain-panel">
+            <button
+              onClick={() => setShowCosmicBrain(!showCosmicBrain)}
+              className="w-full flex items-center justify-between text-left"
+              data-testid="cosmic-brain-toggle"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🧠</span>
+                <span className="font-semibold text-slate-200">E's Cosmic Brain</span>
+                <span className="text-xs text-fuchsia-400/70">(20-ticket Symphony · 432 Hz)</span>
+              </div>
+              {showCosmicBrain ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+            </button>
+
+            {showCosmicBrain && (
+              <div className="mt-4 space-y-4" data-testid="cosmic-brain-content">
+                {/* Inputs */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <label className="text-slate-400">🎯 Target date (dd.mm.yyyy)</label>
+                    <input
+                      type="text"
+                      value={brainTargetDate}
+                      onChange={(e) => setBrainTargetDate(e.target.value)}
+                      className="w-full mt-1 px-2 py-1 rounded bg-slate-800/60 border border-slate-700 text-slate-200 font-mono"
+                      data-testid="brain-target-date"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-slate-400">🌌 Seed mains (comma-sep)</label>
+                    <input
+                      type="text"
+                      value={brainSeedMains}
+                      onChange={(e) => setBrainSeedMains(e.target.value)}
+                      className="w-full mt-1 px-2 py-1 rounded bg-slate-800/60 border border-slate-700 text-slate-200 font-mono"
+                      data-testid="brain-seed-mains"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-slate-400">⭐ Seed stars (comma-sep)</label>
+                    <input
+                      type="text"
+                      value={brainSeedStars}
+                      onChange={(e) => setBrainSeedStars(e.target.value)}
+                      className="w-full mt-1 px-2 py-1 rounded bg-slate-800/60 border border-slate-700 text-slate-200 font-mono"
+                      data-testid="brain-seed-stars"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-slate-400">📌 DJ-pin mains (optional)</label>
+                    <input
+                      type="text"
+                      value={brainPinMains}
+                      onChange={(e) => setBrainPinMains(e.target.value)}
+                      placeholder="e.g. 28,38"
+                      className="w-full mt-1 px-2 py-1 rounded bg-slate-800/60 border border-slate-700 text-slate-200 font-mono"
+                      data-testid="brain-pin-mains"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={runCosmicBrain}
+                  disabled={cosmicBrainLoading}
+                  className="w-full py-2 px-4 rounded bg-gradient-to-r from-fuchsia-600/40 to-purple-600/40 border border-fuchsia-500/50 text-fuchsia-100 font-semibold hover:from-fuchsia-600/60 hover:to-purple-600/60 disabled:opacity-50 transition-all"
+                  data-testid="cosmic-brain-run-btn"
+                >
+                  {cosmicBrainLoading ? '🌀 Tuning the cosmos…' : '🎻 Run the Brain'}
+                </button>
+
+                {/* Results */}
+                {cosmicBrainData && cosmicBrainData.error && (
+                  <div className="text-rose-400 text-xs p-2 rounded bg-rose-950/30 border border-rose-500/30">
+                    ❌ {cosmicBrainData.error}
+                  </div>
+                )}
+
+                {cosmicBrainData && cosmicBrainData.tickets && (
+                  <div className="space-y-3" data-testid="cosmic-brain-results">
+                    {/* Brain summary cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {/* Frequency card */}
+                      <div className="rounded border border-fuchsia-500/30 bg-fuchsia-950/20 p-2.5"
+                           data-testid="brain-frequency-card">
+                        <div className="text-[10px] text-fuchsia-400 font-semibold mb-1">🎼 FREQUENCY</div>
+                        <div className="text-fuchsia-100 font-mono text-sm">
+                          {cosmicBrainData.brain_summary?.frequency_primary?.freq || '—'} Hz
+                        </div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">
+                          {cosmicBrainData.brain_summary?.frequency_primary?.decode || ''}
+                        </div>
+                        <div className="text-[10px] text-slate-500 mt-1 font-mono">
+                          divisors: {Object.entries(cosmicBrainData.brain_summary?.frequency_divisors || {})
+                            .map(([k, v]) => `${k}→${v}`).join(' · ') || '—'}
+                        </div>
+                      </div>
+                      {/* Envelope card */}
+                      <div className="rounded border border-purple-500/30 bg-purple-950/20 p-2.5"
+                           data-testid="brain-envelope-card">
+                        <div className="text-[10px] text-purple-400 font-semibold mb-1">📅 DATE ENVELOPE</div>
+                        <div className="text-purple-100 font-mono text-sm">
+                          {cosmicBrainData.brain_summary?.envelope?.day}-{cosmicBrainData.brain_summary?.envelope?.month}
+                          {cosmicBrainData.brain_summary?.envelope?.is_void
+                            ? <span className="text-amber-400 ml-2">VOID</span>
+                            : <span className="text-emerald-400 ml-2">hides {JSON.stringify(cosmicBrainData.brain_summary?.envelope?.hidden_digits)}</span>}
+                        </div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">
+                          d×m={cosmicBrainData.brain_summary?.envelope?.day_x_month} · sum={cosmicBrainData.brain_summary?.envelope?.date_sum_dj}
+                        </div>
+                      </div>
+                      {/* Precedent card */}
+                      <div className="rounded border border-amber-500/30 bg-amber-950/20 p-2.5 sm:col-span-2"
+                           data-testid="brain-precedent-card">
+                        <div className="text-[10px] text-amber-400 font-semibold mb-1">🪞 PRECEDENT (last identical-stars event)</div>
+                        {cosmicBrainData.brain_summary?.precedent_summary?.seed_date ? (
+                          <div className="text-amber-100 text-xs font-mono">
+                            {cosmicBrainData.brain_summary.precedent_summary.seed_date} →&nbsp;
+                            <span className="text-emerald-300">{cosmicBrainData.brain_summary.precedent_summary.nd_date}</span>
+                            &nbsp;mains <span className="font-bold">{JSON.stringify(cosmicBrainData.brain_summary.precedent_summary.nd_mains)}</span>
+                            &nbsp;⭐<span className="font-bold">{JSON.stringify(cosmicBrainData.brain_summary.precedent_summary.nd_stars)}</span>
+                          </div>
+                        ) : (
+                          <div className="text-slate-400 text-xs">No precedent found.</div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Suspects table */}
+                    <div className="rounded border border-emerald-500/30 bg-emerald-950/20 p-2.5"
+                         data-testid="brain-suspects-card">
+                      <div className="text-[10px] text-emerald-400 font-semibold mb-1.5">💎 RANKED SUSPECTS (top 10)</div>
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+                        {(cosmicBrainData.brain_summary?.ranked_suspects_top10 || []).map((s) => (
+                          <div key={s.n}
+                               className="rounded border border-emerald-500/40 bg-emerald-600/10 px-1.5 py-1"
+                               title={s.tags?.join(' · ')}
+                               data-testid={`brain-suspect-${s.n}`}>
+                            <div className="flex items-baseline justify-between">
+                              <span className="text-emerald-100 font-bold tabular-nums">{s.n}</span>
+                              <span className="text-[8px] text-emerald-400/70">×{s.score}</span>
+                            </div>
+                            <div className="text-[8px] text-emerald-300/70 truncate">
+                              {(s.tags || []).slice(0, 2).join('·')}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Stars table */}
+                    <div className="rounded border border-yellow-500/30 bg-yellow-950/20 p-2.5"
+                         data-testid="brain-stars-card">
+                      <div className="text-[10px] text-yellow-400 font-semibold mb-1.5">⭐ RANKED STARS (top 6)</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {(cosmicBrainData.brain_summary?.ranked_stars_top6 || []).map((s) => (
+                          <div key={s.s}
+                               className="rounded border border-yellow-500/40 bg-yellow-600/10 px-2 py-1"
+                               title={s.tags?.join(' · ')}
+                               data-testid={`brain-star-${s.s}`}>
+                            <span className="text-yellow-100 font-bold">⭐{s.s}</span>
+                            <span className="text-[9px] text-yellow-400/60 ml-1">×{s.score}</span>
+                            <div className="text-[8px] text-yellow-300/70">
+                              {(s.tags || []).slice(0, 1).join('·')}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Lens fires */}
+                    <div className="grid grid-cols-3 gap-2 text-[10px]">
+                      <div className={`rounded border p-1.5 ${cosmicBrainData.brain_summary?.law_90?.fires ? 'border-rose-500/50 bg-rose-950/30 text-rose-200' : 'border-slate-700 bg-slate-900/30 text-slate-500'}`}
+                           data-testid="brain-law90">
+                        <div className="font-semibold">📍 Law 90</div>
+                        <div>{cosmicBrainData.brain_summary?.law_90?.fires ? '🚨 FIRES' : 'silent'}</div>
+                        <div>last P3: {cosmicBrainData.brain_summary?.law_90?.last_p3}</div>
+                      </div>
+                      <div className={`rounded border p-1.5 ${cosmicBrainData.brain_summary?.law_89?.fires ? 'border-cyan-500/50 bg-cyan-950/30 text-cyan-200' : 'border-slate-700 bg-slate-900/30 text-slate-500'}`}
+                           data-testid="brain-law89">
+                        <div className="font-semibold">📍 Law 89</div>
+                        <div>{cosmicBrainData.brain_summary?.law_89?.fires ? '🚨 FIRES' : 'silent'}</div>
+                        <div>last P2: {cosmicBrainData.brain_summary?.law_89?.last_p2}</div>
+                      </div>
+                      <div className={`rounded border p-1.5 ${cosmicBrainData.brain_summary?.saturation_47?.saturated ? 'border-orange-500/50 bg-orange-950/30 text-orange-200' : 'border-slate-700 bg-slate-900/30 text-slate-500'}`}
+                           data-testid="brain-saturation">
+                        <div className="font-semibold">📍 47-saturation</div>
+                        <div>{cosmicBrainData.brain_summary?.saturation_47?.fires_count || 0}/{cosmicBrainData.brain_summary?.saturation_47?.window || 4}</div>
+                        <div>{cosmicBrainData.brain_summary?.saturation_47?.saturated ? '🚨 collapse' : 'no fold'}</div>
+                      </div>
+                    </div>
+
+                    {/* The 20-ticket symphony */}
+                    <div className="rounded border border-fuchsia-500/40 bg-gradient-to-br from-fuchsia-950/30 to-purple-950/30 p-3"
+                         data-testid="brain-tickets-card">
+                      <div className="text-xs font-semibold text-fuchsia-200 mb-2 flex items-center justify-between">
+                        <span>🎼 THE {cosmicBrainData.ticket_count}-TICKET SYMPHONY</span>
+                        <span className="text-[10px] text-fuchsia-400/60 font-mono">7 archetypes · {cosmicBrainData.target_date}</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {(cosmicBrainData.tickets || []).map((t) => {
+                          const archColor = (t.archetype || '').startsWith('A.') ? 'border-fuchsia-500/40 bg-fuchsia-950/20'
+                            : (t.archetype || '').startsWith('B.') ? 'border-purple-500/40 bg-purple-950/20'
+                            : (t.archetype || '').startsWith('C.') ? 'border-emerald-500/40 bg-emerald-950/20'
+                            : (t.archetype || '').startsWith('D.') ? 'border-amber-500/40 bg-amber-950/20'
+                            : (t.archetype || '').startsWith('E.') ? 'border-rose-500/40 bg-rose-950/20'
+                            : (t.archetype || '').startsWith('F.') ? 'border-orange-500/40 bg-orange-950/20'
+                            : 'border-cyan-500/40 bg-cyan-950/20';
+                          return (
+                            <div key={t.ticket_no}
+                                 className={`rounded border ${archColor} p-2`}
+                                 data-testid={`brain-ticket-${t.ticket_no}`}>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-[10px] text-slate-400 font-mono">#{t.ticket_no}</span>
+                                <span className="text-[10px] text-slate-300 font-semibold">{t.archetype}</span>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-1 mb-1">
+                                {(t.mains || []).map((n) => (
+                                  <Ball key={n} number={n} size="xs" maxNum={50} />
+                                ))}
+                                <span className="text-slate-500 mx-1">·</span>
+                                {(t.stars || []).map((s) => (
+                                  <span key={s} className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-yellow-500/20 border border-yellow-400/40 text-yellow-200 text-[10px] font-bold">
+                                    ⭐{s}
+                                  </span>
+                                ))}
+                              </div>
+                              <div className="text-[10px] text-slate-400 italic">{t.reasoning}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
