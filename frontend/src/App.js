@@ -844,6 +844,13 @@ function App() {
   const [brainSeedStars, setBrainSeedStars] = useState('1,11');
   const [brainPinMains, setBrainPinMains] = useState('');
   const [brainPinStars, setBrainPinStars] = useState('');
+
+  // 🎻 DJ "We Think That..." 3 Big Suspects (Session 31)
+  const [djSuspects, setDjSuspects] = useState(null);
+  const [djSuspectsEdit, setDjSuspectsEdit] = useState(false);
+  const [djSuspectsInput, setDjSuspectsInput] = useState('');
+  const [djSuspectsNote, setDjSuspectsNote] = useState('');
+  const [djSuspectsTarget, setDjSuspectsTarget] = useState('');
   
   // 2Chance State
   const [show2Chance, setShow2Chance] = useState(false);
@@ -1076,6 +1083,41 @@ function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showSwissSleepers, lotteryMode, nextDrawDate]);
+
+  // 🎻 Load DJ Suspects on mount + when lotteryMode changes
+  const loadDjSuspects = async () => {
+    try {
+      const mode = lotteryMode === 'euro' ? 'euro' : 'swiss';
+      const res = await axios.get(`${API}/dj-suspects?mode=${mode}`);
+      setDjSuspects(res.data);
+      setDjSuspectsInput((res.data?.suspects || []).join(','));
+      setDjSuspectsNote(res.data?.note || '');
+      setDjSuspectsTarget(res.data?.target_date || '');
+    } catch (e) {
+      console.error("DJ suspects load error:", e);
+    }
+  };
+
+  const saveDjSuspects = async () => {
+    try {
+      const mode = lotteryMode === 'euro' ? 'euro' : 'swiss';
+      const arr = djSuspectsInput.split(',').map(s => parseInt(s.trim(), 10)).filter(n => Number.isFinite(n)).slice(0, 3);
+      if (arr.length === 0) { alert('🎻 Drop 1-3 suspect numbers (comma-separated).'); return; }
+      await axios.post(`${API}/dj-suspects`, {
+        mode,
+        target_date: djSuspectsTarget || '',
+        suspects: arr,
+        note: djSuspectsNote,
+      });
+      setDjSuspectsEdit(false);
+      await loadDjSuspects();
+    } catch (e) {
+      console.error("DJ suspects save error:", e);
+      alert(`Save failed: ${e?.response?.data?.error || e.message}`);
+    }
+  };
+
+  useEffect(() => { loadDjSuspects(); /* eslint-disable-next-line */ }, [lotteryMode]);
 
   // 🧠 E's Cosmic Brain — run on demand (Session 30)
   const runCosmicBrain = async () => {
@@ -3710,6 +3752,102 @@ function App() {
             )}
           </div>
         )}
+
+        {/* 🎻 WE THINK THAT... — DJ's 3 Big Suspects (Session 31) */}
+        <div className="lucky-card p-5 mb-4 border-2 border-fuchsia-500/40 bg-gradient-to-br from-fuchsia-950/40 via-purple-950/30 to-slate-900/60 shadow-[0_0_40px_rgba(217,70,239,0.15)]" data-testid="dj-we-think-that-box">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🎻</span>
+              <span className="text-xl sm:text-2xl font-bold tracking-wide text-fuchsia-200" style={{textShadow:'0 0 20px rgba(217,70,239,0.5)'}}>
+                We think that...
+              </span>
+              {djSuspects?.target_date && (
+                <span className="ml-2 text-xs text-fuchsia-300/70 font-mono">{djSuspects.target_date}</span>
+              )}
+            </div>
+            <button
+              onClick={() => setDjSuspectsEdit(!djSuspectsEdit)}
+              className="text-xs px-2 py-1 rounded bg-fuchsia-900/40 border border-fuchsia-500/40 text-fuchsia-200 hover:bg-fuchsia-800/60"
+              data-testid="dj-suspects-edit-toggle"
+            >
+              {djSuspectsEdit ? '✕ Cancel' : '✎ Edit'}
+            </button>
+          </div>
+
+          {!djSuspectsEdit ? (
+            <>
+              {djSuspects?.suspects?.length > 0 ? (
+                <div className="flex items-center justify-center gap-3 sm:gap-6 py-4" data-testid="dj-suspects-display">
+                  {djSuspects.suspects.slice(0, 3).map((n, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-center w-20 h-20 sm:w-28 sm:h-28 rounded-full border-2 border-fuchsia-400/60 bg-gradient-to-br from-fuchsia-600/30 to-purple-700/30 shadow-[0_0_30px_rgba(217,70,239,0.4)] hover:scale-105 transition-transform"
+                      data-testid={`dj-suspect-${i}`}
+                    >
+                      <span className="text-3xl sm:text-5xl font-extrabold text-fuchsia-100" style={{textShadow:'0 0 15px rgba(217,70,239,0.7)'}}>
+                        {n}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-slate-400 py-6 text-sm">No suspects set yet — hit ✎ Edit to drop tonight's 3.</div>
+              )}
+              {djSuspects?.note && (
+                <div className="mt-2 px-3 py-2 rounded bg-slate-900/50 border border-fuchsia-500/20 text-xs sm:text-sm text-fuchsia-100/80 text-center italic" data-testid="dj-suspects-note">
+                  {djSuspects.note}
+                </div>
+              )}
+              {djSuspects?.updated_at && (
+                <div className="mt-2 text-[10px] text-slate-500 text-right font-mono">
+                  updated · {new Date(djSuspects.updated_at).toLocaleString()}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="space-y-3" data-testid="dj-suspects-edit-form">
+              <div>
+                <label className="text-xs text-slate-400">🎯 Target draw date (dd.mm.yyyy)</label>
+                <input
+                  type="text"
+                  value={djSuspectsTarget}
+                  onChange={(e) => setDjSuspectsTarget(e.target.value)}
+                  placeholder="05.05.2026"
+                  className="w-full mt-1 px-3 py-2 rounded bg-slate-900/60 border border-fuchsia-500/40 text-fuchsia-100 font-mono"
+                  data-testid="dj-suspects-target-input"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-slate-400">💎 Up to 3 big suspects (comma-separated)</label>
+                <input
+                  type="text"
+                  value={djSuspectsInput}
+                  onChange={(e) => setDjSuspectsInput(e.target.value)}
+                  placeholder="7, 6, 34"
+                  className="w-full mt-1 px-3 py-2 rounded bg-slate-900/60 border border-fuchsia-500/40 text-fuchsia-100 font-mono text-lg"
+                  data-testid="dj-suspects-numbers-input"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-slate-400">🥂 Note / reasoning (optional)</label>
+                <textarea
+                  value={djSuspectsNote}
+                  onChange={(e) => setDjSuspectsNote(e.target.value)}
+                  rows={2}
+                  className="w-full mt-1 px-3 py-2 rounded bg-slate-900/60 border border-fuchsia-500/40 text-fuchsia-100 text-sm"
+                  data-testid="dj-suspects-note-input"
+                />
+              </div>
+              <button
+                onClick={saveDjSuspects}
+                className="w-full py-2 rounded bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white font-bold shadow-lg hover:from-fuchsia-500 hover:to-purple-500"
+                data-testid="dj-suspects-save-btn"
+              >
+                🎻 Save tonight's suspects
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* 🧠 E's COSMIC BRAIN — Session 30 — VIP only */}
         {lotteryMode === 'euro' && isUnlimited && (

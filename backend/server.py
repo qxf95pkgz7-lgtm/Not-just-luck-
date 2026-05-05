@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, Body
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -6869,6 +6869,55 @@ async def dj_orchestra_endpoint(
     except Exception as e:
         import traceback
         return {"error": str(e), "trace": traceback.format_exc()}
+
+
+@api_router.get("/dj-suspects")
+async def get_dj_suspects(mode: str = "euro"):
+    """🎻 Get the DJ's 3 big suspects for the upcoming draw.
+    Returns the most recent suspects doc for the given mode.
+    """
+    doc = await db.dj_suspects.find_one(
+        {"mode": mode}, {"_id": 0}, sort=[("updated_at", -1)]
+    )
+    if not doc:
+        return {"mode": mode, "suspects": [], "target_date": "", "note": "", "updated_at": ""}
+    return doc
+
+
+@api_router.post("/dj-suspects")
+async def set_dj_suspects(payload: dict = Body(...)):
+    """🎻 Set the DJ's 3 big suspects for the upcoming draw.
+    Body: {"mode": "euro", "target_date": "05.05.2026",
+           "suspects": [7, 6, 34], "note": "..."}
+    """
+    mode = (payload.get("mode") or "euro").strip().lower()
+    target_date = (payload.get("target_date") or "").strip()
+    suspects = payload.get("suspects") or []
+    note = (payload.get("note") or "").strip()
+    # Validation
+    try:
+        suspects = [int(x) for x in suspects][:3]
+    except Exception:
+        return {"error": "suspects must be a list of up to 3 integers"}
+    if not suspects:
+        return {"error": "suspects required"}
+    pool_max = 50 if mode == "euro" else 42
+    for n in suspects:
+        if n < 1 or n > pool_max:
+            return {"error": f"suspect {n} out of range 1-{pool_max} for mode={mode}"}
+    doc = {
+        "mode": mode,
+        "target_date": target_date,
+        "suspects": suspects,
+        "note": note,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.dj_suspects.update_one(
+        {"mode": mode, "target_date": target_date},
+        {"$set": doc},
+        upsert=True,
+    )
+    return {"ok": True, **doc}
 
 
 @api_router.get("/p3-ghost-orchestra-single/{target_date}/{p3_value}")
