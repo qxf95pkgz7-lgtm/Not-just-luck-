@@ -13,7 +13,7 @@ import os
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
-    BASE_URL = "https://story-seed-tracker.preview.emergentagent.com"
+    BASE_URL = "https://euro-music-brain.preview.emergentagent.com"
 
 
 class TestEuroMillionsHealth:
