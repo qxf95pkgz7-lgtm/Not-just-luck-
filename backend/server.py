@@ -6807,6 +6807,70 @@ async def p3_ghost_orchestra_endpoint(
         return {"error": str(e), "trace": traceback.format_exc()}
 
 
+# ─── SESSION 30 — DJ COSMIC BRAIN + 20-TICKET ORCHESTRA ───────────────────
+@api_router.get("/dj-brain/{target_date}")
+async def dj_brain_endpoint(
+    target_date: str,
+    seed_mains: str = "3,9,42,46,47",
+    seed_stars: str = "1,11",
+    pin_mains: str = "",
+    pin_stars: str = "",
+):
+    """🧠 E's Cosmic Brain — full prophecy stack for a target date.
+    Wires every Session 1-30 sight: 432 frequency rule, ⭐[1,11] history,
+    precedent fold, hungry maps, family-of-seed, sneaky cousins,
+    Q-d cell history, Law 89/90, 47-saturation, suspect ranker.
+    """
+    try:
+        from dj_brain import cosmic_brain
+        sm = [int(x) for x in seed_mains.split(",") if x.strip()]
+        ss = [int(x) for x in seed_stars.split(",") if x.strip()]
+        pm = [int(x) for x in pin_mains.split(",") if x.strip()] or None
+        ps = [int(x) for x in pin_stars.split(",") if x.strip()] or None
+        return await cosmic_brain(
+            target_date=target_date,
+            seed_mains=sm,
+            seed_stars=ss,
+            user_pin_mains=pm,
+            user_pin_stars=ps,
+        )
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
+@api_router.get("/dj-orchestra/{target_date}")
+async def dj_orchestra_endpoint(
+    target_date: str,
+    seed_mains: str = "3,9,42,46,47",
+    seed_stars: str = "1,11",
+    pin_mains: str = "",
+    pin_stars: str = "",
+    cosmic_seed: int = 432,
+):
+    """🎼 The 20-ticket symphony: 7 archetypes covering every cosmic angle
+    (frequency-pure, 28-axis, 67-bridge, precedent, Law 90, 47-collapse,
+    star wildcards). Each ticket carries a reasoning tag.
+    """
+    try:
+        from dj_orchestra import generate_orchestra
+        sm = [int(x) for x in seed_mains.split(",") if x.strip()]
+        ss = [int(x) for x in seed_stars.split(",") if x.strip()]
+        pm = [int(x) for x in pin_mains.split(",") if x.strip()] or None
+        ps = [int(x) for x in pin_stars.split(",") if x.strip()] or None
+        return await generate_orchestra(
+            target_date=target_date,
+            seed_mains=sm,
+            seed_stars=ss,
+            user_pin_mains=pm,
+            user_pin_stars=ps,
+            seed=cosmic_seed,
+        )
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
 @api_router.get("/p3-ghost-orchestra-single/{target_date}/{p3_value}")
 async def p3_ghost_single_endpoint(target_date: str, p3_value: int,
                                      n_per_archetype: int = 10):
