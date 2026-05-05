@@ -1,0 +1,252 @@
+{
+  "draw_date": "05.05.2026",
+  "draw": "EuroMillions Tuesday",
+  "session": "31",
+  "frequency": "576 Hz Perfect Fourth (void-date 5-5)",
+  "bd": {
+    "date": "01.05.2026",
+    "mains": [
+      3,
+      9,
+      42,
+      46,
+      47
+    ],
+    "stars": [
+      1,
+      11
+    ],
+    "breaks": 3
+  },
+  "canons_fired": [
+    "I (P1↑ only)",
+    "II (P5↓ only)",
+    "III (Tue P3 sags LOW)",
+    "IV (Edges flare together)",
+    "V (-25 carrier law)",
+    "VI (date-sum 20 = 3.5 break avg)"
+  ],
+  "banned_tonight": {
+    "mains": [
+      12,
+      28
+    ],
+    "stars": [
+      1,
+      11
+    ],
+    "reason": "12 octave-mute on [1,11] precedent · 28 date-sum 20 not harmonic · ⭐1/11 never repeats"
+  },
+  "tickets": [
+    {
+      "id": "T1",
+      "name": "Tuesday Canon-Pure (HEADLINE)",
+      "mains": [
+        7,
+        17,
+        18,
+        34,
+        38
+      ],
+      "stars": [
+        3,
+        9
+      ],
+      "story": "Family-7 awakens (Tue corridor) · BD carrier 17 surfaces (from BD P3=42 -25→17) · P3=18 (Tue Canon III low-sag) · 34=mask of 9 (Canon V) · P5=38 (Tue P5↓ Canon II)"
+    },
+    {
+      "id": "T2",
+      "name": "DJ Live Mask-Trinity (cascade-up)",
+      "mains": [
+        7,
+        20,
+        34,
+        35,
+        44
+      ],
+      "stars": [
+        3,
+        7
+      ],
+      "story": "Family-7 · P2=20 (date-sum 20 landing raw, Law 89) · three masks: 34=9 / 35=3 (53→Euro wrap) / 44=19 (mirror-day) · the trinity sentence"
+    },
+    {
+      "id": "T3",
+      "name": "576 Hz Harmonic-Pure",
+      "mains": [
+        4,
+        13,
+        24,
+        36,
+        48
+      ],
+      "stars": [
+        3,
+        9
+      ],
+      "story": "24=576÷24 · 36=576÷16 · 48=576÷12 (root tone) · digit-4 carrier door (15→40 echo) · 13=story-seed → 4"
+    },
+    {
+      "id": "T4",
+      "name": "Edges Flare (P1↑+P5↓ Canon IV)",
+      "mains": [
+        13,
+        17,
+        18,
+        34,
+        38
+      ],
+      "stars": [
+        3,
+        7
+      ],
+      "story": "P1=13 HIGH-break (mirror of 31) · P5=38 LOW-break · edges flare 62% co-rate · BD carrier 17 + Tue low-sag 18 + mask-9 (34) in middle"
+    },
+    {
+      "id": "T5",
+      "name": "The 21 Door (BD carrier from 46)",
+      "mains": [
+        4,
+        10,
+        21,
+        33,
+        42
+      ],
+      "stars": [
+        3,
+        9
+      ],
+      "story": "21 surfaces (3×7 Family-7 echo, BD P4=46 -25→21) · 33-ghost-gap breaks · 10 the hero · 42 precedent fold (20.01→23.01 ND P5)"
+    },
+    {
+      "id": "T6",
+      "name": "15→40 Q2 Closing Chord",
+      "mains": [
+        4,
+        15,
+        24,
+        35,
+        40
+      ],
+      "stars": [
+        3,
+        9
+      ],
+      "story": "15 raw + 40 raw same ticket = the Q2 source and echo land together · 4=carrier digit · 24=576 harmonic · 35=53 mask of 3"
+    },
+    {
+      "id": "T7",
+      "name": "47-Saturation + Welcome-17",
+      "mains": [
+        2,
+        10,
+        17,
+        33,
+        42
+      ],
+      "stars": [
+        3,
+        7
+      ],
+      "story": "Law 90 P1=2 strict · hero 10 (the 2-mask, 42+10=52→2) · welcome-companion 17 · 33-ghost · 42 precedent"
+    },
+    {
+      "id": "T8",
+      "name": "THE SNEAKY UNIVERSE (inverse-BD)",
+      "mains": [
+        5,
+        14,
+        19,
+        36,
+        50
+      ],
+      "stars": [
+        2,
+        8
+      ],
+      "story": "ZERO BD-numbers reused [3,9,42,46,47 all absent] · 19 RAW at P3 (mirror-day un-masked) · P5=50 max-stretch · fresh stars (no 1/11) · the cosmos discharges through ABSENCE"
+    },
+    {
+      "id": "T9",
+      "name": "Crazy 19+44 Double-Raw",
+      "mains": [
+        7,
+        19,
+        22,
+        34,
+        44
+      ],
+      "stars": [
+        3,
+        9
+      ],
+      "story": "19 RAW at P2 + 44 RAW at P5 = the mirror-day spoken twice · 22=22.04 firing-date echo (E hit 38+42+R1 there) · 34=mask of 9 anchor"
+    },
+    {
+      "id": "T10",
+      "name": "Snap-Back DNA + Friend Pair",
+      "mains": [
+        2,
+        11,
+        18,
+        33,
+        42
+      ],
+      "stars": [
+        3,
+        7
+      ],
+      "story": "Snap-back canon P1∈{1,2,5} → 2 · 11 from [1,11] memory but in MAINS (allowed) · 18+24=42 friend pair · 33-ghost · 42 precedent"
+    },
+    {
+      "id": "T11",
+      "name": "Today Doubled (5×n ladder)",
+      "mains": [
+        5,
+        17,
+        25,
+        35,
+        50
+      ],
+      "stars": [
+        3,
+        10
+      ],
+      "story": "5 today raw · 17 carrier (P5=50 micro-canon) · 25 today×today literal · 35=53 mask of 3 · 50 today×2 amplification at P5"
+    },
+    {
+      "id": "T12",
+      "name": "16.01.2026 Precedent Echo",
+      "mains": [
+        5,
+        17,
+        24,
+        29,
+        50
+      ],
+      "stars": [
+        3,
+        10
+      ],
+      "story": "Direct echo of [5,17,24,29,50] (last P5=50 of Jan 2026) · ⭐(3,10) hero-as-star like the precedent · when 50 repeats, supporting cast historically repeats"
+    },
+    {
+      "id": "T13",
+      "name": "Bookend Pool (1↔50)",
+      "mains": [
+        1,
+        17,
+        25,
+        38,
+        50
+      ],
+      "stars": [
+        3,
+        7
+      ],
+      "story": "P1=1 (low extreme) + P5=50 (high extreme) = full canvas · 17 carrier · 25 today literal raw · 38 Tue P5↓ companion at P4 · pool edge-to-edge"
+    }
+  ],
+  "ticket_count_total": 13,
+  "p550_extension": "T11/T12/T13 added — covers P5=50 amplification branch + 17-companion micro-canon"
+}
