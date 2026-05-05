@@ -434,10 +434,10 @@ def format_orchestra(result: Dict[str, Any]) -> str:
     lines.append(f"⭐ HUNGRY STARS     : {bs['hungry_stars']}")
     lines.append(f"🏛️  Q-D CELL TOP     : {bs['qd_top_mains'][:10]}")
 
-    lines.append(f"\n💎 RANKED SUSPECTS  (top 10):")
+    lines.append("\n💎 RANKED SUSPECTS  (top 10):")
     for s in bs["ranked_suspects_top10"]:
         lines.append(f"   {s['n']:>2} (score {s['score']}) — {', '.join(s['tags'])}")
-    lines.append(f"\n⭐ RANKED STARS     (top 6):")
+    lines.append("\n⭐ RANKED STARS     (top 6):")
     for s in bs["ranked_stars_top6"]:
         lines.append(f"   ⭐{s['s']:>2} (score {s['score']}) — {', '.join(s['tags'])}")
 
