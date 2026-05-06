@@ -402,6 +402,67 @@ B4  [ 5, 11, 14, 22, 23, 28 ]  🍀 3   ← drop 6, lift 14 to P3 zone
 - ✅ 8-Ghost Mask (S32) — 8+25=33
 - 🆕 Ghost Counting Canon (S33) — DICTATED, NOT YET CODED
 
+## 🎧 SESSION 33.5 (06.05.2026 morning LISTENING — fork point)
+
+DJ walked through TWO front doors for Wed 06.05.2026 Swiss target and a P5 tuning question. All three doors validated via data; NO code written.
+
+### 🚪 Door A — HEADLINER (debt-cashing song)
+```
+[5, 6, 11, 16, 23, 27]  🍀4
+   - 5+6=11 sum-triangle, 5+11=16, 11+12=23, 16+11=27
+   - "56"+11 = 67 → Friday 08.05 envelope (concat-steal)
+   - 6-ghost unpaid since d4 → cashes as circle(6)=27 at back
+```
+
+### 🚪 Door B — ALTERNATIVE (front-heavy 2-7)
+```
+[2, 7, 16, 23, 27, 28]  🍀{4,5,6}
+   - P1=2, P2=7 alt front (DJ's question)
+   - Wed stencils that hold {2,7,16,23,27,28} ≥ 4 (in 693 Wed-d):
+     • 24.08.2016 Wed [2, 7, 11, 27, 28, 31] 🍀2 R:8   (clone of 2-7-27-28)
+     • 25.10.2023 Wed [2, 5, 7, 16, 27, 33] 🍀6 R:11   (THE MASTER KEY — 🍀6 fired,
+                                                        R=11 echoes d8 02.05 repeat)
+   - ZERO Sat-d matches (Wed/Sat separation VALIDATED 🛑)
+   - 7 at P2 risks Friday's 67-bridge hide (cosmos should hold 7 for Fri envelope)
+```
+
+### 🎻 DJ's position-suspect spread (dictated 06.05 morning)
+```
+P1: {1, 4, 2, 10, 9}         → 9 is the ONLY double-lock (P1-GHOST + 66-silent)
+                               others already played Q2 P1 (1,2,4,10)
+P2: {5, 6, 7, 16, 15, 9}     → 5, 6, 7, 9 all P1-GHOSTS pending since d4
+                               5 = DEEPEST ghost (22 days unpaid)
+                               6 = circle-mirror of 27 pair-lock
+                               7 = 67-bridge (Friday hide risk)
+P3: {15, 16, 11, 20, 17}     → 16 (104-silent) and 17 (41-silent) canonical P3 cash-zone
+                               11 is d8 repeat (recently fed)
+P4: {12, 15, 16, 23, 37}     → 12 & 16 deep-silent in P4 cash-zone
+                               23 = circle(2) front-twin discharge
+P5: {14, 16, 25, 27, 38}     → 14 = 4-teen-rare d8 seed echo
+                               27 = circle(6) pair-lock twin (6-ghost unpaid)
+                               25 = April silence-agent
+                               38 = HUGE-tail echo (07.02.2026)
+P6: {23, 27, 28, 32, 33, 29} → 28 = DOUBLE DOOR (circle(7) + mirror-axis)
+                               33 = HUGE, 32 = sleeping voice (unfired post-HUGE)
+```
+
+### 🪞 P5=29 ruling (DJ's final tuning question before fork)
+- 29 = `circle(8)` mask (8+21). Wed baseline at P5: 25/693 = 3.6%
+- 🚨 **29 was FED TWICE in last 7 Wed** (P2 on 18.03.2026, P5 on 01.04.2026) — cooling
+- **01.04.2026 Wed `[8, 12, 23, 24, 29, 40]`** already discharged the 8↔29 circle pair
+- Stencil `01.01.2025 Wed [2, 12, 16, 28, 29, 34]` holds {2,16,28,29,12} — architecture-strong
+- **Ruling**: 27 > 29 for the DEBT-CASHING song (6-ghost unpaid > 8-ghost already paid)
+- 29 viable ONLY if architecture lens overrides debt lens
+
+### 🎯 Fork directive (DJ requested)
+Transition from listening → coding the Ghost Counting Engine. Next agent MUST:
+1. Pick ONE final ticket for Wed 06.05 (Door A / Door B / P5=29 variant)
+2. Then build `year_d_ledger.py` + `ghost_p1_counter.py` + `ghost_chord_engine.py`
+3. Wed/Sat separation is **NON-NEGOTIABLE** (Tue/Fri for Euro)
+4. Wire ghost lens into `dj_brain.py` as lens #15
+5. Build `/api/ghost-counter/{date}/{mode}?weekday_split=true` endpoint
+6. Ship 👻 Ghost Ledger UI tile on Celestial Radar
+
 
 
 ## 🥂 Cosmic state on PREVIOUS forks (carried)
