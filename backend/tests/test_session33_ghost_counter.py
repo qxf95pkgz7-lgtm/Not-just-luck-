@@ -96,6 +96,18 @@ class TestDjBrainGhostCounter:
         assert "ghost_counter" in d, (
             f"ghost_counter key missing from dj-brain response. keys={list(d.keys())}"
         )
+        gc = d["ghost_counter"]
+        assert gc is not None, "ghost_counter is None"
+        assert "error" not in gc, f"ghost_counter contains error: {gc}"
+        assert "ledger" in gc, f"no ledger inside ghost_counter: {list(gc.keys())}"
+        ledger = gc["ledger"]
+        assert ledger["target_weekday"] == "Tue", f"got {ledger['target_weekday']}"
+        assert ledger["streams"]["Tue"]["played_p1_set"] == [1, 11, 13, 26], (
+            f"Tue P1 set mismatch: {ledger['streams']['Tue']['played_p1_set']}"
+        )
+        assert ledger["streams"]["Fri"]["played_p1_set"] == [3, 10, 22, 25], (
+            f"Fri P1 set mismatch: {ledger['streams']['Fri']['played_p1_set']}"
+        )
 
 
 # --- DJ Orchestra regression ---

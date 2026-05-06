@@ -653,6 +653,7 @@ async def cosmic_brain(
             "law_90": l90,
             "law_89": l89,
             "saturation_47": sat,
+            "ghost_counter": ghost,
             "ranked_suspects": suspects,
             "ranked_stars": stars,
         }
