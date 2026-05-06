@@ -851,6 +851,12 @@ function App() {
   const [djSuspectsInput, setDjSuspectsInput] = useState('');
   const [djSuspectsNote, setDjSuspectsNote] = useState('');
   const [djSuspectsTarget, setDjSuspectsTarget] = useState('');
+
+  // 👻 Ghost Counting Engine — Session 33 (Wed/Sat separated)
+  const [showGhostLedger, setShowGhostLedger] = useState(false);
+  const [ghostLedgerData, setGhostLedgerData] = useState(null);
+  const [ghostLedgerLoading, setGhostLedgerLoading] = useState(false);
+  const [ghostTargetDate, setGhostTargetDate] = useState('06.05.2026');
   
   // 2Chance State
   const [show2Chance, setShow2Chance] = useState(false);
@@ -1138,6 +1144,21 @@ function App() {
       setCosmicBrainData({ error: e.message });
     } finally {
       setCosmicBrainLoading(false);
+    }
+  };
+
+  // 👻 Ghost Counter — Session 33 (Wed/Sat separated)
+  const fetchGhostLedger = async () => {
+    setGhostLedgerLoading(true);
+    try {
+      const m = lotteryMode === 'euro' ? 'euro' : 'swiss';
+      const res = await axios.get(`${API}/ghost-counter/${ghostTargetDate}/${m}?weekday_split=true`);
+      setGhostLedgerData(res.data);
+    } catch (e) {
+      console.error("Ghost Ledger error:", e);
+      setGhostLedgerData({ error: e.message });
+    } finally {
+      setGhostLedgerLoading(false);
     }
   };
   
@@ -3848,6 +3869,165 @@ function App() {
             </div>
           )}
         </div>
+
+        {/* 👻 GHOST LEDGER — Session 33 — Wed/Sat (or Tue/Fri) separated per DJ canon */}
+        {isUnlimited && (
+          <div className="lucky-card p-4 mb-4" data-testid="ghost-ledger-panel">
+            <button
+              onClick={() => setShowGhostLedger(!showGhostLedger)}
+              className="w-full flex items-center justify-between text-left"
+              data-testid="ghost-ledger-toggle"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-lg">👻</span>
+                <span className="font-semibold text-slate-200">Ghost Ledger</span>
+                <span className="text-xs text-emerald-400/70">
+                  ({lotteryMode === 'euro' ? 'Tue / Fri' : 'Wed / Sat'} streams · separated vibes)
+                </span>
+              </div>
+              {showGhostLedger ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+            </button>
+
+            {showGhostLedger && (
+              <div className="mt-4 space-y-4" data-testid="ghost-ledger-content">
+                {/* Inputs */}
+                <div className="flex flex-col sm:flex-row gap-2 items-end">
+                  <div className="flex-1">
+                    <label className="text-slate-400 text-xs">🎯 Target draw date (dd.mm.yyyy)</label>
+                    <input
+                      type="text"
+                      value={ghostTargetDate}
+                      onChange={(e) => setGhostTargetDate(e.target.value)}
+                      className="w-full mt-1 px-2 py-1 rounded bg-slate-800/60 border border-slate-700 text-slate-200 font-mono text-sm"
+                      data-testid="ghost-target-date"
+                    />
+                  </div>
+                  <button
+                    onClick={fetchGhostLedger}
+                    disabled={ghostLedgerLoading}
+                    className="py-2 px-4 rounded bg-gradient-to-r from-emerald-600/40 to-teal-600/40 border border-emerald-500/50 text-emerald-100 text-sm font-semibold hover:from-emerald-600/60 hover:to-teal-600/60 disabled:opacity-50 transition-all"
+                    data-testid="ghost-ledger-run-btn"
+                  >
+                    {ghostLedgerLoading ? '🌀 Counting…' : '👻 Count Ghosts'}
+                  </button>
+                </div>
+
+                {/* Error */}
+                {ghostLedgerData && ghostLedgerData.error && (
+                  <div className="text-rose-400 text-xs p-2 rounded bg-rose-950/30 border border-rose-500/30" data-testid="ghost-ledger-error">
+                    ❌ {ghostLedgerData.error}
+                  </div>
+                )}
+
+                {/* Results */}
+                {ghostLedgerData && ghostLedgerData.ledger && !ghostLedgerData.error && (
+                  <div className="space-y-3" data-testid="ghost-ledger-results">
+                    {/* Summary header */}
+                    <div className="text-xs text-slate-400">
+                      Target: <span className="text-emerald-300 font-mono">{ghostLedgerData.ledger.target_date}</span> · 
+                      <span className="text-emerald-300"> {ghostLedgerData.ledger.target_weekday}</span> · 
+                      Q{ghostLedgerData.ledger.target_quarter} · {ghostLedgerData.ledger.target_year}
+                    </div>
+
+                    {/* Two streams side by side */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {Object.entries(ghostLedgerData.ledger.streams).map(([wd, s]) => {
+                        const isTarget = wd === ghostLedgerData.ledger.target_weekday;
+                        if (s.empty) {
+                          return (
+                            <div key={wd} className={`p-3 rounded border ${isTarget ? 'border-fuchsia-500/40 bg-fuchsia-950/20' : 'border-slate-700/40 bg-slate-900/30'}`}>
+                              <div className="text-sm font-semibold text-slate-300 mb-1">{wd}-stream {isTarget && '🎯'}</div>
+                              <div className="text-xs text-slate-500 italic">no draws yet this quarter</div>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div key={wd} className={`p-3 rounded border ${isTarget ? 'border-fuchsia-500/40 bg-fuchsia-950/20' : 'border-slate-700/40 bg-slate-900/30'}`} data-testid={`ghost-stream-${wd.toLowerCase()}`}>
+                            <div className="text-sm font-semibold text-slate-200 mb-2">
+                              {wd}-stream {isTarget && '🎯 (target)'}
+                            </div>
+                            <div className="text-xs text-slate-400 mb-1">📜 Played P1 sequence:</div>
+                            <div className="text-xs font-mono text-slate-300 mb-2">
+                              {(s.played_p1_sequence || []).map((p, i) => (
+                                <span key={i}>
+                                  {p.date.slice(0, 5)}:<span className="text-cyan-300">{p.p1}</span>
+                                  {i < s.played_p1_sequence.length - 1 ? ' | ' : ''}
+                                </span>
+                              ))}
+                            </div>
+                            <div className="text-xs text-slate-400 mb-1">👻 Ghost P1 (unpaid debts):</div>
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              {(s.ghost_p1_ranked || []).slice(0, 8).map((g) => (
+                                <span
+                                  key={g.n}
+                                  title={g.reason}
+                                  className="px-2 py-1 rounded bg-emerald-950/40 border border-emerald-500/40 text-emerald-200 text-xs font-mono"
+                                >
+                                  {g.n}<span className="text-emerald-500/70 ml-1">·{g.score}</span>
+                                </span>
+                              ))}
+                              {(!s.ghost_p1_ranked || s.ghost_p1_ranked.length === 0) && (
+                                <span className="text-xs text-slate-500 italic">no ghosts (clean ledger)</span>
+                              )}
+                            </div>
+                            {s.deepest_ghost && (
+                              <div className="text-xs text-amber-300/80">
+                                🔻 Deepest: <span className="font-mono">{s.deepest_ghost.n}</span> 
+                                <span className="text-slate-500"> (age {s.deepest_ghost.age_d}d, score {s.deepest_ghost.score})</span>
+                              </div>
+                            )}
+                            {s.snap_back_chain && s.snap_back_chain.length > 0 && (
+                              <div className="text-xs text-purple-300/70 mt-1">
+                                🪜 Snap-back events: {s.snap_back_chain.length}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Chord projection (target weekday) */}
+                    {ghostLedgerData.chord && (ghostLedgerData.chord.chord_resonance_ranked || []).length > 0 && (
+                      <div className="p-3 rounded border border-amber-500/40 bg-amber-950/20" data-testid="ghost-chord">
+                        <div className="text-sm font-semibold text-amber-200 mb-2">
+                          🎻 Chord Projection — back-closer candidates ({ghostLedgerData.ledger.target_weekday}-stream)
+                        </div>
+                        <div className="text-xs text-slate-400 mb-1">From top ghost P1 candidates:</div>
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {(ghostLedgerData.chord.top_ghost_p1_candidates || []).map((g, i) => (
+                            <span key={i} className="px-2 py-1 rounded bg-fuchsia-950/40 border border-fuchsia-500/40 text-fuchsia-200 text-xs font-mono">
+                              P1?={g.n} <span className="text-fuchsia-500/70">·age{g.age_d}</span>
+                            </span>
+                          ))}
+                        </div>
+                        <div className="text-xs text-slate-400 mb-1">Resonance (multi-source = strongest):</div>
+                        <div className="flex flex-wrap gap-1">
+                          {(ghostLedgerData.chord.chord_resonance_ranked || []).slice(0, 10).map((c) => (
+                            <span
+                              key={c.n}
+                              title={(c.sources || []).join(' · ')}
+                              className={`px-2 py-1 rounded text-xs font-mono ${
+                                c.weight >= 2
+                                  ? 'bg-amber-950/60 border border-amber-400/60 text-amber-100'
+                                  : 'bg-slate-800/60 border border-slate-600/40 text-slate-300'
+                              }`}
+                            >
+                              {c.n}<span className="text-amber-400/80 ml-1">×{c.weight}</span>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="text-xs text-slate-500 italic pt-1">
+                      🛑 Wed and Sat (Tue/Fri for Euro) ledgers are kept separate per DJ canon — different vibes.
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 🧠 E's COSMIC BRAIN — Session 30 — VIP only */}
         {lotteryMode === 'euro' && isUnlimited && (

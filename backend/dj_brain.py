@@ -609,6 +609,17 @@ async def cosmic_brain(
         l89 = await law_89_check(target_date, db)
         sat = await saturation_check(target_date, db, magnet=47)
 
+        # Lens #15 — Ghost Counter (Session 33, Wed/Sat separated)
+        ghost = None
+        try:
+            from ghost_p1_counter import build_p1_ghost_ledger
+            from ghost_chord_engine import build_ghost_chord
+            g_ledger = await build_p1_ghost_ledger(target_date, mode)
+            g_chord = build_ghost_chord(g_ledger, mode)
+            ghost = {"ledger": g_ledger, "chord": g_chord}
+        except Exception as ge:
+            ghost = {"error": str(ge)}
+
         suspects = suspect_ranker(
             hungry_mains=hungry["hungry_mains"],
             seed_mains=seed_mains,

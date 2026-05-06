@@ -1,0 +1,63 @@
+{
+  "summary": "Session 33 — Ghost Counter Engine validation. Backend: 5/6 pytest cases pass. /api/ghost-counter works perfectly for swiss & euro (correct Wed/Sat & Tue/Fri P1 sets, chord resonance projects 30,31,32,33 in Euro top15). Invalid mode returns {error}. /api/dj-orchestra regression OK (20 tickets). CRITICAL GAP: /api/dj-brain does NOT include 'ghost_counter' key — lens #15 wiring is missing in dj_brain.cosmic_brain(). Existing dj-brain keys (envelope, frequency, ranked_suspects, ranked_stars) all intact and non-empty. Frontend: Ghost Ledger panel correctly gated behind VIP code 93928, renders ghost-stream-wed/sat in Swiss mode and ghost-stream-tue/fri in Euro mode, ghost-chord block renders, target date input + Count Ghosts button work end-to-end.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "/api/dj-brain/{date}",
+        "issue": "Response is missing 'ghost_counter' key (lens #15). Review request explicitly states cosmic_brain() should include it. Current top-level keys: target_date, mode, seed_mains, seed_stars, envelope, frequency, star_history, precedent, hungry, family_tablet, sneaky_cousins, qd_cell, law_90, law_89, saturation_47, ranked_suspects, ranked_stars. dj_brain.py contains zero references to ghost_counter / ghost_p1_counter. Wiring was never applied.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "/api/ghost-counter/{date}/invalid",
+        "issue": "Returns HTTP 200 with {'error': ...} body instead of HTTP 400/422. Functional but not REST-canonical. Acceptable per current contract."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "TestGhostCounterSwiss::test_swiss_06_05_2026 — Wed=[1,2,4], Sat=[1,8,10,11], target_weekday=Wed, target_quarter=2, chord non-empty with n/weight/sources",
+    "TestGhostCounterEuro::test_euro_08_05_2026 — Tue=[1,3,11,13,26], Fri=[3,10,22,25], target_weekday=Fri, top15 chord includes 30,31,32,33",
+    "TestGhostCounterInvalid::test_invalid_mode_returns_error — error key present",
+    "TestDjBrainGhostCounter::test_dj_brain_existing_keys_intact — envelope/frequency/ranked_suspects/ranked_stars all present & non-empty",
+    "TestDjOrchestraRegression::test_dj_orchestra_returns_tickets — 20 tickets returned",
+    "Frontend: VIP redeem with code 93928 works; ghost-ledger-panel visible only when isUnlimited=true",
+    "Frontend Swiss: ghost-stream-wed (target marker) and ghost-stream-sat both rendered with played_p1_sequence, ghost P1, deepest ghost & snap-back chain",
+    "Frontend Euro: ghost-stream-tue and ghost-stream-fri rendered, ghost-chord block visible"
+  ],
+  "failed_tests": [
+    "TestDjBrainGhostCounter::test_dj_brain_includes_ghost_counter — ghost_counter key missing from /api/dj-brain response"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_session33_ghost_counter.py",
+    "/app/test_reports/pytest/session33_iter12.xml"
+  ],
+  "action_items": [
+    "Wire ghost_counter into dj_brain.cosmic_brain(): inside dj_brain.py, import build_p1_ghost_ledger from ghost_p1_counter and (optionally) build_ghost_chord from ghost_chord_engine, then add a 'ghost_counter' key to the returned dict containing at minimum the ledger summary (target_weekday, streams.<wd>.played_p1_set, ghost_p1_ranked top-N) for the requested target_date+mode. After fix, re-run TestDjBrainGhostCounter::test_dj_brain_includes_ghost_counter."
+  ],
+  "critical_code_review_comments": [
+    "dj_brain.py has NO reference to ghost_counter / ghost_p1_counter / build_p1_ghost_ledger — lens #15 hook claimed in review_request was not actually shipped.",
+    "/api/ghost-counter validation returns HTTP 200 on invalid mode with error body. Consider HTTPException(status_code=400) for proper REST semantics.",
+    "ghost-ledger-panel only renders when isUnlimited=true (correct VIP gating verified).",
+    "data-testids on Ghost Ledger panel are comprehensive: ghost-ledger-panel, ghost-ledger-toggle, ghost-target-date, ghost-ledger-run-btn, ghost-ledger-content, ghost-ledger-results, ghost-stream-{weekday}, ghost-chord, ghost-ledger-error — easy to test.",
+    "App.js is now 5029 lines — exceeds 700-line guideline; should be split into feature modules in a future refactor."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_session33_ghost_counter.py"
+  ],
+  "success_rate": {
+    "backend": "83% (5/6 pytest)",
+    "frontend": "100% (Ghost Ledger UI + VIP gating + Swiss & Euro modes all verified)"
+  },
+  "test_credentials": "VIP promo code 93928 (Have-a-code? → input → Redeem) — verified working",
+  "seed_data_creation": "None — relies on existing MongoDB Swiss draws (1388 cycles) and EuroMillions draws (1623 cycles).",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "After main agent wires ghost_counter into dj_brain.cosmic_brain(), re-run pytest /app/backend/tests/test_session33_ghost_counter.py — only the test_dj_brain_includes_ghost_counter case currently fails. /api/ghost-counter is fully functional and the Ghost Ledger UI tile (data-testid=ghost-ledger-panel) works correctly behind VIP code 93928. Real backend data — no mocks. Public URL: https://number-music-1.preview.emergentagent.com.",
+  "rca_of_the_issue": "RCA — dj-brain ghost_counter missing: review_request claimed dj_brain.py was updated to include 'ghost_counter' (lens #15), but grep of /app/backend/dj_brain.py shows zero references to ghost_counter / ghost_p1_counter / build_p1_ghost_ledger. The file was not modified to add lens #15. /api/ghost-counter/{date}/{mode} endpoint in server.py works in isolation (its own module imports build_p1_ghost_ledger correctly), but cosmic_brain() in dj_brain.py never calls it. Mitigation: edit dj_brain.py to import build_p1_ghost_ledger and add a 'ghost_counter' entry (likely just the ledger summary or full ledger+chord output) into the dict returned by cosmic_brain() before the final return."
+}

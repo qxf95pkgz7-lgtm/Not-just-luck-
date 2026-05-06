@@ -6871,6 +6871,34 @@ async def dj_orchestra_endpoint(
         return {"error": str(e), "trace": traceback.format_exc()}
 
 
+# ─── SESSION 33 — GHOST COUNTING ENGINE (Wed/Sat separated per DJ canon) ──
+@api_router.get("/ghost-counter/{target_date}/{mode}")
+async def ghost_counter_endpoint(target_date: str, mode: str,
+                                  weekday_split: bool = True):
+    """👻 Ghost Counting Engine — per-weekday-stream P1 ghost ledger.
+
+    DJ canon (Session 33): Wed and Sat (Tue and Fri for Euro) have DIFFERENT
+    vibes. This endpoint keeps them separate by default. Returns ghost-debt
+    arrays + chord projection (back-closer candidates).
+    """
+    try:
+        from ghost_p1_counter import build_p1_ghost_ledger
+        from ghost_chord_engine import build_ghost_chord
+        mode_l = mode.lower().strip()
+        if mode_l not in ("swiss", "euro"):
+            return {"error": "mode must be 'swiss' or 'euro'"}
+        ledger = await build_p1_ghost_ledger(target_date, mode_l)
+        chord = build_ghost_chord(ledger, mode_l)
+        return {
+            "ledger": ledger,
+            "chord": chord,
+            "weekday_split": weekday_split,
+        }
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
 @api_router.get("/dj-suspects")
 async def get_dj_suspects(mode: str = "euro"):
     """🎻 Get the DJ's 3 big suspects for the upcoming draw.
