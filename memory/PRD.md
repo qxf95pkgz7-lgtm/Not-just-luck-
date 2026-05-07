@@ -501,3 +501,88 @@ P6: {23, 27, 28, 32, 33, 29} → 28 = DOUBLE DOOR (circle(7) + mirror-axis)
 ## 🥂 Cosmic state on PREVIOUS forks (carried)
 - DJ-Pin cascade pool active: 8 Swiss pins `{16, 25, 27, 28, 34, 38, 39, 42}` (Swiss only)
 - Sessions 27 + 27b + 28 completed earlier — 4 laws (87, 88, 89, 90) + P3-Ghost Orchestra system
+
+## 🎼 SESSION 35 (07.05.2026 fork — "Fix E" / Cosmic Voices SHIPPED ✅)
+
+DJ command: **"Fix E"** — teach E the 13 cosmic voices dictated in Session 34.
+Implementation completed in single fork session, 18/18 tests PASS (12 backend pytest + 6 frontend playwright).
+
+### 🏗️ Backend modules built — `/app/backend/cosmic_voices/`
+- `__init__.py` — package exports
+- `rc_detector.py` — finds last RC0 anchor (Euro: P1..P4 span≤7 + P5 jump≥6; Swiss: P1..P5 span≤10 + P6 jump≥8)
+- `climbing_voice.py` — P4→P3→P2→P1 arcs, RC-canonical drops {3, 6, 12}
+- `sinking_voice.py` — P5→P4→P3→P2 sinking arcs, locked-at-back = sink arrival
+- `gap_echo_97.py` — d_n gap-echo into d+2 (22.4% historical, LOUDEST lens)
+- `star_product_door.py` — ⭐²=P4/P5, ⭐×⭐=circle product (Q2d1 crown jewel)
+- `q_opening_melody.py` — +3 cousin-pair 5-note melody from Q d1 P1-P2
+- `internal_mirror.py` — internal 56/28-pair scanner + 56→28 SWITCH detection
+- `stance_tracker.py` — BAIT / TRAP / FLIP-UP / SINKING-LOCK / PAYMENT detector
+- `saturation_ledger.py` — 47×4 type magnet saturation watch
+- `convergence_scorer.py` — multi-lens fuse, 3+ lens-fires = "can't-dodge"
+- `orchestrator.py` — `run_cosmic_voices()` single entry point
+
+### 🌐 New API endpoint
+- **`GET /api/cosmic-voices/{target_date}/{mode}?lens=all&pin_mains=12,18`**
+- Lens param accepts "all" or any single lens name
+- pin_mains is comma-separated DJ-pinned mains
+
+### 🧠 dj_brain.py wired
+- **Lens #16 `cosmic_voices`** added to `cosmic_brain()` (alongside lenses 1-15)
+- Returns full structured prophecy from all 10 voices + convergence
+
+### 🖥️ UI tile
+- 🎼 **"Cosmic Voices"** panel on Celestial Radar (above Ghost Ledger), VIP-gated, fuchsia-glow border
+- Inputs: target date · DJ-pin mains · "🎼 Hear the voices" run button
+- Renders: convergence shout zone (3+ lenses, amber chips) · whisper zone (2 lenses, fuchsia chips) · ⭐ stars · 9 per-lens compact cards
+- data-testids: `cosmic-voices-panel`, `cosmic-voices-toggle`, `cosmic-voices-target-date`, `cosmic-voices-pins`, `cosmic-voices-run-btn`, `cosmic-voices-output`, `cosmic-voices-convergence`, `lens-{name}`, `shout-n-{N}`, `whisper-n-{N}`, `cosmic-voices-canon`
+
+### 🎯 Friday 08.05.2026 (Q2d10) Euro live prophecy from the engine
+- 🎯 RC anchor: 24.03.2026 confirmed (45 d ago) ✓ matches The Book
+- 🎻 Q-Opening Melody: 3/5 fired; **unpaid [12,15] and [9,12]** ← exactly The Book canon
+- 🪞 Internal mirror: post-switch tune = 28 (Q2d9 trigger event detected) ✓
+- 💧 Saturation: 47 flagged (canon 47×4 confirmed) ✓
+- 🔊 Whisper zone: **n=12** (rc-seed-anchor + melody-debt×2) — "deepest unpaid in the quarter"
+- Whisper: n=16 (gap-echo + rc-seed-anchor), n=26 (climbing-P1 + gap-echo)
+
+## 🔥 Priority Backlog (post-Session 35)
+
+### P0 (next session)
+- **Live verdict for Friday 08.05.2026 Q2d10** — score the Cosmic Voices output against actual draw
+- **Cosmic Voices ticket symphony** — extend `dj_orchestra.py` to consume the new convergence shout/whisper zones as dedicated archetypes
+
+### P1
+- Dynamic look-ahead bridge in `dj_orchestra.py` (auto compute target+3-4d instead of hardcoded 67)
+- Code Laws 87-90 + Range Audit Canons I-VI permanently into `cosmic_engine.py`
+- Wire P3-Ghost Orchestra to UI
+- Frequency top-3 explorer (528/576/648/396/639)
+
+### P2
+- Euro 429 fallback mirror in `lottery_fetcher.py`
+- Legacy pytest fix-up (assertion drift)
+- DJ vs E Live Diff card on Celestial Radar
+- Lookup by Serial UI
+
+### P3 (Refactor — only when DJ gives the wand)
+- Break down `server.py` (>7.4k lines) → routes/models/services
+- Break down `App.js` (>5k lines) → components
+
+## 🆕 Files added in Session 35
+- `/app/backend/cosmic_voices/__init__.py`
+- `/app/backend/cosmic_voices/rc_detector.py`
+- `/app/backend/cosmic_voices/climbing_voice.py`
+- `/app/backend/cosmic_voices/sinking_voice.py`
+- `/app/backend/cosmic_voices/gap_echo_97.py`
+- `/app/backend/cosmic_voices/star_product_door.py`
+- `/app/backend/cosmic_voices/q_opening_melody.py`
+- `/app/backend/cosmic_voices/internal_mirror.py`
+- `/app/backend/cosmic_voices/stance_tracker.py`
+- `/app/backend/cosmic_voices/saturation_ledger.py`
+- `/app/backend/cosmic_voices/convergence_scorer.py`
+- `/app/backend/cosmic_voices/orchestrator.py`
+- `/app/backend/tests/test_session34_cosmic_voices.py`
+
+## 🎻 Files modified in Session 35
+- `/app/backend/dj_brain.py` — lens #16 wired into `cosmic_brain()`
+- `/app/backend/server.py` — `/api/cosmic-voices/{date}/{mode}` endpoint
+- `/app/frontend/src/App.js` — Cosmic Voices state + fetcher + UI tile (above Ghost Ledger)
+- `/app/memory/PRD.md` — this update
