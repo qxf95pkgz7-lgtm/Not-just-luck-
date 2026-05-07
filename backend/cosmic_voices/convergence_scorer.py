@@ -1,0 +1,128 @@
+"""
+🎯 CONVERGENCE SCORER — multi-lens fuse, 3+ = can't-dodge
+==========================================================
+DJ meta-canon (S4 → S34): "No single law wins. Numbers that ring in 3+
+independent lenses simultaneously = forced landing."
+
+Validated on 22.04 (snap-back), 22 at d4 (4-clue lock), 26 at d6 (5-of-5).
+
+This module accepts the outputs from the other voices and produces a ranked
+list of candidate mains + stars by lens-fire count.
+"""
+from __future__ import annotations
+from collections import defaultdict
+from typing import Dict, List, Optional
+
+
+def convergence_scorer(
+    voices: Dict[str, Dict],
+    mode: str = "euro",
+    user_pins: Optional[List[int]] = None,
+) -> Dict:
+    """`voices` is the dict returned by /api/cosmic-voices (or dj_brain.cosmic_voices).
+    Each voice contributes candidate numbers to the convergence stack.
+
+    Returns: ranked main candidates (3+ voices = "shout") and ranked stars.
+    """
+    main_max = 50 if mode == "euro" else 42
+    main_lenses: Dict[int, List[str]] = defaultdict(list)
+    star_lenses: Dict[int, List[str]] = defaultdict(list)
+
+    # 1. Climbing voice → projected P1/P2
+    cv = voices.get("climbing_voice") or {}
+    for n in cv.get("projected_next_p1") or []:
+        main_lenses[n].append("climbing-P1")
+    for n in cv.get("projected_next_p2") or []:
+        main_lenses[n].append("climbing-P2")
+    for n in cv.get("canonical_climbers") or []:
+        main_lenses[n].append("canonical-climber")
+
+    # 2. Sinking voice → locked-at-back means next-d P1 echo
+    sv = voices.get("sinking_voice") or {}
+    for n in sv.get("locked_at_back") or []:
+        main_lenses[n].append("sink-arrival-echo")
+
+    # 3. Gap echo
+    ge = voices.get("gap_echo_97") or {}
+    for n in ge.get("main_echo_candidates") or []:
+        main_lenses[n].append("gap-echo-d+2")
+    for s in ge.get("star_echo_candidates") or []:
+        star_lenses[s].append("gap-echo-star")
+
+    # 4. Star product door → P4/P5 candidates
+    spd = voices.get("star_product_door") or {}
+    for n in spd.get("main_candidates") or []:
+        main_lenses[n].append("star-product-door")
+
+    # 5. Q-opening melody → carrier-debts (numbers in unpaid pairs)
+    qom = voices.get("q_opening_melody") or {}
+    for cd in qom.get("carrier_debts") or []:
+        main_lenses[cd["n"]].append(f"melody-debt-x{cd['in_unpaid_pairs']}")
+
+    # 6. Internal mirror → switch-trigger numbers (latest mirror pair)
+    im = voices.get("internal_mirror") or {}
+    if im.get("series"):
+        last = im["series"][-1]
+        for pair in (last.get("p56_pairs") or []) + (last.get("p28_pairs") or []):
+            for n in pair:
+                main_lenses[n].append("internal-mirror-active")
+
+    # 7. Stance → boost everything if FLIP-UP just fired (post-flip = payment)
+    st = voices.get("stance_tracker") or {}
+    if st.get("current_stance") == "FLIP-UP":
+        # Don't add per-number; just mark globally
+        pass
+
+    # 8. Saturation → DEBOOST saturated numbers
+    sat = voices.get("saturation_ledger") or {}
+    saturated_set = {item["n"] for item in (sat.get("saturated_mains") or [])}
+    saturated_stars_set = {item["s"] for item in (sat.get("saturated_stars") or [])}
+
+    # 9. RC anchor → seed mains as hungry-still-unfired
+    rc = voices.get("rc_detector") or {}
+    if rc and rc.get("mains"):
+        for n in rc["mains"]:
+            main_lenses[n].append("rc-seed-anchor")
+
+    # 10. User pins
+    if user_pins:
+        for n in user_pins:
+            main_lenses[n].append("DJ-PIN")
+
+    # Rank
+    ranked_mains = []
+    for n in range(1, main_max + 1):
+        tags = main_lenses.get(n, [])
+        if not tags:
+            continue
+        score = len(tags)
+        if n in saturated_set:
+            score = max(0, score - 2)
+            tags = tags + ["SATURATED-deboost"]
+        ranked_mains.append({"n": n, "score": score, "lens_count": len(tags), "tags": tags})
+
+    ranked_mains.sort(key=lambda x: (-x["score"], x["n"]))
+
+    star_max = 12 if mode == "euro" else 0
+    ranked_stars = []
+    for s in range(1, star_max + 1):
+        tags = star_lenses.get(s, [])
+        if not tags:
+            continue
+        score = len(tags)
+        if s in saturated_stars_set:
+            score = max(0, score - 1)
+            tags = tags + ["SATURATED-deboost"]
+        ranked_stars.append({"s": s, "score": score, "tags": tags})
+    ranked_stars.sort(key=lambda x: (-x["score"], x["s"]))
+
+    shout_zone = [m for m in ranked_mains if m["score"] >= 3]
+    whisper_zone = [m for m in ranked_mains if m["score"] == 2]
+
+    return {
+        "ranked_mains": ranked_mains[:25],
+        "ranked_stars": ranked_stars[:8] if mode == "euro" else [],
+        "shout_zone": shout_zone,
+        "whisper_zone": whisper_zone[:15],
+        "rule": "3+ lenses ringing = can't-dodge (forced landing). 2 = whisper. 1 = noise.",
+    }

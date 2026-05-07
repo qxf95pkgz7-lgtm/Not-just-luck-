@@ -6899,6 +6899,41 @@ async def ghost_counter_endpoint(target_date: str, mode: str,
         return {"error": str(e), "trace": traceback.format_exc()}
 
 
+# ─── SESSION 34 — COSMIC VOICES ENGINE (10 lenses + convergence) ──────────
+@api_router.get("/cosmic-voices/{target_date}/{mode}")
+async def cosmic_voices_endpoint(target_date: str, mode: str,
+                                  lens: str = "all",
+                                  pin_mains: str = ""):
+    """🎼 Cosmic Voices — Session 34's 13-lens chord engine.
+
+    Lenses: rc_detector · climbing_voice · sinking_voice · gap_echo_97 ·
+    star_product_door · q_opening_melody · internal_mirror · stance_tracker ·
+    saturation_ledger · convergence_scorer (the meta-fuse).
+
+    Query params:
+      • lens=all (default) | one of the lens names
+      • pin_mains=12,18 (DJ-pinned mains, comma-separated)
+    """
+    try:
+        from cosmic_voices.orchestrator import run_cosmic_voices
+        mode_l = mode.lower().strip()
+        if mode_l not in ("swiss", "euro"):
+            return {"error": "mode must be 'swiss' or 'euro'"}
+        pins: list = []
+        if pin_mains:
+            try:
+                pins = [int(x.strip()) for x in pin_mains.split(",") if x.strip()]
+            except Exception:
+                pins = []
+        result = await run_cosmic_voices(
+            target_date=target_date, mode=mode_l, lens=lens, user_pins=pins or None,
+        )
+        return result
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
 @api_router.get("/dj-suspects")
 async def get_dj_suspects(mode: str = "euro"):
     """🎻 Get the DJ's 3 big suspects for the upcoming draw.

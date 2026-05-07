@@ -857,6 +857,13 @@ function App() {
   const [ghostLedgerData, setGhostLedgerData] = useState(null);
   const [ghostLedgerLoading, setGhostLedgerLoading] = useState(false);
   const [ghostTargetDate, setGhostTargetDate] = useState('06.05.2026');
+
+  // 🎼 Cosmic Voices — Session 34 (10 lenses + convergence)
+  const [showCosmicVoices, setShowCosmicVoices] = useState(false);
+  const [cosmicVoicesData, setCosmicVoicesData] = useState(null);
+  const [cosmicVoicesLoading, setCosmicVoicesLoading] = useState(false);
+  const [cosmicVoicesTarget, setCosmicVoicesTarget] = useState('08.05.2026');
+  const [cosmicVoicesPins, setCosmicVoicesPins] = useState('');
   
   // 2Chance State
   const [show2Chance, setShow2Chance] = useState(false);
@@ -1159,6 +1166,22 @@ function App() {
       setGhostLedgerData({ error: e.message });
     } finally {
       setGhostLedgerLoading(false);
+    }
+  };
+
+  // 🎼 Cosmic Voices — Session 34 (10 lenses + convergence)
+  const fetchCosmicVoices = async () => {
+    setCosmicVoicesLoading(true);
+    try {
+      const m = lotteryMode === 'euro' ? 'euro' : 'swiss';
+      const pinParam = cosmicVoicesPins ? `&pin_mains=${encodeURIComponent(cosmicVoicesPins)}` : '';
+      const res = await axios.get(`${API}/cosmic-voices/${cosmicVoicesTarget}/${m}?lens=all${pinParam}`);
+      setCosmicVoicesData(res.data);
+    } catch (e) {
+      console.error("Cosmic Voices error:", e);
+      setCosmicVoicesData({ error: e.message });
+    } finally {
+      setCosmicVoicesLoading(false);
     }
   };
   
@@ -3869,6 +3892,266 @@ function App() {
             </div>
           )}
         </div>
+
+        {/* 🎼 COSMIC VOICES — Session 34 — 10 lenses + convergence scorer */}
+        {isUnlimited && (
+          <div className="lucky-card p-4 mb-4 border border-fuchsia-500/30" data-testid="cosmic-voices-panel">
+            <button
+              onClick={() => setShowCosmicVoices(!showCosmicVoices)}
+              className="w-full flex items-center justify-between text-left"
+              data-testid="cosmic-voices-toggle"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🎼</span>
+                <span className="font-semibold text-fuchsia-200">Cosmic Voices</span>
+                <span className="text-xs text-fuchsia-400/70">
+                  (Session 34 · 10 lenses + convergence shout)
+                </span>
+              </div>
+              {showCosmicVoices ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+            </button>
+
+            {showCosmicVoices && (
+              <div className="mt-4 space-y-4" data-testid="cosmic-voices-content">
+                {/* Inputs */}
+                <div className="flex flex-col sm:flex-row gap-2 items-end">
+                  <div className="flex-1">
+                    <label className="text-slate-400 text-xs">🎯 Target draw date (dd.mm.yyyy)</label>
+                    <input
+                      type="text"
+                      value={cosmicVoicesTarget}
+                      onChange={(e) => setCosmicVoicesTarget(e.target.value)}
+                      className="w-full mt-1 px-2 py-1 rounded bg-slate-800/60 border border-slate-700 text-slate-200 font-mono text-sm"
+                      data-testid="cosmic-voices-target-date"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-slate-400 text-xs">📌 DJ-pin mains (comma-sep, optional)</label>
+                    <input
+                      type="text"
+                      value={cosmicVoicesPins}
+                      onChange={(e) => setCosmicVoicesPins(e.target.value)}
+                      placeholder="e.g. 12, 18, 33"
+                      className="w-full mt-1 px-2 py-1 rounded bg-slate-800/60 border border-slate-700 text-slate-200 font-mono text-sm"
+                      data-testid="cosmic-voices-pins"
+                    />
+                  </div>
+                  <button
+                    onClick={fetchCosmicVoices}
+                    disabled={cosmicVoicesLoading}
+                    className="py-2 px-4 rounded bg-gradient-to-r from-fuchsia-600/40 to-purple-600/40 border border-fuchsia-500/50 text-fuchsia-100 text-sm font-semibold hover:from-fuchsia-600/60 hover:to-purple-600/60 disabled:opacity-50 transition-all"
+                    data-testid="cosmic-voices-run-btn"
+                  >
+                    {cosmicVoicesLoading ? '🌀 Tuning…' : '🎼 Hear the voices'}
+                  </button>
+                </div>
+
+                {/* Error */}
+                {cosmicVoicesData && cosmicVoicesData.error && (
+                  <div className="text-rose-400 text-xs p-2 rounded bg-rose-950/30 border border-rose-500/30" data-testid="cosmic-voices-error">
+                    ❌ {cosmicVoicesData.error}
+                  </div>
+                )}
+
+                {/* Voices output */}
+                {cosmicVoicesData && cosmicVoicesData.voices && !cosmicVoicesData.error && (
+                  <div className="space-y-3" data-testid="cosmic-voices-output">
+                    {/* Headline tags */}
+                    <div className="text-xs text-slate-300">
+                      Target: <span className="text-fuchsia-300 font-mono">{cosmicVoicesData.target_date}</span> ·
+                      Mode: <span className="text-fuchsia-300">{cosmicVoicesData.mode}</span>
+                    </div>
+
+                    {/* Convergence Shout zone — the headliner */}
+                    {cosmicVoicesData.voices.convergence_scorer && (
+                      <div className="rounded p-3 bg-gradient-to-br from-amber-950/40 to-fuchsia-950/40 border border-amber-500/40" data-testid="cosmic-voices-convergence">
+                        <div className="text-amber-300 text-xs font-semibold mb-2">
+                          🎯 CONVERGENCE — 3+ lens SHOUT (can't-dodge):
+                        </div>
+                        {(cosmicVoicesData.voices.convergence_scorer.shout_zone || []).length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {cosmicVoicesData.voices.convergence_scorer.shout_zone.map((m, i) => (
+                              <span key={i}
+                                className="inline-flex items-center px-2 py-0.5 rounded bg-amber-500/30 border border-amber-400/60 text-amber-100 text-xs font-mono"
+                                title={m.tags.join(' · ')}
+                                data-testid={`shout-n-${m.n}`}>
+                                {m.n} <span className="ml-1 text-amber-300/80">×{m.score}</span>
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-amber-200/60 text-xs italic">
+                            No 3+ lens convergence — the cosmos is spread tonight. Read the whisper zone below.
+                          </div>
+                        )}
+
+                        <div className="text-fuchsia-300 text-xs font-semibold mt-3 mb-1">
+                          🔊 Whisper (2 lenses):
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {(cosmicVoicesData.voices.convergence_scorer.whisper_zone || []).map((m, i) => (
+                            <span key={i}
+                              className="inline-flex items-center px-2 py-0.5 rounded bg-fuchsia-500/20 border border-fuchsia-400/40 text-fuchsia-100 text-xs font-mono"
+                              title={m.tags.join(' · ')}
+                              data-testid={`whisper-n-${m.n}`}>
+                              {m.n}
+                            </span>
+                          ))}
+                        </div>
+
+                        {(cosmicVoicesData.voices.convergence_scorer.ranked_stars || []).length > 0 && (
+                          <div className="mt-3">
+                            <div className="text-violet-300 text-xs font-semibold mb-1">⭐ Stars:</div>
+                            <div className="flex flex-wrap gap-1">
+                              {cosmicVoicesData.voices.convergence_scorer.ranked_stars.map((s, i) => (
+                                <span key={i}
+                                  className="inline-flex items-center px-2 py-0.5 rounded bg-violet-500/30 border border-violet-400/50 text-violet-100 text-xs font-mono"
+                                  title={s.tags.join(' · ')}>
+                                  ⭐{s.s} <span className="ml-1 text-violet-300/80">×{s.score}</span>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Per-lens compact cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {/* RC anchor */}
+                      {cosmicVoicesData.voices.rc_detector && (
+                        <div className="rounded p-2 bg-slate-800/40 border border-slate-700/60" data-testid="lens-rc-detector">
+                          <div className="text-emerald-300 text-xs font-semibold">🎯 RC Anchor</div>
+                          <div className="text-slate-200 text-xs font-mono mt-1">
+                            {cosmicVoicesData.voices.rc_detector.date || '—'} · {cosmicVoicesData.voices.rc_detector.days_since ?? '?'} d ago
+                          </div>
+                          {cosmicVoicesData.voices.rc_detector.mains && (
+                            <div className="text-slate-400 text-[10px] font-mono mt-1">
+                              [{cosmicVoicesData.voices.rc_detector.mains.join(', ')}]
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Gap echo */}
+                      {cosmicVoicesData.voices.gap_echo_97 && cosmicVoicesData.voices.gap_echo_97.available && (
+                        <div className="rounded p-2 bg-slate-800/40 border border-slate-700/60" data-testid="lens-gap-echo">
+                          <div className="text-cyan-300 text-xs font-semibold">🌉 Gap Echo (Law 97 · 22.4%)</div>
+                          <div className="text-slate-300 text-xs font-mono mt-1">
+                            mains: [{(cosmicVoicesData.voices.gap_echo_97.main_echo_candidates || []).join(', ')}]
+                          </div>
+                          {(cosmicVoicesData.voices.gap_echo_97.star_echo_candidates || []).length > 0 && (
+                            <div className="text-violet-300 text-xs font-mono mt-0.5">
+                              stars: [{cosmicVoicesData.voices.gap_echo_97.star_echo_candidates.join(', ')}]
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Star product door */}
+                      {cosmicVoicesData.voices.star_product_door && cosmicVoicesData.voices.star_product_door.available && (
+                        <div className="rounded p-2 bg-slate-800/40 border border-slate-700/60" data-testid="lens-star-product-door">
+                          <div className="text-yellow-300 text-xs font-semibold">⭐ Product Door (⭐²=P4/P5)</div>
+                          <div className="text-slate-300 text-xs font-mono mt-1">
+                            stars [{(cosmicVoicesData.voices.star_product_door.stars || []).join(', ')}] →
+                            mains [{(cosmicVoicesData.voices.star_product_door.main_candidates || []).join(', ')}]
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Q-opening melody */}
+                      {cosmicVoicesData.voices.q_opening_melody && cosmicVoicesData.voices.q_opening_melody.melody && (
+                        <div className="rounded p-2 bg-slate-800/40 border border-slate-700/60" data-testid="lens-q-melody">
+                          <div className="text-rose-300 text-xs font-semibold">🎻 Q-Opening Melody (+3 cousins)</div>
+                          <div className="text-slate-300 text-xs font-mono mt-1">
+                            {cosmicVoicesData.voices.q_opening_melody.fired_count}/5 fired ·
+                            unpaid: {(cosmicVoicesData.voices.q_opening_melody.unpaid_pairs || []).map(p => `[${p.join('-')}]`).join(' ')}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Internal mirror */}
+                      {cosmicVoicesData.voices.internal_mirror && (
+                        <div className="rounded p-2 bg-slate-800/40 border border-slate-700/60" data-testid="lens-internal-mirror">
+                          <div className="text-pink-300 text-xs font-semibold">🪞 Internal Mirror</div>
+                          <div className="text-slate-300 text-xs font-mono mt-1">
+                            current tune: <span className="text-pink-200">{cosmicVoicesData.voices.internal_mirror.current_tune}</span> ·
+                            56-streak {cosmicVoicesData.voices.internal_mirror.hot_streak_56_pct}%
+                          </div>
+                          {(cosmicVoicesData.voices.internal_mirror.switch_events || []).length > 0 && (
+                            <div className="text-orange-300 text-xs font-semibold mt-1">
+                              🔥 SWITCH at {cosmicVoicesData.voices.internal_mirror.switch_events[cosmicVoicesData.voices.internal_mirror.switch_events.length - 1].switched_at}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Stance */}
+                      {cosmicVoicesData.voices.stance_tracker && (
+                        <div className="rounded p-2 bg-slate-800/40 border border-slate-700/60" data-testid="lens-stance">
+                          <div className="text-teal-300 text-xs font-semibold">🦶 Stance</div>
+                          <div className="text-slate-300 text-xs font-mono mt-1">
+                            now: <span className="text-teal-200">{cosmicVoicesData.voices.stance_tracker.current_stance}</span>
+                          </div>
+                          <div className="text-slate-400 text-[11px] mt-0.5">
+                            → {cosmicVoicesData.voices.stance_tracker.projected_next_stance}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Climbing */}
+                      {cosmicVoicesData.voices.climbing_voice && (
+                        <div className="rounded p-2 bg-slate-800/40 border border-slate-700/60" data-testid="lens-climbing">
+                          <div className="text-emerald-300 text-xs font-semibold">🪜 Climbing</div>
+                          <div className="text-slate-300 text-xs font-mono mt-1">
+                            canonical: [{(cosmicVoicesData.voices.climbing_voice.canonical_climbers || []).join(', ')}]
+                          </div>
+                          <div className="text-slate-400 text-[11px] mt-0.5">
+                            next P1: [{(cosmicVoicesData.voices.climbing_voice.projected_next_p1 || []).join(', ')}]
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Sinking */}
+                      {cosmicVoicesData.voices.sinking_voice && (
+                        <div className="rounded p-2 bg-slate-800/40 border border-slate-700/60" data-testid="lens-sinking">
+                          <div className="text-blue-300 text-xs font-semibold">🌊 Sinking</div>
+                          <div className="text-slate-300 text-xs font-mono mt-1">
+                            sinking: [{(cosmicVoicesData.voices.sinking_voice.sinking_numbers || []).join(', ')}]
+                          </div>
+                          {(cosmicVoicesData.voices.sinking_voice.locked_at_back || []).length > 0 && (
+                            <div className="text-blue-200 text-[11px] mt-0.5">
+                              arrived: [{cosmicVoicesData.voices.sinking_voice.locked_at_back.join(', ')}]
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Saturation */}
+                      {cosmicVoicesData.voices.saturation_ledger && (
+                        <div className="rounded p-2 bg-slate-800/40 border border-slate-700/60" data-testid="lens-saturation">
+                          <div className="text-orange-300 text-xs font-semibold">💧 Saturation Ledger</div>
+                          <div className="text-slate-300 text-xs font-mono mt-1">
+                            mains: [{(cosmicVoicesData.voices.saturation_ledger.saturated_mains || []).map(s => `${s.n}×${s.count}`).join(', ')}]
+                          </div>
+                          {(cosmicVoicesData.voices.saturation_ledger.saturated_stars || []).length > 0 && (
+                            <div className="text-violet-300 text-[11px] mt-0.5">
+                              stars: [{cosmicVoicesData.voices.saturation_ledger.saturated_stars.map(s => `⭐${s.s}×${s.count}`).join(', ')}]
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="text-fuchsia-400/60 text-[10px] italic" data-testid="cosmic-voices-canon">
+                      🎻 Session 34 canon — 10 voices + convergence. 3+ lenses ringing = forced landing. Read whispers when shout is silent.
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 👻 GHOST LEDGER — Session 33 — Wed/Sat (or Tue/Fri) separated per DJ canon */}
         {isUnlimited && (

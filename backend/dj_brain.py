@@ -620,6 +620,19 @@ async def cosmic_brain(
         except Exception as ge:
             ghost = {"error": str(ge)}
 
+        # Lens #16 — Cosmic Voices (Session 34, 10 sub-lenses + convergence)
+        cosmic_voices = None
+        try:
+            from cosmic_voices.orchestrator import run_cosmic_voices
+            cv_full = await run_cosmic_voices(
+                target_date=target_date, mode=mode, lens="all",
+                user_pins=user_pin_mains,
+            )
+            cosmic_voices = cv_full.get("voices") if cv_full and "voices" in cv_full else cv_full
+        except Exception as cve:
+            import traceback as _tb
+            cosmic_voices = {"error": str(cve), "trace": _tb.format_exc()}
+
         suspects = suspect_ranker(
             hungry_mains=hungry["hungry_mains"],
             seed_mains=seed_mains,
@@ -654,6 +667,7 @@ async def cosmic_brain(
             "law_89": l89,
             "saturation_47": sat,
             "ghost_counter": ghost,
+            "cosmic_voices": cosmic_voices,
             "ranked_suspects": suspects,
             "ranked_stars": stars,
         }
