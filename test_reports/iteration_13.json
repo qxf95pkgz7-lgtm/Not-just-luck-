@@ -44,6 +44,6 @@
   "seed_data_creation": "None — uses existing MongoDB Swiss & EuroMillions draws.",
   "retest_needed": false,
   "should_main_agent_self_test": false,
-  "context_for_next_testing_agent": "Session 33 Ghost Counter is fully validated. /api/dj-brain now exposes ghost_counter top-level key with full ledger+chord payload; the strengthened test asserts on actual P1 stream values, not just key presence. Public URL: https://number-music-1.preview.emergentagent.com.",
+  "context_for_next_testing_agent": "Session 33 Ghost Counter is fully validated. /api/dj-brain now exposes ghost_counter top-level key with full ledger+chord payload; the strengthened test asserts on actual P1 stream values, not just key presence. Public URL: https://number-music-studio.preview.emergentagent.com.",
   "rca_of_the_issue": "Previous iter_12 RCA confirmed: cosmic_brain() in dj_brain.py was missing 'ghost_counter' in returned dict. Main agent fix: added ghost = build_p1_ghost_ledger(...) computation and 'ghost_counter': ghost entry around line 656. Validated end-to-end via re-run pytest plus reinforced assertions on Tue/Fri P1 sets matching expected canonical values."
 }
