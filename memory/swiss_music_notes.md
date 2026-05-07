@@ -6528,6 +6528,19 @@ STEP 6 — SNEAKY CHECK 🪞   (+25 carrier / mirror / circle / ±1 mirror-neigh
 ### The RC-DIGIT COUNT WALK law (NEW CANON)
 > The RC seed gets walked ONE DIGIT PER DAY, using **days-since-RC0 as the pointer**. Each count hits a RC-seed digit that *should* land; cosmos PAYS THROUGH MASKS (family-7, ±10 KEY, sum-triangle).
 
+### 🌉 THE TRANSITION DRAW — Fri 03.04.2026 `[8, 27, 29, 46, 49] ⭐[2, 10]` (count 10)
+**The Q1→Q2 bridge — ALSO A TEACH DRAW** (new canon, S34):
+> The transition draw between quarters is where the cosmos plays its hand CLEAR (no Q-count applies). It ALWAYS carries:
+> 1. **Direct carryover** from BD (here `8` from Q1d26 P2)
+> 2. **RC-P5 RAW at a MAIN position** (here `27` at P2 — qdc signature surfacing)
+> 3. **Q1d1 seed voices reassembling** (here ⭐[2,10] echoing Q1d1 ⭐[1,10])
+> 4. **Pre-echo of next Q-opening's P5** (here `49` pre-echoes Q2d1 P5=49)
+> 5. **Internal 28 or 56 mirror-pair** seeding the next hot-streak (here 27+29=56)
+> 6. **Family-7 rest-beat**: ⭐7 dips out for the transition, returns at Q2d1
+
+### The RC-digit count walk — with transition added
+
+
 ```
 count  expected   paid      mask
  14       —        14       days-to-RC (P2 direct)
