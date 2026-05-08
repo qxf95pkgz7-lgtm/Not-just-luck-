@@ -31,6 +31,7 @@ from .saturation_ledger import saturation_ledger
 from .convergence_scorer import convergence_scorer
 from .family_signature import family_signature_stats, signature_of, family_of
 from .frequency_carrier import frequency_carrier_scan
+from .silent_gap_walker import silent_gap_walker
 
 __all__ = [
     "detect_rc_anchor",
@@ -47,4 +48,5 @@ __all__ = [
     "signature_of",
     "family_of",
     "frequency_carrier_scan",
+    "silent_gap_walker",
 ]

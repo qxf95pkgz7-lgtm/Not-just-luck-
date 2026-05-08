@@ -4233,6 +4233,77 @@ function App() {
                       </div>
                     )}
 
+                    {/* 🥂 SILENT GAP WALKER — Session 35 lens #12 */}
+                    {cosmicVoicesData.voices.silent_gap_walker && cosmicVoicesData.voices.silent_gap_walker.available && cosmicVoicesData.mode === 'euro' && (
+                      <div className="rounded p-3 bg-gradient-to-br from-pink-950/40 to-amber-950/30 border border-pink-500/40" data-testid="lens-silent-gap-walker">
+                        <div className="text-pink-300 text-xs font-semibold mb-2">
+                          🥂 Silent Gap Walker (sneaky-universe debt projections)
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                          <div>
+                            <div className="text-pink-400 font-semibold mb-1">📡 BD silent activity</div>
+                            {(cosmicVoicesData.voices.silent_gap_walker.bd_silent_repeats || []).length > 0 ? (
+                              <div className="font-mono text-rose-200">
+                                Silent ×2+ repeats: {cosmicVoicesData.voices.silent_gap_walker.bd_silent_repeats.map((s, i) => (
+                                  <span key={i} className="ml-1 px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-100">
+                                    {s.n}×{s.count}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-slate-400 italic">No silent ×2 repeats in BD</div>
+                            )}
+                            {(cosmicVoicesData.voices.silent_gap_walker.bd_solo_debt || []).length > 0 && (
+                              <div className="mt-2 font-mono text-amber-200">
+                                Solo debt-gap: {cosmicVoicesData.voices.silent_gap_walker.bd_solo_debt.map((s, i) => (
+                                  <span key={i} className="ml-1 px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-100">
+                                    {s.n}×{s.appearances_in_bd_gaps}
+                                  </span>
+                                ))}
+                                <div className="text-[10px] text-slate-400 italic mt-0.5">
+                                  Deep-debt n appears as BD gap (single fire = whisper, repeat = shout)
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <div className="text-pink-400 font-semibold mb-1">🎯 Sneaky-tail projections</div>
+                            {(cosmicVoicesData.voices.silent_gap_walker.deep_debt_projections || []).slice(0, 2).map((proj, i) => (
+                              <div key={i} className="mb-2">
+                                <div className="text-amber-300 font-mono text-[11px]">silent_n = {proj.silent_n}</div>
+                                <div className="space-y-0.5 max-h-24 overflow-auto">
+                                  {(proj.shapes || []).slice(0, 6).map((shape, j) => (
+                                    <div key={j} className="text-slate-300 font-mono text-[10px] ml-2">
+                                      tail {JSON.stringify(shape.tail)} ·
+                                      {shape.p1_options.length} fronts
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        {(cosmicVoicesData.voices.silent_gap_walker.boost_candidates || []).length > 0 && (
+                          <div className="mt-2">
+                            <div className="text-pink-400 text-xs font-semibold mb-1">
+                              🔥 Sneaky-walk boost candidates ({cosmicVoicesData.voices.silent_gap_walker.boost_candidates.length})
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              {cosmicVoicesData.voices.silent_gap_walker.boost_candidates.map((b, i) => (
+                                <span key={i} className="px-1.5 py-0.5 rounded bg-pink-500/20 border border-pink-400/40 text-pink-100 text-[11px] font-mono"
+                                  title={b.tags.join(' · ')}>
+                                  {b.n}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        <div className="mt-2 text-[10px] text-amber-200/80 italic">
+                          🥂 {cosmicVoicesData.voices.silent_gap_walker.sneaky_universe_warning}
+                        </div>
+                      </div>
+                    )}
+
                     {/* 🍽️ FAMILY SIGNATURE STATS — Session 35 (Euro only) */}
                     {cosmicVoicesData.voices.family_signature && cosmicVoicesData.mode === 'euro' && (
                       <div className="rounded p-3 bg-gradient-to-br from-emerald-950/40 to-amber-950/30 border border-emerald-500/30" data-testid="lens-family-signature">

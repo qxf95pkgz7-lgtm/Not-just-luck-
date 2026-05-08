@@ -24,6 +24,7 @@ from cosmic_voices.saturation_ledger import saturation_ledger
 from cosmic_voices.convergence_scorer import convergence_scorer
 from cosmic_voices.family_signature import family_signature_stats
 from cosmic_voices.frequency_carrier import frequency_carrier_scan
+from cosmic_voices.silent_gap_walker import silent_gap_walker
 
 
 def _quarter_draws_for(target_dt: datetime, draws: List[Dict], mode: str) -> List[Dict]:
@@ -83,6 +84,15 @@ async def run_cosmic_voices(
     sat = saturation_ledger(recent, mode, window=5, threshold=3)
     fs = family_signature_stats(target_dt, draws, years_back=5) if mode == "euro" else None
     fc = frequency_carrier_scan(target_dt, recent) if mode == "euro" else None
+    # Lens #12: feed deep-debt numbers from RC + melody for sneaky-gap projection
+    deep_debt: list = []
+    if rc and rc.get("mains"):
+        deep_debt.extend(rc["mains"])
+    if qom and qom.get("carrier_debts"):
+        for cd in qom["carrier_debts"]:
+            if cd.get("in_unpaid_pairs", 0) >= 2 and cd["n"] not in deep_debt:
+                deep_debt.append(cd["n"])
+    sgw = silent_gap_walker(recent, deep_debt_numbers=deep_debt) if mode == "euro" else None
 
     voices = {
         "rc_detector": rc,
@@ -96,6 +106,7 @@ async def run_cosmic_voices(
         "saturation_ledger": sat,
         "family_signature": fs,
         "frequency_carrier": fc,
+        "silent_gap_walker": sgw,
     }
     convergence = convergence_scorer(voices, mode=mode, user_pins=user_pins)
     voices["convergence_scorer"] = convergence

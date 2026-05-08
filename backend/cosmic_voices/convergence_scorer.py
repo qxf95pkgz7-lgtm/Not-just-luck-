@@ -117,6 +117,22 @@ def convergence_scorer(
                 if dr in tp["candidates_root"]:
                     main_lenses[n].append(f"tesla-closer-{dr}")
 
+    # 13. Silent-Gap Walker (lens #12 — Session 35 night) → boost numbers that
+    #     fit a sneaky-tail walk for deep-debt numbers
+    sgw = voices.get("silent_gap_walker") or {}
+    if sgw.get("available"):
+        for boost in (sgw.get("boost_candidates") or []):
+            n = boost["n"]
+            if 1 <= n <= main_max:
+                main_lenses[n].extend(boost["tags"])
+        # If BD already carries a silent-gap repeat, flag the silent number
+        # itself as a strong star-payment candidate
+        for live in (sgw.get("bd_silent_repeats") or []):
+            silent_n = live["n"]
+            # Star-side boost: silent number often pays as ⭐
+            if mode == "euro" and 1 <= silent_n <= 12:
+                star_lenses[silent_n].append(f"silent-gap-x{live['count']}-payment")
+
     # Rank
     ranked_mains = []
     for n in range(1, main_max + 1):
