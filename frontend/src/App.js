@@ -864,6 +864,10 @@ function App() {
   const [cosmicVoicesLoading, setCosmicVoicesLoading] = useState(false);
   const [cosmicVoicesTarget, setCosmicVoicesTarget] = useState('08.05.2026');
   const [cosmicVoicesPins, setCosmicVoicesPins] = useState('');
+
+  // 🎫 Sneaky Universe Symphony — Session 35
+  const [sneakySymphonyData, setSneakySymphonyData] = useState(null);
+  const [sneakySymphonyLoading, setSneakySymphonyLoading] = useState(false);
   
   // 2Chance State
   const [show2Chance, setShow2Chance] = useState(false);
@@ -1182,6 +1186,21 @@ function App() {
       setCosmicVoicesData({ error: e.message });
     } finally {
       setCosmicVoicesLoading(false);
+    }
+  };
+
+  // 🎫 Sneaky Universe Symphony — Session 35
+  const fetchSneakySymphony = async () => {
+    setSneakySymphonyLoading(true);
+    try {
+      const pinParam = cosmicVoicesPins ? `?pin_mains=${encodeURIComponent(cosmicVoicesPins)}` : '';
+      const res = await axios.get(`${API}/sneaky-symphony/${cosmicVoicesTarget}/euro${pinParam}`);
+      setSneakySymphonyData(res.data);
+    } catch (e) {
+      console.error("Sneaky Symphony error:", e);
+      setSneakySymphonyData({ error: e.message });
+    } finally {
+      setSneakySymphonyLoading(false);
     }
   };
   
@@ -4146,6 +4165,128 @@ function App() {
                     <div className="text-fuchsia-400/60 text-[10px] italic" data-testid="cosmic-voices-canon">
                       🎻 Session 34 canon — 10 voices + convergence. 3+ lenses ringing = forced landing. Read whispers when shout is silent.
                     </div>
+
+                    {/* 🍽️ FAMILY SIGNATURE STATS — Session 35 (Euro only) */}
+                    {cosmicVoicesData.voices.family_signature && cosmicVoicesData.mode === 'euro' && (
+                      <div className="rounded p-3 bg-gradient-to-br from-emerald-950/40 to-amber-950/30 border border-emerald-500/30" data-testid="lens-family-signature">
+                        <div className="text-emerald-300 text-xs font-semibold mb-2">
+                          🍽️ Family Signature — {cosmicVoicesData.voices.family_signature.years_in_window?.length}yr Q2 Euro stats
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                          {/* Base rates */}
+                          <div>
+                            <div className="text-emerald-400 font-semibold mb-1">📊 Base rates (5y, n={cosmicVoicesData.voices.family_signature.total_q2_draws_5y})</div>
+                            <div className="space-y-0.5 font-mono">
+                              {(cosmicVoicesData.voices.family_signature.base_rates_5y || []).map((b, i) => (
+                                <div key={i} className="text-slate-300">
+                                  <span className="text-amber-200">{b.signature}</span> · {b.pct}% ({b.count})
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          {/* Tonight projection */}
+                          <div>
+                            <div className="text-emerald-400 font-semibold mb-1">🔮 Projected tonight (d{cosmicVoicesData.voices.family_signature.target_d_pos})</div>
+                            <div className="space-y-0.5 font-mono">
+                              {(cosmicVoicesData.voices.family_signature.projected_tonight || []).map((p, i) => (
+                                <div key={i} className={i === 0 ? 'text-amber-300 font-semibold' : 'text-slate-300'}>
+                                  {i === 0 ? '🥇 ' : ''}<span>{p.signature}</span> · fused={p.fused_score}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          {/* Family feeding */}
+                          <div>
+                            <div className="text-emerald-400 font-semibold mb-1">🍽️ Family feeding (Q2 so far)</div>
+                            <div className="space-y-0.5 font-mono">
+                              {(cosmicVoicesData.voices.family_signature.family_feeding || []).map((f, i) => (
+                                <div key={i} className="text-slate-300">
+                                  <span className="text-cyan-300">{f.family}</span> · {f.fed_count} ({f.pct}%) ·
+                                  <span className={f.status === 'STARVED' ? 'text-rose-300 font-semibold' : f.status === 'OVERFED' ? 'text-orange-300 font-semibold' : 'text-slate-400'}>
+                                    {' '}{f.status}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-2 text-[10px] text-amber-200/80 italic" data-testid="sneaky-canon">
+                          🥂 Sneaky Universe Canon: even 0% historical = MIN {cosmicVoicesData.voices.family_signature.min_tickets_per_signature} tickets per shape. The cosmos doesn't read its record book.
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 🎫 SNEAKY SYMPHONY BUILDER — Session 35 */}
+                    {cosmicVoicesData.mode === 'euro' && (
+                      <div className="rounded p-3 bg-gradient-to-br from-rose-950/40 to-purple-950/40 border border-rose-500/30" data-testid="sneaky-symphony-block">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-rose-300 text-xs font-semibold">
+                            🎫 Sneaky Universe Symphony
+                          </div>
+                          <button
+                            onClick={fetchSneakySymphony}
+                            disabled={sneakySymphonyLoading}
+                            className="py-1 px-3 rounded bg-rose-600/40 border border-rose-400/50 text-rose-100 text-xs font-semibold hover:bg-rose-600/60 disabled:opacity-50"
+                            data-testid="sneaky-symphony-run-btn"
+                          >
+                            {sneakySymphonyLoading ? '🌀 Composing…' : '🎻 Generate symphony'}
+                          </button>
+                        </div>
+                        {sneakySymphonyData && sneakySymphonyData.error && (
+                          <div className="text-rose-400 text-xs">❌ {sneakySymphonyData.error}</div>
+                        )}
+                        {sneakySymphonyData && sneakySymphonyData.symphony && (
+                          <div className="space-y-2" data-testid="sneaky-symphony-output">
+                            <div className="text-[11px] text-slate-400 font-mono">
+                              Plan: {sneakySymphonyData.symphony.plan.map(p => `${p.signature}×${p.tickets}`).join(' · ')}
+                              {' · '}Total <span className="text-rose-200 font-semibold">{sneakySymphonyData.symphony.total_tickets}</span>
+                              {' · '}🚨 Starved {(sneakySymphonyData.symphony.starved_families || []).join(',') || '—'}
+                              {' · '}🔥 Overfed {(sneakySymphonyData.symphony.overfed_families || []).join(',') || '—'}
+                            </div>
+                            <div className="overflow-auto max-h-96">
+                              <table className="w-full text-[11px] font-mono">
+                                <thead className="sticky top-0 bg-slate-900/90 text-rose-300">
+                                  <tr>
+                                    <th className="text-left p-1">#</th>
+                                    <th className="text-left p-1">sig</th>
+                                    <th className="text-left p-1">mains</th>
+                                    <th className="text-left p-1">⭐</th>
+                                    <th className="text-left p-1">30s</th>
+                                    <th className="text-left p-1">whisper</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {sneakySymphonyData.symphony.tickets.map((t, i) => {
+                                    const sigOK = t.signature_target === t.signature_actual;
+                                    return (
+                                      <tr key={i} className={`border-b border-slate-800/60 ${i % 2 ? 'bg-slate-900/30' : ''}`} data-testid={`sym-row-${t.ticket_index}`}>
+                                        <td className="p-1 text-slate-400">{t.ticket_index}</td>
+                                        <td className="p-1">
+                                          <span className={sigOK ? 'text-emerald-300' : 'text-amber-300'}>
+                                            {t.signature_actual}
+                                          </span>
+                                        </td>
+                                        <td className="p-1 text-slate-200">[{t.mains.join(', ')}]</td>
+                                        <td className="p-1 text-violet-300">[{t.stars.join(',')}]</td>
+                                        <td className="p-1 text-emerald-300">
+                                          {t.feeds_starved && t.feeds_starved.length > 0 ? `[${t.feeds_starved.join(',')}]` : '—'}
+                                        </td>
+                                        <td className="p-1 text-fuchsia-300">
+                                          {(t.carries_whisper || []).join(',') || '—'}
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                            <div className="text-[10px] text-rose-300/70 italic">
+                              {sneakySymphonyData.symphony.rule}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

@@ -6899,6 +6899,43 @@ async def ghost_counter_endpoint(target_date: str, mode: str,
         return {"error": str(e), "trace": traceback.format_exc()}
 
 
+# ─── SESSION 35 — SNEAKY UNIVERSE SYMPHONY ────────────────────────────────
+@api_router.get("/sneaky-symphony/{target_date}/{mode}")
+async def sneaky_symphony_endpoint(target_date: str, mode: str,
+                                    pin_mains: str = ""):
+    """🎫 Sneaky Universe Symphony — multi-signature ticket batch.
+
+    DJ canon (S35): no chance still means ≥3 tickets per signature.
+    Builds 5 (2-2-1) + 3 (2-1-1-1) + 3 (3-1-1) + 3 (4-1) + 3 (1-1-1-1-1)
+    = 17 tickets covering every shape, with starved-family bias.
+    """
+    try:
+        from cosmic_voices.orchestrator import run_cosmic_voices
+        from cosmic_voices.sneaky_symphony import build_sneaky_symphony
+        mode_l = mode.lower().strip()
+        if mode_l != "euro":
+            return {"error": "sneaky-symphony currently Euro-only (family signature lens)"}
+        pins: list = []
+        if pin_mains:
+            try:
+                pins = [int(x.strip()) for x in pin_mains.split(",") if x.strip()]
+            except Exception:
+                pins = []
+        cv = await run_cosmic_voices(
+            target_date=target_date, mode=mode_l, lens="all",
+            user_pins=pins or None,
+        )
+        symphony = build_sneaky_symphony(cv.get("voices") or {})
+        return {
+            "target_date": target_date,
+            "mode": mode_l,
+            "symphony": symphony,
+        }
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
 # ─── SESSION 34 — COSMIC VOICES ENGINE (10 lenses + convergence) ──────────
 @api_router.get("/cosmic-voices/{target_date}/{mode}")
 async def cosmic_voices_endpoint(target_date: str, mode: str,
