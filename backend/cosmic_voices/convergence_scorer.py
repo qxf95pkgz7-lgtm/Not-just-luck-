@@ -98,6 +98,25 @@ def convergence_scorer(
         for n in user_pins:
             main_lenses[n].append("DJ-PIN")
 
+    # 12. Frequency Carrier (lens #11 — Session 35) → +1 lens to hidden-digit
+    #     candidates from BD's date envelope + Tesla 3-6-9 closer
+    fc = voices.get("frequency_carrier") or {}
+    if fc.get("available"):
+        for boost in (fc.get("main_boost_candidates") or []):
+            n = boost["n"]
+            if 1 <= n <= main_max:
+                main_lenses[n].append("freq-hidden-digit")
+        # Tesla 3-6-9 closer applies whenever recent roots build a chord —
+        # regardless of whether BD itself is a freq-carrier.
+        tp = fc.get("tesla_projection") or {}
+        if tp.get("candidates_root"):
+            for n in range(1, main_max + 1):
+                dr = n
+                while dr >= 10:
+                    dr = sum(int(c) for c in str(dr))
+                if dr in tp["candidates_root"]:
+                    main_lenses[n].append(f"tesla-closer-{dr}")
+
     # Rank
     ranked_mains = []
     for n in range(1, main_max + 1):

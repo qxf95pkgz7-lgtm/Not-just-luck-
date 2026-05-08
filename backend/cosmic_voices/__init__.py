@@ -30,6 +30,7 @@ from .stance_tracker import stance_tracker
 from .saturation_ledger import saturation_ledger
 from .convergence_scorer import convergence_scorer
 from .family_signature import family_signature_stats, signature_of, family_of
+from .frequency_carrier import frequency_carrier_scan
 
 __all__ = [
     "detect_rc_anchor",
@@ -45,4 +46,5 @@ __all__ = [
     "family_signature_stats",
     "signature_of",
     "family_of",
+    "frequency_carrier_scan",
 ]

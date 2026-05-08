@@ -23,6 +23,7 @@ from cosmic_voices.stance_tracker import stance_tracker
 from cosmic_voices.saturation_ledger import saturation_ledger
 from cosmic_voices.convergence_scorer import convergence_scorer
 from cosmic_voices.family_signature import family_signature_stats
+from cosmic_voices.frequency_carrier import frequency_carrier_scan
 
 
 def _quarter_draws_for(target_dt: datetime, draws: List[Dict], mode: str) -> List[Dict]:
@@ -81,6 +82,7 @@ async def run_cosmic_voices(
     st = stance_tracker(recent, mode, lookback=8)
     sat = saturation_ledger(recent, mode, window=5, threshold=3)
     fs = family_signature_stats(target_dt, draws, years_back=5) if mode == "euro" else None
+    fc = frequency_carrier_scan(target_dt, recent) if mode == "euro" else None
 
     voices = {
         "rc_detector": rc,
@@ -93,6 +95,7 @@ async def run_cosmic_voices(
         "stance_tracker": st,
         "saturation_ledger": sat,
         "family_signature": fs,
+        "frequency_carrier": fc,
     }
     convergence = convergence_scorer(voices, mode=mode, user_pins=user_pins)
     voices["convergence_scorer"] = convergence

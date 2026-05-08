@@ -4166,6 +4166,73 @@ function App() {
                       🎻 Session 34 canon — 10 voices + convergence. 3+ lenses ringing = forced landing. Read whispers when shout is silent.
                     </div>
 
+                    {/* 🎼 FREQUENCY CARRIER — Session 35 lens #11 */}
+                    {cosmicVoicesData.voices.frequency_carrier && cosmicVoicesData.voices.frequency_carrier.available && cosmicVoicesData.mode === 'euro' && (
+                      <div className="rounded p-3 bg-gradient-to-br from-violet-950/40 to-cyan-950/30 border border-violet-500/40" data-testid="lens-frequency-carrier">
+                        <div className="text-violet-300 text-xs font-semibold mb-2">
+                          🎼 Frequency Carrier (cosmic harmonics in P1P2/P3 formulas)
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                          {/* Window scan */}
+                          <div>
+                            <div className="text-violet-400 font-semibold mb-1">📡 Last 3 draws</div>
+                            <div className="space-y-1 font-mono">
+                              {(cosmicVoicesData.voices.frequency_carrier.scan_window || []).map((s, i) => (
+                                <div key={i} className="text-slate-300">
+                                  <span className="text-cyan-300">{s.date}</span> {JSON.stringify(s.mains)} · root={s.draw_root} · hits={s.hits.length}
+                                  {s.hits.map((h, j) => (
+                                    <div key={j} className="ml-4 text-amber-300 text-[10px]">
+                                      → {h.formula} = <span className="font-semibold">{h.value}</span> ({h.name})
+                                    </div>
+                                  ))}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          {/* Tesla / signature bias */}
+                          <div>
+                            <div className="text-violet-400 font-semibold mb-1">🔮 Tesla 3-6-9 + bias</div>
+                            {cosmicVoicesData.voices.frequency_carrier.tesla_projection ? (
+                              <div className="font-mono text-slate-300">
+                                roots: [{(cosmicVoicesData.voices.frequency_carrier.tesla_projection.recent_roots || []).join(', ')}]
+                                <div className="text-cyan-200 mt-0.5">
+                                  → close with: {(cosmicVoicesData.voices.frequency_carrier.tesla_projection.candidates_root || []).join(' or ')}
+                                </div>
+                                <div className="text-[10px] text-slate-400 italic mt-1">
+                                  {cosmicVoicesData.voices.frequency_carrier.tesla_projection.rule}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-slate-400 italic text-xs">No Tesla chord active</div>
+                            )}
+                            {cosmicVoicesData.voices.frequency_carrier.signature_bias && (
+                              <div className="mt-2 text-amber-300 text-[11px]">
+                                🚨 {cosmicVoicesData.voices.frequency_carrier.signature_bias.alarm}
+                              </div>
+                            )}
+                            {cosmicVoicesData.voices.frequency_carrier.multi_formula_carrier && (
+                              <div className="mt-2 text-rose-300 text-[11px]">
+                                🚨 MULTI-FORMULA AMPLIFIER → {cosmicVoicesData.voices.frequency_carrier.multi_formula_carrier.amplified_values.join(', ')}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {(cosmicVoicesData.voices.frequency_carrier.main_boost_candidates || []).length > 0 && (
+                          <div className="mt-2">
+                            <div className="text-violet-400 text-xs font-semibold mb-1">🔢 Hidden-digit echo targets</div>
+                            <div className="flex flex-wrap gap-1">
+                              {cosmicVoicesData.voices.frequency_carrier.main_boost_candidates.map((b, i) => (
+                                <span key={i} className="px-1.5 py-0.5 rounded bg-violet-500/20 border border-violet-400/40 text-violet-100 text-[11px] font-mono"
+                                  title={b.tags.join(' · ')}>
+                                  {b.n}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* 🍽️ FAMILY SIGNATURE STATS — Session 35 (Euro only) */}
                     {cosmicVoicesData.voices.family_signature && cosmicVoicesData.mode === 'euro' && (
                       <div className="rounded p-3 bg-gradient-to-br from-emerald-950/40 to-amber-950/30 border border-emerald-500/30" data-testid="lens-family-signature">
