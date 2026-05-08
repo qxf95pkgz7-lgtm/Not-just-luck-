@@ -84,7 +84,16 @@ def convergence_scorer(
         for n in rc["mains"]:
             main_lenses[n].append("rc-seed-anchor")
 
-    # 10. User pins
+    # 10. Family signature → STARVED-FAMILY members gain a lens-fire each
+    fs = voices.get("family_signature") or {}
+    starved = (fs or {}).get("starved_families") or []
+    for n in range(1, main_max + 1):
+        fam = "1-9" if n <= 9 else ("10s" if n <= 19 else
+              ("20s" if n <= 29 else ("30s" if n <= 39 else "40s")))
+        if fam in starved:
+            main_lenses[n].append(f"starved-family-{fam}")
+
+    # 11. User pins
     if user_pins:
         for n in user_pins:
             main_lenses[n].append("DJ-PIN")

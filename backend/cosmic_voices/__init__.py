@@ -29,6 +29,7 @@ from .internal_mirror import internal_mirror_scan
 from .stance_tracker import stance_tracker
 from .saturation_ledger import saturation_ledger
 from .convergence_scorer import convergence_scorer
+from .family_signature import family_signature_stats, signature_of, family_of
 
 __all__ = [
     "detect_rc_anchor",
@@ -41,4 +42,7 @@ __all__ = [
     "stance_tracker",
     "saturation_ledger",
     "convergence_scorer",
+    "family_signature_stats",
+    "signature_of",
+    "family_of",
 ]
