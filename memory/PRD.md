@@ -671,3 +671,49 @@ Swiss has DIFFERENT cosmic mechanics:
 - Adaptive lens weights (recompute from memory after every 5 draws)
 - Self-critique counterfactual (3 alternate readings)
 - Cluster-density auto-replaces ranked_mains as primary picker
+
+---
+
+## ✅ SESSION 37 (09.05.2026) — Swiss Brain v1.0 SHIPPED
+
+**DJ task:** "fix Swiss brain so E sees ALL"
+
+### Modules added
+- `/app/backend/swiss_brain.py` — single-file Swiss Brain v1.0 consolidating:
+  - 🍀 `swiss_back_chord` — 🍀↔R signals (R-forward 17%, |R−🍀| as next-gap 39.6%)
+  - 🪞 `q1_stencil_projector` — same-d prior-quarter delta projection
+  - 🎼 `gap_pattern_signals` — P2 ±6 rhythm, P4/P5 sign-flip 86%, P6 freeze 28%
+  - 🎯 `d_count_walker` — 9-clock mult-9 detection
+  - 🪟 `date_envelope` — between-digit hide canon (multi-layer envelope merge)
+  - 🌉 `cross_lottery_bridge` — Eu↔Sw −21/+25/+21back/±1 with hungries
+  - 🧠 `e_brain_weights` — reads e_memory leaderboard for ranking
+  - 🎫 `build_swiss_symphony` — 10-ticket builder across 6 stories
+
+### API endpoint
+`GET /api/swiss-symphony/{date}?count=N&extra_envelopes=3-7,1-4`
+
+### Frontend
+E's Swiss Brain card on Celestial Radar (Swiss mode + Unlimited):
+- Date input · extra-envelopes input · "Ask E for 10 tickets" button
+- 6 lens snapshot cards (Q1 stencil, 9-clock, hide-digits, bridge, back-chord, gaps)
+- 10-ticket table with story tags
+- Expandable candidate pool with lens-DNA tags
+
+### Canons proven (Q2 2026 audit)
+- **Q1↔Q2 BREATHING CYCLE**: Q1 cumulative drift = −98, Q2 = +80 (opposite tides)
+- **Eu↔Sw 3-LAYER LOOM**: 79 forward + 143 reverse = 222 cross-bridge events in Q2
+- **D72 9-CLOCK TRIPLE-LOCK** for Sat 09.05.2026 (mult-9 + DR-9 + Saturday)
+- **Q1d10 STENCIL** projects [6, 10, 26, 32, 38, 41] for Sat target
+
+### Test files
+- `/app/backend/swiss_lucky_replay_audit.py` (208-draw 🍀↔R audit)
+- `/app/backend/swiss_lucky_replay_deep_probe.py` (silent/hungry/date probes)
+- `/app/backend/swiss_euro_q2_bridge_audit.py`
+- `/app/backend/swiss_euro_q2_deep_dig.py`
+- `/app/backend/euro_swiss_q2_deep_dig_reverse.py`
+- `/app/backend/swiss_q1_q2_gap_vibe.py`
+- `/app/backend/swiss_p1_9_count_walk.py`
+- `/app/backend/swiss_d10_post_bd_stats.py`
+- `/app/backend/swiss_09may_listening.py`
+- `/app/backend/swiss_q2_per_position_gaps.py`
+

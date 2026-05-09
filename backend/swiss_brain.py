@@ -426,7 +426,7 @@ async def build_swiss_symphony(target_date: str, count: int = 10,
             try:
                 t = builder(top_pool, voices, back_chord, q1_proj, envelope,
                             bridge, gap_pat, d_clock_p1_9, variant)
-            except Exception as ex:
+            except Exception:
                 t = None
             if not t:
                 continue

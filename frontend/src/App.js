@@ -1204,6 +1204,25 @@ function App() {
     }
   };
   
+  // 🧠 Swiss Brain — Session 37 (10-ticket Swiss symphony)
+  const [swissBrainData, setSwissBrainData] = useState(null);
+  const [swissBrainLoading, setSwissBrainLoading] = useState(false);
+  const [swissBrainTarget, setSwissBrainTarget] = useState('2026-05-09');
+  const [swissBrainEnvelopes, setSwissBrainEnvelopes] = useState('');
+  const fetchSwissBrain = async () => {
+    setSwissBrainLoading(true);
+    try {
+      const envParam = swissBrainEnvelopes ? `&extra_envelopes=${encodeURIComponent(swissBrainEnvelopes)}` : '';
+      const res = await axios.get(`${API}/swiss-symphony/${swissBrainTarget}?count=10${envParam}`);
+      setSwissBrainData(res.data);
+    } catch (e) {
+      console.error("Swiss Brain error:", e);
+      setSwissBrainData({ error: e.message });
+    } finally {
+      setSwissBrainLoading(false);
+    }
+  };
+
   // 2Chance functions
   const check2ChanceHits = async () => {
     setTwoChanceChecking(true);
@@ -4427,6 +4446,165 @@ function App() {
                     )}
                   </div>
                 )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 🧠 SWISS BRAIN v1.0 — Session 37 (10-ticket Swiss symphony) */}
+        {isUnlimited && lotteryMode === 'swiss' && (
+          <div className="lucky-card p-4 mb-4" data-testid="swiss-brain-panel">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🧠</span>
+                <span className="font-semibold text-slate-200">E's Swiss Brain v1.0</span>
+                <span className="text-xs text-emerald-400/70">
+                  (10 tickets · 6 stories · all canons wired)
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 items-end mb-3">
+              <div>
+                <label className="text-[10px] text-slate-400 block mb-1">Target date (YYYY-MM-DD)</label>
+                <input
+                  type="text"
+                  value={swissBrainTarget}
+                  onChange={(e) => setSwissBrainTarget(e.target.value)}
+                  className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 w-32 font-mono"
+                  data-testid="swiss-brain-date-input"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-400 block mb-1">Extra envelopes (e.g., 3-7,1-4)</label>
+                <input
+                  type="text"
+                  value={swissBrainEnvelopes}
+                  onChange={(e) => setSwissBrainEnvelopes(e.target.value)}
+                  placeholder="3-7"
+                  className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 w-32 font-mono"
+                  data-testid="swiss-brain-envelopes-input"
+                />
+              </div>
+              <button
+                onClick={fetchSwissBrain}
+                disabled={swissBrainLoading}
+                className="py-1.5 px-4 rounded bg-emerald-600/40 border border-emerald-400/50 text-emerald-100 text-xs font-semibold hover:bg-emerald-600/60 disabled:opacity-50"
+                data-testid="swiss-brain-run-btn"
+              >
+                {swissBrainLoading ? '🌀 Brain thinking…' : '🎻 Ask E for 10 Swiss tickets'}
+              </button>
+            </div>
+
+            {swissBrainData && swissBrainData.error && (
+              <div className="text-rose-400 text-xs">❌ {swissBrainData.error}</div>
+            )}
+
+            {swissBrainData && swissBrainData.tickets && (
+              <div className="space-y-3" data-testid="swiss-brain-output">
+                {/* BD context */}
+                <div className="text-[11px] text-slate-400 font-mono">
+                  Target <span className="text-emerald-200">{swissBrainData.target_date}</span> · BD{' '}
+                  <span className="text-amber-200">{swissBrainData.bd_date}</span> [{swissBrainData.bd_mains?.join(', ')}]{' '}
+                  🍀<span className="text-fuchsia-300">{swissBrainData.bd_lucky}</span>{' '}
+                  R:<span className="text-amber-300">{swissBrainData.bd_replay}</span>
+                </div>
+
+                {/* Lens snapshot */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[10px] font-mono">
+                  {swissBrainData.lenses?.q1_stencil?.available && (
+                    <div className="rounded p-2 bg-purple-950/30 border border-purple-500/20" data-testid="swiss-lens-q1-stencil">
+                      <div className="text-purple-300 mb-1">🪞 Q1 stencil</div>
+                      <div className="text-slate-300">[{swissBrainData.lenses.q1_stencil.projected_mains?.join(', ')}]</div>
+                      <div className="text-slate-500 text-[9px]">from {swissBrainData.lenses.q1_stencil.prior_nd_date}</div>
+                    </div>
+                  )}
+                  {swissBrainData.lenses?.d_count_walker_p1_9?.available && (
+                    <div className="rounded p-2 bg-amber-950/30 border border-amber-500/20" data-testid="swiss-lens-d-clock">
+                      <div className="text-amber-300 mb-1">🎯 9-clock</div>
+                      <div className="text-slate-300">d{swissBrainData.lenses.d_count_walker_p1_9.target_d}{' '}
+                        {swissBrainData.lenses.d_count_walker_p1_9.is_triple_lock ? <span className="text-emerald-300">TRIPLE-LOCK</span> :
+                         swissBrainData.lenses.d_count_walker_p1_9.is_mult_9 ? <span className="text-amber-200">mult-9</span> : '—'}
+                      </div>
+                      <div className="text-slate-500 text-[9px]">last P1=9 {swissBrainData.lenses.d_count_walker_p1_9.last_match_date}</div>
+                    </div>
+                  )}
+                  {swissBrainData.lenses?.date_envelope && (
+                    <div className="rounded p-2 bg-rose-950/30 border border-rose-500/20" data-testid="swiss-lens-envelope">
+                      <div className="text-rose-300 mb-1">🪟 Hide digits</div>
+                      <div className="text-slate-300">{(swissBrainData.lenses.date_envelope.hide_digits || []).join(', ')}</div>
+                      <div className="text-slate-500 text-[9px]">{(swissBrainData.lenses.date_envelope.carrier_numbers || []).slice(0, 12).join(',')}</div>
+                    </div>
+                  )}
+                  {swissBrainData.lenses?.cross_lottery_bridge?.available && (
+                    <div className="rounded p-2 bg-cyan-950/30 border border-cyan-500/20" data-testid="swiss-lens-bridge">
+                      <div className="text-cyan-300 mb-1">🌉 Eu→Sw bridge</div>
+                      <div className="text-slate-300">from {swissBrainData.lenses.cross_lottery_bridge.from_date}</div>
+                      <div className="text-slate-500 text-[9px]">[{(swissBrainData.lenses.cross_lottery_bridge.from_mains || []).join(',')}]</div>
+                    </div>
+                  )}
+                  {swissBrainData.lenses?.back_chord && (
+                    <div className="rounded p-2 bg-pink-950/30 border border-pink-500/20" data-testid="swiss-lens-back-chord">
+                      <div className="text-pink-300 mb-1">🍀 Back chord</div>
+                      <div className="text-slate-300">|R−🍀| = {swissBrainData.lenses.back_chord.delta}{' '}
+                        {swissBrainData.lenses.back_chord.snap_back_p1_low_alarm && <span className="text-amber-300">P1≤7 alarm</span>}
+                      </div>
+                      <div className="text-slate-500 text-[9px]">next-gap hint: {swissBrainData.lenses.back_chord.next_gap_hint}</div>
+                    </div>
+                  )}
+                  {swissBrainData.lenses?.gap_pattern?.available && (
+                    <div className="rounded p-2 bg-blue-950/30 border border-blue-500/20" data-testid="swiss-lens-gap">
+                      <div className="text-blue-300 mb-1">🎼 Last gaps</div>
+                      <div className="text-slate-300">[{(swissBrainData.lenses.gap_pattern.last_gaps || []).join(', ')}]</div>
+                      <div className="text-slate-500 text-[9px]">P4/P5 sign-flip 86% · P6 freeze 28%</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* The 10 tickets */}
+                <div className="overflow-auto max-h-96">
+                  <table className="w-full text-[11px] font-mono" data-testid="swiss-brain-tickets-table">
+                    <thead className="sticky top-0 bg-slate-900/90 text-emerald-300">
+                      <tr>
+                        <th className="text-left p-1">#</th>
+                        <th className="text-left p-1">mains</th>
+                        <th className="text-left p-1">🍀</th>
+                        <th className="text-left p-1">R</th>
+                        <th className="text-left p-1">sum</th>
+                        <th className="text-left p-1">story</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {swissBrainData.tickets.map((t, i) => (
+                        <tr key={i} className={`border-b border-slate-800/60 ${i % 2 ? 'bg-slate-900/30' : ''}`} data-testid={`swiss-brain-ticket-${i + 1}`}>
+                          <td className="p-1 text-slate-400">T{i + 1}</td>
+                          <td className="p-1 text-slate-200">[{t.mains?.join(', ')}]</td>
+                          <td className="p-1 text-fuchsia-300">{t.lucky}</td>
+                          <td className="p-1 text-amber-300">{t.replay}</td>
+                          <td className="p-1 text-slate-400">{t.sum}</td>
+                          <td className="p-1 text-emerald-300">{t.story}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Top candidate pool */}
+                {swissBrainData.candidate_pool && (
+                  <details className="text-[10px]" data-testid="swiss-brain-pool-details">
+                    <summary className="text-emerald-300/80 cursor-pointer">🧬 Top candidate pool ({swissBrainData.candidate_pool_size} numbers · click to expand)</summary>
+                    <div className="mt-2 space-y-1 font-mono max-h-60 overflow-auto">
+                      {Object.entries(swissBrainData.candidate_pool).map(([n, tags]) => (
+                        <div key={n} className="text-slate-400 text-[9px]">
+                          <span className="text-emerald-200 font-semibold">{n}</span> ({(tags || []).length} lenses): {(tags || []).slice(0, 3).join(' · ')}
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                )}
+
+                <div className="text-[10px] text-emerald-300/70 italic">
+                  🥂 Brain v1.0 · sees: 9-clock · Q1 stencil · gap-pattern · date-envelope · 🍀↔R · Eu↔Sw bridge · e_memory weights
+                </div>
               </div>
             )}
           </div>
