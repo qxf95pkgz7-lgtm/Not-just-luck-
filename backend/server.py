@@ -7012,6 +7012,43 @@ async def cosmic_voices_endpoint(target_date: str, mode: str,
         return {"error": str(e), "trace": traceback.format_exc()}
 
 
+# ─── SESSION 37 — SWISS BRAIN v1.0 (10-ticket Swiss symphony) ────────────
+@api_router.get("/swiss-symphony/{target_date}")
+async def swiss_symphony_endpoint(target_date: str, count: int = 10,
+                                    extra_envelopes: str = ""):
+    """🧠 Swiss Brain v1.0 — 10-ticket symphony (6 mains + 🍀 + R).
+
+    Combines all Swiss canons:
+      • Existing cosmic_voices lenses (mode-aware)
+      • swiss_back_chord (🍀↔R signals)
+      • q1_stencil_projector (same-d prior-quarter delta)
+      • gap_pattern (P2 ±6, P4/P5 sign-flip 86%, P6 freeze)
+      • d_count_walker (9-clock mult-9 detection)
+      • date_envelope (between-digit hide)
+      • cross_lottery_bridge (Eu→Sw +21/-25/+1)
+      • e_memory leaderboard weights
+
+    Query params:
+      • count=10 (number of tickets to generate)
+      • extra_envelopes=3-7,1-4 (additional date envelopes, comma-separated)
+    """
+    try:
+        from swiss_brain import build_swiss_symphony
+        envs = []
+        if extra_envelopes:
+            for pair in extra_envelopes.split(","):
+                pair = pair.strip()
+                if "-" in pair:
+                    a, b = pair.split("-", 1)
+                    envs.append((int(a.strip()), int(b.strip())))
+        result = await build_swiss_symphony(target_date, count=count,
+                                             extra_envelopes=envs or None)
+        return result
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
 @api_router.get("/dj-suspects")
 async def get_dj_suspects(mode: str = "euro"):
     """🎻 Get the DJ's 3 big suspects for the upcoming draw.
