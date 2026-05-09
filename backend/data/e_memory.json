@@ -1,0 +1,312 @@
+[
+  {
+    "draw_date": "08.05.2026",
+    "mode": "euro",
+    "actual_mains": [
+      2,
+      17,
+      19,
+      34,
+      37
+    ],
+    "actual_stars": [
+      8,
+      11
+    ],
+    "shout_zone_predicted": [
+      1,
+      2,
+      4,
+      5,
+      6,
+      8,
+      9,
+      14,
+      15,
+      16,
+      17,
+      18,
+      20,
+      24,
+      26,
+      27,
+      29,
+      33,
+      34,
+      36,
+      37,
+      41,
+      42,
+      43,
+      45,
+      48,
+      50
+    ],
+    "whisper_zone_predicted": [
+      7,
+      10,
+      12,
+      13,
+      19,
+      21,
+      22,
+      23,
+      28,
+      30,
+      31,
+      32,
+      35,
+      39,
+      44
+    ],
+    "top12_ranked_predicted": [
+      15,
+      18,
+      34,
+      36,
+      1,
+      5,
+      6,
+      8,
+      9,
+      16,
+      17,
+      24
+    ],
+    "shout_hits": [
+      2,
+      17,
+      34,
+      37
+    ],
+    "whisper_hits": [
+      19
+    ],
+    "top12_hits": [
+      17,
+      34
+    ],
+    "misses": [
+      2,
+      19,
+      37
+    ],
+    "mirror_neighbor_hits": {
+      "15": [
+        17
+      ],
+      "18": [
+        17,
+        19
+      ],
+      "36": [
+        34,
+        37
+      ],
+      "1": [
+        2
+      ],
+      "16": [
+        17
+      ],
+      "17": [
+        19
+      ],
+      "4": [
+        2
+      ],
+      "20": [
+        19
+      ],
+      "33": [
+        34
+      ]
+    },
+    "lens_hit_rates": {
+      "melody-debt-x1": {
+        "fires": 2,
+        "hits": 0
+      },
+      "tesla-closer-6": {
+        "fires": 5,
+        "hits": 0
+      },
+      "silent-12-front": {
+        "fires": 13,
+        "hits": 2
+      },
+      "silent-12-tail": {
+        "fires": 18,
+        "hits": 3
+      },
+      "-12-cousin-of-27": {
+        "fires": 1,
+        "hits": 0
+      },
+      "rc-seed-anchor": {
+        "fires": 4,
+        "hits": 1
+      },
+      "tesla-closer-9": {
+        "fires": 5,
+        "hits": 0
+      },
+      "silent-16-tail": {
+        "fires": 2,
+        "hits": 1
+      },
+      "gap-echo-d+2": {
+        "fires": 4,
+        "hits": 1
+      },
+      "-33-mirror-wrap-of-17": {
+        "fires": 1,
+        "hits": 1
+      },
+      "\u00d72-twin-of-17": {
+        "fires": 1,
+        "hits": 1
+      },
+      "star-product-door": {
+        "fires": 2,
+        "hits": 0
+      },
+      "\u00d72-twin-of-18": {
+        "fires": 1,
+        "hits": 0
+      },
+      "\u00d73-amp-of-12": {
+        "fires": 1,
+        "hits": 0
+      },
+      "silent-16-front": {
+        "fires": 2,
+        "hits": 1
+      },
+      "+33-wrap-wrap-of-18": {
+        "fires": 1,
+        "hits": 0
+      },
+      "\u00d73-wrap-of-17": {
+        "fires": 1,
+        "hits": 0
+      },
+      "cousin-prime-of-3": {
+        "fires": 1,
+        "hits": 0
+      },
+      "-12-cousin-of-17": {
+        "fires": 1,
+        "hits": 0
+      },
+      "-12-cousin-of-18": {
+        "fires": 1,
+        "hits": 0
+      },
+      "\u00f72-of-12": {
+        "fires": 1,
+        "hits": 0
+      },
+      "internal-mirror-active": {
+        "fires": 2,
+        "hits": 0
+      },
+      "\u00f72-of-16": {
+        "fires": 1,
+        "hits": 0
+      },
+      "\u00f72-of-17": {
+        "fires": 1,
+        "hits": 0
+      },
+      "\u00f72-of-18": {
+        "fires": 1,
+        "hits": 0
+      },
+      "+12-cousin-of-12": {
+        "fires": 1,
+        "hits": 0
+      },
+      "\u00d72-twin-of-12": {
+        "fires": 1,
+        "hits": 0
+      },
+      "cousin-prime-of-31": {
+        "fires": 1,
+        "hits": 0
+      },
+      "+12-cousin-of-17": {
+        "fires": 1,
+        "hits": 0
+      },
+      "-33-mirror-wrap-of-12": {
+        "fires": 1,
+        "hits": 0
+      },
+      "+25-shift-of-17": {
+        "fires": 1,
+        "hits": 0
+      },
+      "-25-shift-wrap-of-17": {
+        "fires": 1,
+        "hits": 0
+      },
+      "+25-shift-wrap-of-27": {
+        "fires": 1,
+        "hits": 1
+      },
+      "-25-shift-of-27": {
+        "fires": 1,
+        "hits": 1
+      },
+      "-12-cousin-of-16": {
+        "fires": 1,
+        "hits": 0
+      },
+      "\u00d73-wrap-of-18": {
+        "fires": 1,
+        "hits": 0
+      },
+      "climbing-P1": {
+        "fires": 1,
+        "hits": 0
+      },
+      "-33-mirror-wrap-of-16": {
+        "fires": 1,
+        "hits": 0
+      },
+      "+25-shift-of-12": {
+        "fires": 1,
+        "hits": 1
+      },
+      "-25-shift-wrap-of-12": {
+        "fires": 1,
+        "hits": 1
+      },
+      "+25-shift-of-16": {
+        "fires": 1,
+        "hits": 0
+      },
+      "-25-shift-wrap-of-16": {
+        "fires": 1,
+        "hits": 0
+      },
+      "+25-shift-of-18": {
+        "fires": 1,
+        "hits": 0
+      },
+      "-25-shift-wrap-of-18": {
+        "fires": 1,
+        "hits": 0
+      },
+      "+33-wrap-of-12": {
+        "fires": 1,
+        "hits": 0
+      }
+    },
+    "shout_precision": 0.148,
+    "shout_recall": 0.8,
+    "top12_recall": 0.4,
+    "scored_at": "2026-05-09T07:18:48.389735+00:00"
+  }
+]

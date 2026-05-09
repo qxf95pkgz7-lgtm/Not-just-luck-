@@ -133,6 +133,22 @@ def convergence_scorer(
             if mode == "euro" and 1 <= silent_n <= 12:
                 star_lenses[silent_n].append(f"silent-gap-x{live['count']}-payment")
 
+    # 14. Prime Family (lens #14 — Session 36) → cousin-primes + product-glue
+    pf = voices.get("prime_family") or {}
+    if pf.get("available"):
+        for boost in (pf.get("boost_candidates") or []):
+            n = boost["n"]
+            if 1 <= n <= main_max:
+                main_lenses[n].extend(boost["tags"])
+
+    # 15. Carrier Extensions (lens #15 — Session 36) → 12+25=37 type shifts
+    ce = voices.get("carrier_extensions") or {}
+    if ce.get("available"):
+        for boost in (ce.get("boost_candidates") or []):
+            n = boost["n"]
+            if 1 <= n <= main_max:
+                main_lenses[n].extend(boost["tags"])
+
     # Rank
     ranked_mains = []
     for n in range(1, main_max + 1):

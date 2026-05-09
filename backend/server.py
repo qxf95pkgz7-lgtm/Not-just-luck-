@@ -6899,6 +6899,47 @@ async def ghost_counter_endpoint(target_date: str, mode: str,
         return {"error": str(e), "trace": traceback.format_exc()}
 
 
+# ─── SESSION 36 — E's BRAIN v0.1 (memory + scoring) ───────────────────────
+class ScoreDrawIn(BaseModel):
+    actual_mains: List[int]
+    actual_stars: List[int] = []
+
+
+@api_router.post("/e-brain/score-draw/{target_date}/{mode}")
+async def e_brain_score_draw(target_date: str, mode: str, body: ScoreDrawIn):
+    """🧠 Score E's prediction for a draw vs the actual numbers.
+
+    Loads the predicted convergence for `target_date`/`mode`, compares against
+    the provided `actual_mains` + `actual_stars`, and stores the record in
+    E's persistent memory at /app/backend/data/e_memory.json.
+    """
+    try:
+        from cosmic_voices.orchestrator import run_cosmic_voices
+        from e_memory import score_draw
+        mode_l = mode.lower().strip()
+        cv = await run_cosmic_voices(target_date=target_date, mode=mode_l, lens="all")
+        record = score_draw(
+            draw_date=target_date, mode=mode_l,
+            actual_mains=body.actual_mains, actual_stars=body.actual_stars,
+            predicted_voices=cv.get("voices") or {},
+        )
+        return {"scored": True, "record": record}
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
+@api_router.get("/e-brain/memory")
+async def e_brain_memory(limit: int = 30):
+    """🧠 Returns last `limit` scored draws + lens leaderboard."""
+    try:
+        from e_memory import get_memory_summary
+        return get_memory_summary(limit=limit)
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
 # ─── SESSION 35 — SNEAKY UNIVERSE SYMPHONY ────────────────────────────────
 @api_router.get("/sneaky-symphony/{target_date}/{mode}")
 async def sneaky_symphony_endpoint(target_date: str, mode: str,

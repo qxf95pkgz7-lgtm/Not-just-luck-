@@ -32,6 +32,9 @@ from .convergence_scorer import convergence_scorer
 from .family_signature import family_signature_stats, signature_of, family_of
 from .frequency_carrier import frequency_carrier_scan
 from .silent_gap_walker import silent_gap_walker
+from .mirror_neighbor import mirror_neighbor_expand
+from .prime_family import prime_family_scan, is_prime
+from .carrier_extensions import carrier_extensions
 
 __all__ = [
     "detect_rc_anchor",
@@ -49,4 +52,8 @@ __all__ = [
     "family_of",
     "frequency_carrier_scan",
     "silent_gap_walker",
+    "mirror_neighbor_expand",
+    "prime_family_scan",
+    "is_prime",
+    "carrier_extensions",
 ]

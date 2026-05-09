@@ -25,6 +25,9 @@ from cosmic_voices.convergence_scorer import convergence_scorer
 from cosmic_voices.family_signature import family_signature_stats
 from cosmic_voices.frequency_carrier import frequency_carrier_scan
 from cosmic_voices.silent_gap_walker import silent_gap_walker
+from cosmic_voices.prime_family import prime_family_scan
+from cosmic_voices.carrier_extensions import carrier_extensions
+from cosmic_voices.mirror_neighbor import mirror_neighbor_expand
 
 
 def _quarter_draws_for(target_dt: datetime, draws: List[Dict], mode: str) -> List[Dict]:
@@ -93,6 +96,8 @@ async def run_cosmic_voices(
             if cd.get("in_unpaid_pairs", 0) >= 2 and cd["n"] not in deep_debt:
                 deep_debt.append(cd["n"])
     sgw = silent_gap_walker(recent, deep_debt_numbers=deep_debt) if mode == "euro" else None
+    pf = prime_family_scan(recent) if mode == "euro" else None
+    ce = carrier_extensions(deep_debt) if (mode == "euro" and deep_debt) else None
 
     voices = {
         "rc_detector": rc,
@@ -107,8 +112,18 @@ async def run_cosmic_voices(
         "family_signature": fs,
         "frequency_carrier": fc,
         "silent_gap_walker": sgw,
+        "prime_family": pf,
+        "carrier_extensions": ce,
     }
     convergence = convergence_scorer(voices, mode=mode, user_pins=user_pins)
+    # Brain v0.1: mirror-neighbor expansion AFTER convergence
+    if mode == "euro" and convergence.get("ranked_mains"):
+        mn = mirror_neighbor_expand(convergence["ranked_mains"])
+        convergence["mirror_neighbor"] = mn
+        # Replace ranked_mains with expanded list (keeps original tags + neighbor tags)
+        convergence["ranked_mains_expanded"] = mn["expanded_ranked"]
+        convergence["shout_zone_expanded"] = mn["shout_expanded"]
+        convergence["whisper_zone_expanded"] = mn["whisper_expanded"]
     voices["convergence_scorer"] = convergence
 
     # Filter to specific lens if requested
