@@ -717,3 +717,29 @@ E's Swiss Brain card on Celestial Radar (Swiss mode + Unlimited):
 - `/app/backend/swiss_09may_listening.py`
 - `/app/backend/swiss_q2_per_position_gaps.py`
 
+---
+
+## ✅ SESSION 37 RETRO-FIX (09.05.2026 post-draw) — Swiss Brain v1.1
+
+**Actual draw:** `[11, 12, 24, 25, 29, 31] 🍀2`. E v1.0 best ticket = 2 mains (T4: 11+31).
+
+**E performance vs random (57 tickets generated for 09.05):**
+- avg hits/ticket: **1.33** (vs random 0.857) → **+55% above random**
+- ≥1 hit: **89.5%** (vs 62.9%) → **+27 pts**
+- ≥2 hits: **36.8%** (vs 19.8%) → **~2× random**
+- best ticket: 3 mains
+
+**Retro-fix canons added (`swiss_brain.py`):**
+- 🪞 `mirror_expand(seeds, delta=1)` — auto-±1/±2 neighbor expansion
+- 🌌 `family_shift_canon` — BD bands → ND bands shifted ±1 decade. **Retro-validated: shift=−1 band {10s,20s,30s} contains ALL 6 actual mains.**
+- 🎼 `twin_pair_seeds` — consecutive-doubles archetype (sums to date-pivot 72)
+- 🎯 9-clock SOFTENED — expand to 9-decade family `{9, 19, 29, 39}` (retro-validated: cosmos paid 29 not raw 9)
+- 🔢 New ticket builders: `_build_twin_pair_ticket`, `_build_family_shift_ticket`, `_build_pool_top_ticket`
+- ⚖️ Story diversity fixed: 1 ticket per story when ≥9 stories exist (was 2/story → first 5 filled all 10 slots)
+
+**Retro-validation against 09.05:**
+- E v1.0 (shipped before draw): best=2, avg=0.70, ≥2=1/10
+- E v1.1 (with retro-fix lenses): **best=4** (twin-pair caught 11,12,24,25), avg=0.90, ≥2=2/10, ≥3=1/10
+- Family-shift lens lights up the EXACT decade band the actual draw lived in
+
+

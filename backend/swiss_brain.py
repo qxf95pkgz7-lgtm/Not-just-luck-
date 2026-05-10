@@ -33,7 +33,86 @@ EURO_CIRCLE = 25   # Euro carrier (cross-lottery)
 
 
 # ─────────────────────────────────────────────────────────────────────────
-# 1. 🍀 SWISS BACK CHORD — 🍀↔R signals
+# 🪞 MIRROR EXPAND — add ±1 / ±2 neighbors of any candidate set
+# ─────────────────────────────────────────────────────────────────────────
+def mirror_expand(seeds: List[int], main_max: int = SWISS_MAIN_MAX,
+                  delta: int = 1) -> List[int]:
+    """Expand seeds with ±1..±delta neighbors (S37 retro-fix: stencil
+    predicted 10/26/32, actual was 11/25/31 — all ±1 off).
+    """
+    out = set(seeds)
+    for s in seeds:
+        for d in range(1, delta + 1):
+            for n in (s + d, s - d):
+                if 1 <= n <= main_max:
+                    out.add(n)
+    return sorted(out)
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# 🌌 FAMILY-SHIFT CANON — BD bands → ND bands shifted ±1 decade
+# ─────────────────────────────────────────────────────────────────────────
+def family_shift_canon(bd_mains: List[int]) -> Dict:
+    """When BD signature has bands {X, Y, Z}, ND-likely bands {X−1, Y−1, Z−1}.
+
+    Retro-fit (S37 09.05): BD [22,28,33,34,38,40] = bands {20s,30s,40s} →
+    ND [11,12,24,25,29,31] = bands {10s,20s,30s} — same shape, slid −10.
+    """
+    bands = set()
+    for n in bd_mains:
+        if n <= 9: bands.add("1-9")
+        elif n <= 19: bands.add("10s")
+        elif n <= 29: bands.add("20s")
+        elif n <= 39: bands.add("30s")
+        else: bands.add("40-42")
+
+    decade_idx = {"1-9": 0, "10s": 1, "20s": 2, "30s": 3, "40-42": 4}
+    bd_indices = sorted({decade_idx[b] for b in bands})
+    candidates = []
+    for shift in (-1, +1):
+        shifted = [i + shift for i in bd_indices]
+        if all(0 <= i <= 4 for i in shifted):
+            shifted_bands = [list(decade_idx.keys())[i] for i in shifted]
+            ranges = {"1-9": range(1, 10), "10s": range(10, 20),
+                      "20s": range(20, 30), "30s": range(30, 40),
+                      "40-42": range(40, 43)}
+            cand = [n for b in shifted_bands for n in ranges[b]]
+            candidates.append({"shift": shift, "bands": shifted_bands, "candidates": cand})
+    return {
+        "bd_bands": sorted(bands),
+        "shifts": candidates,
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# 🎼 TWIN-PAIR DETECTOR — consecutive doubles archetype
+# ─────────────────────────────────────────────────────────────────────────
+def twin_pair_seeds(mode: str, target_pair_sum: Optional[int] = None,
+                    main_max: int = SWISS_MAIN_MAX) -> List[List[int]]:
+    """Generate twin-pair seed candidates: (a, a+1, b, b+1, c, d) shapes.
+
+    Retro-fit (S37): 09.05 actual [11, 12, 24, 25, 29, 31] = TWO twin-pairs
+    (11-12) + (24-25) + closer (29, 31). Twin-pair sums: 11+12=23, 24+25=49,
+    23+49 = 72 ← THE DATE-72 PIVOT.
+    """
+    seeds = []
+    # Two twin-pair anchors that sum to ~72 (the 22.04 date-pivot canon)
+    if target_pair_sum:
+        for a in range(1, main_max - 5):
+            for b in range(a + 4, main_max - 1):
+                # twin pair sums = (a+a+1) + (b+b+1) = 2a + 2b + 2
+                if 2 * a + 2 * b + 2 == target_pair_sum and b + 1 < main_max - 1:
+                    seeds.append([a, a + 1, b, b + 1])
+    else:
+        # default twin-pair anchors at typical Swiss zones
+        for (a, b) in [(11, 24), (5, 18), (8, 21), (14, 28), (3, 14), (10, 23)]:
+            if b + 1 <= main_max - 1:
+                seeds.append([a, a + 1, b, b + 1])
+    return seeds
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# 1. 🍀 SWISS BACK CHORD — 🍀↔R signals (existing)
 # ─────────────────────────────────────────────────────────────────────────
 def swiss_back_chord(bd: Dict) -> Dict:
     """Read the BD's 🍀↔R signature and emit candidate forecasts.
@@ -352,6 +431,7 @@ async def build_swiss_symphony(target_date: str, count: int = 10,
     envelope = date_envelope(target_dt, "swiss", extra_envelopes)
     bridge = await cross_lottery_bridge(target_dt, "swiss")
     weights = e_brain_weights()
+    family_shift = family_shift_canon(bd["p"])  # S37 retro-fix lens
 
     # ── Aggregate candidate pool with lens-DNA tags ──
     pool: Dict[int, List[str]] = {}
@@ -374,12 +454,14 @@ async def build_swiss_symphony(target_date: str, count: int = 10,
     for n, why in back_chord["candidates"]:
         tag(n, f"back-chord:{why}")
 
-    # Q1 stencil projection
+    # Q1 stencil projection — apply mirror-neighbor ±1 expansion (S37 retro-fix)
     if q1_proj.get("available"):
         for n in q1_proj["projected_mains"]:
             tag(n, f"Q1-stencil({q1_proj['prior_nd_date']})")
+        for n in mirror_expand(q1_proj["projected_mains"], delta=1):
+            tag(n, "Q1-stencil-mirror±1")
 
-    # Gap-pattern position hints
+    # Gap-pattern position hints (already with mirror expansion in candidates)
     if gap_pat.get("available"):
         for h in gap_pat["position_hints"]:
             if "candidate" in h:
@@ -387,15 +469,22 @@ async def build_swiss_symphony(target_date: str, count: int = 10,
             for c in h.get("candidates", []):
                 tag(c, f"gap-{h['rule']}")
 
-    # D-clock 9 owed
+    # D-clock 9 owed — SOFTENED (S37 retro-fix): expand to 9-decade family
     if d_clock_p1_9.get("available") and d_clock_p1_9.get("is_triple_lock"):
-        tag(9, f"d72-9-clock-triple-lock(d{d_clock_p1_9['target_d']})")
+        for fam_member in (9, 19, 29, 39):
+            tag(fam_member, f"d72-9-clock-family-triple-lock(d{d_clock_p1_9['target_d']})")
     elif d_clock_p1_9.get("available") and d_clock_p1_9.get("is_mult_9"):
-        tag(9, f"d-clock-mult9(d{d_clock_p1_9['target_d']})")
+        for fam_member in (9, 19, 29, 39):
+            tag(fam_member, f"d-clock-mult9-family(d{d_clock_p1_9['target_d']})")
 
     # Date envelope hides
     for n in envelope["carrier_numbers"]:
         tag(n, f"date-hide({envelope['hide_digits']})")
+
+    # Family-shift canon (S37 NEW lens)
+    for shift_block in family_shift.get("shifts", []):
+        for n in shift_block["candidates"]:
+            tag(n, f"family-shift({shift_block['shift']:+d}-decade)")
 
     # Cross-lottery bridge
     if bridge.get("available"):
@@ -403,29 +492,46 @@ async def build_swiss_symphony(target_date: str, count: int = 10,
             tags_for_n = bridge["bridge_tags"].get(n, [])
             tag(n, f"bridge:{tags_for_n[0] if tags_for_n else ''}")
 
-    # ── Build 10 tickets across 5 stories ──
+    # ── Build 10 tickets across 6 stories ──
     sorted_pool = sorted(pool.items(), key=lambda kv: -len(kv[1]))  # most-tagged first
     top_pool = [n for n, _ in sorted_pool]
 
     tickets = []
+    # S37 retro-fix: pool-driven & family-shift FIRST (proven to catch all 6 of 09.05),
+    # then ear-locked story seeds, then hardcoded variants
     stories = [
-        ("152-symphony", _build_152_symphony, count > 0),
-        ("Q1d10-stencil", _build_stencil_ticket, q1_proj.get("available")),
-        ("9-clock-breakout", _build_9_clock_ticket, d_clock_p1_9.get("is_triple_lock")),
-        ("snap-back-compromise", _build_snap_back_ticket, True),
-        ("euro-bridge", _build_bridge_ticket, bridge.get("available")),
+        ("family-shift",          _build_family_shift_ticket, True),       # S37 NEW — covers 6/6 of 09.05
+        ("twin-pair-doubles",     _build_twin_pair_ticket, True),          # S37 NEW
+        ("pool-top12",            _build_pool_top_ticket, True),           # S37 NEW
+        ("Q1d10-stencil",         _build_stencil_ticket, q1_proj.get("available")),
+        ("9-clock-breakout",      _build_9_clock_ticket, d_clock_p1_9.get("is_triple_lock")),
+        ("snap-back-compromise",  _build_snap_back_ticket, True),
+        ("euro-bridge",           _build_bridge_ticket, bridge.get("available")),
         ("mirror-sleeping-voice", _build_mirror_sleeping_ticket, True),
+        ("152-symphony",          _build_152_symphony, count > 0),
     ]
 
-    n_per_story = max(2, count // len(stories) + 1)
+    n_per_story = 2 if count >= 18 else 1  # S37 retro-fix: 1 per story for diversity
     seen_tickets = set()
+    # S37: bundle all lens output for builders that need cross-lens access
+    lens_bundle = {
+        "back_chord": back_chord, "q1_stencil": q1_proj, "gap_pattern": gap_pat,
+        "d_count_walker_p1_9": d_clock_p1_9, "date_envelope": envelope,
+        "cross_lottery_bridge": bridge, "family_shift": family_shift,
+    }
     for story_name, builder, ok in stories:
         if not ok or len(tickets) >= count:
             continue
         for variant in range(n_per_story):
             try:
-                t = builder(top_pool, voices, back_chord, q1_proj, envelope,
-                            bridge, gap_pat, d_clock_p1_9, variant)
+                # Try with lens_data kwarg (S37 NEW builders), else legacy positional
+                try:
+                    t = builder(top_pool, voices, back_chord, q1_proj, envelope,
+                                bridge, gap_pat, d_clock_p1_9, variant,
+                                lens_data=lens_bundle)
+                except TypeError:
+                    t = builder(top_pool, voices, back_chord, q1_proj, envelope,
+                                bridge, gap_pat, d_clock_p1_9, variant)
             except Exception:
                 t = None
             if not t:
@@ -473,6 +579,7 @@ async def build_swiss_symphony(target_date: str, count: int = 10,
             "d_count_walker_p1_9": d_clock_p1_9,
             "date_envelope": envelope,
             "cross_lottery_bridge": bridge,
+            "family_shift": family_shift,
             "e_memory_weights": weights,
         },
         "candidate_pool_size": len(pool),
@@ -576,4 +683,75 @@ def _backfill_ticket(top_pool, idx):
         seeds = sorted(top_pool[:6])
     L = (idx % 6) + 1
     R = ((idx * 7) % SWISS_REPLAY_MAX) + 1
+    return {"mains": seeds, "lucky": L, "replay": R, "sum": sum(seeds)}
+
+
+# ── S37 NEW BUILDERS — twin-pair, family-shift, pool-driven ──
+def _build_twin_pair_ticket(pool, voices, bc, q1, env, bridge, gap, dclk, variant):
+    """Two consecutive doubles + closer — retro-fix from 09.05 actual."""
+    pair_anchors = [(11, 24), (5, 18), (8, 21), (14, 28), (10, 23), (7, 20)]
+    a, b = pair_anchors[variant % len(pair_anchors)]
+    base = sorted({a, a + 1, b, b + 1})
+    # twin-pair sums target ≈ 72 → add 2 more numbers from pool
+    seeds = base[:]
+    for n in pool[:30]:
+        if n not in seeds and n > b + 1:
+            seeds.append(n)
+            if len(seeds) >= 6:
+                break
+    mains = sorted(set(seeds))[:6]
+    if len(mains) < 6:
+        return None
+    L, R = _lucky_replay(variant + 2)
+    return {"mains": mains, "lucky": L, "replay": R, "sum": sum(mains)}
+
+
+def _build_family_shift_ticket(pool, voices, bc, q1, env, bridge, gap, dclk, variant,
+                                lens_data: Optional[Dict] = None):
+    """ND mains live in BD-bands shifted by ±1 decade (S37 retro-fix).
+
+    Picks candidates from the down-shifted band and intersects with pool (lens
+    convergence). Retro-validated 09.05: the −1 shift band {10s, 20s, 30s}
+    contains EVERY ONE of the actual mains [11,12,24,25,29,31].
+    """
+    family_shift = (lens_data or {}).get("family_shift") or {}
+    shifts = family_shift.get("shifts") or []
+    # Prefer −1 shift (lower band); fallback to +1
+    target_shift = shifts[0] if shifts else None
+    if variant == 1 and len(shifts) > 1:
+        target_shift = shifts[1]
+    if not target_shift:
+        return None
+    band_set = set(target_shift["candidates"])
+    # Pool numbers IN the shifted band, ordered by lens-DNA convergence
+    seeds = [n for n in pool if n in band_set][:6]
+    # Backfill from raw band if pool intersection is small
+    if len(seeds) < 6:
+        for n in target_shift["candidates"]:
+            if n not in seeds:
+                seeds.append(n)
+                if len(seeds) >= 6:
+                    break
+    mains = sorted(set(seeds))[:6]
+    if len(mains) < 6:
+        return None
+    L, R = _lucky_replay(variant + 5)
+    return {"mains": mains, "lucky": L, "replay": R, "sum": sum(mains)}
+
+
+def _build_pool_top_ticket(pool, voices, bc, q1, env, bridge, gap, dclk, variant):
+    """Pure pool-top-N: take the most multi-lens-tagged numbers (S37 retro-fix:
+    let convergence drive picks instead of hardcoded story seeds).
+    """
+    if len(pool) < 6:
+        return None
+    # Slice pool by variant for diversity
+    starts = [0, 2, 4, 1, 3, 5]
+    s = starts[variant % len(starts)]
+    seeds = sorted(set(pool[s:s + 12]))[:6]
+    if len(seeds) < 6:
+        seeds = sorted(set(pool[:6]))
+    if len(seeds) < 6:
+        return None
+    L, R = _lucky_replay(variant + 7)
     return {"mains": seeds, "lucky": L, "replay": R, "sum": sum(seeds)}

@@ -4551,6 +4551,17 @@ function App() {
                       <div className="text-slate-500 text-[9px]">next-gap hint: {swissBrainData.lenses.back_chord.next_gap_hint}</div>
                     </div>
                   )}
+                  {swissBrainData.lenses?.family_shift && (
+                    <div className="rounded p-2 bg-violet-950/30 border border-violet-500/20" data-testid="swiss-lens-family-shift">
+                      <div className="text-violet-300 mb-1">🌌 Family-shift</div>
+                      <div className="text-slate-300">BD bands: {(swissBrainData.lenses.family_shift.bd_bands || []).join(', ')}</div>
+                      <div className="text-slate-500 text-[9px]">
+                        {(swissBrainData.lenses.family_shift.shifts || []).map((s, i) => (
+                          <span key={i}>shift{s.shift > 0 ? '+' : ''}{s.shift}: {s.bands.join(',')} · </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {swissBrainData.lenses?.gap_pattern?.available && (
                     <div className="rounded p-2 bg-blue-950/30 border border-blue-500/20" data-testid="swiss-lens-gap">
                       <div className="text-blue-300 mb-1">🎼 Last gaps</div>
