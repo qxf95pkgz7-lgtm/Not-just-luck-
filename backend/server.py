@@ -7012,6 +7012,31 @@ async def cosmic_voices_endpoint(target_date: str, mode: str,
         return {"error": str(e), "trace": traceback.format_exc()}
 
 
+# ─── SESSION 38/39 — GHOST ENGINE (Ghost-Counting Canon) ─────────────────
+@api_router.get("/ghost-ledger/{target_date}/{mode}")
+async def ghost_ledger_endpoint(target_date: str, mode: str,
+                                  lookback: int = 10):
+    """👻 Ghost Ledger — Session 38 Ghost-Counting Canon (S39 build).
+
+    Extracts every born ghost via `?+Pa=Pb` arithmetic doors, walks them +1
+    per draw with mirror-neighbor / digit-swap / carrier-form probes,
+    detects closures (raw / 4-late / 9-10d-deep-sleep / cross-carrier),
+    flags chainless cash-windows, and fuses everything into convergence
+    shout / whisper zones for the target date.
+
+    Query params:
+      • lookback=10 (window size for ghost tracking)
+    """
+    try:
+        from ghost_engine import build_ghost_ledger
+        return await build_ghost_ledger(
+            target_date=target_date, mode=mode, lookback=lookback,
+        )
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
 # ─── SESSION 37 — SWISS BRAIN v1.0 (10-ticket Swiss symphony) ────────────
 @api_router.get("/swiss-symphony/{target_date}")
 async def swiss_symphony_endpoint(target_date: str, count: int = 10,

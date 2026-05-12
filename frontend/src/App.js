@@ -865,6 +865,18 @@ function App() {
   const [cosmicVoicesTarget, setCosmicVoicesTarget] = useState('08.05.2026');
   const [cosmicVoicesPins, setCosmicVoicesPins] = useState('');
 
+  // 🚪 Ghost Engine — Session 38/39 (`?+Pa=Pb` doors, 9-10d deep-sleep, chainless cash-windows)
+  const [showGhostEngine, setShowGhostEngine] = useState(false);
+  const [ghostEngineData, setGhostEngineData] = useState(null);
+  const [ghostEngineLoading, setGhostEngineLoading] = useState(false);
+  const [ghostEngineTarget, setGhostEngineTarget] = useState('13.05.2026');
+  const [ghostEngineLookback, setGhostEngineLookback] = useState(10);
+  // 🎬 Cosmic Replay slider — walks historical quarters forward d-by-d
+  const [replayMode, setReplayMode] = useState(false);
+  const [replayDates, setReplayDates] = useState([]); // list of dd.mm.yyyy in selected Q
+  const [replayIdx, setReplayIdx] = useState(0);
+  const [replayLoading, setReplayLoading] = useState(false);
+
   // 🎫 Sneaky Universe Symphony — Session 35
   const [sneakySymphonyData, setSneakySymphonyData] = useState(null);
   const [sneakySymphonyLoading, setSneakySymphonyLoading] = useState(false);
@@ -1202,6 +1214,57 @@ function App() {
     } finally {
       setSneakySymphonyLoading(false);
     }
+  };
+
+  // 🚪 Ghost Engine — Session 38/39 (`?+Pa=Pb` doors)
+  const fetchGhostEngine = async (overrideDate = null) => {
+    setGhostEngineLoading(true);
+    try {
+      const m = lotteryMode === 'euro' ? 'euro' : 'swiss';
+      const dt = overrideDate || ghostEngineTarget;
+      const res = await axios.get(
+        `${API}/ghost-ledger/${dt}/${m}?lookback=${ghostEngineLookback}`
+      );
+      setGhostEngineData(res.data);
+    } catch (e) {
+      console.error("Ghost Engine error:", e);
+      setGhostEngineData({ error: e.message });
+    } finally {
+      setGhostEngineLoading(false);
+    }
+  };
+  // 🎬 Cosmic Replay — build the slider date list using ghost-ledger's window
+  const buildReplayDates = async () => {
+    setReplayLoading(true);
+    try {
+      const m = lotteryMode === 'euro' ? 'euro' : 'swiss';
+      // Pull a wide window (30 d) for the slider
+      const res = await axios.get(
+        `${API}/ghost-ledger/${ghostEngineTarget}/${m}?lookback=30`
+      );
+      const dates = (res.data?.draws_window || [])
+        .map((d) => d.date)
+        .filter(Boolean);
+      if (dates.length > 0) {
+        // Add the current target as the last stop on the timeline
+        const timeline = [...dates, ghostEngineTarget];
+        setReplayDates(timeline);
+        setReplayIdx(timeline.length - 1);
+        setGhostEngineData(res.data);
+      }
+    } catch (e) {
+      console.error('Replay build error:', e);
+    } finally {
+      setReplayLoading(false);
+    }
+  };
+  const stepReplay = async (delta) => {
+    const next = Math.min(replayDates.length - 1, Math.max(0, replayIdx + delta));
+    if (next === replayIdx) return;
+    setReplayIdx(next);
+    const dt = replayDates[next];
+    setGhostEngineTarget(dt);
+    await fetchGhostEngine(dt);
   };
   
   // 🧠 Swiss Brain — Session 37 (10-ticket Swiss symphony)
@@ -3835,7 +3898,8 @@ function App() {
           </div>
         )}
 
-        {/* 🎻 WE THINK THAT... — DJ's 3 Big Suspects (Session 31) */}
+        {/* 🎻 WE THINK THAT... — DJ's 3 Big Suspects (Session 31) — VIP-only per S38 canon */}
+        {isUnlimited && (
         <div className="lucky-card p-5 mb-4 border-2 border-fuchsia-500/40 bg-gradient-to-br from-fuchsia-950/40 via-purple-950/30 to-slate-900/60 shadow-[0_0_40px_rgba(217,70,239,0.15)]" data-testid="dj-we-think-that-box">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -3930,8 +3994,32 @@ function App() {
             </div>
           )}
         </div>
+        )}
 
-        {/* 🎼 COSMIC VOICES — Session 34 — 10 lenses + convergence scorer */}
+        {/* 🎻 LOCKED-STATE TEASER for free users — Deep listening tools (per DJ canon 10.05.2026) */}
+        {!isUnlimited && (
+          <div
+            className="lucky-card p-5 mb-4 border border-slate-700/60 bg-gradient-to-br from-slate-900/70 via-slate-950/80 to-slate-900/50"
+            data-testid="vip-deep-tools-teaser"
+          >
+            <div className="flex items-start gap-3">
+              <div className="text-2xl mt-0.5">🎻</div>
+              <div className="flex-1">
+                <div className="text-base sm:text-lg font-semibold text-slate-200">
+                  The deep listening tools are reserved
+                </div>
+                <p className="text-xs sm:text-sm text-slate-400 mt-1 leading-relaxed">
+                  E's Cosmic Brain · Cosmic Voices · Ghost Ledger · Cosmic Replay · Swiss Brain — these are the tuning chambers where the DJ teaches the engine to hear deep frequencies. They are reserved today, and will open in the future.
+                </p>
+                <p className="text-xs sm:text-sm text-amber-300/90 mt-3 leading-relaxed">
+                  👉 Head to <span className="font-semibold text-amber-200">Pending Tickets</span> below — the cosmic-generated picks are free and ready for you to play with 🍀.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+
         {isUnlimited && (
           <div className="lucky-card p-4 mb-4 border border-fuchsia-500/30" data-testid="cosmic-voices-panel">
             <button
@@ -4773,6 +4861,240 @@ function App() {
                     <div className="text-xs text-slate-500 italic pt-1">
                       🛑 Wed and Sat (Tue/Fri for Euro) ledgers are kept separate per DJ canon — different vibes.
                     </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 🚪 GHOST ENGINE — Session 38 — `?+Pa=Pb` arithmetic doors, 9-10d deep-sleep, chainless cash-windows */}
+        {isUnlimited && (
+          <div className="lucky-card p-4 mb-4 border border-amber-500/30" data-testid="ghost-engine-panel">
+            <button
+              onClick={() => setShowGhostEngine(!showGhostEngine)}
+              className="w-full flex items-center justify-between text-left"
+              data-testid="ghost-engine-toggle"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🚪</span>
+                <span className="font-semibold text-amber-200">Ghost Engine</span>
+                <span className="text-xs text-amber-400/70">
+                  (S38 · doors `?+Pa=Pb` · 9-10d deep-sleep · chainless cash)
+                </span>
+              </div>
+              {showGhostEngine ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+            </button>
+
+            {showGhostEngine && (
+              <div className="mt-4 space-y-4" data-testid="ghost-engine-content">
+                {/* Inputs */}
+                <div className="flex flex-col sm:flex-row gap-2 items-end">
+                  <div className="flex-1">
+                    <label className="text-xs text-slate-400">🎯 Target date (dd.mm.yyyy)</label>
+                    <input
+                      type="text"
+                      value={ghostEngineTarget}
+                      onChange={(e) => setGhostEngineTarget(e.target.value)}
+                      placeholder="13.05.2026"
+                      className="w-full px-3 py-2 rounded bg-slate-900/60 border border-slate-700 text-slate-100 text-sm font-mono"
+                      data-testid="ghost-engine-target-date"
+                    />
+                  </div>
+                  <div className="w-28">
+                    <label className="text-xs text-slate-400">Lookback</label>
+                    <input
+                      type="number"
+                      min={4}
+                      max={30}
+                      value={ghostEngineLookback}
+                      onChange={(e) => setGhostEngineLookback(parseInt(e.target.value) || 10)}
+                      className="w-full px-3 py-2 rounded bg-slate-900/60 border border-slate-700 text-slate-100 text-sm font-mono"
+                      data-testid="ghost-engine-lookback"
+                    />
+                  </div>
+                  <button
+                    onClick={() => fetchGhostEngine()}
+                    disabled={ghostEngineLoading}
+                    className="px-4 py-2 rounded bg-gradient-to-r from-amber-600 to-orange-600 text-white font-bold shadow-lg hover:from-amber-500 hover:to-orange-500 disabled:opacity-50"
+                    data-testid="ghost-engine-run-btn"
+                  >
+                    {ghostEngineLoading ? '🚪 Counting ghosts...' : '🚪 Count the ghosts'}
+                  </button>
+                </div>
+
+                {/* 🎬 Cosmic Replay slider */}
+                <div className="rounded p-3 bg-gradient-to-br from-purple-950/40 to-fuchsia-950/30 border border-fuchsia-500/30" data-testid="cosmic-replay-bar">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🎬</span>
+                      <span className="text-sm font-semibold text-fuchsia-200">Cosmic Replay</span>
+                      <span className="text-[10px] text-fuchsia-400/70">walk a quarter forward d-by-d</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const next = !replayMode;
+                        setReplayMode(next);
+                        if (next && replayDates.length === 0) buildReplayDates();
+                      }}
+                      className="text-xs px-3 py-1 rounded bg-fuchsia-900/40 border border-fuchsia-500/40 text-fuchsia-200 hover:bg-fuchsia-800/60"
+                      data-testid="cosmic-replay-toggle"
+                    >
+                      {replayMode ? '✕ Close replay' : '🎬 Open replay'}
+                    </button>
+                  </div>
+                  {replayMode && (
+                    <div className="space-y-2" data-testid="cosmic-replay-controls">
+                      {replayLoading ? (
+                        <div className="text-xs text-fuchsia-400/70">Loading replay timeline…</div>
+                      ) : replayDates.length === 0 ? (
+                        <div className="text-xs text-slate-400">No timeline available yet. Pick a target date + run Ghost Engine first.</div>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => stepReplay(-1)}
+                              disabled={replayIdx === 0}
+                              className="px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 disabled:opacity-40"
+                              data-testid="replay-prev-btn"
+                            >◂ prev</button>
+                            <input
+                              type="range"
+                              min={0}
+                              max={Math.max(0, replayDates.length - 1)}
+                              value={replayIdx}
+                              onChange={(e) => {
+                                const v = parseInt(e.target.value) || 0;
+                                setReplayIdx(v);
+                              }}
+                              onMouseUp={(e) => {
+                                const v = parseInt(e.target.value) || 0;
+                                const dt = replayDates[v];
+                                if (dt) {
+                                  setGhostEngineTarget(dt);
+                                  fetchGhostEngine(dt);
+                                }
+                              }}
+                              onTouchEnd={(e) => {
+                                const v = parseInt(e.target.value) || 0;
+                                const dt = replayDates[v];
+                                if (dt) {
+                                  setGhostEngineTarget(dt);
+                                  fetchGhostEngine(dt);
+                                }
+                              }}
+                              className="flex-1 accent-fuchsia-500"
+                              data-testid="replay-slider"
+                            />
+                            <button
+                              onClick={() => stepReplay(1)}
+                              disabled={replayIdx >= replayDates.length - 1}
+                              className="px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 disabled:opacity-40"
+                              data-testid="replay-next-btn"
+                            >next ▸</button>
+                          </div>
+                          <div className="flex items-center justify-between text-[10px] text-fuchsia-300/80 font-mono">
+                            <span>{replayDates[0]}</span>
+                            <span className="text-amber-300">
+                              🎯 {replayDates[replayIdx] || '—'} (d{replayIdx + 1}/{replayDates.length})
+                            </span>
+                            <span>{replayDates[replayDates.length - 1]}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Output */}
+                {ghostEngineData && !ghostEngineData.error && (
+                  <div className="space-y-3" data-testid="ghost-engine-output">
+                    {/* Convergence */}
+                    {ghostEngineData.convergence?.shout?.length > 0 && (
+                      <div className="rounded p-3 bg-gradient-to-br from-amber-950/40 to-orange-950/40 border border-amber-500/40">
+                        <div className="text-xs text-amber-300 font-semibold mb-2">📢 Shout zone — ≥3 ghost lenses ringing</div>
+                        <div className="flex flex-wrap gap-2" data-testid="ghost-shout-zone">
+                          {ghostEngineData.convergence.shout.map((n, idx) => (
+                            <span key={idx} className="px-2 py-1 rounded bg-amber-500/20 border border-amber-400/60 text-amber-100 font-bold text-sm">{n}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {ghostEngineData.convergence?.whisper?.length > 0 && (
+                      <div className="rounded p-2 bg-fuchsia-950/30 border border-fuchsia-500/30">
+                        <div className="text-xs text-fuchsia-300 font-semibold mb-1">🔊 Whisper — 2 lenses</div>
+                        <div className="flex flex-wrap gap-1.5" data-testid="ghost-whisper-zone">
+                          {ghostEngineData.convergence.whisper.map((n, idx) => (
+                            <span key={idx} className="px-1.5 py-0.5 rounded bg-fuchsia-500/15 border border-fuchsia-400/40 text-fuchsia-100 text-xs">{n}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {/* Alive ghosts */}
+                    {ghostEngineData.alive_ghosts?.length > 0 && (
+                      <div className="rounded p-3 bg-slate-900/40 border border-slate-700/50">
+                        <div className="text-xs text-slate-300 font-semibold mb-2">👻 Alive ghosts (unpaid, oldest first)</div>
+                        <div className="space-y-1" data-testid="ghost-alive-list">
+                          {ghostEngineData.alive_ghosts.slice(0, 8).map((g, idx) => (
+                            <div key={idx} className="flex items-center justify-between text-xs gap-2">
+                              <div className="flex items-center gap-2">
+                                <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 font-bold">{g.n}</span>
+                                <span className="text-slate-400 font-mono">{g.born_door}</span>
+                                <span className="text-slate-500">@{g.born_date}</span>
+                              </div>
+                              <div className="text-amber-300/80">age {g.age}d</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {/* Quarter shape + saturation + chainless */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {ghostEngineData.quarter_shape?.chord && (
+                        <div className="rounded p-2 bg-slate-900/40 border border-slate-700/50">
+                          <div className="text-[10px] text-slate-400 uppercase tracking-wider">🎼 Quarter shape</div>
+                          <div className="text-sm font-mono text-amber-200 mt-1">{ghostEngineData.quarter_shape.chord}</div>
+                          <div className="text-[10px] text-slate-500">hit {ghostEngineData.quarter_shape.count}/{ghostEngineData.quarter_shape.total_draws}</div>
+                        </div>
+                      )}
+                      {ghostEngineData.saturation?.saturated?.length > 0 && (
+                        <div className="rounded p-2 bg-slate-900/40 border border-slate-700/50">
+                          <div className="text-[10px] text-slate-400 uppercase tracking-wider">🌌 Saturation</div>
+                          {ghostEngineData.saturation.saturated.slice(0, 3).map((s, i) => (
+                            <div key={i} className="text-sm text-fuchsia-200 font-mono">
+                              {s.n} ×{s.count} <span className="text-slate-500 text-[10px]">{s.decade}</span>
+                            </div>
+                          ))}
+                          {ghostEngineData.saturation.next_family_rare_zone && (
+                            <div className="text-[10px] text-amber-300 mt-1">→ family-rare zone {ghostEngineData.saturation.next_family_rare_zone}</div>
+                          )}
+                        </div>
+                      )}
+                      <div className="rounded p-2 bg-slate-900/40 border border-slate-700/50">
+                        <div className="text-[10px] text-slate-400 uppercase tracking-wider">🔇 Chainless</div>
+                        <div className="text-sm text-emerald-300 font-mono">
+                          {(ghostEngineData.chainless_windows || []).filter(c => c.is_cash_window).length} cash-windows
+                        </div>
+                        <div className="text-[10px] text-slate-500">in last {ghostEngineData.lookback} draws</div>
+                      </div>
+                    </div>
+                    {/* Closures summary */}
+                    {ghostEngineData.closed_ghosts_summary && (
+                      <div className="rounded p-2 bg-slate-900/30 border border-slate-700/40 text-[11px] text-slate-300">
+                        <span className="text-emerald-300 font-semibold">Closures · </span>
+                        total {ghostEngineData.closed_ghosts_summary.total} ·
+                        alive {ghostEngineData.closed_ghosts_summary.alive} ·
+                        closed {ghostEngineData.closed_ghosts_summary.closed} ·
+                        💤 deep-sleep {ghostEngineData.closed_ghosts_summary.deep_sleep_closures} ·
+                        🪜 4-late {ghostEngineData.closed_ghosts_summary.late_4_5_closures}
+                      </div>
+                    )}
+                    <div className="text-[10px] text-amber-400/60 italic">{ghostEngineData.canon}</div>
+                  </div>
+                )}
+                {ghostEngineData?.error && (
+                  <div className="text-rose-400 text-xs p-2 rounded bg-rose-950/30 border border-rose-500/30" data-testid="ghost-engine-error">
+                    {ghostEngineData.error}
                   </div>
                 )}
               </div>
@@ -5683,8 +6005,14 @@ function App() {
                 </div>
 
                 <div>
-                  <h3 className="text-amber-300 font-semibold mb-1">💎 VIP Promo Code</h3>
-                  <p>Have a VIP code? Enter it via the <span className="text-white font-medium">"Have a code?"</span> link near the top to unlock <span className="text-amber-400 font-bold">unlimited tickets</span>. The counter won't cap you anymore — the stars pour freely 🎻.</p>
+                  <h3 className="text-amber-300 font-semibold mb-1">🎫 Where to start (Free)</h3>
+                  <p>Open the <span className="text-amber-200 font-semibold">Pending Tickets</span> panel — every draw, the engine drops a fresh batch of cosmic-tuned picks. Browse them, learn the patterns, and use them as inspiration to choose your own lottery numbers 🍀.</p>
+                  <p className="mt-1">Also free: the <span className="text-white font-medium">Top Predicted Numbers</span> for the upcoming draw + the <span className="text-white font-medium">Hit Tracker</span> to see how E performed on past draws.</p>
+                </div>
+
+                <div>
+                  <h3 className="text-amber-300 font-semibold mb-1">🎻 Deep listening tools (Reserved)</h3>
+                  <p>The deeper tuning chambers — <span className="text-white font-medium">E's Cosmic Brain · Cosmic Voices · Ghost Ledger · Ghost Engine · Cosmic Replay · Swiss Brain</span> — are reserved today. They will open in the future. For now, the Pending Tickets carry their wisdom into the picks you can play with.</p>
                 </div>
 
                 <div>

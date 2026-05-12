@@ -1,0 +1,62 @@
+{
+  "summary": "Session 39 — Ghost Engine (8 modules) + VIP gating + Cosmic Replay slider + 'How to Use' free-user rewrite fully validated end-to-end. 15/15 backend pytest cases PASS on /api/ghost-ledger/{date}/{mode} for both Swiss (13.05.2026) and Euro (15.05.2026) modes: top-level keys present (arithmetic_ledger, alive_ghosts, chainless_windows, saturation, quarter_shape, carrier_pool, convergence), shout/whisper ranges respect mode bounds (Swiss 1-42, Euro 1-50), ghost births non-zero, invalid mode/date return 200+{error} (existing pattern), lookback param respected, regressions on /api/cosmic-voices + /api/ghost-counter intact. Frontend Playwright run: free user sees vip-deep-tools-teaser and ALL deep panels hidden (dj-we-think-that-box, cosmic-voices-panel, ghost-engine-panel, ghost-ledger-panel, cosmic-brain-panel = False); after promo 93928 the teaser disappears and all 4 deep panels appear; Ghost Engine expanded, target=13.05.2026, run produced shout [2,5,6,7,17,26,...], alive ghost list with born_door labels (P1+P2=?, P1+?=P3, etc.); Cosmic Replay slider builds 31-date timeline (28.01.2026 → 13.05.2026) and moving it to mid-point updated the target-date input to 21.03.2026 and re-fetched Ghost Engine; Euro mode switch + run 15.05.2026 produced a different shout set (1,5,3,9,11,20,23,...); 'How to Use' guide contains both '🎫 Where to start (Free)' and '🎻 Deep listening tools (Reserved)' sections referencing Pending Tickets.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/ghost-ledger/{date}/badmode", "issue": "Returns HTTP 200 with {error: ...} instead of 4xx (pre-existing convention across Lucky Jack endpoints; non-blocking)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "BE: TestGhostLedgerSwiss::test_status_200",
+    "BE: TestGhostLedgerSwiss::test_top_level_keys (all 11 keys present)",
+    "BE: TestGhostLedgerSwiss::test_convergence_shape (shout/whisper 1-42 enforced)",
+    "BE: TestGhostLedgerSwiss::test_alive_ghosts_shape (n, born_date, age, projected_hot_zone, carriers)",
+    "BE: TestGhostLedgerSwiss::test_arithmetic_ledger_has_births",
+    "BE: TestGhostLedgerSwiss::test_quarter_shape_present",
+    "BE: TestGhostLedgerEuro::test_status_200",
+    "BE: TestGhostLedgerEuro::test_top_level_keys",
+    "BE: TestGhostLedgerEuro::test_euro_range (1-50 enforced)",
+    "BE: TestGhostLedgerEuro::test_different_from_swiss",
+    "BE: TestGhostLedgerEdge::test_invalid_mode_no_500",
+    "BE: TestGhostLedgerEdge::test_invalid_date_no_500",
+    "BE: TestGhostLedgerEdge::test_lookback_param_respected",
+    "BE: TestRegressions::test_cosmic_voices_still_works",
+    "BE: TestRegressions::test_ghost_counter_swiss_still_works",
+    "FE: Free user — vip-deep-tools-teaser visible",
+    "FE: Free user — dj-we-think-that-box/cosmic-voices-panel/ghost-engine-panel/ghost-ledger-panel/cosmic-brain-panel ALL hidden",
+    "FE: VIP unlock with promo 93928 → teaser hidden, all 4 deep panels visible",
+    "FE: ghost-engine-toggle expands content; run-btn produces ghost-engine-output with shout/whisper/alive list",
+    "FE: cosmic-replay-toggle builds timeline (31 dates), replay-slider move updates target-date + refetches",
+    "FE: Euro mode switch + run produces different shout numbers (different draws_window)",
+    "FE: How-to-Use modal contains '🎫 Where to start (Free)' + '🎻 Deep listening tools (Reserved)' + Pending Tickets reference"
+  ],
+  "failed_tests": [],
+  "test_report_links": [
+    "/app/backend/tests/test_session39_ghost_engine.py",
+    "/app/test_reports/pytest/session39_iter15.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Ghost engine orchestrator correctly fuses 8 modules and returns a clean, well-typed payload (no Mongo _id leakage).",
+    "Convergence scoring is deterministic and bounded (shout ≥ 5 pts, whisper 3–4 pts, capped at 12 each).",
+    "Cosmic Replay onMouseUp/onTouchEnd refetch is good UX; onChange-only would be excessive. Consider adding 'onKeyUp' for keyboard accessibility (minor).",
+    "App.js is now ~6108 lines — pre-existing technical debt flagged in earlier iterations remains. Future refactor candidate (move Ghost Engine tile to its own component, ~250 lines extractable).",
+    "Backend endpoint pattern of returning 200+{error} instead of 4xx is consistent across Lucky Jack APIs; clients handle it correctly. Non-blocking, but consider normalising in a future API hardening pass.",
+    "VIP gating is symmetric: !isUnlimited shows teaser, isUnlimited shows all 4 deep panels. Clean and matches the canon described in the request."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_session39_ghost_engine.py (new — 15 pytest cases for Ghost Engine endpoint + regressions)"
+  ],
+  "success_rate": {"backend": "100% (15/15 pytest)", "frontend": "100% (free + VIP + Ghost Engine + Replay + Euro + How-to-Use all verified)"},
+  "test_credentials": "VIP promo code: 93928 (entered via 'Have a code?' link)",
+  "seed_data_creation": "None — uses existing MongoDB Swiss (1389) & EuroMillions draws.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Session 39 Ghost Engine is fully validated end-to-end. Backend: GET /api/ghost-ledger/{target_date}/{mode}?lookback=10 returns full prophecy with 8 module outputs; tested for Swiss (13.05.2026) + Euro (15.05.2026). Frontend: ghost-engine-panel is VIP-gated; data-testids in use: ghost-engine-toggle, ghost-engine-target-date, ghost-engine-lookback, ghost-engine-run-btn, ghost-engine-output, ghost-shout-zone, ghost-whisper-zone, ghost-alive-list, cosmic-replay-toggle, cosmic-replay-bar, cosmic-replay-controls, replay-slider, replay-prev-btn, replay-next-btn. Free-user teaser data-testid='vip-deep-tools-teaser' replaces dj-we-think-that-box + cosmic-voices-panel + ghost-engine-panel + ghost-ledger-panel + cosmic-brain-panel when !isUnlimited. How-to-Use guide has two new sections that match the canon. Public URL: https://vip-brain.preview.emergentagent.com.",
+  "rca_of_the_issue": "n/a — feature implementation validated; no bugs found."
+}
