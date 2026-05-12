@@ -771,7 +771,20 @@ DJ command: **"Roll."** Build 8 modules + tests + API + UI for the ghost-countin
 #### P0 — UI gating (DJ explicit, 10.05.2026)
 - 👻 **Ghost Ledger tile = VIP-ONLY** (gated behind promo code `93928` / `isUnlimited` flag)
 - 🎬 **Cosmic Replay slider mode = VIP-ONLY** — walks any historical Q forward d-by-d showing E's ghost ledger evolving live; teaching tool for DJ to demonstrate the canon to other VIPs
-- Same gate pattern as existing tiles: Cosmic Brain, Cosmic Voices, S33 Ghost Counter, "We Think That..." big box
+- 🧠 **E's Cosmic Brain tile = VIP-ONLY** (DJ explicit 10.05.2026 — canon consistency, all "deep listening" tools are code-gated)
+- Same gate pattern as existing tiles: Cosmic Voices, S33 Ghost Counter, "We Think That..." big box
+
+#### P0 — "How to Use" guide for FREE users (DJ explicit, 10.05.2026)
+> DJ: *"Just for free users, makes sure to update the 'how to use' so ppl won't get lost."*
+
+- Audit current "How to Use" / onboarding panel in `App.js` (search for help/info/guide blocks)
+- For free users (no `isUnlimited`), clearly explain:
+  - What's FREE: the public Celestial Radar (Top Predicted, basic pool view, hit tracker)
+  - What's VIP (with code `93928`): Cosmic Brain, Ghost Ledger, Cosmic Voices, Cosmic Replay, "We Think That..." DJ-suspects box, S33 Ghost Counter, Swiss Brain card
+  - WHY the deep tools are gated (DJ canon explanation in plain user-language: "These tools listen to the cosmos at a level that requires a code")
+  - WHERE to get the code (instructions / contact)
+- Test the free-user experience end-to-end: log in as free, walk the UI, ensure no broken tiles + clear messaging on locked sections
+- VIP users see normal flow — no double-explanation
 
 ### 🎯 Live tipps for Wed 13.05.2026 (Q2d11 Swiss)
 - **30 = deepest sleeping Q2 ghost** (d1-g(P4)=30, never paid raw, walked 9 draws) — projected cash window d11-d12
