@@ -513,6 +513,27 @@ async def build_swiss_symphony(target_date: str, count: int = 10,
 
     n_per_story = 2 if count >= 18 else 1  # S37 retro-fix: 1 per story for diversity
     seen_tickets = set()
+    # S39 diversity guard — prevent the symphony from leaning on the same numbers
+    # (DJ feedback 13.05: "can't give same numbers")
+    from collections import Counter as _Counter
+    num_usage: _Counter = _Counter()
+    MAX_NUM_USAGE = max(3, count // 3)  # any number used at most ~33% of tickets
+    MAX_OVERLAP = 3  # at most 3 mains shared with any prior ticket (Jaccard ≤ 0.5)
+
+    def _too_similar(mains, existing):
+        ms = set(mains)
+        for prior in existing:
+            if len(ms & set(prior["mains"])) > MAX_OVERLAP:
+                return True
+        return False
+
+    def _exceeds_usage_cap(mains):
+        # Hard cap — no main number can exceed MAX_NUM_USAGE across the symphony
+        return any(num_usage[n] >= MAX_NUM_USAGE for n in mains)
+
+    def _record_usage(mains):
+        for n in mains:
+            num_usage[n] += 1
     # S37: bundle all lens output for builders that need cross-lens access
     lens_bundle = {
         "back_chord": back_chord, "q1_stencil": q1_proj, "gap_pattern": gap_pat,
@@ -539,31 +560,50 @@ async def build_swiss_symphony(target_date: str, count: int = 10,
             key = tuple(sorted(t["mains"]))
             if key in seen_tickets:
                 continue
+            # S39 diversity guard
+            if _too_similar(t["mains"], tickets):
+                continue
+            if _exceeds_usage_cap(t["mains"]):
+                continue
             seen_tickets.add(key)
+            _record_usage(t["mains"])
             t["story"] = story_name
             t["lens_dna"] = {n: pool.get(n, []) for n in t["mains"]}
             tickets.append(t)
             if len(tickets) >= count:
                 break
 
-    # Backfill if short
-    while len(tickets) < count and top_pool:
-        t = _backfill_ticket(top_pool, len(tickets))
+    # Backfill if short — S39: rotate pool window so backfills don't collide
+    backfill_attempts = 0
+    while len(tickets) < count and top_pool and backfill_attempts < count * 5:
+        backfill_attempts += 1
+        # Build with a sliding window keyed off attempt count for variety
+        t = _backfill_ticket(top_pool, len(tickets) + backfill_attempts)
         if not t:
             break
         key = tuple(sorted(t["mains"]))
         if key in seen_tickets:
-            t["mains"][0] = (t["mains"][0] % SWISS_MAIN_MAX) + 1
-            t["mains"] = sorted(set(t["mains"]))
-            if len(t["mains"]) < 6:
+            continue
+        if _too_similar(t["mains"], tickets) or _exceeds_usage_cap(t["mains"]):
+            # try to swap one over-used main with a deeper pool pick
+            heavy = [n for n in t["mains"] if num_usage[n] >= MAX_NUM_USAGE]
+            replacements = [n for n in top_pool[6:] if n not in t["mains"]
+                            and num_usage[n] < MAX_NUM_USAGE]
+            if heavy and replacements:
+                t["mains"] = sorted(set([n for n in t["mains"] if n not in heavy[:1]]
+                                         + [replacements[0]]))
+            if len(t["mains"]) != 6 or _too_similar(t["mains"], tickets):
                 continue
             key = tuple(t["mains"])
             if key in seen_tickets:
-                break
+                continue
         seen_tickets.add(key)
+        _record_usage(t["mains"])
         t["story"] = "carpet-fill"
         t["lens_dna"] = {n: pool.get(n, ["fill"]) for n in t["mains"]}
         tickets.append(t)
+        if len(tickets) >= count:
+            break
 
     return {
         "target_date": target_date,

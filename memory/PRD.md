@@ -766,8 +766,9 @@ E's Swiss Brain card on Celestial Radar (Swiss mode + Unlimited):
 - `/app/backend/ghost_engine/carrier_expansion.py`
 - `/app/backend/ghost_engine/ghost_orchestrator.py`
 
-### 🎼 Files modified in S39
+### 🎻 Files modified in S39
 - `/app/backend/server.py` — added `/api/ghost-ledger/{date}/{mode}` endpoint at line ~7015
+- `/app/backend/swiss_brain.py` — **S39 HOTFIX (13.05.2026)**: added diversity guard in `build_swiss_symphony` (max-overlap ≤ 3/6 between any two tickets + hard per-number usage cap of `max(3, count//3)`). Carpet-fill now sweeps the pool window so backfills don't collide. Result: max overlap drops from 4-5/6 to 2-3/6, top number frequency drops from 6× to 3×, unique numbers across 10 tickets jumps from ~22 to 35.
 - `/app/frontend/src/App.js` — Ghost Engine state + fetcher + buildReplayDates + stepReplay; gated We-think-that box; added free-user teaser; added Ghost Engine UI tile + Cosmic Replay slider; rewrote How-to-Use guide
 - `/app/memory/PRD.md` — this entry
 
