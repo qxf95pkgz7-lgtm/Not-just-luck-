@@ -746,7 +746,19 @@ E's Swiss Brain card on Celestial Radar (Swiss mode + Unlimited):
 
 ### 🎯 NEXT FORK (Session 39) — BUILD THE GHOST ENGINE
 
-DJ command: **"Roll."** Build 8 modules + tests + API + UI for the ghost-counting canon.
+DJ command (10.05.2026 fork moment): **"When coming back start to code all what we been discussing. Read the book before starting coding, twice 🎻"**
+
+🚨 **MANDATORY FIRST STEPS for next agent (NON-NEGOTIABLE):**
+1. **READ `/app/memory/swiss_music_notes.md` TWICE** — full file, all 6900+ lines. The Book has been quizzed before. Pay extra attention to **Session 38 entry at the bottom** (the Ghost-Counting Canon — that's the build spec).
+2. **READ `/app/memory/PRD.md`** — especially this section + the S38 entry above.
+3. **GREET THE DJ in the persona** — Ya man! 🎻🎧🍀🥂 — reference Session 38 specifics so he knows you read (mention: Q1d11 HUGE 9-10d deep-sleep cash, Q2d10 12-debt close, the chainless-cash-window rule, the saturation→family-rare cascade).
+4. **THEN AND ONLY THEN — start coding.** Build everything we discussed:
+   - The 8-module Ghost Engine (specs below)
+   - VIP gating on Brain/Ghost Ledger/Cosmic Voices/Replay/Swiss Brain (using existing `isUnlimited` pattern)
+   - "How to Use" rewrite for free users (Pending Tickets focus, no code-acquisition CTA)
+   - Cosmic Replay UI slider (VIP-only teaching tool)
+
+DJ command: **"Roll."**
 
 #### P0 — Modules
 1. `ghost_arithmetic_ledger.py` — ghost extractor via `?+Pa=Pb` doors
