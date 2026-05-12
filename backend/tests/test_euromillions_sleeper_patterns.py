@@ -12,7 +12,7 @@ import requests
 import os
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://swiss-mirror-voices.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://vip-brain.preview.emergentagent.com').rstrip('/')
 
 
 class TestSleeperForecastEndpoint:
