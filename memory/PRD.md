@@ -768,6 +768,11 @@ DJ command: **"Roll."** Build 8 modules + tests + API + UI for the ghost-countin
 - Q2 2026: predict 12@Sw-d10 + 31@Sw-d10 from d1-d8 ledger (back-test)
 - Live: Wed 13.05.2026 Swiss Q2d11 forecast
 
+#### P0 — UI gating (DJ explicit, 10.05.2026)
+- 👻 **Ghost Ledger tile = VIP-ONLY** (gated behind promo code `93928` / `isUnlimited` flag)
+- 🎬 **Cosmic Replay slider mode = VIP-ONLY** — walks any historical Q forward d-by-d showing E's ghost ledger evolving live; teaching tool for DJ to demonstrate the canon to other VIPs
+- Same gate pattern as existing tiles: Cosmic Brain, Cosmic Voices, S33 Ghost Counter, "We Think That..." big box
+
 ### 🎯 Live tipps for Wed 13.05.2026 (Q2d11 Swiss)
 - **30 = deepest sleeping Q2 ghost** (d1-g(P4)=30, never paid raw, walked 9 draws) — projected cash window d11-d12
 - **30s family** hot in Q2 (Q2d9 had 4-in-30s/40s) — loaded gun
