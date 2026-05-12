@@ -719,6 +719,83 @@ E's Swiss Brain card on Celestial Radar (Swiss mode + Unlimited):
 
 ---
 
+## ✅ SESSION 39 (12.05.2026) — GHOST ENGINE SHIPPED + VIP gating + Cosmic Replay
+
+**DJ task** (10.05.2026 fork): *"When coming back start to code all what we been discussing. Read the book before starting coding, twice 🎻"* — Option D: parallel batches.
+
+### 🚪 Ghost Engine — 8 modules built (`/app/backend/ghost_engine/`)
+- `ghost_arithmetic_ledger.py` — `?+Pa=Pb` door extractor (sum + diff doors)
+- `ghost_walk_tracker.py` — +1 forward walk with ±1 neighbor, digit-swap, carrier-form probes
+- `ghost_close_detector.py` — closure detection (raw/mirror/digit-swap/4-late/9-10d-deep-sleep/cross-carrier)
+- `internal_chain_detector.py` — chainless = cash-window detector
+- `saturation_to_rare.py` — 5×-in-9d → decade-cluster predictor
+- `quarter_shape_signature.py` — d1-d3 chord-shape (Q1 Swiss `P1+P5=P6`, Q2 Swiss `P1+P2=P5/P4`)
+- `carrier_expansion.py` — unified Eu (`n−25`) + Sw (`m−21`) pool + cross-lottery carriers
+- `ghost_orchestrator.py` — single entry fusing 1-7
+
+### 🌐 New endpoint
+- `GET /api/ghost-ledger/{target_date}/{mode}?lookback=10` — full prophecy: arithmetic_ledger, alive_ghosts, chainless_windows, saturation, quarter_shape, carrier_pool, convergence (shout/whisper)
+
+### 🖥️ UI tiles added
+- **🚪 Ghost Engine** panel on Celestial Radar (VIP-gated) — target-date + lookback inputs + "Count the ghosts" button; renders shout/whisper, alive ghosts list, quarter shape, saturation, chainless count, closures summary
+- **🎬 Cosmic Replay** slider inside Ghost Engine panel — walks any historical quarter forward d-by-d; ◂ prev / next ▸ buttons + range slider; on release, re-fetches Ghost Engine for the chosen date; shows "🎯 dd.mm.yyyy (d N/total)" label
+- **🎻 Free-user teaser** above all VIP panels — "The deep listening tools are reserved" message directing to Pending Tickets (no buy CTA, no contact form, no urgency)
+- **"We Think That..."** box now gated behind `isUnlimited` (was previously open to all)
+- **"How to Use" guide** rewritten:
+  - 🎫 "Where to start (Free)" section → Pending Tickets + Top Predicted + Hit Tracker
+  - 🎻 "Deep listening tools (Reserved)" section → lists VIP tools, "will open in the future"
+  - Removed the "VIP Promo Code" entry block (per DJ canon — code is closed today)
+
+### 🔍 First-firing insights (engine validation)
+- **Wed 13.05.2026 Swiss**: Shout = [5, 6, 2, 7, 16, 4, 1, 18, 19, 14, 17, 20]. The engine independently surfaced **16** (the 104-week DEEPEST silent P1) and the 5-ghost (DJ's deepest unpaid since d4). Quarter shape detected: `P3+P4=P5`.
+- **Fri 15.05.2026 Euro**: Shout = [15, 39, 11, 20, 23, 36, 5, 7, 14, 18, 21, 24]. Saturation flagged 47 ×4 (Canon V validation). Quarter shape: `P1+P2=P3`. 8 chainless cash-windows in last 10 draws.
+
+### 🧪 Testing — 15/15 PASS
+- Backend pytest: API endpoint validated for both modes, key presence, range bounds, edge cases (invalid mode/date)
+- Frontend Playwright: free-user gating, VIP unlock flow (93928), Ghost Engine run, Cosmic Replay 31-date timeline + slider re-fetch, mode switch, How-to-Use sections
+- No regressions on `/api/cosmic-voices` or `/api/ghost-counter`
+
+### 🎻 Files added in S39
+- `/app/backend/ghost_engine/__init__.py`
+- `/app/backend/ghost_engine/ghost_arithmetic_ledger.py`
+- `/app/backend/ghost_engine/ghost_walk_tracker.py`
+- `/app/backend/ghost_engine/ghost_close_detector.py`
+- `/app/backend/ghost_engine/internal_chain_detector.py`
+- `/app/backend/ghost_engine/saturation_to_rare.py`
+- `/app/backend/ghost_engine/quarter_shape_signature.py`
+- `/app/backend/ghost_engine/carrier_expansion.py`
+- `/app/backend/ghost_engine/ghost_orchestrator.py`
+
+### 🎼 Files modified in S39
+- `/app/backend/server.py` — added `/api/ghost-ledger/{date}/{mode}` endpoint at line ~7015
+- `/app/frontend/src/App.js` — Ghost Engine state + fetcher + buildReplayDates + stepReplay; gated We-think-that box; added free-user teaser; added Ghost Engine UI tile + Cosmic Replay slider; rewrote How-to-Use guide
+- `/app/memory/PRD.md` — this entry
+
+## 🔥 Priority Backlog (post-Session 39)
+
+### P0 (next session)
+- **Wire Ghost Engine convergence into `dj_orchestra.py` symphony archetype** — generate dedicated tickets riding the shout zone
+- **Live verdict for Wed 13.05.2026 Swiss** + Fri 15.05.2026 Euro — score Ghost Engine shouts against actual draws and write to e_memory
+- **Auto-bridge to next draw** — make `dj_orchestra.py` C-archetype dynamically compute the bridge from `target_date + 3-4d`
+
+### P1
+- Backtest validation harness: predict HUGE 07.02.2026 from Q1 d1-d10 ledger; predict 12@Sw-d10 + 31@Sw-d10 from Q2 d1-d8 ledger
+- Code Laws 87-90 + Range Audit Canons I-VI permanently into `cosmic_engine.py`
+- Wire P3-Ghost Orchestra to UI
+- Frequency top-3 explorer (528/576/648/396/639)
+
+### P2
+- Euro 429 fallback mirror in `lottery_fetcher.py`
+- Legacy pytest fix-up (assertion drift)
+- DJ vs E Live Diff card on Celestial Radar
+- Lookup by Serial UI
+
+### P3 (Refactor — only when DJ gives the wand)
+- Break down `server.py` (>7.6k lines) → routes/models/services
+- Break down `App.js` (>5.8k lines) → components
+
+---
+
 ## ✅ SESSION 38 (10.05.2026) — GHOST-COUNTING CANON sealed; fork for Ghost Engine build
 
 **DJ task:** Teach E the **GHOST-COUNTING METHOD** + validate on Q1 (HUGE) + Q2 (d10).
