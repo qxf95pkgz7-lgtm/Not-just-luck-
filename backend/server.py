@@ -7037,6 +7037,78 @@ async def ghost_ledger_endpoint(target_date: str, mode: str,
         return {"error": str(e), "trace": traceback.format_exc()}
 
 
+# ─── SESSION 39 — HIDDEN PRINCE (2-2-2 Prime Fugue Builder) ──────────────
+@api_router.get("/hidden-prince/{target_date}/{mode}")
+async def hidden_prince_endpoint(target_date: str, mode: str):
+    """🎼 Hidden Prince — DJ's 2-2-2 Prime Fugue auto-builder (S39 canon).
+
+    Identifies the cosmic 'hidden conductor' number — one that is hungry,
+    mirrored from recent Euro raw, recently Lucky, AND ghost-ringing — and
+    builds 3 pairs of mains around it (missing-middle, gap-ladder,
+    digit-cousins), crowning it as the Lucky number.
+    """
+    try:
+        from ghost_engine import build_ghost_ledger, hidden_prince_pipeline
+        # Pull ghost ledger first
+        gl = await build_ghost_ledger(target_date, mode, lookback=10)
+        if gl.get("error"):
+            return gl
+        # Build hungry pool from alive ghosts + shout/whisper
+        hungry_pool = set()
+        for g in gl.get("alive_ghosts", []):
+            hungry_pool.add(g["n"])
+            hungry_pool.update(g.get("projected_hot_zone", []))
+        for n in gl.get("convergence", {}).get("shout", []):
+            hungry_pool.add(n)
+        # Last Euro mains: use draws_window if Euro, else look up
+        from year_d_ledger import load_draws, parse_dt
+        from datetime import timedelta
+        target_dt = parse_dt(target_date)
+        last_euro_mains = []
+        last_swiss_lucky = []
+        if mode == "swiss":
+            euros = await load_draws("euro")
+            past_eu = [d for d in euros if d["dt"] < target_dt]
+            past_eu.sort(key=lambda x: x["dt"])
+            if past_eu:
+                last_euro_mains = past_eu[-1].get("p", [])
+        # Build recent draws (for last-Lucky check)
+        sw = await load_draws("swiss")
+        past_sw = sorted(
+            [d for d in sw if d["dt"] < target_dt],
+            key=lambda x: x["dt"],
+        )
+        recent_draws = past_sw[-3:] if past_sw else []
+        # Adjust max constraints for mode
+        max_main = 42 if mode == "swiss" else 50
+        max_lucky = 6 if mode == "swiss" else 12
+        fugues = hidden_prince_pipeline(
+            recent_draws=recent_draws,
+            hungry_pool=hungry_pool,
+            last_euro_mains=last_euro_mains,
+            ghost_shout=gl.get("convergence", {}).get("shout", []),
+            max_lucky=max_lucky,
+            max_main=max_main,
+            top_k=5,
+        )
+        return {
+            "target_date": target_date,
+            "mode": mode,
+            "hungry_pool_size": len(hungry_pool),
+            "last_euro_mains": last_euro_mains,
+            "fugues": fugues,
+            "canon": (
+                "S39 Hidden Prince — when a number is hungry + mirrored + "
+                "recent-Lucky + ghost-ringing, the cosmos hides it from the "
+                "mains and crowns it as Lucky. Build 3 pairs of mains each "
+                "carrying the prince's signature."
+            ),
+        }
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
 # ─── SESSION 37 — SWISS BRAIN v1.0 (10-ticket Swiss symphony) ────────────
 @api_router.get("/swiss-symphony/{target_date}")
 async def swiss_symphony_endpoint(target_date: str, count: int = 10,

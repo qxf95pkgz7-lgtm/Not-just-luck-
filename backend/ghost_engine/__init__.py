@@ -37,6 +37,9 @@ from .saturation_to_rare import saturation_watch
 from .quarter_shape_signature import detect_quarter_shape
 from .carrier_expansion import expand_carriers, unified_pool
 from .ghost_orchestrator import build_ghost_ledger
+from .hidden_prince import (
+    hidden_prince_pipeline, score_prince, build_fugue,
+)
 
 __all__ = [
     "build_arithmetic_ledger",
@@ -50,4 +53,7 @@ __all__ = [
     "expand_carriers",
     "unified_pool",
     "build_ghost_ledger",
+    "hidden_prince_pipeline",
+    "score_prince",
+    "build_fugue",
 ]
