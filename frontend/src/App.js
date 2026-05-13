@@ -877,6 +877,14 @@ function App() {
   const [replayIdx, setReplayIdx] = useState(0);
   const [replayLoading, setReplayLoading] = useState(false);
 
+  // 📖 Story Composer — Session 40 (DJ canon: fuses Brain + Ghost + Hungry + Prince)
+  const [showStoryComposer, setShowStoryComposer] = useState(false);
+  const [storyComposerData, setStoryComposerData] = useState(null);
+  const [storyComposerLoading, setStoryComposerLoading] = useState(false);
+  const [storyComposerTarget, setStoryComposerTarget] = useState('13.05.2026');
+  const [storyComposerCount, setStoryComposerCount] = useState(10);
+  const [storyExpandedIdx, setStoryExpandedIdx] = useState(null);
+
   // 🎫 Sneaky Universe Symphony — Session 35
   const [sneakySymphonyData, setSneakySymphonyData] = useState(null);
   const [sneakySymphonyLoading, setSneakySymphonyLoading] = useState(false);
@@ -1233,6 +1241,25 @@ function App() {
       setGhostEngineLoading(false);
     }
   };
+
+  // 📖 Story Composer — Session 40 — fuses Brain + Ghost + Hungry + Prince
+  const fetchStoryComposer = async () => {
+    setStoryComposerLoading(true);
+    try {
+      const m = lotteryMode === 'euro' ? 'euro' : 'swiss';
+      const res = await axios.get(
+        `${API}/story-tickets/${storyComposerTarget}/${m}?count=${storyComposerCount}`
+      );
+      setStoryComposerData(res.data);
+      setStoryExpandedIdx(null);
+    } catch (e) {
+      console.error("Story Composer error:", e);
+      setStoryComposerData({ error: e.message });
+    } finally {
+      setStoryComposerLoading(false);
+    }
+  };
+
   // 🎬 Cosmic Replay — build the slider date list using ghost-ledger's window
   const buildReplayDates = async () => {
     setReplayLoading(true);
@@ -4860,6 +4887,200 @@ function App() {
 
                     <div className="text-xs text-slate-500 italic pt-1">
                       🛑 Wed and Sat (Tue/Fri for Euro) ledgers are kept separate per DJ canon — different vibes.
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 📖 STORY COMPOSER — Session 40 — fuses Brain + Ghost + Hungry + Prince into ticket-stories */}
+        {isUnlimited && (
+          <div className="lucky-card p-4 mb-4 border border-fuchsia-500/40 bg-gradient-to-br from-fuchsia-950/20 to-purple-950/10" data-testid="story-composer-panel">
+            <button
+              onClick={() => setShowStoryComposer(!showStoryComposer)}
+              className="w-full flex items-center justify-between text-left"
+              data-testid="story-composer-toggle"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📖</span>
+                <span className="font-semibold text-fuchsia-200">Story Composer</span>
+                <span className="text-xs text-fuchsia-400/70">
+                  (S40 · Brain + Ghost + Hungry + Prince · narrative tickets)
+                </span>
+              </div>
+              {showStoryComposer ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+            </button>
+
+            {showStoryComposer && (
+              <div className="mt-4 space-y-4" data-testid="story-composer-content">
+                <div className="text-xs text-fuchsia-300/80 italic px-1">
+                  🎻 E reads every channel — Brain (cosmic_voices), Ghost Pool, Hungry Plate (S39 C8), Hidden Prince (S39 C9), sister-date precedents — then composes ticket-stories <span className="text-white font-medium">backward from P6</span>. Each number wears its full lens-DNA.
+                </div>
+
+                {/* Inputs */}
+                <div className="flex flex-col sm:flex-row gap-2 items-end">
+                  <div className="flex-1">
+                    <label className="text-xs text-slate-400">🎯 Target date (dd.mm.yyyy)</label>
+                    <input
+                      type="text"
+                      value={storyComposerTarget}
+                      onChange={(e) => setStoryComposerTarget(e.target.value)}
+                      placeholder="13.05.2026"
+                      className="w-full px-3 py-2 rounded bg-slate-900/60 border border-slate-700 text-slate-100 text-sm font-mono"
+                      data-testid="story-composer-target"
+                    />
+                  </div>
+                  <div className="w-24">
+                    <label className="text-xs text-slate-400">Count</label>
+                    <input
+                      type="number"
+                      min={3}
+                      max={15}
+                      value={storyComposerCount}
+                      onChange={(e) => setStoryComposerCount(parseInt(e.target.value) || 10)}
+                      className="w-full px-3 py-2 rounded bg-slate-900/60 border border-slate-700 text-slate-100 text-sm font-mono"
+                      data-testid="story-composer-count"
+                    />
+                  </div>
+                  <button
+                    onClick={fetchStoryComposer}
+                    disabled={storyComposerLoading}
+                    className="px-4 py-2 rounded bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white font-bold shadow-lg hover:from-fuchsia-500 hover:to-purple-500 disabled:opacity-50"
+                    data-testid="story-composer-run-btn"
+                  >
+                    {storyComposerLoading ? '📖 Composing...' : '📖 Compose stories'}
+                  </button>
+                </div>
+
+                {storyComposerData?.error && (
+                  <div className="text-xs text-red-400 px-2 py-1 bg-red-950/30 rounded" data-testid="story-composer-error">
+                    Error: {storyComposerData.error}
+                  </div>
+                )}
+
+                {storyComposerData && !storyComposerData.error && (
+                  <div className="space-y-3" data-testid="story-composer-output">
+                    {/* Source signals summary */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px]">
+                      <div className="rounded bg-slate-900/60 border border-slate-700 px-2 py-1.5">
+                        <div className="text-slate-400">🎼 Voices shout</div>
+                        <div className="text-fuchsia-200 font-mono">{(storyComposerData.voices_shout || []).slice(0, 8).join(' · ') || '—'}</div>
+                      </div>
+                      <div className="rounded bg-slate-900/60 border border-slate-700 px-2 py-1.5">
+                        <div className="text-slate-400">👻 Ghost shout</div>
+                        <div className="text-amber-200 font-mono">{(storyComposerData.ghost_shout || []).slice(0, 8).join(' · ') || '—'}</div>
+                      </div>
+                      <div className="rounded bg-slate-900/60 border border-slate-700 px-2 py-1.5">
+                        <div className="text-slate-400">🌾 Hungry top</div>
+                        <div className="text-emerald-200 font-mono">{(storyComposerData.hungry_plate || []).slice(0, 6).map(h => h.n).join(' · ') || '—'}</div>
+                      </div>
+                      <div className="rounded bg-slate-900/60 border border-slate-700 px-2 py-1.5">
+                        <div className="text-slate-400">👑 Princes</div>
+                        <div className="text-violet-200 font-mono">
+                          {(storyComposerData.princes || []).map(p => `X${p.prince}(${p.score})`).join(' · ') || '—'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Sister-date precedents */}
+                    {storyComposerData.sister_date_precedents?.length > 0 && (
+                      <div className="rounded bg-slate-900/40 border border-slate-700 px-3 py-2" data-testid="story-sister-dates">
+                        <div className="text-xs text-slate-400 mb-1">🗓️ Sister-date precedents (same dd.mm)</div>
+                        <div className="space-y-0.5 text-xs">
+                          {storyComposerData.sister_date_precedents.slice(0, 4).map((s, i) => (
+                            <div key={i} className="font-mono text-slate-300">
+                              <span className="text-cyan-300">{s.date}</span>{' '}
+                              <span>[{(s.mains || []).join(', ')}]</span>
+                              {s.lucky != null && <span className="text-amber-300"> 🍀{s.lucky}</span>}
+                              {s.stars && <span className="text-amber-300"> ⭐{s.stars.join(',')}</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Stories */}
+                    <div className="space-y-2" data-testid="story-composer-tickets">
+                      <div className="text-xs text-fuchsia-300 font-semibold">
+                        🎫 {storyComposerData.count_returned || 0} ticket-stories (sorted by cosmic score)
+                      </div>
+                      {(storyComposerData.stories || []).map((s, i) => {
+                        const isExpanded = storyExpandedIdx === i;
+                        const isEuro = (storyComposerData.mode === 'euro');
+                        return (
+                          <div
+                            key={i}
+                            className="rounded border border-fuchsia-500/30 bg-slate-900/50 p-2.5"
+                            data-testid={`story-ticket-${i}`}
+                          >
+                            <button
+                              onClick={() => setStoryExpandedIdx(isExpanded ? null : i)}
+                              className="w-full text-left"
+                              data-testid={`story-ticket-toggle-${i}`}
+                            >
+                              <div className="flex items-center justify-between gap-2 flex-wrap">
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-xs text-fuchsia-300 font-semibold truncate">
+                                    #{i + 1} · {s.theme}
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                    {(s.mains || []).map(n => (
+                                      <span
+                                        key={n}
+                                        className="inline-block px-2 py-0.5 rounded bg-gradient-to-br from-fuchsia-700/60 to-purple-700/60 border border-fuchsia-400/40 text-white text-xs font-mono font-bold"
+                                      >
+                                        {n}
+                                      </span>
+                                    ))}
+                                    {isEuro && s.stars && (
+                                      <span className="ml-1 text-amber-300 text-xs font-mono">
+                                        ⭐ {(s.stars || []).join(' · ')}
+                                      </span>
+                                    )}
+                                    {!isEuro && s.lucky != null && (
+                                      <span className="ml-1 text-amber-300 text-xs font-mono">
+                                        🍀 {s.lucky} · R={s.replay}
+                                      </span>
+                                    )}
+                                    <span className="ml-2 text-[10px] text-slate-400">
+                                      sc {s.cosmic_score}
+                                    </span>
+                                  </div>
+                                </div>
+                                <ChevronDown className={`w-4 h-4 text-slate-500 flex-shrink-0 transform ${isExpanded ? 'rotate-180' : ''} transition-transform`} />
+                              </div>
+                            </button>
+
+                            {isExpanded && (
+                              <div className="mt-2 space-y-1.5 border-t border-fuchsia-500/20 pt-2" data-testid={`story-ticket-detail-${i}`}>
+                                <div className="text-xs text-slate-300">
+                                  <span className="text-fuchsia-400">📜 Narrative:</span> {s.narrative}
+                                </div>
+                                {s.lucky_why && (
+                                  <div className="text-[11px] text-amber-200/80">🍀 {s.lucky_why}</div>
+                                )}
+                                {s.stars_why && (
+                                  <div className="text-[11px] text-amber-200/80">⭐ {s.stars_why}</div>
+                                )}
+                                <div className="text-[11px] text-slate-400 mt-1">🧬 Number DNA (why each number is here):</div>
+                                {Object.entries(s.number_dna || {}).map(([n, lenses]) => (
+                                  <div key={n} className="text-[11px] text-slate-300 font-mono pl-2">
+                                    <span className="text-fuchsia-300 font-bold">{n}</span>
+                                    {' ← '}
+                                    <span className="text-slate-400">{(lenses || []).slice(0, 4).join(' · ') || '—'}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="text-[10px] text-fuchsia-400/70 italic px-1">
+                      {storyComposerData.canon}
                     </div>
                   </div>
                 )}

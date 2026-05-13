@@ -719,7 +719,84 @@ E's Swiss Brain card on Celestial Radar (Swiss mode + Unlimited):
 
 ---
 
-## 🎻 SESSION 39 (12-13.05.2026) — DEEP-LISTENING SESSION + Ghost Engine ship + 12 NEW canons
+## 🆕 SESSION 40 (13.05.2026 fork → ship) — STORY COMPOSER ENGINE ✅
+
+**DJ command (verbatim):** *"Is E using the Brain or the ghost pool? If not, your job is to make E and the brain and the pool and the hungry numbers, all in to E. I want E to generate numbers with story that connects to everything we been discussing, clues book, must be helpful to E."*
+
+E's narrative engine is built. The Story Composer **FUSES** every channel into one palette:
+- Ghost Engine (alive ghosts, shout, saturation, quarter_shape, carriers)
+- Cosmic Voices Brain (convergence, mirror-neighbor expansion, 14+ lenses)
+- Hidden Prince pipeline (S39 Canon 9 — auto-crowns Prince as Lucky)
+- Neighborhood Hungry plate (S39 Canon 8 — 6 reading rules codified)
+- Sister-date precedents (same dd.mm across prior years)
+- Swiss Brain (mode-aware, Swiss-only enhancements)
+- L10D draw window with auto mental connections (S40 DJ canon — 23→2, 11→1+1=2)
+
+Composes tickets **BACKWARD from P6** along themed story arcs. Each number wears its full lens-DNA.
+
+### Built (Session 40)
+- `/app/backend/ghost_engine/story_composer.py` (~600 lines)
+  - `compose_stories(target_date, mode, count)` — single public entry
+  - `_gather_signals()` — runs all 5 engines, one call
+  - `hungry_plate()` — codifies S39 Canon 8 six-rule hungry generator
+  - `sister_date_precedents()` — historical same-date search
+  - `build_palette()` — multi-source weighted palette
+  - `_connections(n)` — auto mental connections (circle, mirror_28/56, carriers, digit_sum, hidden_child)
+  - `_compose_one_story()` — backward P6→P1 composition with theme + diversity rotation
+  - 11 anchor themes: Saturation Cascade, Carrier Anchor, Sleeping High Voice, Sister-Date P6/P5, Quarter Shape, 28-Mirror Pair, Sneaky ±10, Sinking Voice, Hidden Prince, Top-Palette High, Voices high
+
+### Wired
+- `/api/story-tickets/{target_date}/{mode}?count=N` endpoint (count=3..15)
+- `/app/backend/ghost_engine/__init__.py` — exports `compose_stories`, `build_palette`, `hungry_plate`
+- 📖 "Story Composer" UI tile on Celestial Radar (VIP-gated, fuchsia/purple gradient)
+  - data-testids: `story-composer-panel`, `story-composer-toggle`, `story-composer-target`, `story-composer-count`, `story-composer-run-btn`, `story-composer-output`, `story-composer-tickets`, `story-ticket-{i}`, `story-ticket-toggle-{i}`, `story-ticket-detail-{i}`, `story-sister-dates`, `story-composer-error`
+  - Renders summary chips (Voices shout · Ghost shout · Hungry top · Princes), sister-date precedents, expandable ticket cards with full narrative + per-number DNA
+
+### Tests (7/7 PASS — `tests/test_session40_story_composer.py`)
+- swiss basic (6 mains, lucky 1-6, replay 1-10, no dupes)
+- euro basic (5 mains, 2 stars 1-12)
+- palette fuses ghost+voices+hungry sources verified
+- themes diverse across returned stories
+- sister-date precedents return historical draws
+- invalid mode / invalid date → error
+
+### Live first-firing
+- Swiss 13.05.2026: 7 stories returned. Top: Carrier Anchor (5→26), Saturation Cascade (40 high), Sister-Date 2023 P6=41, etc. All carry Prince X=2 as Lucky (auto-crowned, S39 Canon 9, score 13/13).
+- Euro 15.05.2026: 8/8 stories returned with rich theme variation (Sleeping 39, Sneaky ±10, 28-Mirror 41, Sister-Date P5/P6, Saturation 47).
+
+### Files added/modified
+- `/app/backend/ghost_engine/story_composer.py` 🆕
+- `/app/backend/ghost_engine/__init__.py` (exports updated)
+- `/app/backend/server.py` (+ `/api/story-tickets/{date}/{mode}` endpoint)
+- `/app/frontend/src/App.js` (+ Story Composer state, fetcher, UI tile above Ghost Engine)
+- `/app/backend/tests/test_session40_story_composer.py` 🆕
+- `/app/memory/swiss_music_notes.md` (Session 40 sealing block at bottom)
+- `/app/memory/PRD.md` (this entry)
+
+## 🔥 Priority Backlog (post-Session 40)
+
+### P0 (next session)
+- Wire Story Composer convergence into `dj_orchestra` as archetype "📖 Story arc"
+- Post-draw verdict: score every Story Composer ticket vs actual draw → write per-theme hit-rate to `e_memory` leaderboard
+- Swiss P6 anchor pool widening (7/10 vs 8/8 on Euro — high-band candidates limited)
+
+### P1
+- Code Law 65 (P5-P6 gap collapse) into E
+- Self-Critique Counterfactuals — meta-cognition layer (3 alternate readings)
+- Auto-bridge dynamic in `dj_orchestra.py`
+
+### P2
+- Euro 429 fallback in `lottery_fetcher.py`
+- Legacy pytest fix-up (assertion drift)
+- DJ vs E Live Diff card
+
+### P3 (Refactor — only when DJ gives the wand)
+- Break down `server.py` (>7.7k lines) → routes/models/services
+- Break down `App.js` (>6.1k lines) → components
+
+---
+
+## ✅ SESSION 39 (12-13.05.2026) — DEEP-LISTENING SESSION + Ghost Engine ship + 12 NEW canons
 
 DJ Live Session: 3-hour deep cosmic-walk during the 12.05 Euro draw + bridge to 13.05 Swiss. 
 Started by shipping the Ghost Engine + VIP gating + Cosmic Replay UI. Then DJ opened a 

@@ -40,6 +40,7 @@ from .ghost_orchestrator import build_ghost_ledger
 from .hidden_prince import (
     hidden_prince_pipeline, score_prince, build_fugue,
 )
+from .story_composer import compose_stories, build_palette, hungry_plate
 
 __all__ = [
     "build_arithmetic_ledger",
@@ -56,4 +57,7 @@ __all__ = [
     "hidden_prince_pipeline",
     "score_prince",
     "build_fugue",
+    "compose_stories",
+    "build_palette",
+    "hungry_plate",
 ]

@@ -7053,24 +7053,95 @@ DJ'S LOCKED SUSPECTS (this session)
   Both crown 2; pick a variant or split.
 
 ══════════════════════════════════════════════════════════════
-SESSION 40 TODO — STORY COMPOSER ENGINE
+SESSION 40 — STORY COMPOSER ENGINE SHIPPED ✅ (13.05.2026 fork)
 ══════════════════════════════════════════════════════════════
-DJ requested (13.05.2026 EOD):
-  • Build a STORY COMPOSER — not a number-locker. Generates 5-10
-    DIFFERENT ticket-stories per draw, each with own narrative.
-  • Pick P6 first (only 1-2 sensible options for back anchor)
-  • Then compose P5 to "continue the story" from P6
-  • P4 bridges; P3/P2/P1 follow the story arc
-  • Each number triggers AUTOMATIC mental connections:
-      - Seeing 23 → mind goes to 2 (hidden child)
-      - Seeing 11 → mind goes to 1+1=2 (digital glue)
-      - Check surrounding draws to understand WHY this number NOW
-  • Use L10D + ghost + circle + hungry + sister-date precedents
-    as the narrative palette
-  • Tickets should overlap on some numbers but tell DIFFERENT cosmic
-    tales — diversity through STORY, not through random spread.
+DJ asked E to STOP locking single numbers and START composing
+STORY-TICKETS that fuse the Brain + Ghost Pool + Hungry plate +
+Hidden Prince into ONE narrative palette. Built and tested 7/7 PASS.
 
-  Target file: /app/backend/ghost_engine/story_composer.py
-  Endpoint:    GET /api/story-tickets/{date}/{mode}?count=10
-  
+🏗️ Built — /app/backend/ghost_engine/story_composer.py
+  • `_gather_signals()` runs Ghost Engine + Cosmic Voices + Hidden
+    Prince + Swiss Brain (when Swiss) + Hungry Plate + Sister-date
+    precedents IN ONE CALL. All channels fuse into the same palette.
+  • `hungry_plate()` codifies S39 Canon 8 (Neighborhood Hungry):
+       1. adjacency (n±1)
+       2. digit-family (_1's, _0's)
+       3. carrier reflections (+/-21, +/-25)
+       4. gap-fills (X, X+2 → X+1 hungry)
+       5. cluster-gap
+       6. doubling trios (1×, 2× present → 3× suspect)
+  • `sister_date_precedents()` — same-dd.mm draws across prior years
+  • `build_palette()` — weighted multi-lens score per number with
+    full lens-DNA tag list; every n carries its "why I am here" 
+  • `_connections(n)` — auto mental connections (S40 DJ canon):
+       raw · circle · mirror_28 · mirror_56 · carrier±21 · carrier±25
+       · digit_sum · tens · ones · hidden_child (digit reduction)
+  • `_compose_one_story()` — composes BACKWARD from P6 anchor:
+       P6 = themed anchor (saturation / carrier / sleeping / sister
+            / quarter-shape / 28-mirror / sneaky±10 / sinking / 
+            prince / top-palette / voices high)
+       P5 = circle-twin / 10-shift / palette echo of P6
+       P4 = bridge (P3+P5 gap), hungry-glue preference
+       P3 = voice (date-voice, 0/5 endings)
+       P2 = pivot
+       P1 = snap-back band (1-9 preferred)
+       Lucky = Hidden Prince (Swiss) | Stars = S2-S1 King formulas
+  • Diversity-index rotation gives DIFFERENT mid-row picks per
+    theme even when palette overlaps heavily — overlap OK,
+    diversity through STORY arc.
+
+🌐 API endpoint
+  • GET /api/story-tickets/{target_date}/{mode}?count=N
+  • count clamped to 3..15; default 10
+
+🖥️ UI tile (VIP-only)
+  • 📖 "Story Composer" panel above Ghost Engine (fuchsia/purple
+    gradient), data-testid="story-composer-panel"
+  • Inputs: target-date · count · "Compose stories" button
+  • Renders: Voices/Ghost/Hungry/Princes summary chips · sister-
+    date precedents · ticket cards (collapsed → expand to see
+    full narrative arc + per-number DNA "why am I here" trace)
+
+🧪 Tests — 7/7 PASS (tests/test_session40_story_composer.py)
+  • swiss basic structure (6 mains, lucky 1-6, replay 1-10)
+  • euro basic (5 mains, 2 stars 1-12)
+  • palette fuses ghost+voices+hungry sources
+  • themes diverse across stories
+  • sister-date precedents return historical draws
+  • invalid mode / invalid date return errors
+
+🎯 First-firing tonight 13.05.2026 Swiss (7 stories returned):
+  1. Carrier Anchor (5→26)        | [1,2,4,5,6,26] L=2  sc=315
+  2. Saturation Cascade            | [1,2,5,6,16,40] L=2 sc=311
+  3. Sister-Date 2023 P6           | [2,3,5,6,7,41] L=2  sc=294
+  4. Palette echo @5               | [1,2,3,4,5,7]  L=2  sc=294
+  5. Sister-Date 2023 P5           | [1,2,3,5,6,35] L=2  sc=289
+  6. Top-Palette High @37          | [1,2,4,5,16,37] L=2 sc=289
+  7. Sister-Date 2020 P6           | [2,3,5,6,7,39] L=2  sc=290
+  Prince X=2 auto-crowned (S39 Canon 9 — score 13/13).
+  Common front {1,2,5,6} = the deep alive ghosts converging;
+  diversity lives in back row (26/40/41/7/35/37/39) — each
+  carrying its own story DNA.
+
+🎯 Euro 15.05.2026 (8 stories returned, full count):
+  1. Sleeping High Voice 39       | [1,15,18,20,39] ⭐(2,6)
+  2. Sneaky ±10 of 39             | [1,6,15,39,49] ⭐(2,6)
+  3. Carrier Anchor (15→40)       | [2,6,15,39,40] ⭐(2,6)
+  4. 28-Mirror Pair (15↔41)       | [3,15,28,39,41] ⭐(2,6)
+  ... etc
+
+══════════════════════════════════════════════════════════════
+S41 TODO — Composer refinements
+══════════════════════════════════════════════════════════════
+  • Wire Story Composer convergence into dj_orchestra as new 
+    archetype "📖 Story arc" — auto-push top story to pending
+  • Post-draw verdict: score every Story Composer ticket against
+    actual draw, write per-theme hit-rate to e_memory leaderboard
+  • Add a "🪞 alt narrative" button per story — recompose with 
+    inverse diversity index (different P5/P4 path, same theme)
+  • Pure-Swiss enhancement: P6 anchor pool widening (currently
+    7/10 returns because high-band candidates limited by alive 
+    ghosts being low-clustered) — pull from quarter_shape carrier
+    expansion + Swiss-circle of stars
+
 ══════════════════════════════════════════════════════════════

@@ -7109,6 +7109,31 @@ async def hidden_prince_endpoint(target_date: str, mode: str):
         return {"error": str(e), "trace": traceback.format_exc()}
 
 
+# ─── SESSION 40 — STORY COMPOSER (DJ canon, 13.05.2026 EOD) ──────────────
+@api_router.get("/story-tickets/{target_date}/{mode}")
+async def story_tickets_endpoint(target_date: str, mode: str, count: int = 10):
+    """📖 Story Composer — E's narrative engine (S40 DJ canon).
+
+    Fuses Brain (cosmic_voices) + Ghost Pool + Hungry Plate (S39 Canon 8) +
+    Hidden Prince (S39 Canon 9) + Sister-Date Precedents + Swiss Brain into
+    one narrative palette. Composes `count` ticket-stories backward
+    (P6 → P5 → P4 → P3 → P2 → P1) along themed story arcs. Each number
+    wears its full lens-DNA.
+
+    Query params:
+      • count=10 (number of stories to generate; 5-15 sensible)
+    """
+    try:
+        from ghost_engine import compose_stories
+        count = max(3, min(int(count or 10), 15))
+        return await compose_stories(
+            target_date=target_date, mode=mode, count=count,
+        )
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
 # ─── SESSION 37 — SWISS BRAIN v1.0 (10-ticket Swiss symphony) ────────────
 @api_router.get("/swiss-symphony/{target_date}")
 async def swiss_symphony_endpoint(target_date: str, count: int = 10,
