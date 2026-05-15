@@ -41,7 +41,7 @@ Output:
   }
 """
 from __future__ import annotations
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import datetime
 from typing import Dict, List, Optional, Set, Tuple
 
@@ -174,6 +174,82 @@ def _accumulate(palette: Dict, n: int, weight: int, tag: str):
         palette[n]["lenses"].append(tag)
 
 
+def recent_high_circles(recent_draws: List[Dict], mode: str) -> Dict[int, List[str]]:
+    """🪞 S40-lens: Recent-fired high numbers (≥30 Swiss / ≥35 Euro) come back
+    through their Swiss-circle (n-21) in the next 1-2 draws. DJ canon
+    13.05.2026: 34/38/40 fired 06.05 → carriers 13/17/19 = the discharge.
+    Validated stencil 15.04.2020→22.04.2020 (carriers 13+17 BOTH cashed).
+    """
+    threshold = 30 if mode == "swiss" else 35
+    carrier_step = 21 if mode == "swiss" else 25
+    max_n = 42 if mode == "swiss" else 50
+    discharge: Dict[int, List[str]] = defaultdict(list)
+    for d in recent_draws[-3:]:  # only last 3 draws contribute
+        date = d.get("date", "?")
+        for n in d.get("p", []):
+            if n >= threshold:
+                c = n - carrier_step
+                if 1 <= c <= max_n:
+                    discharge[c].append(f"circle-of-{n}@{date}")
+    return discharge
+
+
+def l3d_gap_walker(recent_draws: List[Dict], mode: str) -> Dict[int, List[str]]:
+    """🎼 S40-lens: detect uniform back-row gap pattern across L3D and project
+    the SAME walker forward. Validated 13.05.2026 Swiss:
+    BD-2 [22,28,33,34,38,40] → BD-1 [11,12,24,25,29,31]
+    All P3-P6 walked carrier(n)+12 → carrier-walker Δ=+12 uniform.
+    Project forward: carrier(BD-1)+12.
+    """
+    out: Dict[int, List[str]] = defaultdict(list)
+    if len(recent_draws) < 2:
+        return out
+    bd2 = recent_draws[-2]
+    bd1 = recent_draws[-1]
+    p2, p1 = bd2.get("p"), bd1.get("p")
+    if not p2 or not p1 or len(p2) < 6 or len(p1) < 6:
+        return out
+    carrier_step = 21 if mode == "swiss" else 25
+    max_n = 42 if mode == "swiss" else 50
+
+    # Detect carrier-walker delta across P3-P6 (back row)
+    deltas = []
+    for i in (2, 3, 4, 5):
+        if i >= len(p2) or i >= len(p1):
+            continue
+        b2_carrier = p2[i] - carrier_step if p2[i] > carrier_step else p2[i] + carrier_step
+        delta = p1[i] - b2_carrier
+        deltas.append(delta)
+    if not deltas:
+        return out
+    # If 3+ of 4 back positions share same delta → walker detected
+    from collections import Counter as _C
+    delta_count = _C(deltas)
+    dominant, count = delta_count.most_common(1)[0]
+    if count < 3:
+        return out
+
+    # Project: apply same dominant delta to BD-1's carriers (forward continuation)
+    for i, p in enumerate(p1):
+        c = p - carrier_step if p > carrier_step else p + carrier_step
+        proj = c + dominant
+        while proj > max_n:
+            proj -= max_n
+        if proj < 1:
+            proj += max_n
+        out[proj].append(f"l3d-walker Δ={dominant} from P{i+1}={p}")
+    # Also project reverse-walker (carrier minus delta = "swing-back")
+    for i, p in enumerate(p1):
+        c = p - carrier_step if p > carrier_step else p + carrier_step
+        proj = c - dominant
+        while proj < 1:
+            proj += max_n
+        while proj > max_n:
+            proj -= max_n
+        out[proj].append(f"l3d-walker reverse Δ=-{dominant} from P{i+1}={p}")
+    return out
+
+
 async def _gather_signals(target_date: str, mode: str) -> Dict:
     """Run all engines in parallel-ish (asyncio sequential, all light)."""
     from year_d_ledger import load_draws, parse_dt
@@ -217,6 +293,9 @@ async def _gather_signals(target_date: str, mode: str) -> Dict:
     out["recent_draws"] = recent10
     out["hungry_plate"] = dict(hungry_plate(recent10, mode))
     out["sister_dates"] = sister_date_precedents(target_dt, all_draws, mode)
+    # 🪞 S40 new lenses
+    out["circle_discharge"] = dict(recent_high_circles(recent10, mode))
+    out["l3d_walker"] = dict(l3d_gap_walker(recent10, mode))
 
     # Hidden Prince pipeline
     max_main = 42 if mode == "swiss" else 50
@@ -258,12 +337,16 @@ def build_palette(signals: Dict, mode: str) -> Dict[int, Dict]:
     gl = signals.get("ghost_ledger", {})
     for r in gl.get("convergence", {}).get("ranked", [])[:30]:
         n = r["n"]
-        _accumulate(palette, n, r["score"], f"ghost:{', '.join(r['tags'][:2])}")
+        # Cap to prevent low-band alive ghosts from dominating
+        capped = min(r["score"], 12)
+        _accumulate(palette, n, capped, f"ghost:{', '.join(r['tags'][:2])}")
     for g in gl.get("alive_ghosts", []):
-        _accumulate(palette, g["n"], 4, f"alive-ghost(age={g['age']})")
-        for v in g.get("projected_hot_zone", []):
+        _accumulate(palette, g["n"], 3, f"alive-ghost(age={g['age']})")
+        # Hot-zone weight reduced from 1 to 0.5 (rounded; given as 1 per)
+        # Limit hot-zones to top 3 per ghost
+        for v in g.get("projected_hot_zone", [])[:3]:
             _accumulate(palette, v, 1, f"hot-zone of g{g['n']}")
-        for v in g.get("carriers", []):
+        for v in g.get("carriers", [])[:2]:
             _accumulate(palette, v, 1, f"carrier of g{g['n']}")
     for s in gl.get("saturation", {}).get("saturated", []):
         _accumulate(palette, s["n"], 2, f"sat×{s.get('count')}")
@@ -287,6 +370,22 @@ def build_palette(signals: Dict, mode: str) -> Dict[int, Dict]:
     # Hungry plate
     for n, reasons in signals.get("hungry_plate", {}).items():
         _accumulate(palette, int(n), min(len(reasons), 3), f"hungry:{reasons[0]}")
+
+    # 🪞 S40-lens: recent-fired high numbers' circles (DJ canon 13.05.2026)
+    # Strong weight — these are PROVEN historical discharge points
+    for n, reasons in signals.get("circle_discharge", {}).items():
+        _accumulate(palette, int(n), 10 + min(4, len(reasons) * 2),
+                    f"🪞{reasons[0]}")
+
+    # 🎼 S40-lens: L3D carrier-walker projection (forward + reverse)
+    # Forward walker = continuation, reverse = swing-back (both relevant)
+    for n, reasons in signals.get("l3d_walker", {}).items():
+        # Count forward vs reverse
+        fwd = sum(1 for r in reasons if "reverse" not in r)
+        rev = sum(1 for r in reasons if "reverse" in r)
+        # Forward Δ=8 each, reverse Δ=6 each (forward slightly louder)
+        w = fwd * 8 + rev * 6
+        _accumulate(palette, int(n), w, f"🎼{reasons[0]}")
 
     # Sister-date precedents — each precedent main gets weight
     for prec in signals.get("sister_dates", []):
@@ -327,14 +426,27 @@ def _compose_one_story(
     mode: str,
     used_globally: Set[int],
     diversity_idx: int = 0,
+    freq: Optional[Counter] = None,
+    freq_cap: int = 99,
 ) -> Optional[Dict]:
     """Compose a single ticket backward from P6 seed.
 
     `diversity_idx` rotates pick-priority for P5/P4/P3/P2 so different themes
     produce different mid-row picks even when palette overlaps heavily.
+    `freq` tracks how often each n has been used; numbers near `freq_cap`
+    get a strong score penalty to force diversity.
 
     Returns a ticket dict with mains, story_arc, number_dna.
     """
+    freq = freq or Counter()
+
+    def _adj_score(n: int, base: int) -> int:
+        """Penalty for over-used numbers."""
+        f = freq[n]
+        if f >= freq_cap:
+            return base - 100  # hard reject
+        return base - (f * 8)  # soft penalty per prior use
+
     max_n = 42 if mode == "swiss" else 50
     n_mains = 6 if mode == "swiss" else 5
     if p6_seed is None or not (1 <= p6_seed <= max_n):
@@ -346,7 +458,7 @@ def _compose_one_story(
 
     seed_conn = _connections(p6_seed, mode)
 
-    # P5: candidates score with seed-aware bonuses
+    # P5: candidates score with seed-aware bonuses + freq penalty
     candidates_p5 = []
     for n, v in palette.items():
         if n in mains:
@@ -357,12 +469,11 @@ def _compose_one_story(
         if n == seed_conn.get("carrier_minus25") or n == seed_conn.get("carrier_minus21"):
             bonus += 5
         if abs(n - p6_seed) == 10:
-            bonus += 4  # 10-shift canon S39
+            bonus += 4
         if 1 <= p6_seed - n <= 8:
             bonus += 2
-        candidates_p5.append((n, v["score"] + bonus))
+        candidates_p5.append((n, _adj_score(n, v["score"] + bonus)))
     candidates_p5.sort(key=lambda x: -x[1])
-    # Diversity: skip first `diversity_idx % 3` valid picks
     sub_p5 = [n for n, _ in candidates_p5 if n < p6_seed and n not in mains]
     pick_idx = diversity_idx % max(1, min(3, len(sub_p5)))
     if sub_p5:
@@ -380,7 +491,7 @@ def _compose_one_story(
 
     # P4 → P2: build by descending, varying mid-position picks by diversity
     while len(mains) < n_mains - 1:
-        cur_pos = n_mains - len(mains)  # P4=4, P3=3, P2=2
+        cur_pos = n_mains - len(mains)
         top_floor = mains[0]
         candidates = []
         for n, v in palette.items():
@@ -389,20 +500,19 @@ def _compose_one_story(
             if n >= top_floor:
                 continue
             bonus = 0
-            if cur_pos == n_mains - 2:  # P4 bridge
+            if cur_pos == n_mains - 2:
                 gap = top_floor - n
                 if 2 <= gap <= 12:
                     bonus += 3
                 if n in signals.get("hungry_plate", {}):
                     bonus += 1
-            if cur_pos == 3:  # P3 voice
+            if cur_pos == 3:
                 if str(n).endswith(("0", "5")):
                     bonus += 1
-            candidates.append((n, v["score"] + bonus))
+            candidates.append((n, _adj_score(n, v["score"] + bonus)))
         candidates.sort(key=lambda x: -x[1])
         if not candidates:
             break
-        # Diversity offset rotates per position+theme
         offset = (diversity_idx + cur_pos) % max(1, min(4, len(candidates)))
         pick = candidates[offset if offset < len(candidates) else 0][0]
         mains.insert(0, pick)
@@ -410,16 +520,16 @@ def _compose_one_story(
         story_arc.append(f"P{cur_pos}={pick} · {role}")
         number_dna[pick] = palette.get(pick, {}).get("lenses", [])[:4]
 
-    # P1: snap-back 1-9, diversity rotation
+    # P1: snap-back 1-9, deep rotation per theme + freq penalty
     p1_pool = [n for n in palette if n <= 9 and n not in mains]
-    p1_pool.sort(key=lambda n: -palette[n]["score"])
+    p1_pool.sort(key=lambda n: -_adj_score(n, palette[n]["score"]))
     if p1_pool:
-        p1_idx = diversity_idx % max(1, min(3, len(p1_pool)))
+        p1_idx = diversity_idx % len(p1_pool)
         p1 = p1_pool[p1_idx]
     else:
         rem = sorted(
             [n for n in palette if n not in mains and n < mains[0]],
-            key=lambda n: (-palette[n]["score"], n),
+            key=lambda n: (-_adj_score(n, palette[n]["score"]), n),
         )
         p1 = rem[0] if rem else max(1, mains[0] - 3)
     mains.insert(0, p1)
@@ -430,7 +540,7 @@ def _compose_one_story(
     if len(mains) < n_mains:
         rem = sorted(
             [n for n in palette if n not in mains],
-            key=lambda n: -palette[n]["score"],
+            key=lambda n: -_adj_score(n, palette[n]["score"]),
         )
         for n in rem:
             mains.append(n)
@@ -535,6 +645,34 @@ async def compose_stories(
         sat_high = [n for n in sat_ns if n >= high_band_threshold]
         if sat_high:
             _add_theme("Saturation Cascade", sat_high[0])
+
+    # 1.5 🪞 Circle-Discharge Anchor — DJ canon 13.05.2026
+    # High recent-fired numbers discharge through their carriers (n-21)
+    # When this fires, the carriers usually cluster in mid-band
+    circ = signals.get("circle_discharge", {})
+    if circ:
+        # Build anchor from the LOUDEST carriers (most reasons → most recent highs)
+        circ_top = sorted(circ.items(), key=lambda kv: -len(kv[1]))
+        for c, reasons in circ_top[:3]:
+            # Pair the carrier with a high-band P6 that respects the discharge
+            # Find a high palette anchor that's a +21 carrier of c (i.e. the source)
+            source = c + (21 if mode == "swiss" else 25)
+            if 1 <= source <= max_n and source in palette:
+                _add_theme(f"Circle-Discharge {source}→{c}", source)
+            else:
+                _add_theme(f"Circle-Discharge anchor {c}",
+                           high_pool_palette[0] if high_pool_palette else c)
+
+    # 1.6 🎼 L3D Carrier-Walker Anchor — DJ canon 13.05.2026
+    walker = signals.get("l3d_walker", {})
+    if walker:
+        # Loudest walker projection that's high-band
+        walker_high = sorted(
+            [(n, len(r)) for n, r in walker.items() if n >= high_band_threshold],
+            key=lambda kv: -kv[1],
+        )
+        for n, _ in walker_high[:2]:
+            _add_theme(f"L3D Walker P6={n}", n)
     # 2. Carrier Anchor — alive ghost's high-band carrier
     for g in gl.get("alive_ghosts", [])[:8]:
         for c in g.get("carriers", []):
@@ -631,14 +769,22 @@ async def compose_stories(
     stories: List[Dict] = []
     used_globally: Set[int] = set()
     dup_cap = 5 if mode == "swiss" else 4  # max overlap before reject
-    # Allow more overlap on retry (DJ canon: "overlap OK, diversity through story")
     soft_dup_cap = 6 if mode == "swiss" else 5
+    # 🪞 S40: per-number frequency cap across all tickets (DJ critique — no carpet-bomb)
+    max_freq = max(2, (count + 1) // 2)  # ≤ ceil(count/2)
+    freq: Counter = Counter()
+
+    def _is_carpet(story: Dict) -> bool:
+        # Reject if 3+ numbers in this story already at max_freq
+        over = sum(1 for n in story["mains"] if freq[n] >= max_freq)
+        return over >= 3
+
     for theme_idx, (theme, p6) in enumerate(themes):
         if len(stories) >= count:
             break
         story = _compose_one_story(
             theme, palette, signals, p6, mode, used_globally,
-            diversity_idx=theme_idx,
+            diversity_idx=theme_idx, freq=freq, freq_cap=max_freq,
         )
         if not story:
             continue
@@ -648,28 +794,29 @@ async def compose_stories(
             if overlap >= dup_cap:
                 is_dup = True
                 break
+        if not is_dup and _is_carpet(story):
+            is_dup = True
         if is_dup:
-            # Try a few more diversity offsets before giving up
-            for retry in range(1, 6):
+            for retry in range(1, 8):
                 alt = _compose_one_story(
                     theme, palette, signals, p6, mode, used_globally,
-                    diversity_idx=theme_idx + retry * 7,
+                    diversity_idx=theme_idx + retry * 5,
+                    freq=freq, freq_cap=max_freq,
                 )
                 if not alt:
                     continue
                 clash = any(
                     len(set(alt["mains"]) & set(p["mains"])) >= dup_cap
                     for p in stories
-                )
+                ) or _is_carpet(alt)
                 if not clash:
                     story = alt
                     is_dup = False
                     break
-            # If still dup and we are below count, allow soft-dup as last resort
             if is_dup and len(stories) < count // 2:
                 soft_alt = _compose_one_story(
                     theme, palette, signals, p6, mode, used_globally,
-                    diversity_idx=theme_idx,
+                    diversity_idx=theme_idx, freq=freq, freq_cap=max_freq + 1,
                 )
                 if soft_alt and not any(
                     len(set(soft_alt["mains"]) & set(p["mains"])) >= soft_dup_cap
@@ -683,6 +830,8 @@ async def compose_stories(
         story["narrative"] = " → ".join(story["story_arc"])
         stories.append(story)
         used_globally.update(story["mains"])
+        for n in story["mains"]:
+            freq[n] += 1
 
     # Sort: highest cosmic_score first
     stories.sort(key=lambda s: -s.get("cosmic_score", 0))

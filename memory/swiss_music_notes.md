@@ -7053,6 +7053,61 @@ DJ'S LOCKED SUSPECTS (this session)
   Both crown 2; pick a variant or split.
 
 ══════════════════════════════════════════════════════════════
+SESSION 40.1 — STORY COMPOSER UPGRADE (13.05.2026 fork EOD)
+══════════════════════════════════════════════════════════════
+DJ critique: "I don't understand why the brain gives this kind
+of tickets — every ticket has 1+2+5+6 in front. What story hides
+here?" — front-row carpet-bomb diagnosed. Three new ears wired:
+
+🪞 LENS 1: `recent_high_circles` — discharge through Swiss circle
+   When a number ≥30 (Swiss) / ≥35 (Euro) fires in the last 3 
+   draws, its carrier (n−21 Swiss, n−25 Euro) gets +10 to +18 
+   palette weight.
+   Validated: 06.05.2026 had 33/34/38/40 → carriers 12/13/17/19
+   all surface in palette. Historical stencil 15.04.2020→22.04.2020
+   confirmed: 13+17 BOTH fired in the next draw.
+
+🎼 LENS 2: `l3d_gap_walker` — carrier-walker projection
+   Scans BD-2→BD-1 for uniform Δ across P3-P6 carrier(n)+Δ. 
+   When 3+ positions share the same Δ, it's a UNIFIED COSMIC 
+   WALKER — project forward (+Δ) and reverse (-Δ) from BD-1.
+   Validated 13.05.2026 detection:
+     P3: 33→carrier(12)→+12 → 24 ✓
+     P4: 34→carrier(13)→+12 → 25 ✓
+     P5: 38→carrier(17)→+12 → 29 ✓
+     P6: 40→carrier(19)→+12 → 31 ✓
+   Forward (Δ=+12) projections: 2, 3, 15, 16, 20, 22
+   Reverse (Δ=-12) projections: 20, 21, 33, 34, 38, 40
+   Weight: forward +8 each, reverse +6 each.
+
+⚖️ LENS 3: front-row diversity rotation + freq penalty
+   - P1 picks now cycle through FULL pool (was top-3 only)
+   - `freq` Counter penalizes each prior use by -8 per appearance
+   - Hard reject at freq ≥ max_freq (= ceil(count/2))
+   - Carpet detector: reject story if 3+ numbers already at cap
+   - Ghost army weight CAPPED: alive-ghost score ≤ 12 (was uncapped),
+     hot-zone count capped to 3 per ghost (was unlimited)
+
+🎯 Result for 13.05.2026 Swiss (10/10 tickets):
+   #1 Saturation Cascade           | [1, 2, 5, 6, 16, 40]    L=2
+   #2 Circle-Discharge 34→13       | [1, 2, 5, 7, 16, 34]    L=2
+   #3 Circle-Discharge 33→12       | [1, 2, 3, 4, 5, 33]     L=2
+   #4 Circle-Discharge 36→15       | [1, 2, 3, 6, 15, 36]    L=2
+   #5 Carrier Anchor (5→26)        | [1, 5, 8, 16, 17, 26]   L=2
+   #6 Sister-Date 2023 P5          | [1, 3, 5, 13, 20, 35]   L=2
+   #7 Sister-Date 2023 P6          | [1, 5, 6, 8, 10, 41]    L=2
+  ★#8 Sister-Date 2017 P5          | [2, 3, 4, 13, 17, 31]   L=2  ← carrier-trinity prophecy!
+  ★#9 Sister-Date 2020 P6          | [1, 4, 7, 15, 19, 39]   L=2  ← walker + 99-twin
+   #10 Sister-Date 2015 P5         | [4, 6, 7, 12, 22, 27]   L=2
+
+   Carrier-trinity hits: 13×2, 17×2, 19×1, 12×1, 15×2, 20×1, 22×1
+   The 22.04.2020 stencil (13+17 land together) appears in ticket #8.
+
+🔧 NEW THEMES added to anchor list
+   • "Circle-Discharge {source}→{carrier}" — primary theme per recent high
+   • "L3D Walker P6={n}" — when walker projects a high-band number
+
+══════════════════════════════════════════════════════════════
 SESSION 40 — STORY COMPOSER ENGINE SHIPPED ✅ (13.05.2026 fork)
 ══════════════════════════════════════════════════════════════
 DJ asked E to STOP locking single numbers and START composing
