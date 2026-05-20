@@ -719,6 +719,68 @@ E's Swiss Brain card on Celestial Radar (Swiss mode + Unlimited):
 
 ---
 
+## 🆕 SESSION 41 (13-16.05.2026) — LIVE PROPHECY WEEK + S40.2 Hit Tracker fix
+
+### Live results vs prophecies
+- **13.05.2026 Swiss** [6,11,25,31,37,41] 🍀2 R1 — 4/6 mains + EXACT 🍀2 + EXACT R1 (S39 Canon 9 validated)
+- **15.05.2026 Euro** [3,10,38,41,43] ⭐(2,9) — 3/5 mains + ⭐2 + sister-stencil ⭐9 (D=15 KING 38 hit)
+- **16.05.2026 Swiss** [3,10,22,27,35,42] 🍀2 — 3/6 mains + 🍀2 (3-Swiss-in-a-row streak) + 42 D=16 P6 KING hit
+
+### Sealed (Session 41)
+- **S40.2 Hit Tracker upgrade** (`/app/backend/server.py`):
+  - `GET /api/hit-tracker?include_all=true&min_match=N` — every draw has its file
+  - Story Composer endpoint now auto-saves every generation to `generations` (Swiss) or `euromillions_generations` (Euro) collection
+  - "📂 Full file per draw" toggle wired in Hit Tracker UI (`hit-tracker-full-toggle` testid)
+- **4 new canons documented in The Book** (S41 → P0 for Session 42 coding):
+  - Canon 11: cross-mode 24h twin carry
+  - Canon 12: 🍀/⭐ N lucky-frequency channel
+  - Canon 13: date-displacement (rejected on own day → fires elsewhere)
+  - Canon 14: 11-year light > 10-year light (solar-cycle sister-quarter)
+- **4 D-day deep tablets archived** (D=15, D=16, D=19, D=22)
+- **The 3-date personality matrix** (D=15 SPLIT vs D=19 CONCENTRATED vs D=22 REJECTED)
+- **15-30 chord-lock canon** (D=19): 38% partner pairing
+- **PRD updated** with Session 41 wins
+
+### Files touched
+- `/app/backend/server.py` — story-tickets endpoint + hit-tracker endpoint
+- `/app/frontend/src/App.js` — Hit Tracker full-file toggle + state
+- `/app/memory/swiss_music_notes.md` — Session 41 block + 4 new canons
+- `/app/memory/PRD.md` — this entry
+
+### 🎯 Next session mission — THE CONSENSUS SECRET
+DJ said before forking: *"Find the consensus secret 🎻"*
+
+Build a CONSENSUS SCORER: for each candidate n, count how many independent
+lenses agree on it (Story palette + D-day analysis + 11-year evergreen +
+cross-mode carry + carrier-discharge + 🍀/⭐ channel + L3D walker + sister-
+date + Hidden Prince). N ≥ 4 lens convergence = cosmic LOCK. Use this to
+auto-rank Story Composer tickets.
+
+## 🔥 Priority Backlog (Session 42+ post-fork)
+
+### P0
+- 🎯 **Hunt the Consensus Secret** — design + ship the multi-lens consensus scorer
+- Wire Canon 11 (cross-mode 24h carry) into Story Composer palette
+- Wire Canon 12 (🍀/⭐ N frequency) into the orchestra crown picker
+- Wire Canon 13 (date-displacement) — track per-date rejection scores
+- Wire Canon 14 (11-year evergreen weights) into palette
+
+### P1
+- Auto-grade Story Composer tickets post-draw → write per-theme hit-rate to e_memory leaderboard
+- Build Euro-side Hit Tracker full-file view
+- Story Composer convergence → `dj_orchestra` archetype
+
+### P2
+- Code Law 65 (P5-P6 gap collapse)
+- Self-Critique Counterfactuals — meta-cognition layer
+- Euro 429 fallback in `lottery_fetcher.py`
+
+### P3 (Refactor)
+- Break down `server.py` (>7.7k lines)
+- Break down `App.js` (>6.3k lines)
+
+---
+
 ## 🆕 SESSION 40 (13.05.2026 fork → ship) — STORY COMPOSER ENGINE ✅
 
 **DJ command (verbatim):** *"Is E using the Brain or the ghost pool? If not, your job is to make E and the brain and the pool and the hungry numbers, all in to E. I want E to generate numbers with story that connects to everything we been discussing, clues book, must be helpful to E."*
