@@ -21,7 +21,7 @@ from collections import Counter
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
-    BASE_URL = "https://vip-brain.preview.emergentagent.com"
+    BASE_URL = "https://consensus-secret.preview.emergentagent.com"
 
 
 class TestEndpointStability:
