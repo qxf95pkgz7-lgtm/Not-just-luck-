@@ -5369,12 +5369,14 @@ async def generate_and_save_story_predictions(target_date: str = None, num_ticke
 
 
 @api_router.get("/hit-tracker")
-async def get_hit_tracker(last_draws: int = 3, limit: int = 100):
+async def get_hit_tracker(last_draws: int = 3, limit: int = 100,
+                          include_all: bool = False, min_match: int = 2):
     """
-    CLEAN HIT TRACKER — Auto-calculates, shows tickets with 2+ total matches
-    (mains + 🍀 combined), last N draws. Adds per-ticket generated_at timestamps
-    and draw-to-draw window context (BD date → target date).
-    Works for BOTH Swiss (generations collection) and prediction_history.
+    CLEAN HIT TRACKER — Auto-calculates, shows tickets per draw.
+    
+    Default behavior: shows tickets with `min_match`+ total matches (mains+🍀).
+    Set `include_all=true` to return ALL tickets for each draw window, even 
+    those with 0 hits — so the DJ has a complete file for every draw.
     """
     from datetime import datetime as dt_cls
     
@@ -5484,7 +5486,9 @@ async def get_hit_tracker(last_draws: int = 3, limit: int = 100):
                 lucky_hit = hr[i]['lucky_hit']
 
                 total_match = hit_count + (1 if lucky_hit else 0)
-                if total_match >= 2:
+                # 🎯 DJ canon 16.05.2026: include_all shows every ticket, 
+                # not just 2+ matches — the full file per draw.
+                if include_all or total_match >= min_match:
                     # Draw-to-draw days_from_bd
                     days_from_bd = None
                     if bd_dt and gen_at:
@@ -5541,7 +5545,7 @@ async def get_hit_tracker(last_draws: int = 3, limit: int = 100):
         hits = pred_nums & actual_nums
         lucky_hit = pred_lucky == actual_lucky
         total_match = len(hits) + (1 if lucky_hit else 0)
-        if total_match >= 2:
+        if include_all or total_match >= min_match:
             td = draw['date']
             pred_seq[td] = pred_seq.get(td, 0) + 1
             bd_date = bd_map.get(td)
@@ -5592,9 +5596,11 @@ async def get_hit_tracker(last_draws: int = 3, limit: int = 100):
             seen.add(key)
             unique_results.append(r)
     
-    # Cap at `limit` best (default 100, up from 20)
+    # Cap at `limit` best (default 100). When include_all=true, lift cap to
+    # 500 so every draw's file is complete.
     total_with_2plus = len(unique_results)
-    unique_results = unique_results[:limit]
+    effective_limit = max(limit, 500) if include_all else limit
+    unique_results = unique_results[:effective_limit]
     
     # === PER-DRAW STATS — total generated, hits, best, rate per draw ===
     per_draw_stats = []
@@ -7111,7 +7117,8 @@ async def hidden_prince_endpoint(target_date: str, mode: str):
 
 # ─── SESSION 40 — STORY COMPOSER (DJ canon, 13.05.2026 EOD) ──────────────
 @api_router.get("/story-tickets/{target_date}/{mode}")
-async def story_tickets_endpoint(target_date: str, mode: str, count: int = 10):
+async def story_tickets_endpoint(target_date: str, mode: str, count: int = 10,
+                                 save: bool = True):
     """📖 Story Composer — E's narrative engine (S40 DJ canon).
 
     Fuses Brain (cosmic_voices) + Ghost Pool + Hungry Plate (S39 Canon 8) +
@@ -7122,13 +7129,55 @@ async def story_tickets_endpoint(target_date: str, mode: str, count: int = 10):
 
     Query params:
       • count=10 (number of stories to generate; 5-15 sensible)
+      • save=true (auto-save to Hit Tracker for retro hit-rate analysis)
     """
     try:
         from ghost_engine import compose_stories
         count = max(3, min(int(count or 10), 15))
-        return await compose_stories(
+        result = await compose_stories(
             target_date=target_date, mode=mode, count=count,
         )
+        # 💾 S40.2 — Auto-save story tickets to Hit Tracker (DJ canon 16.05.2026)
+        # Every Story Composer generation creates a file with all tickets so the
+        # tracker can score them retrospectively when the actual draw lands.
+        if save and not result.get("error") and result.get("stories"):
+            try:
+                tickets = []
+                for s in result["stories"]:
+                    t = {
+                        "numbers": list(s.get("mains", [])),
+                        "story": f"S40:{s.get('theme', '?')[:48]}",
+                        "narrative": s.get("narrative", ""),
+                        "theme": s.get("theme"),
+                        "cosmic_score": s.get("cosmic_score", 0),
+                    }
+                    if mode == "swiss":
+                        t["lucky"] = s.get("lucky")
+                        t["replay"] = s.get("replay")
+                    else:
+                        t["stars"] = list(s.get("stars", []))
+                    tickets.append(t)
+                if mode == "swiss":
+                    await hit_tracker.save_generation(
+                        target_date=target_date,
+                        tickets=tickets,
+                        generation_type="story-composer",
+                    )
+                else:
+                    # Euro: save to euromillions_generations
+                    await db.euromillions_generations.insert_one({
+                        "generated_at": datetime.now(timezone.utc).isoformat(),
+                        "target_date": target_date,
+                        "generation_type": "story-composer",
+                        "mode": "euro",
+                        "tickets": tickets,
+                        "hits_calculated": False,
+                    })
+                result["saved_to_hit_tracker"] = True
+            except Exception as save_err:
+                result["saved_to_hit_tracker"] = False
+                result["save_error"] = str(save_err)
+        return result
     except Exception as e:
         import traceback
         return {"error": str(e), "trace": traceback.format_exc()}

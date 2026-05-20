@@ -824,6 +824,8 @@ function App() {
   const [storyTickets, setStoryTickets] = useState(null);
   const [storyLoading, setStoryLoading] = useState(false);
   const [perDrawStats, setPerDrawStats] = useState([]);
+  // 🎯 S40.2 — Hit Tracker "Full File" toggle (DJ canon 16.05.2026)
+  const [hitTrackerFullFile, setHitTrackerFullFile] = useState(false);
   
   // Sleeper Radar State
   const [showSleeperRadar, setShowSleeperRadar] = useState(false);
@@ -953,7 +955,9 @@ function App() {
         setPerDrawStats(res.data.per_draw_stats || []);
       } else {
         // Use the new clean hit-tracker endpoint for Swiss
-        const res = await axios.get(`${API}/hit-tracker?last_draws=3&limit=100`, { timeout: 20000 });
+        // 🎯 S40.2 — `include_all=true` returns EVERY ticket per draw (full file)
+        const allParam = hitTrackerFullFile ? '&include_all=true' : '';
+        const res = await axios.get(`${API}/hit-tracker?last_draws=4&limit=200${allParam}`, { timeout: 20000 });
         setGenerationHistory(res.data.results || []);
         setLastDraw(res.data.last_draws?.[0] || null);
         setPerDrawStats(res.data.per_draw_stats || []);
@@ -1070,14 +1074,14 @@ function App() {
     }
   };
   
-  // Load hit tracker data when section is opened
+  // Load hit tracker data when section is opened (also re-loads when toggle flips)
   useEffect(() => {
     if (showHitTracker) {
       fetchLastDraw();
       fetchGenerationHistory();
       fetchHitStats();
     }
-  }, [showHitTracker, lotteryMode]);
+  }, [showHitTracker, lotteryMode, hitTrackerFullFile]);
   
   // Sleeper Radar fetch
   const fetchSleeperForecast = async () => {
@@ -5694,6 +5698,26 @@ function App() {
           
           {showHitTracker && (
             <div className="mt-4 space-y-4">
+              {/* 🎯 S40.2 — "Full File" toggle (Swiss only) */}
+              {lotteryMode === 'swiss' && (
+                <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-slate-900/40 border border-slate-700">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-300">📂 Full file per draw</span>
+                    <span className="text-[10px] text-slate-500">(show every generated ticket, not only 2+ hits)</span>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer" data-testid="hit-tracker-full-toggle-label">
+                    <input
+                      type="checkbox"
+                      checked={hitTrackerFullFile}
+                      onChange={(e) => setHitTrackerFullFile(e.target.checked)}
+                      className="sr-only peer"
+                      data-testid="hit-tracker-full-toggle"
+                    />
+                    <div className="w-10 h-5 bg-slate-700 peer-focus:ring-2 peer-focus:ring-emerald-400 rounded-full peer peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                  </label>
+                </div>
+              )}
+
               {/* Last Draw Result */}
               {lastDraw && (
                 <div className={`p-3 rounded-lg bg-gradient-to-r ${
