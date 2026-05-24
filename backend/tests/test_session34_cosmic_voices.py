@@ -6,7 +6,7 @@ import os
 import requests
 import pytest
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://consensus-secret.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://cosmic-canons.preview.emergentagent.com").rstrip("/")
 EP = f"{BASE_URL}/api/cosmic-voices"
 
 EXPECTED_LENSES = {
