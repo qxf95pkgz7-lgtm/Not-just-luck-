@@ -28,6 +28,7 @@ from cosmic_voices.silent_gap_walker import silent_gap_walker
 from cosmic_voices.prime_family import prime_family_scan
 from cosmic_voices.carrier_extensions import carrier_extensions
 from cosmic_voices.mirror_neighbor import mirror_neighbor_expand
+from cosmic_voices.rc_walks_encryption import compose_encryption_reading
 
 
 def _quarter_draws_for(target_dt: datetime, draws: List[Dict], mode: str) -> List[Dict]:
@@ -99,6 +100,19 @@ async def run_cosmic_voices(
     pf = prime_family_scan(recent) if mode == "euro" else None
     ce = carrier_extensions(deep_debt) if (mode == "euro" and deep_debt) else None
 
+    # Lens #17 (Session 43) — RC-Walks Encryption Decoder (Euro)
+    rc_walks_enc = None
+    if mode == "euro" and rc and rc.get("mains"):
+        from year_d_ledger import parse_dt as _pd
+        rc_dt = _pd(rc["date"])
+        post_rc = [d for d in past if d["dt"] > rc_dt] if rc_dt else []
+        rc_walks_enc = compose_encryption_reading(
+            target_date=target_date, mode=mode, rc0=rc,
+            all_quarter_draws=quarter_draws,
+            recent_draws=recent,
+            post_rc_draws=post_rc,
+        )
+
     voices = {
         "rc_detector": rc,
         "climbing_voice": cv,
@@ -114,6 +128,7 @@ async def run_cosmic_voices(
         "silent_gap_walker": sgw,
         "prime_family": pf,
         "carrier_extensions": ce,
+        "rc_walks_encryption": rc_walks_enc,
     }
     convergence = convergence_scorer(voices, mode=mode, user_pins=user_pins)
     # Brain v0.1: mirror-neighbor expansion AFTER convergence

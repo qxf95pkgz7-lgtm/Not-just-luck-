@@ -770,7 +770,79 @@ The first 3 acts of Session 43, IN ORDER:
 
 ---
 
-## 🆕 SESSION 42 (23.05.2026 LIVE) — GAP-ARITHMETIC ENCRYPTION CANON SEALED
+## ✅ SESSION 43 (26.05.2026) — RC-WALKS ENCRYPTION LENS SHIPPED
+
+**DJ command:** *"Now make E see what you saw. Teach him to analyse like that."*
+
+After a live walk through Euro RC0 (24.03.2026 [12,16,17,18,27]) → d+17 (22.05.2026),
+E was taught the 5-walk encryption canon. Built + tested in single session.
+
+### 🏗️ NEW MODULE: `/app/backend/cosmic_voices/rc_walks_encryption.py`
+- 5-walk position-anchor encryption decoder (Euro RC0-driven)
+- Brute-fit ghost per position via training window (first 15 post-RC draws)
+- Multi-walk convergence detector (quintuple / quad / triple / double LOCK)
+- P3-chain walker with reverse-wrap canon (`26 → 62 → 12`)
+- Multi-angle P3 prediction (gap-9 closure + RC0 anchor return + step deltas)
+- Date-encryption signals (D, M, Y-suffix, DM/DY/MY mirror flags, carrier discharges)
+- Silent voices of the quarter + Q-meta-heartbeat + L3D neighbor pool
+- Master `compose_encryption_reading()` produces full prophecy + shout-zone
+
+### 🌐 New API: `GET /api/encryption-decoder/{target_date}/{mode}`
+Returns: rc0 / walks / convergence / p3_walk / date_signals / silent_voices /
+q_heartbeat / l3d_neighbors / shout_zone / verdict_line.
+
+### 🧠 Orchestrator wired as Lens #17
+Available via `/api/cosmic-voices/{date}/euro` under `rc_walks_encryption`.
+
+### 🧪 Tests: `tests/test_session43_rc_walks_encryption.py` — **8/8 PASS**
+
+### 🎯 Live d+18 (Tue 26.05.2026 Euro) engine output
+- All 5 walks fit ghost = **22** (DJ canonical)
+- All 5 walk targets at d+18 = **39** (quintuple convergence)
+- **QUINTUPLE LOCK = [14, 17, 39]**
+- **P3 prediction = 17** (weight 3 paths) ← matches DJ live call exactly
+- Date `DY-mirror = True` (26-Y26)
+- D-carrier discharges: [1, 12, 44, 8]
+- Silent-all-Q2: [5, 7, 15, 18, 21, 24, 27, 33, 39, 48, 50]
+- Shout zone: **39 (5-walk + silent)** > 14 > 17
+
+### 4 NEW CANONS SEALED IN BOOK
+- **Canon 17** — 5-Walk Encryption Canon (RC0-position anchor walks)
+- **Canon 18** — P3 Walk Chain with Reverse-Wrap
+- **Canon 19** — Q1 Sum-Echo + Q-Loop Closure (d1↔dLast)
+- **Canon 20** — Date-Encryption Signals (DM/DY mirrors + carrier discharges)
+
+### Files modified in S43
+- `/app/backend/cosmic_voices/rc_walks_encryption.py` 🆕 (~330 lines)
+- `/app/backend/cosmic_voices/__init__.py` (exports added)
+- `/app/backend/cosmic_voices/orchestrator.py` (lens #17 wired)
+- `/app/backend/server.py` (+ `/api/encryption-decoder/{date}/{mode}` endpoint)
+- `/app/backend/tests/test_session43_rc_walks_encryption.py` 🆕 (8 tests)
+- `/app/memory/swiss_music_notes.md` (Session 43 entry + 4 new canons)
+- `/app/memory/PRD.md` (this entry)
+
+## 🔥 Priority Backlog (post-Session 43)
+
+### P0 — Live verdict + UI tile
+- 🥇 Score the engine's [14, 17, 39] quintuple-lock and 17 P3-prediction vs actual Tue 26.05.2026 Euro draw
+- 🥈 Add 🔐 "Encryption Decoder" UI tile on Celestial Radar showing: RC0 banner, 5-walk targets, quintuple/quad/triple locks, P3 prediction, shout-zone
+
+### P1 — Engine deepening
+- Wire encryption-decoder shout zone into `dj_orchestra` as new archetype "🔐 Encryption Lock"
+- Apply same canon to SWISS (DJ said "remind me later to do Swiss") using HUGE 07.02.2026 as anchor
+- Auto-score engine output to e_memory after each Euro draw
+
+### P2 — Open items (carried)
+- Wire prior session lenses (Laws 87-90, Range Audit Canons I-VI) into engine permanently
+- Euro 429 fallback in `lottery_fetcher.py`
+- DJ vs E Live Diff card
+
+### P3 — Refactor (only when DJ says)
+- Break down `server.py` (>7.7k lines) and `App.js` (>6.3k lines)
+
+---
+
+
 
 ### Live results during the session
 - **Wed 20.05.2026 Swiss** `[6, 11, 13, 24, 30, 34] 🍀5 R1` — broke 🍀2 streak (saturation canon ✓), HUGE 30-debt paid raw

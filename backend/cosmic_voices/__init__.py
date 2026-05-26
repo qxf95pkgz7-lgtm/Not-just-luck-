@@ -35,6 +35,14 @@ from .silent_gap_walker import silent_gap_walker
 from .mirror_neighbor import mirror_neighbor_expand
 from .prime_family import prime_family_scan, is_prime
 from .carrier_extensions import carrier_extensions
+from .rc_walks_encryption import (
+    compose_encryption_reading,
+    fit_best_ghost,
+    multi_walk_convergence,
+    track_p3_chain,
+    predict_next_p3,
+    date_encryption_signals,
+)
 
 __all__ = [
     "detect_rc_anchor",
@@ -56,4 +64,10 @@ __all__ = [
     "prime_family_scan",
     "is_prime",
     "carrier_extensions",
+    "compose_encryption_reading",
+    "fit_best_ghost",
+    "multi_walk_convergence",
+    "track_p3_chain",
+    "predict_next_p3",
+    "date_encryption_signals",
 ]
