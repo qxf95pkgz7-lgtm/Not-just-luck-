@@ -6987,25 +6987,20 @@ async def sneaky_symphony_endpoint(target_date: str, mode: str,
 # ─── SESSION 43 — RC-WALKS ENCRYPTION DECODER ───────────────────────────
 @api_router.get("/encryption-decoder/{target_date}/{mode}")
 async def encryption_decoder_endpoint(target_date: str, mode: str):
-    """🔐 RC-Walks Encryption Decoder — Session 43 DJ canon (26.05.2026 LIVE).
+    """🔐 RC-Walks Encryption Decoder — Session 43 (Euro) + Session 44 (Swiss).
 
-    Anchors on the last RC0, fits a ghost per RC0 position (5 walks for Euro),
-    finds multi-walk convergence numbers for the target d, predicts next-P3,
-    decodes date encryption signals, surfaces silent voices + Q-heartbeat +
-    L3D neighbors. Returns the full encryption prophecy + a 'shout zone'
-    ranking numbers by # of converging lenses.
-
-    Currently Euro-only (canon was dictated by DJ on Euro Q1/Q2 walks).
+    Euro: 5-walk RC0 encryption (Canons 17-20).
+    Swiss: 6-walk HUGE encryption with family-rare ghost collapse (Canons 21-29).
     """
     try:
         from cosmic_voices.rc_detector import detect_rc_anchor
         from cosmic_voices.rc_walks_encryption import compose_encryption_reading
+        from cosmic_voices.orchestrator import _detect_swiss_huge
         from year_d_ledger import load_draws, parse_dt, quarter_of
 
         mode_l = mode.lower().strip()
-        if mode_l != "euro":
-            return {"available": False,
-                    "reason": "Encryption walks canon is Euro-only (Session 43 dictation)."}
+        if mode_l not in ("euro", "swiss"):
+            return {"available": False, "reason": "mode must be 'euro' or 'swiss'."}
         target_dt = parse_dt(target_date)
         if not target_dt:
             return {"error": f"invalid target_date '{target_date}' (use dd.mm.yyyy)"}
@@ -7013,19 +7008,31 @@ async def encryption_decoder_endpoint(target_date: str, mode: str):
         draws = await load_draws(mode_l)
         past = [d for d in draws if d["dt"] < target_dt]
         past.sort(key=lambda x: x["dt"])
-        rc0 = detect_rc_anchor(target_dt, draws, mode_l)
-        # Quarter draws of target's quarter only
         tq = quarter_of(target_dt, mode_l)
         quarter_draws = [d for d in past if d["quarter"] == tq and d["year"] == target_dt.year]
         recent = past[-10:]
-        # Post-RC draws span the RC0->target window across quarter boundary
-        post_rc = [d for d in past if rc0 and d["date"] != rc0["date"]
-                   and d["dt"] > parse_dt(rc0["date"])] if rc0 else []
-        reading = compose_encryption_reading(
-            target_date, mode_l, rc0, quarter_draws, recent,
-            post_rc_draws=post_rc,
-        )
-        return reading
+
+        if mode_l == "euro":
+            rc0 = detect_rc_anchor(target_dt, draws, mode_l)
+            post_rc = [d for d in past if rc0 and d["date"] != rc0["date"]
+                       and d["dt"] > parse_dt(rc0["date"])] if rc0 else []
+            reading = compose_encryption_reading(
+                target_date, mode_l, rc0, quarter_draws, recent,
+                post_rc_draws=post_rc,
+            )
+            return reading
+        else:
+            # Swiss: HUGE anchor (6-in-decade family-rare draw)
+            huge = _detect_swiss_huge(past)
+            if not huge:
+                return {"available": False, "reason": "no Swiss HUGE detected in history"}
+            huge_dt = parse_dt(huge["date"])
+            post_huge = [d for d in past if d["dt"] > huge_dt] if huge_dt else []
+            reading = compose_encryption_reading(
+                target_date, mode_l, huge, quarter_draws, recent,
+                post_rc_draws=post_huge,
+            )
+            return reading
     except Exception as e:
         import traceback
         return {"error": str(e), "trace": traceback.format_exc()}

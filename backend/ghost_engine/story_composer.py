@@ -595,6 +595,114 @@ def _crown_companions(
 
 
 # ─── Public entrypoint ─────────────────────────────────────────────────
+def _p1_silent_state(signals: Dict, target_n: int = 9, lookback: int = 30) -> Dict:
+    """Canon 28 + P1=9 INJECT MANDATE state-tracker.
+    Returns {'p1_silent': bool, 'p1_fires': int, 'lookback': N} for `target_n`
+    at the P1 (smallest-main) position across the last `lookback` Swiss draws.
+    """
+    recent = signals.get("recent_draws", []) or []
+    if not recent:
+        # fall back to gl saturation history if available
+        gl = signals.get("ghost_ledger", {}) or {}
+        recent = gl.get("recent", []) or []
+    # Use most recent N draws
+    window = recent[-lookback:] if len(recent) > lookback else recent
+    fires = 0
+    for d in window:
+        mains = sorted(d.get("p") or d.get("mains") or [])
+        if mains and mains[0] == target_n:
+            fires += 1
+    return {
+        "target_n": target_n,
+        "lookback": len(window),
+        "p1_fires": fires,
+        "p1_silent": fires == 0,
+    }
+
+
+def _inject_p1_9_swiss(
+    stories: List[Dict],
+    palette: Dict[int, Dict],
+    signals: Dict,
+    count: int,
+) -> List[Dict]:
+    """🎯 P1=9 INJECT MANDATE (DJ canon 26.05.2026 night):
+        'every 10 gen at least 2 tickets p1-9 Until it happens'
+
+    When 9 is still P1-silent in the active Swiss walk, FORCE at least
+    ceil(count * 0.2) tickets in the batch to carry P1=9. Mandate releases
+    automatically when 9 has fired at P1 in the recent window (Canon 28).
+
+    The injected tickets keep their other mains intact: lowest non-9 main
+    is dropped if 9 is already present in mid-row, else 9 replaces P1.
+    """
+    state = _p1_silent_state(signals, target_n=9, lookback=30)
+    if not state["p1_silent"]:
+        # Mandate released — 9 has fired at P1 recently
+        for s in stories:
+            s["p1_9_mandate"] = "released"
+        return stories
+
+    required = max(2, (count * 2 + 9) // 10)  # ceil(count/5), min 2
+    already = sum(1 for s in stories if s.get("mains") and min(s["mains"]) == 9)
+    need = max(0, required - already)
+
+    if need == 0:
+        for s in stories:
+            if s.get("mains") and min(s["mains"]) == 9:
+                s["p1_9_injected"] = True
+                s["p1_9_mandate"] = "active"
+        return stories
+
+    # Sort stories by lowest cosmic score (modify weakest first), preserving order
+    indexed = sorted(
+        [(i, s) for i, s in enumerate(stories)],
+        key=lambda kv: kv[1].get("cosmic_score", 0),
+    )
+    modified = 0
+    n_mains = 6  # Swiss
+    for i, story in indexed:
+        if modified >= need:
+            break
+        mains = sorted(story.get("mains") or [])
+        if not mains or mains[0] == 9:
+            continue
+        # Build new ticket: 9 at P1 + top mains > 9 from original (keep ≤5)
+        top_others = sorted([n for n in mains if n > 9], reverse=True)[:n_mains - 1]
+        new_mains = sorted([9] + top_others)
+        # If still under n_mains, top up from palette (>9 only)
+        while len(new_mains) < n_mains:
+            candidates = sorted(
+                [n for n in palette if n not in new_mains and n > 9],
+                key=lambda n: -palette[n]["score"],
+            )
+            if not candidates:
+                break
+            new_mains = sorted(new_mains + [candidates[0]])
+        if len(new_mains) != n_mains or min(new_mains) != 9:
+            continue
+        story["mains"] = new_mains
+        story["p1_9_injected"] = True
+        story["p1_9_mandate"] = "active"
+        story["story_arc"] = (
+            ["P1=9 · 🎯 DJ-MANDATE (Canon 28 silent debt — carrier of HUGE-P1=30)"]
+            + [arc for arc in (story.get("story_arc") or []) if not arc.startswith("P1=")]
+        )
+        # Recompute cosmic score
+        story["cosmic_score"] = sum(
+            palette.get(n, {}).get("score", 0) for n in new_mains
+        )
+        modified += 1
+
+    # Flag the rest with mandate-active
+    for s in stories:
+        s.setdefault("p1_9_mandate", "active")
+        if s.get("mains") and min(s["mains"]) == 9:
+            s["p1_9_injected"] = True
+
+    return stories
+
+
 async def compose_stories(
     target_date: str,
     mode: str = "swiss",
@@ -832,6 +940,10 @@ async def compose_stories(
         used_globally.update(story["mains"])
         for n in story["mains"]:
             freq[n] += 1
+
+    # 🎯 P1=9 INJECT MANDATE (Swiss only — Canon 28 silent debt enforcement)
+    if mode == "swiss":
+        stories = _inject_p1_9_swiss(stories, palette, signals, count)
 
     # Sort: highest cosmic_score first
     stories.sort(key=lambda s: -s.get("cosmic_score", 0))

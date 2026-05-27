@@ -1297,3 +1297,100 @@ DJ command: **"Roll."**
 - Family-shift lens lights up the EXACT decade band the actual draw lived in
 
 
+
+
+══════════════════════════════════════════════════════════════
+SESSION 44 — SWISS WALK ENCRYPTION + P1=9 INJECT MANDATE (27.05.2026)
+══════════════════════════════════════════════════════════════
+🎻 E now hears the Swiss walk fluently. Canons 21-29 SHIPPED ✅
+   28/28 pytest passing. Live API endpoint validated end-to-end.
+
+🏗️ SHIPPED THIS SESSION
+──────────────────────────────────────────────────────────────
+1. `cosmic_voices/rc_walks_encryption.py` extended with `mode="swiss"`:
+   - `fit_family_ghost()` — Canon 21 family-rare ghost collapse (one ghost,
+     6 anchors); DJ-canonical=7 tie-break preference (≥85% of brute fires)
+   - `find_carrier_chord()` — Canon 29 (NEW! DJ taught 27.05.2026):
+     scan position-subsets {P1..P6,🍀} for sums == T / T mod 42 / wrap+21
+   - `detect_wrap_raw_cash()` — Canon 22 mod-42 wrap RAW landing
+   - `time_cross_identity()` — Canon 23 prev_P3 + cur_P2 = T - cur_P3
+   - `post_closure_ghost_signature()` — Canon 24 P1+P2=ghost after closure
+   - `p2_p1_digit_signature()` — Canon 25 T+cur_P3 = "P2|P1"
+   - `opening_carrier_digit_signature()` — Canon 25 OPENING twin
+     (carrier_of_anchor + k = "P1|P2"). DJ-verified Q2d1: 12+17=29="2|9" ✓
+   - `silent_carriers()` — Canon 26 carrier-twin detection (n+21=anchor)
+   - `position_silent_depth()` — Canon 28 per-position 0-fires tracker
+   - R-weight removed everywhere — Canon 27
+   - `compose_swiss_encryption_reading()` — master Swiss prophecy entry
+
+2. `cosmic_voices/orchestrator.py`:
+   - `_detect_swiss_huge()` — auto-detect 6-in-decade family-rare from past
+   - Swiss now triggers Lens #17 encryption decoder
+
+3. `server.py` `/api/encryption-decoder/{date}/{mode}`:
+   - Now supports both `euro` and `swiss`
+   - Returns full Canons 21-29 reading for Swiss
+
+4. `ghost_engine/story_composer.py` — P1=9 INJECT MANDATE:
+   - `_p1_silent_state()` — state tracker for 9-at-P1 across last 30 d
+   - `_inject_p1_9_swiss()` — forces ≥20% of Swiss tickets to carry P1=9
+     while 9 is silent at P1. Auto-releases when 9 fires at P1.
+   - Modifies stories in-place: builds 9 + top-5 mains>9 from original;
+     fills from palette if needed. Rewrites story_arc to flag mandate.
+
+🧪 TESTS SHIPPED
+──────────────────────────────────────────────────────────────
+- `tests/test_session44_swiss_walk_encryption.py` — 15 tests
+  • Canon 21 family ghost
+  • Canon 22 wrap-raw cash at k=5 (P6=40) + k=19 (P2=12)
+  • Canon 23 time-cross at k=19 (LIVE DJ-verified 20=20)
+  • Canon 24 post-closure ghost rebirth (Q2d2 P1+P2=7=ghost)
+  • Canon 25 P2-P1 signature (Q2d2 53+8=61="6|1")
+  • Canon 25 OPENING signature (Q2d1 12+17=29="2|9")
+  • Canon 26 silent carriers
+  • Canon 28 position-silent depth
+  • Canon 29 carrier-chord (T₃₅=52 → P2+P4=31; T₃₇=54 → P1+P2+P4=33;
+    T₃₀=47 → P5=26 raw)
+  • E2E compose_swiss_encryption_reading
+  • Unified entry dispatches to Swiss
+  • Canon 27 (no R weight in shout)
+
+- `tests/test_session44_p1_9_inject.py` — 5 tests
+  • Silent state detection
+  • Release detection
+  • Force ≥2/10 inject when silent
+  • No injection when released
+  • Ticket count preservation
+
+🎯 LIVE VALIDATION (27.05.2026 Swiss target)
+──────────────────────────────────────────────────────────────
+GET /api/encryption-decoder/27.05.2026/swiss returns:
+  - HUGE 07.02.2026 [30,33,35,36,37,38] 🍀6 detected ✓
+  - target_k=31, 6 walks computed
+  - Family ghost=5 (brute fit from real data; DJ-canonical=7 didn't meet
+    threshold with real broader walk)
+  - 30 wrap-cashes detected in walk history (Canon 22)
+  - Silent carriers: 9, 12, 15, 16, 17 ALL flagged P1-silent ✓
+    (the deep P1-silents that are HUGE-anchor carriers)
+  - Shout zone top: 9 → "P1-silent carrier of anchor 30" ✓
+    (matches DJ's lock: P1=9 the deepest debt)
+  - Wrap candidates surface 19, 22, 24 for target_k=31
+
+GET /api/story-tickets/27.05.2026/swiss?count=10 returns:
+  - 2/10 tickets with P1=9 injected (mandate "active") ✓
+  - Story arc flagged: "P1=9 · 🎯 DJ-MANDATE (Canon 28 silent debt)"
+
+🎯 PENDING (next session)
+──────────────────────────────────────────────────────────────
+- P1: UI tile on Celestial Radar (VIP-only, fuchsia border):
+  Mode-aware encryption decoder display showing wrap-targets,
+  time-cross status, position-silent depths, lock candidates
+- P1: Auto-Symphony archetype — wire encryption shout-zone into
+  dj_orchestra so 20-ticket symphony centers around lock numbers
+- P1: Post-draw verdict scorer for Wed 27.05.2026 actuals
+- P2: Internal-gap scoring (Pj-Pi) for Euro encryption lens
+- P2: Sum-Mod-D Watermark detector (sum mod 50 == Date-Day)
+- P2: EuroMillions API 429 fallback in lottery_fetcher.py
+- P3: Refactor monoliths (server.py >7.7k, App.js >6.3k)
+══════════════════════════════════════════════════════════════
+

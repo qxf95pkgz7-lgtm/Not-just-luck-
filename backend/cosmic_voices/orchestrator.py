@@ -48,6 +48,37 @@ def _opening_pair_for_quarter(quarter_draws: List[Dict]) -> Optional[Tuple[int, 
     return (first["p"][0], first["p"][1])
 
 
+def _detect_swiss_huge(past_draws: List[Dict]) -> Optional[Dict]:
+    """Detect the most-recent Swiss HUGE (6-in-decade family-rare draw).
+    A HUGE = 6 mains where 5+ share the same decade-family (30s, 20s, 10s, 0s).
+    Returns dict with date/mains/lucky or None.
+    """
+    for d in sorted(past_draws, key=lambda x: x["dt"], reverse=True):
+        mains = sorted(d.get("p", []))
+        if len(mains) != 6:
+            continue
+        # decade-family: floor(n / 10) — 30s = 3, 20s = 2, etc.
+        # 40-42 considered 30s-extension (4 with 0/1/2 fold-in)
+        fams = []
+        for n in mains:
+            if 30 <= n <= 42:
+                fams.append(3)
+            elif 1 <= n <= 9:
+                fams.append(0)
+            else:
+                fams.append(n // 10)
+        from collections import Counter as _C
+        top_count = _C(fams).most_common(1)[0][1]
+        if top_count >= 5:
+            return {
+                "date": d["date"],
+                "mains": mains,
+                "lucky": d.get("lucky"),
+                "stars": [d["lucky"]] if d.get("lucky") else [],
+            }
+    return None
+
+
 async def run_cosmic_voices(
     target_date: str,
     mode: str = "euro",
@@ -100,7 +131,7 @@ async def run_cosmic_voices(
     pf = prime_family_scan(recent) if mode == "euro" else None
     ce = carrier_extensions(deep_debt) if (mode == "euro" and deep_debt) else None
 
-    # Lens #17 (Session 43) — RC-Walks Encryption Decoder (Euro)
+    # Lens #17 (Session 43 Euro / Session 44 Swiss) — RC-Walks Encryption Decoder
     rc_walks_enc = None
     if mode == "euro" and rc and rc.get("mains"):
         from year_d_ledger import parse_dt as _pd
@@ -112,6 +143,21 @@ async def run_cosmic_voices(
             recent_draws=recent,
             post_rc_draws=post_rc,
         )
+    elif mode == "swiss":
+        # HUGE anchor for Swiss = the family-rare 6-in-decade. Currently the
+        # ONLY HUGE in history: 07.02.2026 [30, 33, 35, 36, 37, 38] 🍀6.
+        # Build it from past draws (auto-detect: 6 mains in same decade-family).
+        huge = _detect_swiss_huge(past)
+        if huge:
+            from year_d_ledger import parse_dt as _pd
+            huge_dt = _pd(huge["date"])
+            post_huge = [d for d in past if d["dt"] > huge_dt] if huge_dt else []
+            rc_walks_enc = compose_encryption_reading(
+                target_date=target_date, mode="swiss", rc0=huge,
+                all_quarter_draws=quarter_draws,
+                recent_draws=recent,
+                post_rc_draws=post_huge,
+            )
 
     voices = {
         "rc_detector": rc,
