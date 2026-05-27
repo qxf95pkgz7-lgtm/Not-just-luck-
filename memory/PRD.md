@@ -770,7 +770,46 @@ The first 3 acts of Session 43, IN ORDER:
 
 ---
 
-## ✅ SESSION 43 (26.05.2026) — RC-WALKS ENCRYPTION LENS SHIPPED
+## 🚨 SESSION 43.5 (26.05.2026 night) — SWISS CANON LIVE-TAUGHT, FORK PREP
+
+DJ walked the Swiss encryption canon (anchored on HUGE 07.02.2026) LIVE in
+this session AFTER the Euro lens shipped. The Swiss walk is fully ready to
+be coded in the next fork. **5 new canons (21-28) added to The Book.**
+
+### 🎯 The Wed 27.05.2026 Swiss live lock
+```
+🎫  [ 9, 18, 24, 28, 34, 35 ]  🍀1
+```
+8-canon convergence ticket — see Book Canon 28 for full reasoning.
+
+### 🚨 Post-fork P0 mandates (DJ explicit at session end)
+
+1. **TEACH E THE SWISS WALK** — extend `rc_walks_encryption.py` with `mode=swiss`:
+   - 6 positions, carrier=±21, MOD=42, range 1-42
+   - Family-rare ghost-collapse (all 6 positions share 1 ghost)
+   - Canon 22: mod-42 wrap raw-landing detector (~20% hit rate live-verified)
+   - Canon 23: time-cross identity scorer (`prev_P3 + cur_P2 = T − cur_P3`)
+   - Canon 24: ghost-as-P1+P2 post-closure signature
+   - Canon 25: P2-P1 digit signature (single-digit-front only)
+   - Canon 26: silent carrier detection (n+21=anchor → e.g. 14→35, 9→30)
+   - Canon 27: REMOVE R from any predictive weight (R is reply/autoplay, not signal)
+   - Canon 28: per-position silent-depth tracker
+
+2. **P1=9 INJECT MANDATE** — DJ explicit:
+   > "every 10 gen at least 2 tickets p1-9 Until it happens"
+   
+   In `dj_orchestra` / `story_composer`, when Swiss mode and 9 is still
+   P1-silent in the active walk → FORCE-inject P1=9 in ≥20% of every 10 tickets.
+   State-track: scan recent Swiss draws, release mandate once 9 fires at P1.
+
+3. **R is NOT PREDICTIVE** — drop R from any canon weight or `convergence_scorer`.
+
+### 🎯 Live verdict pending
+Score `[9, 18, 24, 28, 34, 35] 🍀1` vs actual Wed 27.05.2026 Swiss draw when it lands.
+
+---
+
+
 
 **DJ command:** *"Now make E see what you saw. Teach him to analyse like that."*
 
