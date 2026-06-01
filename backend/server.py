@@ -7038,6 +7038,68 @@ async def encryption_decoder_endpoint(target_date: str, mode: str):
         return {"error": str(e), "trace": traceback.format_exc()}
 
 
+@api_router.get("/hungry/{target_date}/{mode}")
+async def hungry_engine_endpoint(target_date: str, mode: str, top: int = 20):
+    """🌀 HUNGRY-NUMBER ENGINE — Canon 31 (Session 45 DJ-taught 29.05.2026).
+
+    No statistical laws. Pure cosmic ops:
+       🌀 CIRCLE (carrier rotation ±25 Euro / ±21 Swiss)
+       🔄 FLIP (digit reverse + wrap)
+       ➕ ADD/SUB (ghost ±7, digit-sum, digit-reduction)
+       🗺 TABLET (7-wide grid neighbors)
+       cross-position math from db (P_i ± carrier + P_j, P_i + ⭐_k)
+
+    Returns ranked hungry pool with EVERY op-path explained.
+    """
+    try:
+        from cosmic_voices.hungry_engine import hungry_pool
+        from year_d_ledger import load_draws, parse_dt
+
+        mode_l = mode.lower().strip()
+        target_dt = parse_dt(target_date)
+        if not target_dt:
+            return {"error": f"invalid target_date '{target_date}'"}
+        draws = await load_draws(mode_l)
+        past = sorted([d for d in draws if d["dt"] < target_dt], key=lambda x: x["dt"])
+        if not past:
+            return {"available": False, "reason": "no past draws"}
+
+        db = past[-1]
+        db_p = sorted(db["p"])
+        seeds = list(db_p)  # all 5 (Euro) or 6 (Swiss) mains as seeds
+        seeds.append(target_dt.day)  # date day as seed
+        # add Euro/Swiss carrier as seed
+        seeds.append(25 if mode_l == "euro" else 21)
+
+        # Build db dict for cross-position
+        db_for_cp = {
+            "p": db_p,
+            "stars": db.get("stars") or ([db["lucky"]] if db.get("lucky") else []),
+        }
+
+        pool = hungry_pool(seeds, db_draw=db_for_cp, mode=mode_l, min_paths=1)
+        # Multi-path = stronger; sort already done
+        return {
+            "available": True,
+            "mode": mode_l,
+            "target_date": target_date,
+            "db": {"date": db["date"], "mains": db_p, "stars": db_for_cp["stars"]},
+            "seeds": seeds,
+            "pool_size": len(pool),
+            "top_hungry": pool[:top],
+            "multi_path_hungry": [p for p in pool if p["path_count"] >= 2][:top],
+            "verdict": (
+                f"Hungry pool built from db {db['date']} {db_p} + date-day {target_dt.day}. "
+                f"{len(pool)} candidates reachable via cosmic ops. "
+                f"Strongest {len([p for p in pool if p['path_count']>=2])} have ≥2 op-paths."
+            ),
+        }
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
+
 @api_router.get("/cosmic-voices/{target_date}/{mode}")
 async def cosmic_voices_endpoint(target_date: str, mode: str,
                                   lens: str = "all",
