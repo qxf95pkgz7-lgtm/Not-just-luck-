@@ -1,0 +1,6881 @@
+{
+  "total_pairs": 201,
+  "by_source": {
+    "day+month": 53,
+    "day+year": 55,
+    "month+year": 93
+  },
+  "grammar": {
+    "raw_avg": 0.7014925373134329,
+    "carrier_avg": 0.472636815920398,
+    "neighbor_avg": 1.9402985074626866,
+    "star_avg": 0.4079601990049751
+  },
+  "pairs": [
+    {
+      "mirror_date": "20.08.2004",
+      "mirror_q": 3,
+      "mirror_d": 8,
+      "mirror_pair": [
+        8,
+        20
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        6,
+        9,
+        10,
+        27,
+        35
+      ],
+      "mirror_stars": [
+        6,
+        8
+      ],
+      "sister_d": 8,
+      "sister_date": "20.08.2004",
+      "sister_mains": [
+        6,
+        9,
+        10,
+        27,
+        35
+      ],
+      "sister_stars": [
+        6,
+        8
+      ]
+    },
+    {
+      "mirror_date": "24.09.2004",
+      "mirror_q": 3,
+      "mirror_d": 13,
+      "mirror_pair": [
+        4,
+        24
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        21,
+        26,
+        27,
+        44,
+        48
+      ],
+      "mirror_stars": [
+        1,
+        7
+      ],
+      "sister_d": 4,
+      "sister_date": "23.07.2004",
+      "sister_mains": [
+        7,
+        10,
+        27,
+        31,
+        34
+      ],
+      "sister_stars": [
+        3,
+        8
+      ]
+    },
+    {
+      "mirror_date": "24.12.2004",
+      "mirror_q": 4,
+      "mirror_d": 13,
+      "mirror_pair": [
+        4,
+        24
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        3,
+        4,
+        27,
+        29,
+        37
+      ],
+      "mirror_stars": [
+        5,
+        6
+      ],
+      "sister_d": 4,
+      "sister_date": "22.10.2004",
+      "sister_mains": [
+        1,
+        9,
+        23,
+        25,
+        40
+      ],
+      "sister_stars": [
+        3,
+        9
+      ]
+    },
+    {
+      "mirror_date": "25.03.2005",
+      "mirror_q": 1,
+      "mirror_d": 12,
+      "mirror_pair": [
+        3,
+        25
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        4,
+        29,
+        33,
+        37,
+        38
+      ],
+      "mirror_stars": [
+        6,
+        9
+      ],
+      "sister_d": 3,
+      "sister_date": "21.01.2005",
+      "sister_mains": [
+        10,
+        12,
+        14,
+        24,
+        26
+      ],
+      "sister_stars": [
+        5,
+        8
+      ]
+    },
+    {
+      "mirror_date": "23.09.2005",
+      "mirror_q": 3,
+      "mirror_d": 13,
+      "mirror_pair": [
+        5,
+        23
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        1,
+        26,
+        31,
+        34,
+        47
+      ],
+      "mirror_stars": [
+        4,
+        9
+      ],
+      "sister_d": 5,
+      "sister_date": "29.07.2005",
+      "sister_mains": [
+        3,
+        19,
+        26,
+        49,
+        50
+      ],
+      "sister_stars": [
+        4,
+        5
+      ]
+    },
+    {
+      "mirror_date": "16.12.2005",
+      "mirror_q": 4,
+      "mirror_d": 11,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        2,
+        3,
+        15,
+        18,
+        32
+      ],
+      "mirror_stars": [
+        6,
+        7
+      ],
+      "sister_d": 12,
+      "sister_date": "23.12.2005",
+      "sister_mains": [
+        15,
+        31,
+        36,
+        37,
+        42
+      ],
+      "sister_stars": [
+        1,
+        7
+      ]
+    },
+    {
+      "mirror_date": "23.12.2005",
+      "mirror_q": 4,
+      "mirror_d": 12,
+      "mirror_pair": [
+        5,
+        23
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        15,
+        31,
+        36,
+        37,
+        42
+      ],
+      "mirror_stars": [
+        1,
+        7
+      ],
+      "sister_d": 5,
+      "sister_date": "04.11.2005",
+      "sister_mains": [
+        26,
+        36,
+        37,
+        38,
+        42
+      ],
+      "sister_stars": [
+        2,
+        6
+      ]
+    },
+    {
+      "mirror_date": "27.01.2012",
+      "mirror_q": 1,
+      "mirror_d": 8,
+      "mirror_pair": [
+        1,
+        27
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        10,
+        13,
+        19,
+        39,
+        44
+      ],
+      "mirror_stars": [
+        2,
+        6
+      ],
+      "sister_d": 1,
+      "sister_date": "03.01.2012",
+      "sister_mains": [
+        3,
+        30,
+        42,
+        45,
+        49
+      ],
+      "sister_stars": [
+        5,
+        10
+      ]
+    },
+    {
+      "mirror_date": "16.03.2012",
+      "mirror_q": 1,
+      "mirror_d": 22,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        3,
+        4,
+        12,
+        23,
+        50
+      ],
+      "mirror_stars": [
+        4,
+        7
+      ],
+      "sister_d": 12,
+      "sister_date": "10.02.2012",
+      "sister_mains": [
+        3,
+        8,
+        14,
+        31,
+        41
+      ],
+      "sister_stars": [
+        7,
+        11
+      ]
+    },
+    {
+      "mirror_date": "24.04.2012",
+      "mirror_q": 2,
+      "mirror_d": 7,
+      "mirror_pair": [
+        4,
+        24
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        8,
+        9,
+        24,
+        43,
+        48
+      ],
+      "mirror_stars": [
+        3,
+        5
+      ],
+      "sister_d": 4,
+      "sister_date": "13.04.2012",
+      "sister_mains": [
+        8,
+        13,
+        26,
+        39,
+        43
+      ],
+      "sister_stars": [
+        3,
+        5
+      ]
+    },
+    {
+      "mirror_date": "22.06.2012",
+      "mirror_q": 2,
+      "mirror_d": 24,
+      "mirror_pair": [
+        6,
+        22
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        14,
+        18,
+        19,
+        43,
+        49
+      ],
+      "mirror_stars": [
+        3,
+        7
+      ],
+      "sister_d": 6,
+      "sister_date": "20.04.2012",
+      "sister_mains": [
+        3,
+        6,
+        29,
+        32,
+        41
+      ],
+      "sister_stars": [
+        10,
+        11
+      ]
+    },
+    {
+      "mirror_date": "16.10.2012",
+      "mirror_q": 4,
+      "mirror_d": 5,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        10,
+        32,
+        40,
+        41,
+        49
+      ],
+      "mirror_stars": [
+        2,
+        8
+      ],
+      "sister_d": 12,
+      "sister_date": "09.11.2012",
+      "sister_mains": [
+        14,
+        21,
+        22,
+        28,
+        47
+      ],
+      "sister_stars": [
+        4,
+        5
+      ]
+    },
+    {
+      "mirror_date": "16.11.2012",
+      "mirror_q": 4,
+      "mirror_d": 14,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        10,
+        15,
+        19,
+        23,
+        41
+      ],
+      "mirror_stars": [
+        2,
+        9
+      ],
+      "sister_d": 12,
+      "sister_date": "09.11.2012",
+      "sister_mains": [
+        14,
+        21,
+        22,
+        28,
+        47
+      ],
+      "sister_stars": [
+        4,
+        5
+      ]
+    },
+    {
+      "mirror_date": "15.01.2013",
+      "mirror_q": 1,
+      "mirror_d": 5,
+      "mirror_pair": [
+        13,
+        15
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        22,
+        38,
+        40,
+        42,
+        47
+      ],
+      "mirror_stars": [
+        1,
+        11
+      ],
+      "sister_d": 13,
+      "sister_date": "12.02.2013",
+      "sister_mains": [
+        5,
+        11,
+        16,
+        25,
+        28
+      ],
+      "sister_stars": [
+        7,
+        9
+      ]
+    },
+    {
+      "mirror_date": "15.02.2013",
+      "mirror_q": 1,
+      "mirror_d": 14,
+      "mirror_pair": [
+        13,
+        15
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        2,
+        4,
+        22,
+        28,
+        42
+      ],
+      "mirror_stars": [
+        4,
+        9
+      ],
+      "sister_d": 13,
+      "sister_date": "12.02.2013",
+      "sister_mains": [
+        5,
+        11,
+        16,
+        25,
+        28
+      ],
+      "sister_stars": [
+        7,
+        9
+      ]
+    },
+    {
+      "mirror_date": "26.02.2013",
+      "mirror_q": 1,
+      "mirror_d": 17,
+      "mirror_pair": [
+        2,
+        26
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        3,
+        12,
+        13,
+        17,
+        30
+      ],
+      "mirror_stars": [
+        2,
+        6
+      ],
+      "sister_d": 2,
+      "sister_date": "04.01.2013",
+      "sister_mains": [
+        4,
+        10,
+        22,
+        27,
+        41
+      ],
+      "sister_stars": [
+        8,
+        10
+      ]
+    },
+    {
+      "mirror_date": "15.03.2013",
+      "mirror_q": 1,
+      "mirror_d": 22,
+      "mirror_pair": [
+        13,
+        15
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        4,
+        14,
+        21,
+        24,
+        39
+      ],
+      "mirror_stars": [
+        3,
+        10
+      ],
+      "sister_d": 13,
+      "sister_date": "12.02.2013",
+      "sister_mains": [
+        5,
+        11,
+        16,
+        25,
+        28
+      ],
+      "sister_stars": [
+        7,
+        9
+      ]
+    },
+    {
+      "mirror_date": "20.08.2013",
+      "mirror_q": 3,
+      "mirror_d": 15,
+      "mirror_pair": [
+        8,
+        20
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        5,
+        11,
+        42,
+        49,
+        50
+      ],
+      "mirror_stars": [
+        8,
+        11
+      ],
+      "sister_d": 8,
+      "sister_date": "26.07.2013",
+      "sister_mains": [
+        12,
+        23,
+        29,
+        38,
+        49
+      ],
+      "sister_stars": [
+        3,
+        4
+      ]
+    },
+    {
+      "mirror_date": "15.10.2013",
+      "mirror_q": 4,
+      "mirror_d": 5,
+      "mirror_pair": [
+        13,
+        15
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        18,
+        27,
+        39,
+        43,
+        47
+      ],
+      "mirror_stars": [
+        4,
+        7
+      ],
+      "sister_d": 13,
+      "sister_date": "12.11.2013",
+      "sister_mains": [
+        14,
+        29,
+        37,
+        40,
+        48
+      ],
+      "sister_stars": [
+        2,
+        11
+      ]
+    },
+    {
+      "mirror_date": "18.10.2013",
+      "mirror_q": 4,
+      "mirror_d": 6,
+      "mirror_pair": [
+        10,
+        18
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        5,
+        25,
+        36,
+        46,
+        47
+      ],
+      "mirror_stars": [
+        2,
+        6
+      ],
+      "sister_d": 10,
+      "sister_date": "01.11.2013",
+      "sister_mains": [
+        7,
+        19,
+        29,
+        30,
+        33
+      ],
+      "sister_stars": [
+        3,
+        8
+      ]
+    },
+    {
+      "mirror_date": "15.11.2013",
+      "mirror_q": 4,
+      "mirror_d": 14,
+      "mirror_pair": [
+        13,
+        15
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        3,
+        13,
+        15,
+        29,
+        42
+      ],
+      "mirror_stars": [
+        1,
+        4
+      ],
+      "sister_d": 13,
+      "sister_date": "12.11.2013",
+      "sister_mains": [
+        14,
+        29,
+        37,
+        40,
+        48
+      ],
+      "sister_stars": [
+        2,
+        11
+      ]
+    },
+    {
+      "mirror_date": "14.01.2014",
+      "mirror_q": 1,
+      "mirror_d": 4,
+      "mirror_pair": [
+        14,
+        14
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        18,
+        20,
+        25,
+        26,
+        37
+      ],
+      "mirror_stars": [
+        10,
+        11
+      ],
+      "sister_d": 14,
+      "sister_date": "18.02.2014",
+      "sister_mains": [
+        23,
+        26,
+        36,
+        37,
+        49
+      ],
+      "sister_stars": [
+        6,
+        7
+      ]
+    },
+    {
+      "mirror_date": "14.02.2014",
+      "mirror_q": 1,
+      "mirror_d": 13,
+      "mirror_pair": [
+        14,
+        14
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        2,
+        4,
+        6,
+        19,
+        39
+      ],
+      "mirror_stars": [
+        2,
+        7
+      ],
+      "sister_d": 14,
+      "sister_date": "18.02.2014",
+      "sister_mains": [
+        23,
+        26,
+        36,
+        37,
+        49
+      ],
+      "sister_stars": [
+        6,
+        7
+      ]
+    },
+    {
+      "mirror_date": "14.03.2014",
+      "mirror_q": 1,
+      "mirror_d": 21,
+      "mirror_pair": [
+        14,
+        14
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        6,
+        24,
+        25,
+        27,
+        30
+      ],
+      "mirror_stars": [
+        5,
+        9
+      ],
+      "sister_d": 14,
+      "sister_date": "18.02.2014",
+      "sister_mains": [
+        23,
+        26,
+        36,
+        37,
+        49
+      ],
+      "sister_stars": [
+        6,
+        7
+      ]
+    },
+    {
+      "mirror_date": "25.03.2014",
+      "mirror_q": 1,
+      "mirror_d": 24,
+      "mirror_pair": [
+        3,
+        25
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        7,
+        20,
+        26,
+        28,
+        50
+      ],
+      "mirror_stars": [
+        2,
+        8
+      ],
+      "sister_d": 3,
+      "sister_date": "10.01.2014",
+      "sister_mains": [
+        1,
+        2,
+        11,
+        27,
+        29
+      ],
+      "sister_stars": [
+        1,
+        10
+      ]
+    },
+    {
+      "mirror_date": "23.05.2014",
+      "mirror_q": 2,
+      "mirror_d": 15,
+      "mirror_pair": [
+        5,
+        23
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        3,
+        8,
+        31,
+        34,
+        47
+      ],
+      "mirror_stars": [
+        9,
+        11
+      ],
+      "sister_d": 5,
+      "sister_date": "15.04.2014",
+      "sister_mains": [
+        3,
+        14,
+        26,
+        47,
+        50
+      ],
+      "sister_stars": [
+        7,
+        11
+      ]
+    },
+    {
+      "mirror_date": "19.09.2014",
+      "mirror_q": 3,
+      "mirror_d": 24,
+      "mirror_pair": [
+        9,
+        19
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        6,
+        8,
+        34,
+        38,
+        48
+      ],
+      "mirror_stars": [
+        3,
+        9
+      ],
+      "sister_d": 9,
+      "sister_date": "29.07.2014",
+      "sister_mains": [
+        10,
+        23,
+        35,
+        40,
+        43
+      ],
+      "sister_stars": [
+        3,
+        9
+      ]
+    },
+    {
+      "mirror_date": "14.10.2014",
+      "mirror_q": 4,
+      "mirror_d": 4,
+      "mirror_pair": [
+        14,
+        14
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        4,
+        5,
+        15,
+        23,
+        32
+      ],
+      "mirror_stars": [
+        3,
+        7
+      ],
+      "sister_d": 14,
+      "sister_date": "18.11.2014",
+      "sister_mains": [
+        2,
+        3,
+        17,
+        36,
+        38
+      ],
+      "sister_stars": [
+        4,
+        11
+      ]
+    },
+    {
+      "mirror_date": "14.11.2014",
+      "mirror_q": 4,
+      "mirror_d": 13,
+      "mirror_pair": [
+        14,
+        14
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        17,
+        32,
+        36,
+        38,
+        48
+      ],
+      "mirror_stars": [
+        5,
+        8
+      ],
+      "sister_d": 14,
+      "sister_date": "18.11.2014",
+      "sister_mains": [
+        2,
+        3,
+        17,
+        36,
+        38
+      ],
+      "sister_stars": [
+        4,
+        11
+      ]
+    },
+    {
+      "mirror_date": "16.12.2014",
+      "mirror_q": 4,
+      "mirror_d": 22,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        3,
+        7,
+        12,
+        13,
+        25
+      ],
+      "mirror_stars": [
+        5,
+        8
+      ],
+      "sister_d": 12,
+      "sister_date": "11.11.2014",
+      "sister_mains": [
+        2,
+        14,
+        21,
+        36,
+        46
+      ],
+      "sister_stars": [
+        7,
+        11
+      ]
+    },
+    {
+      "mirror_date": "13.01.2015",
+      "mirror_q": 1,
+      "mirror_d": 4,
+      "mirror_pair": [
+        13,
+        15
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        8,
+        17,
+        21,
+        31,
+        34
+      ],
+      "mirror_stars": [
+        9,
+        10
+      ],
+      "sister_d": 13,
+      "sister_date": "13.02.2015",
+      "sister_mains": [
+        12,
+        24,
+        39,
+        42,
+        44
+      ],
+      "sister_stars": [
+        3,
+        11
+      ]
+    },
+    {
+      "mirror_date": "27.01.2015",
+      "mirror_q": 1,
+      "mirror_d": 8,
+      "mirror_pair": [
+        1,
+        27
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        5,
+        10,
+        31,
+        33,
+        40
+      ],
+      "mirror_stars": [
+        8,
+        10
+      ],
+      "sister_d": 1,
+      "sister_date": "02.01.2015",
+      "sister_mains": [
+        22,
+        24,
+        25,
+        28,
+        49
+      ],
+      "sister_stars": [
+        3,
+        6
+      ]
+    },
+    {
+      "mirror_date": "13.02.2015",
+      "mirror_q": 1,
+      "mirror_d": 13,
+      "mirror_pair": [
+        13,
+        15
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        12,
+        24,
+        39,
+        42,
+        44
+      ],
+      "mirror_stars": [
+        3,
+        11
+      ],
+      "sister_d": 13,
+      "sister_date": "13.02.2015",
+      "sister_mains": [
+        12,
+        24,
+        39,
+        42,
+        44
+      ],
+      "sister_stars": [
+        3,
+        11
+      ]
+    },
+    {
+      "mirror_date": "13.03.2015",
+      "mirror_q": 1,
+      "mirror_d": 21,
+      "mirror_pair": [
+        13,
+        15
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        4,
+        5,
+        18,
+        22,
+        23
+      ],
+      "mirror_stars": [
+        1,
+        3
+      ],
+      "sister_d": 13,
+      "sister_date": "13.02.2015",
+      "sister_mains": [
+        12,
+        24,
+        39,
+        42,
+        44
+      ],
+      "sister_stars": [
+        3,
+        11
+      ]
+    },
+    {
+      "mirror_date": "24.04.2015",
+      "mirror_q": 2,
+      "mirror_d": 7,
+      "mirror_pair": [
+        4,
+        24
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        5,
+        19,
+        29,
+        31,
+        40
+      ],
+      "mirror_stars": [
+        3,
+        10
+      ],
+      "sister_d": 4,
+      "sister_date": "14.04.2015",
+      "sister_mains": [
+        24,
+        32,
+        34,
+        35,
+        49
+      ],
+      "sister_stars": [
+        1,
+        2
+      ]
+    },
+    {
+      "mirror_date": "21.07.2015",
+      "mirror_q": 3,
+      "mirror_d": 6,
+      "mirror_pair": [
+        7,
+        21
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        14,
+        20,
+        27,
+        29,
+        44
+      ],
+      "mirror_stars": [
+        7,
+        10
+      ],
+      "sister_d": 7,
+      "sister_date": "24.07.2015",
+      "sister_mains": [
+        2,
+        9,
+        21,
+        35,
+        46
+      ],
+      "sister_stars": [
+        2,
+        11
+      ]
+    },
+    {
+      "mirror_date": "13.10.2015",
+      "mirror_q": 4,
+      "mirror_d": 4,
+      "mirror_pair": [
+        13,
+        15
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        12,
+        15,
+        26,
+        29,
+        47
+      ],
+      "mirror_stars": [
+        3,
+        11
+      ],
+      "sister_d": 13,
+      "sister_date": "13.11.2015",
+      "sister_mains": [
+        10,
+        17,
+        18,
+        33,
+        40
+      ],
+      "sister_stars": [
+        2,
+        8
+      ]
+    },
+    {
+      "mirror_date": "13.11.2015",
+      "mirror_q": 4,
+      "mirror_d": 13,
+      "mirror_pair": [
+        13,
+        15
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        10,
+        17,
+        18,
+        33,
+        40
+      ],
+      "mirror_stars": [
+        2,
+        8
+      ],
+      "sister_d": 13,
+      "sister_date": "13.11.2015",
+      "sister_mains": [
+        10,
+        17,
+        18,
+        33,
+        40
+      ],
+      "sister_stars": [
+        2,
+        8
+      ]
+    },
+    {
+      "mirror_date": "17.11.2015",
+      "mirror_q": 4,
+      "mirror_d": 14,
+      "mirror_pair": [
+        11,
+        17
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        6,
+        7,
+        23,
+        37,
+        38
+      ],
+      "mirror_stars": [
+        10,
+        11
+      ],
+      "sister_d": 11,
+      "sister_date": "06.11.2015",
+      "sister_mains": [
+        3,
+        17,
+        26,
+        38,
+        40
+      ],
+      "sister_stars": [
+        4,
+        10
+      ]
+    },
+    {
+      "mirror_date": "12.01.2016",
+      "mirror_q": 1,
+      "mirror_d": 4,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        1,
+        2,
+        10,
+        30,
+        44
+      ],
+      "mirror_stars": [
+        1,
+        8
+      ],
+      "sister_d": 12,
+      "sister_date": "09.02.2016",
+      "sister_mains": [
+        6,
+        9,
+        13,
+        28,
+        37
+      ],
+      "sister_stars": [
+        4,
+        5
+      ]
+    },
+    {
+      "mirror_date": "12.02.2016",
+      "mirror_q": 1,
+      "mirror_d": 13,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        3,
+        20,
+        28,
+        31,
+        49
+      ],
+      "mirror_stars": [
+        2,
+        5
+      ],
+      "sister_d": 12,
+      "sister_date": "09.02.2016",
+      "sister_mains": [
+        6,
+        9,
+        13,
+        28,
+        37
+      ],
+      "sister_stars": [
+        4,
+        5
+      ]
+    },
+    {
+      "mirror_date": "26.02.2016",
+      "mirror_q": 1,
+      "mirror_d": 17,
+      "mirror_pair": [
+        2,
+        26
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        5,
+        13,
+        15,
+        33,
+        50
+      ],
+      "mirror_stars": [
+        9,
+        11
+      ],
+      "sister_d": 2,
+      "sister_date": "05.01.2016",
+      "sister_mains": [
+        6,
+        10,
+        31,
+        36,
+        39
+      ],
+      "sister_stars": [
+        6,
+        10
+      ]
+    },
+    {
+      "mirror_date": "25.03.2016",
+      "mirror_q": 1,
+      "mirror_d": 25,
+      "mirror_pair": [
+        3,
+        25
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        12,
+        19,
+        36,
+        42,
+        43
+      ],
+      "mirror_stars": [
+        5,
+        8
+      ],
+      "sister_d": 3,
+      "sister_date": "08.01.2016",
+      "sister_mains": [
+        5,
+        26,
+        33,
+        35,
+        40
+      ],
+      "sister_stars": [
+        3,
+        8
+      ]
+    },
+    {
+      "mirror_date": "12.04.2016",
+      "mirror_q": 2,
+      "mirror_d": 5,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        1,
+        5,
+        9,
+        22,
+        38
+      ],
+      "mirror_stars": [
+        2,
+        10
+      ],
+      "sister_d": 12,
+      "sister_date": "22.04.2016",
+      "sister_mains": [
+        17,
+        26,
+        32,
+        34,
+        43
+      ],
+      "sister_stars": [
+        2,
+        10
+      ]
+    },
+    {
+      "mirror_date": "12.04.2016",
+      "mirror_q": 2,
+      "mirror_d": 5,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        1,
+        5,
+        9,
+        22,
+        38
+      ],
+      "mirror_stars": [
+        2,
+        10
+      ],
+      "sister_d": 12,
+      "sister_date": "22.04.2016",
+      "sister_mains": [
+        17,
+        26,
+        32,
+        34,
+        43
+      ],
+      "sister_stars": [
+        2,
+        10
+      ]
+    },
+    {
+      "mirror_date": "12.07.2016",
+      "mirror_q": 3,
+      "mirror_d": 7,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        3,
+        7,
+        26,
+        33,
+        41
+      ],
+      "mirror_stars": [
+        2,
+        10
+      ],
+      "sister_d": 12,
+      "sister_date": "29.07.2016",
+      "sister_mains": [
+        1,
+        21,
+        26,
+        40,
+        50
+      ],
+      "sister_stars": [
+        2,
+        4
+      ]
+    },
+    {
+      "mirror_date": "12.08.2016",
+      "mirror_q": 3,
+      "mirror_d": 16,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        2,
+        15,
+        28,
+        36,
+        50
+      ],
+      "mirror_stars": [
+        2,
+        11
+      ],
+      "sister_d": 12,
+      "sister_date": "29.07.2016",
+      "sister_mains": [
+        1,
+        21,
+        26,
+        40,
+        50
+      ],
+      "sister_stars": [
+        2,
+        4
+      ]
+    },
+    {
+      "mirror_date": "18.10.2016",
+      "mirror_q": 4,
+      "mirror_d": 5,
+      "mirror_pair": [
+        10,
+        18
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        2,
+        17,
+        21,
+        25,
+        27
+      ],
+      "mirror_stars": [
+        6,
+        9
+      ],
+      "sister_d": 10,
+      "sister_date": "04.11.2016",
+      "sister_mains": [
+        7,
+        11,
+        12,
+        44,
+        48
+      ],
+      "sister_stars": [
+        3,
+        7
+      ]
+    },
+    {
+      "mirror_date": "02.12.2016",
+      "mirror_q": 4,
+      "mirror_d": 18,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        6,
+        11,
+        23,
+        31,
+        32
+      ],
+      "mirror_stars": [
+        2,
+        12
+      ],
+      "sister_d": 12,
+      "sister_date": "11.11.2016",
+      "sister_mains": [
+        3,
+        22,
+        23,
+        38,
+        49
+      ],
+      "sister_stars": [
+        2,
+        9
+      ]
+    },
+    {
+      "mirror_date": "06.12.2016",
+      "mirror_q": 4,
+      "mirror_d": 19,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        1,
+        7,
+        11,
+        27,
+        45
+      ],
+      "mirror_stars": [
+        4,
+        9
+      ],
+      "sister_d": 12,
+      "sister_date": "11.11.2016",
+      "sister_mains": [
+        3,
+        22,
+        23,
+        38,
+        49
+      ],
+      "sister_stars": [
+        2,
+        9
+      ]
+    },
+    {
+      "mirror_date": "09.12.2016",
+      "mirror_q": 4,
+      "mirror_d": 20,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        6,
+        12,
+        28,
+        37,
+        40
+      ],
+      "mirror_stars": [
+        1,
+        5
+      ],
+      "sister_d": 12,
+      "sister_date": "11.11.2016",
+      "sister_mains": [
+        3,
+        22,
+        23,
+        38,
+        49
+      ],
+      "sister_stars": [
+        2,
+        9
+      ]
+    },
+    {
+      "mirror_date": "13.12.2016",
+      "mirror_q": 4,
+      "mirror_d": 21,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        14,
+        28,
+        29,
+        48,
+        50
+      ],
+      "mirror_stars": [
+        2,
+        8
+      ],
+      "sister_d": 12,
+      "sister_date": "11.11.2016",
+      "sister_mains": [
+        3,
+        22,
+        23,
+        38,
+        49
+      ],
+      "sister_stars": [
+        2,
+        9
+      ]
+    },
+    {
+      "mirror_date": "16.12.2016",
+      "mirror_q": 4,
+      "mirror_d": 22,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        6,
+        10,
+        30,
+        41,
+        45
+      ],
+      "mirror_stars": [
+        4,
+        11
+      ],
+      "sister_d": 12,
+      "sister_date": "11.11.2016",
+      "sister_mains": [
+        3,
+        22,
+        23,
+        38,
+        49
+      ],
+      "sister_stars": [
+        2,
+        9
+      ]
+    },
+    {
+      "mirror_date": "16.12.2016",
+      "mirror_q": 4,
+      "mirror_d": 22,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        6,
+        10,
+        30,
+        41,
+        45
+      ],
+      "mirror_stars": [
+        4,
+        11
+      ],
+      "sister_d": 12,
+      "sister_date": "11.11.2016",
+      "sister_mains": [
+        3,
+        22,
+        23,
+        38,
+        49
+      ],
+      "sister_stars": [
+        2,
+        9
+      ]
+    },
+    {
+      "mirror_date": "20.12.2016",
+      "mirror_q": 4,
+      "mirror_d": 23,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        13,
+        15,
+        17,
+        21,
+        27
+      ],
+      "mirror_stars": [
+        2,
+        3
+      ],
+      "sister_d": 12,
+      "sister_date": "11.11.2016",
+      "sister_mains": [
+        3,
+        22,
+        23,
+        38,
+        49
+      ],
+      "sister_stars": [
+        2,
+        9
+      ]
+    },
+    {
+      "mirror_date": "23.12.2016",
+      "mirror_q": 4,
+      "mirror_d": 24,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        4,
+        16,
+        20,
+        39,
+        46
+      ],
+      "mirror_stars": [
+        2,
+        5
+      ],
+      "sister_d": 12,
+      "sister_date": "11.11.2016",
+      "sister_mains": [
+        3,
+        22,
+        23,
+        38,
+        49
+      ],
+      "sister_stars": [
+        2,
+        9
+      ]
+    },
+    {
+      "mirror_date": "27.12.2016",
+      "mirror_q": 4,
+      "mirror_d": 25,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        3,
+        22,
+        25,
+        32,
+        39
+      ],
+      "mirror_stars": [
+        7,
+        12
+      ],
+      "sister_d": 12,
+      "sister_date": "11.11.2016",
+      "sister_mains": [
+        3,
+        22,
+        23,
+        38,
+        49
+      ],
+      "sister_stars": [
+        2,
+        9
+      ]
+    },
+    {
+      "mirror_date": "30.12.2016",
+      "mirror_q": 4,
+      "mirror_d": 26,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        8,
+        10,
+        22,
+        29,
+        47
+      ],
+      "mirror_stars": [
+        1,
+        3
+      ],
+      "sister_d": 12,
+      "sister_date": "11.11.2016",
+      "sister_mains": [
+        3,
+        22,
+        23,
+        38,
+        49
+      ],
+      "sister_stars": [
+        2,
+        9
+      ]
+    },
+    {
+      "mirror_date": "27.01.2017",
+      "mirror_q": 1,
+      "mirror_d": 8,
+      "mirror_pair": [
+        1,
+        27
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        17,
+        20,
+        28,
+        45,
+        48
+      ],
+      "mirror_stars": [
+        5,
+        9
+      ],
+      "sister_d": 1,
+      "sister_date": "03.01.2017",
+      "sister_mains": [
+        19,
+        23,
+        27,
+        34,
+        49
+      ],
+      "sister_stars": [
+        1,
+        11
+      ]
+    },
+    {
+      "mirror_date": "11.04.2017",
+      "mirror_q": 2,
+      "mirror_d": 3,
+      "mirror_pair": [
+        11,
+        17
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        5,
+        21,
+        22,
+        31,
+        49
+      ],
+      "mirror_stars": [
+        2,
+        8
+      ],
+      "sister_d": 11,
+      "sister_date": "09.05.2017",
+      "sister_mains": [
+        8,
+        12,
+        16,
+        22,
+        26
+      ],
+      "sister_stars": [
+        6,
+        7
+      ]
+    },
+    {
+      "mirror_date": "23.05.2017",
+      "mirror_q": 2,
+      "mirror_d": 15,
+      "mirror_pair": [
+        5,
+        23
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        8,
+        15,
+        25,
+        27,
+        42
+      ],
+      "mirror_stars": [
+        1,
+        4
+      ],
+      "sister_d": 5,
+      "sister_date": "18.04.2017",
+      "sister_mains": [
+        17,
+        22,
+        31,
+        38,
+        45
+      ],
+      "sister_stars": [
+        5,
+        12
+      ]
+    },
+    {
+      "mirror_date": "11.07.2017",
+      "mirror_q": 3,
+      "mirror_d": 3,
+      "mirror_pair": [
+        11,
+        17
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        14,
+        22,
+        26,
+        42,
+        50
+      ],
+      "mirror_stars": [
+        8,
+        10
+      ],
+      "sister_d": 11,
+      "sister_date": "08.08.2017",
+      "sister_mains": [
+        15,
+        25,
+        26,
+        40,
+        41
+      ],
+      "sister_stars": [
+        4,
+        5
+      ]
+    },
+    {
+      "mirror_date": "21.07.2017",
+      "mirror_q": 3,
+      "mirror_d": 6,
+      "mirror_pair": [
+        7,
+        21
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        1,
+        8,
+        9,
+        26,
+        49
+      ],
+      "mirror_stars": [
+        5,
+        9
+      ],
+      "sister_d": 7,
+      "sister_date": "25.07.2017",
+      "sister_mains": [
+        12,
+        14,
+        43,
+        44,
+        48
+      ],
+      "sister_stars": [
+        2,
+        11
+      ]
+    },
+    {
+      "mirror_date": "11.08.2017",
+      "mirror_q": 3,
+      "mirror_d": 12,
+      "mirror_pair": [
+        11,
+        17
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        18,
+        28,
+        39,
+        46,
+        48
+      ],
+      "mirror_stars": [
+        5,
+        12
+      ],
+      "sister_d": 11,
+      "sister_date": "08.08.2017",
+      "sister_mains": [
+        15,
+        25,
+        26,
+        40,
+        41
+      ],
+      "sister_stars": [
+        4,
+        5
+      ]
+    },
+    {
+      "mirror_date": "19.09.2017",
+      "mirror_q": 3,
+      "mirror_d": 23,
+      "mirror_pair": [
+        9,
+        19
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        1,
+        8,
+        21,
+        30,
+        45
+      ],
+      "mirror_stars": [
+        2,
+        3
+      ],
+      "sister_d": 9,
+      "sister_date": "01.08.2017",
+      "sister_mains": [
+        14,
+        21,
+        24,
+        29,
+        30
+      ],
+      "sister_stars": [
+        8,
+        10
+      ]
+    },
+    {
+      "mirror_date": "03.11.2017",
+      "mirror_q": 4,
+      "mirror_d": 10,
+      "mirror_pair": [
+        11,
+        17
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        5,
+        12,
+        17,
+        33,
+        41
+      ],
+      "mirror_stars": [
+        4,
+        9
+      ],
+      "sister_d": 11,
+      "sister_date": "07.11.2017",
+      "sister_mains": [
+        7,
+        19,
+        20,
+        37,
+        41
+      ],
+      "sister_stars": [
+        2,
+        12
+      ]
+    },
+    {
+      "mirror_date": "07.11.2017",
+      "mirror_q": 4,
+      "mirror_d": 11,
+      "mirror_pair": [
+        11,
+        17
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        7,
+        19,
+        20,
+        37,
+        41
+      ],
+      "mirror_stars": [
+        2,
+        12
+      ],
+      "sister_d": 11,
+      "sister_date": "07.11.2017",
+      "sister_mains": [
+        7,
+        19,
+        20,
+        37,
+        41
+      ],
+      "sister_stars": [
+        2,
+        12
+      ]
+    },
+    {
+      "mirror_date": "10.11.2017",
+      "mirror_q": 4,
+      "mirror_d": 12,
+      "mirror_pair": [
+        11,
+        17
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        13,
+        22,
+        29,
+        36,
+        37
+      ],
+      "mirror_stars": [
+        1,
+        9
+      ],
+      "sister_d": 11,
+      "sister_date": "07.11.2017",
+      "sister_mains": [
+        7,
+        19,
+        20,
+        37,
+        41
+      ],
+      "sister_stars": [
+        2,
+        12
+      ]
+    },
+    {
+      "mirror_date": "14.11.2017",
+      "mirror_q": 4,
+      "mirror_d": 13,
+      "mirror_pair": [
+        11,
+        17
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        14,
+        16,
+        39,
+        40,
+        41
+      ],
+      "mirror_stars": [
+        8,
+        10
+      ],
+      "sister_d": 11,
+      "sister_date": "07.11.2017",
+      "sister_mains": [
+        7,
+        19,
+        20,
+        37,
+        41
+      ],
+      "sister_stars": [
+        2,
+        12
+      ]
+    },
+    {
+      "mirror_date": "17.11.2017",
+      "mirror_q": 4,
+      "mirror_d": 14,
+      "mirror_pair": [
+        11,
+        17
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        20,
+        26,
+        35,
+        36,
+        42
+      ],
+      "mirror_stars": [
+        5,
+        12
+      ],
+      "sister_d": 11,
+      "sister_date": "07.11.2017",
+      "sister_mains": [
+        7,
+        19,
+        20,
+        37,
+        41
+      ],
+      "sister_stars": [
+        2,
+        12
+      ]
+    },
+    {
+      "mirror_date": "17.11.2017",
+      "mirror_q": 4,
+      "mirror_d": 14,
+      "mirror_pair": [
+        11,
+        17
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        20,
+        26,
+        35,
+        36,
+        42
+      ],
+      "mirror_stars": [
+        5,
+        12
+      ],
+      "sister_d": 11,
+      "sister_date": "07.11.2017",
+      "sister_mains": [
+        7,
+        19,
+        20,
+        37,
+        41
+      ],
+      "sister_stars": [
+        2,
+        12
+      ]
+    },
+    {
+      "mirror_date": "21.11.2017",
+      "mirror_q": 4,
+      "mirror_d": 15,
+      "mirror_pair": [
+        11,
+        17
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        2,
+        10,
+        14,
+        28,
+        31
+      ],
+      "mirror_stars": [
+        5,
+        7
+      ],
+      "sister_d": 11,
+      "sister_date": "07.11.2017",
+      "sister_mains": [
+        7,
+        19,
+        20,
+        37,
+        41
+      ],
+      "sister_stars": [
+        2,
+        12
+      ]
+    },
+    {
+      "mirror_date": "24.11.2017",
+      "mirror_q": 4,
+      "mirror_d": 16,
+      "mirror_pair": [
+        11,
+        17
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        19,
+        24,
+        28,
+        30,
+        50
+      ],
+      "mirror_stars": [
+        3,
+        10
+      ],
+      "sister_d": 11,
+      "sister_date": "07.11.2017",
+      "sister_mains": [
+        7,
+        19,
+        20,
+        37,
+        41
+      ],
+      "sister_stars": [
+        2,
+        12
+      ]
+    },
+    {
+      "mirror_date": "28.11.2017",
+      "mirror_q": 4,
+      "mirror_d": 17,
+      "mirror_pair": [
+        11,
+        17
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        1,
+        6,
+        12,
+        18,
+        42
+      ],
+      "mirror_stars": [
+        2,
+        7
+      ],
+      "sister_d": 11,
+      "sister_date": "07.11.2017",
+      "sister_mains": [
+        7,
+        19,
+        20,
+        37,
+        41
+      ],
+      "sister_stars": [
+        2,
+        12
+      ]
+    },
+    {
+      "mirror_date": "10.04.2018",
+      "mirror_q": 2,
+      "mirror_d": 3,
+      "mirror_pair": [
+        10,
+        18
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        14,
+        27,
+        39,
+        46,
+        48
+      ],
+      "mirror_stars": [
+        11,
+        12
+      ],
+      "sister_d": 10,
+      "sister_date": "04.05.2018",
+      "sister_mains": [
+        6,
+        12,
+        23,
+        39,
+        45
+      ],
+      "sister_stars": [
+        9,
+        12
+      ]
+    },
+    {
+      "mirror_date": "24.04.2018",
+      "mirror_q": 2,
+      "mirror_d": 7,
+      "mirror_pair": [
+        4,
+        24
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        20,
+        23,
+        28,
+        30,
+        44
+      ],
+      "mirror_stars": [
+        3,
+        7
+      ],
+      "sister_d": 4,
+      "sister_date": "13.04.2018",
+      "sister_mains": [
+        5,
+        25,
+        34,
+        48,
+        50
+      ],
+      "sister_stars": [
+        6,
+        7
+      ]
+    },
+    {
+      "mirror_date": "22.06.2018",
+      "mirror_q": 2,
+      "mirror_d": 24,
+      "mirror_pair": [
+        6,
+        22
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        14,
+        25,
+        39,
+        41,
+        44
+      ],
+      "mirror_stars": [
+        2,
+        8
+      ],
+      "sister_d": 6,
+      "sister_date": "20.04.2018",
+      "sister_mains": [
+        3,
+        16,
+        25,
+        39,
+        44
+      ],
+      "sister_stars": [
+        7,
+        11
+      ]
+    },
+    {
+      "mirror_date": "10.07.2018",
+      "mirror_q": 3,
+      "mirror_d": 3,
+      "mirror_pair": [
+        10,
+        18
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        3,
+        8,
+        26,
+        33,
+        45
+      ],
+      "mirror_stars": [
+        7,
+        10
+      ],
+      "sister_d": 10,
+      "sister_date": "03.08.2018",
+      "sister_mains": [
+        7,
+        26,
+        36,
+        38,
+        43
+      ],
+      "sister_stars": [
+        6,
+        12
+      ]
+    },
+    {
+      "mirror_date": "10.08.2018",
+      "mirror_q": 3,
+      "mirror_d": 12,
+      "mirror_pair": [
+        10,
+        18
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        18,
+        20,
+        36,
+        43,
+        44
+      ],
+      "mirror_stars": [
+        3,
+        9
+      ],
+      "sister_d": 10,
+      "sister_date": "03.08.2018",
+      "sister_mains": [
+        7,
+        26,
+        36,
+        38,
+        43
+      ],
+      "sister_stars": [
+        6,
+        12
+      ]
+    },
+    {
+      "mirror_date": "02.10.2018",
+      "mirror_q": 4,
+      "mirror_d": 1,
+      "mirror_pair": [
+        10,
+        18
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        7,
+        17,
+        29,
+        37,
+        45
+      ],
+      "mirror_stars": [
+        3,
+        11
+      ],
+      "sister_d": 10,
+      "sister_date": "02.11.2018",
+      "sister_mains": [
+        5,
+        15,
+        17,
+        37,
+        44
+      ],
+      "sister_stars": [
+        7,
+        11
+      ]
+    },
+    {
+      "mirror_date": "05.10.2018",
+      "mirror_q": 4,
+      "mirror_d": 2,
+      "mirror_pair": [
+        10,
+        18
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        8,
+        16,
+        24,
+        26,
+        35
+      ],
+      "mirror_stars": [
+        3,
+        11
+      ],
+      "sister_d": 10,
+      "sister_date": "02.11.2018",
+      "sister_mains": [
+        5,
+        15,
+        17,
+        37,
+        44
+      ],
+      "sister_stars": [
+        7,
+        11
+      ]
+    },
+    {
+      "mirror_date": "09.10.2018",
+      "mirror_q": 4,
+      "mirror_d": 3,
+      "mirror_pair": [
+        10,
+        18
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        3,
+        12,
+        36,
+        44,
+        45
+      ],
+      "mirror_stars": [
+        8,
+        11
+      ],
+      "sister_d": 10,
+      "sister_date": "02.11.2018",
+      "sister_mains": [
+        5,
+        15,
+        17,
+        37,
+        44
+      ],
+      "sister_stars": [
+        7,
+        11
+      ]
+    },
+    {
+      "mirror_date": "12.10.2018",
+      "mirror_q": 4,
+      "mirror_d": 4,
+      "mirror_pair": [
+        10,
+        18
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        4,
+        9,
+        12,
+        31,
+        43
+      ],
+      "mirror_stars": [
+        5,
+        8
+      ],
+      "sister_d": 10,
+      "sister_date": "02.11.2018",
+      "sister_mains": [
+        5,
+        15,
+        17,
+        37,
+        44
+      ],
+      "sister_stars": [
+        7,
+        11
+      ]
+    },
+    {
+      "mirror_date": "16.10.2018",
+      "mirror_q": 4,
+      "mirror_d": 5,
+      "mirror_pair": [
+        10,
+        18
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        15,
+        28,
+        37,
+        40,
+        42
+      ],
+      "mirror_stars": [
+        1,
+        6
+      ],
+      "sister_d": 10,
+      "sister_date": "02.11.2018",
+      "sister_mains": [
+        5,
+        15,
+        17,
+        37,
+        44
+      ],
+      "sister_stars": [
+        7,
+        11
+      ]
+    },
+    {
+      "mirror_date": "19.10.2018",
+      "mirror_q": 4,
+      "mirror_d": 6,
+      "mirror_pair": [
+        10,
+        18
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        1,
+        3,
+        29,
+        47,
+        48
+      ],
+      "mirror_stars": [
+        3,
+        12
+      ],
+      "sister_d": 10,
+      "sister_date": "02.11.2018",
+      "sister_mains": [
+        5,
+        15,
+        17,
+        37,
+        44
+      ],
+      "sister_stars": [
+        7,
+        11
+      ]
+    },
+    {
+      "mirror_date": "23.10.2018",
+      "mirror_q": 4,
+      "mirror_d": 7,
+      "mirror_pair": [
+        10,
+        18
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        1,
+        2,
+        5,
+        21,
+        32
+      ],
+      "mirror_stars": [
+        2,
+        12
+      ],
+      "sister_d": 10,
+      "sister_date": "02.11.2018",
+      "sister_mains": [
+        5,
+        15,
+        17,
+        37,
+        44
+      ],
+      "sister_stars": [
+        7,
+        11
+      ]
+    },
+    {
+      "mirror_date": "26.10.2018",
+      "mirror_q": 4,
+      "mirror_d": 8,
+      "mirror_pair": [
+        10,
+        18
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        5,
+        18,
+        21,
+        31,
+        35
+      ],
+      "mirror_stars": [
+        6,
+        9
+      ],
+      "sister_d": 10,
+      "sister_date": "02.11.2018",
+      "sister_mains": [
+        5,
+        15,
+        17,
+        37,
+        44
+      ],
+      "sister_stars": [
+        7,
+        11
+      ]
+    },
+    {
+      "mirror_date": "30.10.2018",
+      "mirror_q": 4,
+      "mirror_d": 9,
+      "mirror_pair": [
+        10,
+        18
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        17,
+        23,
+        27,
+        43,
+        44
+      ],
+      "mirror_stars": [
+        1,
+        12
+      ],
+      "sister_d": 10,
+      "sister_date": "02.11.2018",
+      "sister_mains": [
+        5,
+        15,
+        17,
+        37,
+        44
+      ],
+      "sister_stars": [
+        7,
+        11
+      ]
+    },
+    {
+      "mirror_date": "26.02.2019",
+      "mirror_q": 1,
+      "mirror_d": 17,
+      "mirror_pair": [
+        2,
+        26
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        3,
+        15,
+        29,
+        35,
+        47
+      ],
+      "mirror_stars": [
+        3,
+        4
+      ],
+      "sister_d": 2,
+      "sister_date": "04.01.2019",
+      "sister_mains": [
+        7,
+        11,
+        19,
+        27,
+        37
+      ],
+      "sister_stars": [
+        6,
+        10
+      ]
+    },
+    {
+      "mirror_date": "09.04.2019",
+      "mirror_q": 2,
+      "mirror_d": 3,
+      "mirror_pair": [
+        9,
+        19
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        18,
+        21,
+        29,
+        38,
+        41
+      ],
+      "mirror_stars": [
+        1,
+        11
+      ],
+      "sister_d": 9,
+      "sister_date": "30.04.2019",
+      "sister_mains": [
+        5,
+        12,
+        20,
+        26,
+        48
+      ],
+      "sister_stars": [
+        2,
+        11
+      ]
+    },
+    {
+      "mirror_date": "09.07.2019",
+      "mirror_q": 3,
+      "mirror_d": 3,
+      "mirror_pair": [
+        9,
+        19
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        7,
+        29,
+        32,
+        36,
+        41
+      ],
+      "mirror_stars": [
+        6,
+        7
+      ],
+      "sister_d": 9,
+      "sister_date": "30.07.2019",
+      "sister_mains": [
+        15,
+        20,
+        23,
+        27,
+        40
+      ],
+      "sister_stars": [
+        3,
+        6
+      ]
+    },
+    {
+      "mirror_date": "09.08.2019",
+      "mirror_q": 3,
+      "mirror_d": 12,
+      "mirror_pair": [
+        9,
+        19
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        2,
+        14,
+        35,
+        41,
+        42
+      ],
+      "mirror_stars": [
+        10,
+        11
+      ],
+      "sister_d": 9,
+      "sister_date": "30.07.2019",
+      "sister_mains": [
+        15,
+        20,
+        23,
+        27,
+        40
+      ],
+      "sister_stars": [
+        3,
+        6
+      ]
+    },
+    {
+      "mirror_date": "20.08.2019",
+      "mirror_q": 3,
+      "mirror_d": 15,
+      "mirror_pair": [
+        8,
+        20
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        20,
+        22,
+        23,
+        24,
+        37
+      ],
+      "mirror_stars": [
+        1,
+        4
+      ],
+      "sister_d": 8,
+      "sister_date": "26.07.2019",
+      "sister_mains": [
+        2,
+        5,
+        27,
+        37,
+        42
+      ],
+      "sister_stars": [
+        3,
+        10
+      ]
+    },
+    {
+      "mirror_date": "03.09.2019",
+      "mirror_q": 3,
+      "mirror_d": 19,
+      "mirror_pair": [
+        9,
+        19
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        7,
+        11,
+        38,
+        39,
+        44
+      ],
+      "mirror_stars": [
+        7,
+        10
+      ],
+      "sister_d": 9,
+      "sister_date": "30.07.2019",
+      "sister_mains": [
+        15,
+        20,
+        23,
+        27,
+        40
+      ],
+      "sister_stars": [
+        3,
+        6
+      ]
+    },
+    {
+      "mirror_date": "06.09.2019",
+      "mirror_q": 3,
+      "mirror_d": 20,
+      "mirror_pair": [
+        9,
+        19
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        10,
+        13,
+        22,
+        40,
+        48
+      ],
+      "mirror_stars": [
+        2,
+        5
+      ],
+      "sister_d": 9,
+      "sister_date": "30.07.2019",
+      "sister_mains": [
+        15,
+        20,
+        23,
+        27,
+        40
+      ],
+      "sister_stars": [
+        3,
+        6
+      ]
+    },
+    {
+      "mirror_date": "10.09.2019",
+      "mirror_q": 3,
+      "mirror_d": 21,
+      "mirror_pair": [
+        9,
+        19
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        3,
+        22,
+        25,
+        30,
+        49
+      ],
+      "mirror_stars": [
+        3,
+        6
+      ],
+      "sister_d": 9,
+      "sister_date": "30.07.2019",
+      "sister_mains": [
+        15,
+        20,
+        23,
+        27,
+        40
+      ],
+      "sister_stars": [
+        3,
+        6
+      ]
+    },
+    {
+      "mirror_date": "13.09.2019",
+      "mirror_q": 3,
+      "mirror_d": 22,
+      "mirror_pair": [
+        9,
+        19
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        1,
+        12,
+        27,
+        42,
+        47
+      ],
+      "mirror_stars": [
+        6,
+        7
+      ],
+      "sister_d": 9,
+      "sister_date": "30.07.2019",
+      "sister_mains": [
+        15,
+        20,
+        23,
+        27,
+        40
+      ],
+      "sister_stars": [
+        3,
+        6
+      ]
+    },
+    {
+      "mirror_date": "17.09.2019",
+      "mirror_q": 3,
+      "mirror_d": 23,
+      "mirror_pair": [
+        9,
+        19
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        22,
+        37,
+        43,
+        44,
+        45
+      ],
+      "mirror_stars": [
+        1,
+        12
+      ],
+      "sister_d": 9,
+      "sister_date": "30.07.2019",
+      "sister_mains": [
+        15,
+        20,
+        23,
+        27,
+        40
+      ],
+      "sister_stars": [
+        3,
+        6
+      ]
+    },
+    {
+      "mirror_date": "20.09.2019",
+      "mirror_q": 3,
+      "mirror_d": 24,
+      "mirror_pair": [
+        9,
+        19
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        8,
+        21,
+        25,
+        38,
+        50
+      ],
+      "mirror_stars": [
+        4,
+        8
+      ],
+      "sister_d": 9,
+      "sister_date": "30.07.2019",
+      "sister_mains": [
+        15,
+        20,
+        23,
+        27,
+        40
+      ],
+      "sister_stars": [
+        3,
+        6
+      ]
+    },
+    {
+      "mirror_date": "24.09.2019",
+      "mirror_q": 3,
+      "mirror_d": 25,
+      "mirror_pair": [
+        9,
+        19
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        2,
+        33,
+        42,
+        47,
+        48
+      ],
+      "mirror_stars": [
+        1,
+        2
+      ],
+      "sister_d": 9,
+      "sister_date": "30.07.2019",
+      "sister_mains": [
+        15,
+        20,
+        23,
+        27,
+        40
+      ],
+      "sister_stars": [
+        3,
+        6
+      ]
+    },
+    {
+      "mirror_date": "27.09.2019",
+      "mirror_q": 3,
+      "mirror_d": 26,
+      "mirror_pair": [
+        9,
+        19
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        24,
+        37,
+        41,
+        43,
+        46
+      ],
+      "mirror_stars": [
+        2,
+        8
+      ],
+      "sister_d": 9,
+      "sister_date": "30.07.2019",
+      "sister_mains": [
+        15,
+        20,
+        23,
+        27,
+        40
+      ],
+      "sister_stars": [
+        3,
+        6
+      ]
+    },
+    {
+      "mirror_date": "18.10.2019",
+      "mirror_q": 4,
+      "mirror_d": 6,
+      "mirror_pair": [
+        10,
+        18
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        8,
+        18,
+        22,
+        41,
+        42
+      ],
+      "mirror_stars": [
+        11,
+        12
+      ],
+      "sister_d": 10,
+      "sister_date": "01.11.2019",
+      "sister_mains": [
+        2,
+        20,
+        39,
+        44,
+        48
+      ],
+      "sister_stars": [
+        5,
+        7
+      ]
+    },
+    {
+      "mirror_date": "24.04.2020",
+      "mirror_q": 2,
+      "mirror_d": 7,
+      "mirror_pair": [
+        4,
+        24
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        1,
+        5,
+        19,
+        21,
+        28
+      ],
+      "mirror_stars": [
+        4,
+        7
+      ],
+      "sister_d": 4,
+      "sister_date": "14.04.2020",
+      "sister_mains": [
+        6,
+        29,
+        34,
+        35,
+        40
+      ],
+      "sister_stars": [
+        4,
+        11
+      ]
+    },
+    {
+      "mirror_date": "08.05.2020",
+      "mirror_q": 2,
+      "mirror_d": 11,
+      "mirror_pair": [
+        8,
+        20
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        8,
+        25,
+        32,
+        33,
+        38
+      ],
+      "mirror_stars": [
+        7,
+        9
+      ],
+      "sister_d": 8,
+      "sister_date": "28.04.2020",
+      "sister_mains": [
+        15,
+        23,
+        26,
+        28,
+        32
+      ],
+      "sister_stars": [
+        1,
+        5
+      ]
+    },
+    {
+      "mirror_date": "21.07.2020",
+      "mirror_q": 3,
+      "mirror_d": 6,
+      "mirror_pair": [
+        7,
+        21
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        14,
+        15,
+        24,
+        29,
+        42
+      ],
+      "mirror_stars": [
+        2,
+        4
+      ],
+      "sister_d": 7,
+      "sister_date": "24.07.2020",
+      "sister_mains": [
+        8,
+        9,
+        27,
+        28,
+        50
+      ],
+      "sister_stars": [
+        4,
+        12
+      ]
+    },
+    {
+      "mirror_date": "04.08.2020",
+      "mirror_q": 3,
+      "mirror_d": 10,
+      "mirror_pair": [
+        8,
+        20
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        1,
+        2,
+        5,
+        15,
+        42
+      ],
+      "mirror_stars": [
+        5,
+        8
+      ],
+      "sister_d": 8,
+      "sister_date": "28.07.2020",
+      "sister_mains": [
+        9,
+        13,
+        15,
+        17,
+        34
+      ],
+      "sister_stars": [
+        2,
+        7
+      ]
+    },
+    {
+      "mirror_date": "07.08.2020",
+      "mirror_q": 3,
+      "mirror_d": 11,
+      "mirror_pair": [
+        8,
+        20
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        5,
+        20,
+        21,
+        36,
+        41
+      ],
+      "mirror_stars": [
+        6,
+        11
+      ],
+      "sister_d": 8,
+      "sister_date": "28.07.2020",
+      "sister_mains": [
+        9,
+        13,
+        15,
+        17,
+        34
+      ],
+      "sister_stars": [
+        2,
+        7
+      ]
+    },
+    {
+      "mirror_date": "11.08.2020",
+      "mirror_q": 3,
+      "mirror_d": 12,
+      "mirror_pair": [
+        8,
+        20
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        8,
+        13,
+        14,
+        42,
+        50
+      ],
+      "mirror_stars": [
+        3,
+        9
+      ],
+      "sister_d": 8,
+      "sister_date": "28.07.2020",
+      "sister_mains": [
+        9,
+        13,
+        15,
+        17,
+        34
+      ],
+      "sister_stars": [
+        2,
+        7
+      ]
+    },
+    {
+      "mirror_date": "14.08.2020",
+      "mirror_q": 3,
+      "mirror_d": 13,
+      "mirror_pair": [
+        8,
+        20
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        9,
+        10,
+        19,
+        42,
+        49
+      ],
+      "mirror_stars": [
+        4,
+        12
+      ],
+      "sister_d": 8,
+      "sister_date": "28.07.2020",
+      "sister_mains": [
+        9,
+        13,
+        15,
+        17,
+        34
+      ],
+      "sister_stars": [
+        2,
+        7
+      ]
+    },
+    {
+      "mirror_date": "18.08.2020",
+      "mirror_q": 3,
+      "mirror_d": 14,
+      "mirror_pair": [
+        8,
+        20
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        6,
+        12,
+        17,
+        34,
+        42
+      ],
+      "mirror_stars": [
+        5,
+        12
+      ],
+      "sister_d": 8,
+      "sister_date": "28.07.2020",
+      "sister_mains": [
+        9,
+        13,
+        15,
+        17,
+        34
+      ],
+      "sister_stars": [
+        2,
+        7
+      ]
+    },
+    {
+      "mirror_date": "21.08.2020",
+      "mirror_q": 3,
+      "mirror_d": 15,
+      "mirror_pair": [
+        8,
+        20
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        10,
+        15,
+        35,
+        44,
+        50
+      ],
+      "mirror_stars": [
+        3,
+        5
+      ],
+      "sister_d": 8,
+      "sister_date": "28.07.2020",
+      "sister_mains": [
+        9,
+        13,
+        15,
+        17,
+        34
+      ],
+      "sister_stars": [
+        2,
+        7
+      ]
+    },
+    {
+      "mirror_date": "25.08.2020",
+      "mirror_q": 3,
+      "mirror_d": 16,
+      "mirror_pair": [
+        8,
+        20
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        7,
+        18,
+        30,
+        37,
+        39
+      ],
+      "mirror_stars": [
+        8,
+        10
+      ],
+      "sister_d": 8,
+      "sister_date": "28.07.2020",
+      "sister_mains": [
+        9,
+        13,
+        15,
+        17,
+        34
+      ],
+      "sister_stars": [
+        2,
+        7
+      ]
+    },
+    {
+      "mirror_date": "28.08.2020",
+      "mirror_q": 3,
+      "mirror_d": 17,
+      "mirror_pair": [
+        8,
+        20
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        7,
+        12,
+        16,
+        17,
+        31
+      ],
+      "mirror_stars": [
+        7,
+        9
+      ],
+      "sister_d": 8,
+      "sister_date": "28.07.2020",
+      "sister_mains": [
+        9,
+        13,
+        15,
+        17,
+        34
+      ],
+      "sister_stars": [
+        2,
+        7
+      ]
+    },
+    {
+      "mirror_date": "08.09.2020",
+      "mirror_q": 3,
+      "mirror_d": 20,
+      "mirror_pair": [
+        8,
+        20
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        2,
+        9,
+        31,
+        35,
+        41
+      ],
+      "mirror_stars": [
+        9,
+        12
+      ],
+      "sister_d": 8,
+      "sister_date": "28.07.2020",
+      "sister_mains": [
+        9,
+        13,
+        15,
+        17,
+        34
+      ],
+      "sister_stars": [
+        2,
+        7
+      ]
+    },
+    {
+      "mirror_date": "17.11.2020",
+      "mirror_q": 4,
+      "mirror_d": 14,
+      "mirror_pair": [
+        11,
+        17
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        16,
+        19,
+        25,
+        30,
+        44
+      ],
+      "mirror_stars": [
+        2,
+        6
+      ],
+      "sister_d": 11,
+      "sister_date": "06.11.2020",
+      "sister_mains": [
+        7,
+        12,
+        37,
+        40,
+        50
+      ],
+      "sister_stars": [
+        1,
+        2
+      ]
+    },
+    {
+      "mirror_date": "08.12.2020",
+      "mirror_q": 4,
+      "mirror_d": 20,
+      "mirror_pair": [
+        8,
+        20
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        1,
+        4,
+        21,
+        24,
+        46
+      ],
+      "mirror_stars": [
+        2,
+        12
+      ],
+      "sister_d": 8,
+      "sister_date": "27.10.2020",
+      "sister_mains": [
+        13,
+        15,
+        28,
+        32,
+        44
+      ],
+      "sister_stars": [
+        3,
+        12
+      ]
+    },
+    {
+      "mirror_date": "26.02.2021",
+      "mirror_q": 1,
+      "mirror_d": 17,
+      "mirror_pair": [
+        2,
+        26
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        6,
+        12,
+        22,
+        29,
+        33
+      ],
+      "mirror_stars": [
+        6,
+        11
+      ],
+      "sister_d": 2,
+      "sister_date": "05.01.2021",
+      "sister_mains": [
+        12,
+        34,
+        37,
+        38,
+        42
+      ],
+      "sister_stars": [
+        1,
+        3
+      ]
+    },
+    {
+      "mirror_date": "07.05.2021",
+      "mirror_q": 2,
+      "mirror_d": 11,
+      "mirror_pair": [
+        7,
+        21
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        14,
+        22,
+        33,
+        38,
+        47
+      ],
+      "mirror_stars": [
+        8,
+        9
+      ],
+      "sister_d": 7,
+      "sister_date": "23.04.2021",
+      "sister_mains": [
+        3,
+        14,
+        15,
+        19,
+        29
+      ],
+      "sister_stars": [
+        2,
+        8
+      ]
+    },
+    {
+      "mirror_date": "22.06.2021",
+      "mirror_q": 2,
+      "mirror_d": 24,
+      "mirror_pair": [
+        6,
+        22
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        6,
+        24,
+        26,
+        27,
+        41
+      ],
+      "mirror_stars": [
+        3,
+        8
+      ],
+      "sister_d": 6,
+      "sister_date": "20.04.2021",
+      "sister_mains": [
+        5,
+        17,
+        28,
+        41,
+        46
+      ],
+      "sister_stars": [
+        10,
+        11
+      ]
+    },
+    {
+      "mirror_date": "02.07.2021",
+      "mirror_q": 3,
+      "mirror_d": 1,
+      "mirror_pair": [
+        7,
+        21
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        9,
+        14,
+        29,
+        38,
+        49
+      ],
+      "mirror_stars": [
+        7,
+        10
+      ],
+      "sister_d": 7,
+      "sister_date": "23.07.2021",
+      "sister_mains": [
+        23,
+        24,
+        26,
+        34,
+        50
+      ],
+      "sister_stars": [
+        2,
+        4
+      ]
+    },
+    {
+      "mirror_date": "06.07.2021",
+      "mirror_q": 3,
+      "mirror_d": 2,
+      "mirror_pair": [
+        7,
+        21
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        2,
+        5,
+        21,
+        27,
+        42
+      ],
+      "mirror_stars": [
+        9,
+        11
+      ],
+      "sister_d": 7,
+      "sister_date": "23.07.2021",
+      "sister_mains": [
+        23,
+        24,
+        26,
+        34,
+        50
+      ],
+      "sister_stars": [
+        2,
+        4
+      ]
+    },
+    {
+      "mirror_date": "09.07.2021",
+      "mirror_q": 3,
+      "mirror_d": 3,
+      "mirror_pair": [
+        7,
+        21
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        6,
+        19,
+        36,
+        37,
+        49
+      ],
+      "mirror_stars": [
+        4,
+        11
+      ],
+      "sister_d": 7,
+      "sister_date": "23.07.2021",
+      "sister_mains": [
+        23,
+        24,
+        26,
+        34,
+        50
+      ],
+      "sister_stars": [
+        2,
+        4
+      ]
+    },
+    {
+      "mirror_date": "13.07.2021",
+      "mirror_q": 3,
+      "mirror_d": 4,
+      "mirror_pair": [
+        7,
+        21
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        5,
+        6,
+        8,
+        11,
+        22
+      ],
+      "mirror_stars": [
+        3,
+        4
+      ],
+      "sister_d": 7,
+      "sister_date": "23.07.2021",
+      "sister_mains": [
+        23,
+        24,
+        26,
+        34,
+        50
+      ],
+      "sister_stars": [
+        2,
+        4
+      ]
+    },
+    {
+      "mirror_date": "16.07.2021",
+      "mirror_q": 3,
+      "mirror_d": 5,
+      "mirror_pair": [
+        7,
+        21
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        5,
+        16,
+        42,
+        47,
+        49
+      ],
+      "mirror_stars": [
+        3,
+        11
+      ],
+      "sister_d": 7,
+      "sister_date": "23.07.2021",
+      "sister_mains": [
+        23,
+        24,
+        26,
+        34,
+        50
+      ],
+      "sister_stars": [
+        2,
+        4
+      ]
+    },
+    {
+      "mirror_date": "20.07.2021",
+      "mirror_q": 3,
+      "mirror_d": 6,
+      "mirror_pair": [
+        7,
+        21
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        3,
+        12,
+        19,
+        41,
+        48
+      ],
+      "mirror_stars": [
+        6,
+        9
+      ],
+      "sister_d": 7,
+      "sister_date": "23.07.2021",
+      "sister_mains": [
+        23,
+        24,
+        26,
+        34,
+        50
+      ],
+      "sister_stars": [
+        2,
+        4
+      ]
+    },
+    {
+      "mirror_date": "23.07.2021",
+      "mirror_q": 3,
+      "mirror_d": 7,
+      "mirror_pair": [
+        7,
+        21
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        23,
+        24,
+        26,
+        34,
+        50
+      ],
+      "mirror_stars": [
+        2,
+        4
+      ],
+      "sister_d": 7,
+      "sister_date": "23.07.2021",
+      "sister_mains": [
+        23,
+        24,
+        26,
+        34,
+        50
+      ],
+      "sister_stars": [
+        2,
+        4
+      ]
+    },
+    {
+      "mirror_date": "27.07.2021",
+      "mirror_q": 3,
+      "mirror_d": 8,
+      "mirror_pair": [
+        7,
+        21
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        5,
+        9,
+        19,
+        21,
+        25
+      ],
+      "mirror_stars": [
+        10,
+        12
+      ],
+      "sister_d": 7,
+      "sister_date": "23.07.2021",
+      "sister_mains": [
+        23,
+        24,
+        26,
+        34,
+        50
+      ],
+      "sister_stars": [
+        2,
+        4
+      ]
+    },
+    {
+      "mirror_date": "30.07.2021",
+      "mirror_q": 3,
+      "mirror_d": 9,
+      "mirror_pair": [
+        7,
+        21
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        10,
+        23,
+        33,
+        35,
+        37
+      ],
+      "mirror_stars": [
+        5,
+        10
+      ],
+      "sister_d": 7,
+      "sister_date": "23.07.2021",
+      "sister_mains": [
+        23,
+        24,
+        26,
+        34,
+        50
+      ],
+      "sister_stars": [
+        2,
+        4
+      ]
+    },
+    {
+      "mirror_date": "20.08.2021",
+      "mirror_q": 3,
+      "mirror_d": 15,
+      "mirror_pair": [
+        8,
+        20
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        3,
+        9,
+        19,
+        20,
+        23
+      ],
+      "mirror_stars": [
+        9,
+        11
+      ],
+      "sister_d": 8,
+      "sister_date": "27.07.2021",
+      "sister_mains": [
+        5,
+        9,
+        19,
+        21,
+        25
+      ],
+      "sister_stars": [
+        10,
+        12
+      ]
+    },
+    {
+      "mirror_date": "07.09.2021",
+      "mirror_q": 3,
+      "mirror_d": 20,
+      "mirror_pair": [
+        7,
+        21
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        7,
+        19,
+        35,
+        42,
+        43
+      ],
+      "mirror_stars": [
+        7,
+        9
+      ],
+      "sister_d": 7,
+      "sister_date": "23.07.2021",
+      "sister_mains": [
+        23,
+        24,
+        26,
+        34,
+        50
+      ],
+      "sister_stars": [
+        2,
+        4
+      ]
+    },
+    {
+      "mirror_date": "07.12.2021",
+      "mirror_q": 4,
+      "mirror_d": 20,
+      "mirror_pair": [
+        7,
+        21
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        22,
+        31,
+        38,
+        46,
+        47
+      ],
+      "mirror_stars": [
+        7,
+        11
+      ],
+      "sister_d": 7,
+      "sister_date": "22.10.2021",
+      "sister_mains": [
+        12,
+        17,
+        22,
+        33,
+        39
+      ],
+      "sister_stars": [
+        2,
+        12
+      ]
+    },
+    {
+      "mirror_date": "25.03.2022",
+      "mirror_q": 1,
+      "mirror_d": 24,
+      "mirror_pair": [
+        3,
+        25
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        6,
+        10,
+        24,
+        27,
+        29
+      ],
+      "mirror_stars": [
+        5,
+        12
+      ],
+      "sister_d": 3,
+      "sister_date": "11.01.2022",
+      "sister_mains": [
+        4,
+        23,
+        32,
+        33,
+        44
+      ],
+      "sister_stars": [
+        9,
+        12
+      ]
+    },
+    {
+      "mirror_date": "06.05.2022",
+      "mirror_q": 2,
+      "mirror_d": 11,
+      "mirror_pair": [
+        6,
+        22
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        3,
+        8,
+        18,
+        24,
+        40
+      ],
+      "mirror_stars": [
+        3,
+        11
+      ],
+      "sister_d": 6,
+      "sister_date": "19.04.2022",
+      "sister_mains": [
+        2,
+        12,
+        17,
+        28,
+        46
+      ],
+      "sister_stars": [
+        6,
+        10
+      ]
+    },
+    {
+      "mirror_date": "03.06.2022",
+      "mirror_q": 2,
+      "mirror_d": 19,
+      "mirror_pair": [
+        6,
+        22
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        12,
+        28,
+        29,
+        34,
+        48
+      ],
+      "mirror_stars": [
+        9,
+        11
+      ],
+      "sister_d": 6,
+      "sister_date": "19.04.2022",
+      "sister_mains": [
+        2,
+        12,
+        17,
+        28,
+        46
+      ],
+      "sister_stars": [
+        6,
+        10
+      ]
+    },
+    {
+      "mirror_date": "07.06.2022",
+      "mirror_q": 2,
+      "mirror_d": 20,
+      "mirror_pair": [
+        6,
+        22
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        6,
+        16,
+        17,
+        25,
+        31
+      ],
+      "mirror_stars": [
+        2,
+        6
+      ],
+      "sister_d": 6,
+      "sister_date": "19.04.2022",
+      "sister_mains": [
+        2,
+        12,
+        17,
+        28,
+        46
+      ],
+      "sister_stars": [
+        6,
+        10
+      ]
+    },
+    {
+      "mirror_date": "10.06.2022",
+      "mirror_q": 2,
+      "mirror_d": 21,
+      "mirror_pair": [
+        6,
+        22
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        17,
+        26,
+        36,
+        37,
+        40
+      ],
+      "mirror_stars": [
+        9,
+        12
+      ],
+      "sister_d": 6,
+      "sister_date": "19.04.2022",
+      "sister_mains": [
+        2,
+        12,
+        17,
+        28,
+        46
+      ],
+      "sister_stars": [
+        6,
+        10
+      ]
+    },
+    {
+      "mirror_date": "14.06.2022",
+      "mirror_q": 2,
+      "mirror_d": 22,
+      "mirror_pair": [
+        6,
+        22
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        2,
+        7,
+        27,
+        34,
+        40
+      ],
+      "mirror_stars": [
+        3,
+        11
+      ],
+      "sister_d": 6,
+      "sister_date": "19.04.2022",
+      "sister_mains": [
+        2,
+        12,
+        17,
+        28,
+        46
+      ],
+      "sister_stars": [
+        6,
+        10
+      ]
+    },
+    {
+      "mirror_date": "17.06.2022",
+      "mirror_q": 2,
+      "mirror_d": 23,
+      "mirror_pair": [
+        6,
+        22
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        19,
+        21,
+        22,
+        31,
+        38
+      ],
+      "mirror_stars": [
+        7,
+        11
+      ],
+      "sister_d": 6,
+      "sister_date": "19.04.2022",
+      "sister_mains": [
+        2,
+        12,
+        17,
+        28,
+        46
+      ],
+      "sister_stars": [
+        6,
+        10
+      ]
+    },
+    {
+      "mirror_date": "21.06.2022",
+      "mirror_q": 2,
+      "mirror_d": 24,
+      "mirror_pair": [
+        6,
+        22
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        6,
+        23,
+        36,
+        39,
+        47
+      ],
+      "mirror_stars": [
+        8,
+        10
+      ],
+      "sister_d": 6,
+      "sister_date": "19.04.2022",
+      "sister_mains": [
+        2,
+        12,
+        17,
+        28,
+        46
+      ],
+      "sister_stars": [
+        6,
+        10
+      ]
+    },
+    {
+      "mirror_date": "24.06.2022",
+      "mirror_q": 2,
+      "mirror_d": 25,
+      "mirror_pair": [
+        6,
+        22
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        10,
+        17,
+        28,
+        44,
+        50
+      ],
+      "mirror_stars": [
+        8,
+        12
+      ],
+      "sister_d": 6,
+      "sister_date": "19.04.2022",
+      "sister_mains": [
+        2,
+        12,
+        17,
+        28,
+        46
+      ],
+      "sister_stars": [
+        6,
+        10
+      ]
+    },
+    {
+      "mirror_date": "28.06.2022",
+      "mirror_q": 2,
+      "mirror_d": 26,
+      "mirror_pair": [
+        6,
+        22
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        10,
+        35,
+        42,
+        47,
+        48
+      ],
+      "mirror_stars": [
+        2,
+        11
+      ],
+      "sister_d": 6,
+      "sister_date": "19.04.2022",
+      "sister_mains": [
+        2,
+        12,
+        17,
+        28,
+        46
+      ],
+      "sister_stars": [
+        6,
+        10
+      ]
+    },
+    {
+      "mirror_date": "06.09.2022",
+      "mirror_q": 3,
+      "mirror_d": 20,
+      "mirror_pair": [
+        6,
+        22
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        7,
+        10,
+        22,
+        29,
+        44
+      ],
+      "mirror_stars": [
+        4,
+        5
+      ],
+      "sister_d": 6,
+      "sister_date": "19.07.2022",
+      "sister_mains": [
+        6,
+        23,
+        27,
+        40,
+        41
+      ],
+      "sister_stars": [
+        2,
+        12
+      ]
+    },
+    {
+      "mirror_date": "18.10.2022",
+      "mirror_q": 4,
+      "mirror_d": 5,
+      "mirror_pair": [
+        10,
+        18
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        3,
+        5,
+        13,
+        42,
+        48
+      ],
+      "mirror_stars": [
+        1,
+        6
+      ],
+      "sister_d": 10,
+      "sister_date": "04.11.2022",
+      "sister_mains": [
+        2,
+        11,
+        37,
+        45,
+        47
+      ],
+      "sister_stars": [
+        2,
+        3
+      ]
+    },
+    {
+      "mirror_date": "06.12.2022",
+      "mirror_q": 4,
+      "mirror_d": 19,
+      "mirror_pair": [
+        6,
+        22
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        12,
+        20,
+        25,
+        26,
+        27
+      ],
+      "mirror_stars": [
+        8,
+        12
+      ],
+      "sister_d": 6,
+      "sister_date": "21.10.2022",
+      "sister_mains": [
+        25,
+        26,
+        28,
+        38,
+        40
+      ],
+      "sister_stars": [
+        1,
+        6
+      ]
+    },
+    {
+      "mirror_date": "16.12.2022",
+      "mirror_q": 4,
+      "mirror_d": 22,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        2,
+        15,
+        19,
+        35,
+        44
+      ],
+      "mirror_stars": [
+        2,
+        7
+      ],
+      "sister_d": 12,
+      "sister_date": "11.11.2022",
+      "sister_mains": [
+        2,
+        19,
+        24,
+        25,
+        44
+      ],
+      "sister_stars": [
+        2,
+        10
+      ]
+    },
+    {
+      "mirror_date": "27.01.2023",
+      "mirror_q": 1,
+      "mirror_d": 8,
+      "mirror_pair": [
+        1,
+        27
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        8,
+        9,
+        15,
+        19,
+        31
+      ],
+      "mirror_stars": [
+        10,
+        12
+      ],
+      "sister_d": 1,
+      "sister_date": "03.01.2023",
+      "sister_mains": [
+        20,
+        21,
+        29,
+        45,
+        46
+      ],
+      "sister_stars": [
+        3,
+        10
+      ]
+    },
+    {
+      "mirror_date": "02.05.2023",
+      "mirror_q": 2,
+      "mirror_d": 9,
+      "mirror_pair": [
+        5,
+        23
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        7,
+        32,
+        44,
+        47,
+        48
+      ],
+      "mirror_stars": [
+        7,
+        8
+      ],
+      "sister_d": 5,
+      "sister_date": "18.04.2023",
+      "sister_mains": [
+        17,
+        21,
+        23,
+        35,
+        37
+      ],
+      "sister_stars": [
+        10,
+        11
+      ]
+    },
+    {
+      "mirror_date": "05.05.2023",
+      "mirror_q": 2,
+      "mirror_d": 10,
+      "mirror_pair": [
+        5,
+        23
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        3,
+        8,
+        18,
+        34,
+        49
+      ],
+      "mirror_stars": [
+        3,
+        7
+      ],
+      "sister_d": 5,
+      "sister_date": "18.04.2023",
+      "sister_mains": [
+        17,
+        21,
+        23,
+        35,
+        37
+      ],
+      "sister_stars": [
+        10,
+        11
+      ]
+    },
+    {
+      "mirror_date": "05.05.2023",
+      "mirror_q": 2,
+      "mirror_d": 10,
+      "mirror_pair": [
+        5,
+        23
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        3,
+        8,
+        18,
+        34,
+        49
+      ],
+      "mirror_stars": [
+        3,
+        7
+      ],
+      "sister_d": 5,
+      "sister_date": "18.04.2023",
+      "sister_mains": [
+        17,
+        21,
+        23,
+        35,
+        37
+      ],
+      "sister_stars": [
+        10,
+        11
+      ]
+    },
+    {
+      "mirror_date": "09.05.2023",
+      "mirror_q": 2,
+      "mirror_d": 11,
+      "mirror_pair": [
+        5,
+        23
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        13,
+        17,
+        21,
+        28,
+        46
+      ],
+      "mirror_stars": [
+        7,
+        9
+      ],
+      "sister_d": 5,
+      "sister_date": "18.04.2023",
+      "sister_mains": [
+        17,
+        21,
+        23,
+        35,
+        37
+      ],
+      "sister_stars": [
+        10,
+        11
+      ]
+    },
+    {
+      "mirror_date": "12.05.2023",
+      "mirror_q": 2,
+      "mirror_d": 12,
+      "mirror_pair": [
+        5,
+        23
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        9,
+        10,
+        13,
+        39,
+        44
+      ],
+      "mirror_stars": [
+        4,
+        6
+      ],
+      "sister_d": 5,
+      "sister_date": "18.04.2023",
+      "sister_mains": [
+        17,
+        21,
+        23,
+        35,
+        37
+      ],
+      "sister_stars": [
+        10,
+        11
+      ]
+    },
+    {
+      "mirror_date": "16.05.2023",
+      "mirror_q": 2,
+      "mirror_d": 13,
+      "mirror_pair": [
+        5,
+        23
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        4,
+        6,
+        9,
+        14,
+        37
+      ],
+      "mirror_stars": [
+        4,
+        11
+      ],
+      "sister_d": 5,
+      "sister_date": "18.04.2023",
+      "sister_mains": [
+        17,
+        21,
+        23,
+        35,
+        37
+      ],
+      "sister_stars": [
+        10,
+        11
+      ]
+    },
+    {
+      "mirror_date": "19.05.2023",
+      "mirror_q": 2,
+      "mirror_d": 14,
+      "mirror_pair": [
+        5,
+        23
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        18,
+        27,
+        34,
+        41,
+        49
+      ],
+      "mirror_stars": [
+        3,
+        9
+      ],
+      "sister_d": 5,
+      "sister_date": "18.04.2023",
+      "sister_mains": [
+        17,
+        21,
+        23,
+        35,
+        37
+      ],
+      "sister_stars": [
+        10,
+        11
+      ]
+    },
+    {
+      "mirror_date": "23.05.2023",
+      "mirror_q": 2,
+      "mirror_d": 15,
+      "mirror_pair": [
+        5,
+        23
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        5,
+        6,
+        14,
+        23,
+        34
+      ],
+      "mirror_stars": [
+        2,
+        11
+      ],
+      "sister_d": 5,
+      "sister_date": "18.04.2023",
+      "sister_mains": [
+        17,
+        21,
+        23,
+        35,
+        37
+      ],
+      "sister_stars": [
+        10,
+        11
+      ]
+    },
+    {
+      "mirror_date": "23.05.2023",
+      "mirror_q": 2,
+      "mirror_d": 15,
+      "mirror_pair": [
+        5,
+        23
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        5,
+        6,
+        14,
+        23,
+        34
+      ],
+      "mirror_stars": [
+        2,
+        11
+      ],
+      "sister_d": 5,
+      "sister_date": "18.04.2023",
+      "sister_mains": [
+        17,
+        21,
+        23,
+        35,
+        37
+      ],
+      "sister_stars": [
+        10,
+        11
+      ]
+    },
+    {
+      "mirror_date": "26.05.2023",
+      "mirror_q": 2,
+      "mirror_d": 16,
+      "mirror_pair": [
+        5,
+        23
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        15,
+        25,
+        37,
+        38,
+        41
+      ],
+      "mirror_stars": [
+        1,
+        7
+      ],
+      "sister_d": 5,
+      "sister_date": "18.04.2023",
+      "sister_mains": [
+        17,
+        21,
+        23,
+        35,
+        37
+      ],
+      "sister_stars": [
+        10,
+        11
+      ]
+    },
+    {
+      "mirror_date": "30.05.2023",
+      "mirror_q": 2,
+      "mirror_d": 17,
+      "mirror_pair": [
+        5,
+        23
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        27,
+        29,
+        32,
+        33,
+        47
+      ],
+      "mirror_stars": [
+        2,
+        8
+      ],
+      "sister_d": 5,
+      "sister_date": "18.04.2023",
+      "sister_mains": [
+        17,
+        21,
+        23,
+        35,
+        37
+      ],
+      "sister_stars": [
+        10,
+        11
+      ]
+    },
+    {
+      "mirror_date": "21.07.2023",
+      "mirror_q": 3,
+      "mirror_d": 6,
+      "mirror_pair": [
+        7,
+        21
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        7,
+        31,
+        33,
+        35,
+        36
+      ],
+      "mirror_stars": [
+        7,
+        10
+      ],
+      "sister_d": 7,
+      "sister_date": "25.07.2023",
+      "sister_mains": [
+        5,
+        7,
+        11,
+        27,
+        37
+      ],
+      "sister_stars": [
+        6,
+        12
+      ]
+    },
+    {
+      "mirror_date": "05.09.2023",
+      "mirror_q": 3,
+      "mirror_d": 19,
+      "mirror_pair": [
+        5,
+        23
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        1,
+        7,
+        24,
+        41,
+        48
+      ],
+      "mirror_stars": [
+        10,
+        12
+      ],
+      "sister_d": 5,
+      "sister_date": "18.07.2023",
+      "sister_mains": [
+        4,
+        12,
+        34,
+        35,
+        45
+      ],
+      "sister_stars": [
+        1,
+        9
+      ]
+    },
+    {
+      "mirror_date": "19.09.2023",
+      "mirror_q": 3,
+      "mirror_d": 23,
+      "mirror_pair": [
+        9,
+        19
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        10,
+        15,
+        31,
+        41,
+        42
+      ],
+      "mirror_stars": [
+        2,
+        5
+      ],
+      "sister_d": 9,
+      "sister_date": "01.08.2023",
+      "sister_mains": [
+        25,
+        27,
+        35,
+        40,
+        45
+      ],
+      "sister_stars": [
+        7,
+        11
+      ]
+    },
+    {
+      "mirror_date": "17.11.2023",
+      "mirror_q": 4,
+      "mirror_d": 14,
+      "mirror_pair": [
+        11,
+        17
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        2,
+        24,
+        26,
+        46,
+        50
+      ],
+      "mirror_stars": [
+        2,
+        7
+      ],
+      "sister_d": 11,
+      "sister_date": "07.11.2023",
+      "sister_mains": [
+        8,
+        10,
+        11,
+        30,
+        39
+      ],
+      "sister_stars": [
+        4,
+        10
+      ]
+    },
+    {
+      "mirror_date": "05.12.2023",
+      "mirror_q": 4,
+      "mirror_d": 19,
+      "mirror_pair": [
+        5,
+        23
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        4,
+        6,
+        20,
+        24,
+        25
+      ],
+      "mirror_stars": [
+        5,
+        9
+      ],
+      "sister_d": 5,
+      "sister_date": "17.10.2023",
+      "sister_mains": [
+        10,
+        17,
+        20,
+        35,
+        40
+      ],
+      "sister_stars": [
+        3,
+        4
+      ]
+    },
+    {
+      "mirror_date": "02.04.2024",
+      "mirror_q": 2,
+      "mirror_d": 1,
+      "mirror_pair": [
+        4,
+        24
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        1,
+        23,
+        31,
+        36,
+        48
+      ],
+      "mirror_stars": [
+        5,
+        8
+      ],
+      "sister_d": 4,
+      "sister_date": "12.04.2024",
+      "sister_mains": [
+        2,
+        3,
+        12,
+        16,
+        45
+      ],
+      "sister_stars": [
+        2,
+        11
+      ]
+    },
+    {
+      "mirror_date": "05.04.2024",
+      "mirror_q": 2,
+      "mirror_d": 2,
+      "mirror_pair": [
+        4,
+        24
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        13,
+        18,
+        26,
+        35,
+        37
+      ],
+      "mirror_stars": [
+        8,
+        11
+      ],
+      "sister_d": 4,
+      "sister_date": "12.04.2024",
+      "sister_mains": [
+        2,
+        3,
+        12,
+        16,
+        45
+      ],
+      "sister_stars": [
+        2,
+        11
+      ]
+    },
+    {
+      "mirror_date": "09.04.2024",
+      "mirror_q": 2,
+      "mirror_d": 3,
+      "mirror_pair": [
+        4,
+        24
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        19,
+        23,
+        26,
+        27,
+        46
+      ],
+      "mirror_stars": [
+        2,
+        10
+      ],
+      "sister_d": 4,
+      "sister_date": "12.04.2024",
+      "sister_mains": [
+        2,
+        3,
+        12,
+        16,
+        45
+      ],
+      "sister_stars": [
+        2,
+        11
+      ]
+    },
+    {
+      "mirror_date": "12.04.2024",
+      "mirror_q": 2,
+      "mirror_d": 4,
+      "mirror_pair": [
+        4,
+        24
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        2,
+        3,
+        12,
+        16,
+        45
+      ],
+      "mirror_stars": [
+        2,
+        11
+      ],
+      "sister_d": 4,
+      "sister_date": "12.04.2024",
+      "sister_mains": [
+        2,
+        3,
+        12,
+        16,
+        45
+      ],
+      "sister_stars": [
+        2,
+        11
+      ]
+    },
+    {
+      "mirror_date": "16.04.2024",
+      "mirror_q": 2,
+      "mirror_d": 5,
+      "mirror_pair": [
+        4,
+        24
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        22,
+        29,
+        31,
+        39,
+        46
+      ],
+      "mirror_stars": [
+        3,
+        7
+      ],
+      "sister_d": 4,
+      "sister_date": "12.04.2024",
+      "sister_mains": [
+        2,
+        3,
+        12,
+        16,
+        45
+      ],
+      "sister_stars": [
+        2,
+        11
+      ]
+    },
+    {
+      "mirror_date": "19.04.2024",
+      "mirror_q": 2,
+      "mirror_d": 6,
+      "mirror_pair": [
+        4,
+        24
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        10,
+        20,
+        40,
+        44,
+        46
+      ],
+      "mirror_stars": [
+        1,
+        3
+      ],
+      "sister_d": 4,
+      "sister_date": "12.04.2024",
+      "sister_mains": [
+        2,
+        3,
+        12,
+        16,
+        45
+      ],
+      "sister_stars": [
+        2,
+        11
+      ]
+    },
+    {
+      "mirror_date": "23.04.2024",
+      "mirror_q": 2,
+      "mirror_d": 7,
+      "mirror_pair": [
+        4,
+        24
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        6,
+        9,
+        11,
+        32,
+        49
+      ],
+      "mirror_stars": [
+        2,
+        10
+      ],
+      "sister_d": 4,
+      "sister_date": "12.04.2024",
+      "sister_mains": [
+        2,
+        3,
+        12,
+        16,
+        45
+      ],
+      "sister_stars": [
+        2,
+        11
+      ]
+    },
+    {
+      "mirror_date": "26.04.2024",
+      "mirror_q": 2,
+      "mirror_d": 8,
+      "mirror_pair": [
+        4,
+        24
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        2,
+        20,
+        39,
+        40,
+        47
+      ],
+      "mirror_stars": [
+        4,
+        8
+      ],
+      "sister_d": 4,
+      "sister_date": "12.04.2024",
+      "sister_mains": [
+        2,
+        3,
+        12,
+        16,
+        45
+      ],
+      "sister_stars": [
+        2,
+        11
+      ]
+    },
+    {
+      "mirror_date": "30.04.2024",
+      "mirror_q": 2,
+      "mirror_d": 9,
+      "mirror_pair": [
+        4,
+        24
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        13,
+        22,
+        24,
+        33,
+        47
+      ],
+      "mirror_stars": [
+        1,
+        5
+      ],
+      "sister_d": 4,
+      "sister_date": "12.04.2024",
+      "sister_mains": [
+        2,
+        3,
+        12,
+        16,
+        45
+      ],
+      "sister_stars": [
+        2,
+        11
+      ]
+    },
+    {
+      "mirror_date": "04.06.2024",
+      "mirror_q": 2,
+      "mirror_d": 19,
+      "mirror_pair": [
+        4,
+        24
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        6,
+        7,
+        9,
+        14,
+        43
+      ],
+      "mirror_stars": [
+        3,
+        4
+      ],
+      "sister_d": 4,
+      "sister_date": "12.04.2024",
+      "sister_mains": [
+        2,
+        3,
+        12,
+        16,
+        45
+      ],
+      "sister_stars": [
+        2,
+        11
+      ]
+    },
+    {
+      "mirror_date": "20.08.2024",
+      "mirror_q": 3,
+      "mirror_d": 15,
+      "mirror_pair": [
+        8,
+        20
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        7,
+        10,
+        13,
+        18,
+        26
+      ],
+      "mirror_stars": [
+        3,
+        12
+      ],
+      "sister_d": 8,
+      "sister_date": "26.07.2024",
+      "sister_mains": [
+        4,
+        19,
+        23,
+        35,
+        37
+      ],
+      "sister_stars": [
+        4,
+        8
+      ]
+    },
+    {
+      "mirror_date": "04.10.2024",
+      "mirror_q": 4,
+      "mirror_d": 2,
+      "mirror_pair": [
+        4,
+        24
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        4,
+        8,
+        16,
+        17,
+        20
+      ],
+      "mirror_stars": [
+        1,
+        6
+      ],
+      "sister_d": 4,
+      "sister_date": "11.10.2024",
+      "sister_mains": [
+        16,
+        23,
+        32,
+        46,
+        49
+      ],
+      "sister_stars": [
+        4,
+        5
+      ]
+    },
+    {
+      "mirror_date": "18.10.2024",
+      "mirror_q": 4,
+      "mirror_d": 6,
+      "mirror_pair": [
+        10,
+        18
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        4,
+        15,
+        23,
+        30,
+        39
+      ],
+      "mirror_stars": [
+        1,
+        12
+      ],
+      "sister_d": 10,
+      "sister_date": "01.11.2024",
+      "sister_mains": [
+        7,
+        33,
+        38,
+        44,
+        50
+      ],
+      "sister_stars": [
+        2,
+        7
+      ]
+    },
+    {
+      "mirror_date": "03.01.2025",
+      "mirror_q": 1,
+      "mirror_d": 1,
+      "mirror_pair": [
+        3,
+        25
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        3,
+        19,
+        29,
+        35,
+        37
+      ],
+      "mirror_stars": [
+        1,
+        9
+      ],
+      "sister_d": 3,
+      "sister_date": "10.01.2025",
+      "sister_mains": [
+        12,
+        27,
+        36,
+        37,
+        42
+      ],
+      "sister_stars": [
+        6,
+        7
+      ]
+    },
+    {
+      "mirror_date": "04.03.2025",
+      "mirror_q": 1,
+      "mirror_d": 18,
+      "mirror_pair": [
+        3,
+        25
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        15,
+        20,
+        29,
+        35,
+        42
+      ],
+      "mirror_stars": [
+        2,
+        9
+      ],
+      "sister_d": 3,
+      "sister_date": "10.01.2025",
+      "sister_mains": [
+        12,
+        27,
+        36,
+        37,
+        42
+      ],
+      "sister_stars": [
+        6,
+        7
+      ]
+    },
+    {
+      "mirror_date": "07.03.2025",
+      "mirror_q": 1,
+      "mirror_d": 19,
+      "mirror_pair": [
+        3,
+        25
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        6,
+        10,
+        27,
+        32,
+        48
+      ],
+      "mirror_stars": [
+        3,
+        8
+      ],
+      "sister_d": 3,
+      "sister_date": "10.01.2025",
+      "sister_mains": [
+        12,
+        27,
+        36,
+        37,
+        42
+      ],
+      "sister_stars": [
+        6,
+        7
+      ]
+    },
+    {
+      "mirror_date": "11.03.2025",
+      "mirror_q": 1,
+      "mirror_d": 20,
+      "mirror_pair": [
+        3,
+        25
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        13,
+        36,
+        37,
+        42,
+        47
+      ],
+      "mirror_stars": [
+        7,
+        11
+      ],
+      "sister_d": 3,
+      "sister_date": "10.01.2025",
+      "sister_mains": [
+        12,
+        27,
+        36,
+        37,
+        42
+      ],
+      "sister_stars": [
+        6,
+        7
+      ]
+    },
+    {
+      "mirror_date": "14.03.2025",
+      "mirror_q": 1,
+      "mirror_d": 21,
+      "mirror_pair": [
+        3,
+        25
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        8,
+        10,
+        33,
+        35,
+        49
+      ],
+      "mirror_stars": [
+        2,
+        9
+      ],
+      "sister_d": 3,
+      "sister_date": "10.01.2025",
+      "sister_mains": [
+        12,
+        27,
+        36,
+        37,
+        42
+      ],
+      "sister_stars": [
+        6,
+        7
+      ]
+    },
+    {
+      "mirror_date": "18.03.2025",
+      "mirror_q": 1,
+      "mirror_d": 22,
+      "mirror_pair": [
+        3,
+        25
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        4,
+        9,
+        35,
+        46,
+        50
+      ],
+      "mirror_stars": [
+        8,
+        11
+      ],
+      "sister_d": 3,
+      "sister_date": "10.01.2025",
+      "sister_mains": [
+        12,
+        27,
+        36,
+        37,
+        42
+      ],
+      "sister_stars": [
+        6,
+        7
+      ]
+    },
+    {
+      "mirror_date": "21.03.2025",
+      "mirror_q": 1,
+      "mirror_d": 23,
+      "mirror_pair": [
+        3,
+        25
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        9,
+        17,
+        18,
+        21,
+        50
+      ],
+      "mirror_stars": [
+        5,
+        12
+      ],
+      "sister_d": 3,
+      "sister_date": "10.01.2025",
+      "sister_mains": [
+        12,
+        27,
+        36,
+        37,
+        42
+      ],
+      "sister_stars": [
+        6,
+        7
+      ]
+    },
+    {
+      "mirror_date": "25.03.2025",
+      "mirror_q": 1,
+      "mirror_d": 24,
+      "mirror_pair": [
+        3,
+        25
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        1,
+        3,
+        18,
+        33,
+        36
+      ],
+      "mirror_stars": [
+        2,
+        6
+      ],
+      "sister_d": 3,
+      "sister_date": "10.01.2025",
+      "sister_mains": [
+        12,
+        27,
+        36,
+        37,
+        42
+      ],
+      "sister_stars": [
+        6,
+        7
+      ]
+    },
+    {
+      "mirror_date": "25.03.2025",
+      "mirror_q": 1,
+      "mirror_d": 24,
+      "mirror_pair": [
+        3,
+        25
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        1,
+        3,
+        18,
+        33,
+        36
+      ],
+      "mirror_stars": [
+        2,
+        6
+      ],
+      "sister_d": 3,
+      "sister_date": "10.01.2025",
+      "sister_mains": [
+        12,
+        27,
+        36,
+        37,
+        42
+      ],
+      "sister_stars": [
+        6,
+        7
+      ]
+    },
+    {
+      "mirror_date": "28.03.2025",
+      "mirror_q": 1,
+      "mirror_d": 25,
+      "mirror_pair": [
+        3,
+        25
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        10,
+        21,
+        30,
+        42,
+        45
+      ],
+      "mirror_stars": [
+        1,
+        9
+      ],
+      "sister_d": 3,
+      "sister_date": "10.01.2025",
+      "sister_mains": [
+        12,
+        27,
+        36,
+        37,
+        42
+      ],
+      "sister_stars": [
+        6,
+        7
+      ]
+    },
+    {
+      "mirror_date": "23.05.2025",
+      "mirror_q": 2,
+      "mirror_d": 16,
+      "mirror_pair": [
+        5,
+        23
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        10,
+        29,
+        43,
+        46,
+        49
+      ],
+      "mirror_stars": [
+        7,
+        12
+      ],
+      "sister_d": 5,
+      "sister_date": "15.04.2025",
+      "sister_mains": [
+        3,
+        31,
+        33,
+        38,
+        44
+      ],
+      "sister_stars": [
+        6,
+        12
+      ]
+    },
+    {
+      "mirror_date": "03.06.2025",
+      "mirror_q": 2,
+      "mirror_d": 19,
+      "mirror_pair": [
+        3,
+        25
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        12,
+        15,
+        38,
+        47,
+        48
+      ],
+      "mirror_stars": [
+        5,
+        7
+      ],
+      "sister_d": 3,
+      "sister_date": "08.04.2025",
+      "sister_mains": [
+        3,
+        14,
+        15,
+        48,
+        49
+      ],
+      "sister_stars": [
+        1,
+        7
+      ]
+    },
+    {
+      "mirror_date": "19.09.2025",
+      "mirror_q": 3,
+      "mirror_d": 24,
+      "mirror_pair": [
+        9,
+        19
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        8,
+        10,
+        26,
+        32,
+        42
+      ],
+      "mirror_stars": [
+        9,
+        12
+      ],
+      "sister_d": 9,
+      "sister_date": "29.07.2025",
+      "sister_mains": [
+        5,
+        6,
+        42,
+        44,
+        46
+      ],
+      "sister_stars": [
+        4,
+        8
+      ]
+    },
+    {
+      "mirror_date": "03.10.2025",
+      "mirror_q": 4,
+      "mirror_d": 1,
+      "mirror_pair": [
+        3,
+        25
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        6,
+        12,
+        18,
+        25,
+        41
+      ],
+      "mirror_stars": [
+        2,
+        6
+      ],
+      "sister_d": 3,
+      "sister_date": "10.10.2025",
+      "sister_mains": [
+        6,
+        7,
+        17,
+        20,
+        21
+      ],
+      "sister_stars": [
+        1,
+        10
+      ]
+    },
+    {
+      "mirror_date": "16.12.2025",
+      "mirror_q": 4,
+      "mirror_d": 22,
+      "mirror_pair": [
+        12,
+        16
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        14,
+        16,
+        40,
+        41,
+        44
+      ],
+      "mirror_stars": [
+        2,
+        10
+      ],
+      "sister_d": 12,
+      "sister_date": "11.11.2025",
+      "sister_mains": [
+        4,
+        22,
+        32,
+        36,
+        47
+      ],
+      "sister_stars": [
+        2,
+        10
+      ]
+    },
+    {
+      "mirror_date": "02.01.2026",
+      "mirror_q": 1,
+      "mirror_d": 1,
+      "mirror_pair": [
+        2,
+        26
+      ],
+      "mirror_pair_source": "day+year",
+      "mirror_mains": [
+        8,
+        27,
+        42,
+        44,
+        46
+      ],
+      "mirror_stars": [
+        1,
+        10
+      ],
+      "sister_d": 2,
+      "sister_date": "06.01.2026",
+      "sister_mains": [
+        5,
+        14,
+        17,
+        18,
+        31
+      ],
+      "sister_stars": [
+        10,
+        12
+      ]
+    },
+    {
+      "mirror_date": "27.01.2026",
+      "mirror_q": 1,
+      "mirror_d": 8,
+      "mirror_pair": [
+        1,
+        27
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        4,
+        23,
+        42,
+        43,
+        47
+      ],
+      "mirror_stars": [
+        3,
+        9
+      ],
+      "sister_d": 1,
+      "sister_date": "02.01.2026",
+      "sister_mains": [
+        8,
+        27,
+        42,
+        44,
+        46
+      ],
+      "sister_stars": [
+        1,
+        10
+      ]
+    },
+    {
+      "mirror_date": "03.02.2026",
+      "mirror_q": 1,
+      "mirror_d": 10,
+      "mirror_pair": [
+        2,
+        26
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        26,
+        27,
+        28,
+        34,
+        37
+      ],
+      "mirror_stars": [
+        4,
+        9
+      ],
+      "sister_d": 2,
+      "sister_date": "06.01.2026",
+      "sister_mains": [
+        5,
+        14,
+        17,
+        18,
+        31
+      ],
+      "sister_stars": [
+        10,
+        12
+      ]
+    },
+    {
+      "mirror_date": "06.02.2026",
+      "mirror_q": 1,
+      "mirror_d": 11,
+      "mirror_pair": [
+        2,
+        26
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        10,
+        13,
+        20,
+        23,
+        24
+      ],
+      "mirror_stars": [
+        6,
+        11
+      ],
+      "sister_d": 2,
+      "sister_date": "06.01.2026",
+      "sister_mains": [
+        5,
+        14,
+        17,
+        18,
+        31
+      ],
+      "sister_stars": [
+        10,
+        12
+      ]
+    },
+    {
+      "mirror_date": "10.02.2026",
+      "mirror_q": 1,
+      "mirror_d": 12,
+      "mirror_pair": [
+        2,
+        26
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        1,
+        17,
+        19,
+        34,
+        42
+      ],
+      "mirror_stars": [
+        5,
+        8
+      ],
+      "sister_d": 2,
+      "sister_date": "06.01.2026",
+      "sister_mains": [
+        5,
+        14,
+        17,
+        18,
+        31
+      ],
+      "sister_stars": [
+        10,
+        12
+      ]
+    },
+    {
+      "mirror_date": "13.02.2026",
+      "mirror_q": 1,
+      "mirror_d": 13,
+      "mirror_pair": [
+        2,
+        26
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        9,
+        13,
+        31,
+        37,
+        40
+      ],
+      "mirror_stars": [
+        6,
+        9
+      ],
+      "sister_d": 2,
+      "sister_date": "06.01.2026",
+      "sister_mains": [
+        5,
+        14,
+        17,
+        18,
+        31
+      ],
+      "sister_stars": [
+        10,
+        12
+      ]
+    },
+    {
+      "mirror_date": "17.02.2026",
+      "mirror_q": 1,
+      "mirror_d": 14,
+      "mirror_pair": [
+        2,
+        26
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        1,
+        4,
+        6,
+        10,
+        41
+      ],
+      "mirror_stars": [
+        5,
+        12
+      ],
+      "sister_d": 2,
+      "sister_date": "06.01.2026",
+      "sister_mains": [
+        5,
+        14,
+        17,
+        18,
+        31
+      ],
+      "sister_stars": [
+        10,
+        12
+      ]
+    },
+    {
+      "mirror_date": "20.02.2026",
+      "mirror_q": 1,
+      "mirror_d": 15,
+      "mirror_pair": [
+        2,
+        26
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        13,
+        24,
+        28,
+        33,
+        35
+      ],
+      "mirror_stars": [
+        5,
+        9
+      ],
+      "sister_d": 2,
+      "sister_date": "06.01.2026",
+      "sister_mains": [
+        5,
+        14,
+        17,
+        18,
+        31
+      ],
+      "sister_stars": [
+        10,
+        12
+      ]
+    },
+    {
+      "mirror_date": "24.02.2026",
+      "mirror_q": 1,
+      "mirror_d": 16,
+      "mirror_pair": [
+        2,
+        26
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        10,
+        27,
+        40,
+        43,
+        47
+      ],
+      "mirror_stars": [
+        6,
+        10
+      ],
+      "sister_d": 2,
+      "sister_date": "06.01.2026",
+      "sister_mains": [
+        5,
+        14,
+        17,
+        18,
+        31
+      ],
+      "sister_stars": [
+        10,
+        12
+      ]
+    },
+    {
+      "mirror_date": "27.02.2026",
+      "mirror_q": 1,
+      "mirror_d": 17,
+      "mirror_pair": [
+        2,
+        26
+      ],
+      "mirror_pair_source": "month+year",
+      "mirror_mains": [
+        14,
+        24,
+        27,
+        39,
+        42
+      ],
+      "mirror_stars": [
+        6,
+        10
+      ],
+      "sister_d": 2,
+      "sister_date": "06.01.2026",
+      "sister_mains": [
+        5,
+        14,
+        17,
+        18,
+        31
+      ],
+      "sister_stars": [
+        10,
+        12
+      ]
+    },
+    {
+      "mirror_date": "24.04.2026",
+      "mirror_q": 2,
+      "mirror_d": 7,
+      "mirror_pair": [
+        4,
+        24
+      ],
+      "mirror_pair_source": "day+month",
+      "mirror_mains": [
+        25,
+        26,
+        30,
+        40,
+        45
+      ],
+      "mirror_stars": [
+        1,
+        5
+      ],
+      "sister_d": 4,
+      "sister_date": "14.04.2026",
+      "sister_mains": [
+        1,
+        2,
+        4,
+        28,
+        44
+      ],
+      "sister_stars": [
+        5,
+        12
+      ]
+    }
+  ],
+  "tonight_projection": {
+    "date": "02.06.2026",
+    "pairs": [
+      [
+        2,
+        26,
+        "day+year"
+      ]
+    ],
+    "sisters": [
+      {
+        "pair": [
+          2,
+          26
+        ],
+        "source": "day+year",
+        "sister_date": "07.04.2026",
+        "sister_mains": [
+          11,
+          14,
+          19,
+          36,
+          49
+        ],
+        "sister_stars": [
+          6,
+          7
+        ]
+      }
+    ]
+  }
+}
