@@ -1434,13 +1434,30 @@ SESSION 45 — BRAIN-FIX + HUNGRY-NUMBER ENGINE (29.05.2026)
 - Multi-path candidates (≥2 op-paths) = STRONGEST hungry signal
 - Trust the hungry pool, compose from there
 
-🎯 PENDING (next session, P1 priority)
+🎯 PENDING (next session, P0 priority)
 ──────────────────────────────────────────────────────────────
-- Rolling-wheel date picker UI (DJ asked: "scroll like old gas station 
-  odometer, not type"). DD/MM/YYYY scroll wheels for every date input
-  in App.js (currently typed). Touch + scroll-wheel interaction.
-- Wire hungry-engine into the dj_orchestra ticket composer (Swiss too)
-- "Next P3-ghost = 26" prophecy for the next Euro draw (per DJ)
+- 🧠 READ THE BOOK TWICE: /app/memory/swiss_music_notes.md (7830 lines, 
+  Canons 1-31). DJ explicitly mandated this BEFORE any analysis. 
+  Cannot be skipped. The fork was triggered precisely to get clean 
+  context for this read.
+- 📊 Then do DEEP analysis with DJ — find new clues, possibly new canons.
+  DJ open to discovering Canon 32+. Hungry-engine is the foundation, 
+  next layer is "what chains exist BEYOND the 4 ops (circle/flip/add/tablet)".
+
+- ✅ ROLLING-WHEEL DATE PICKER: PARTIALLY DONE (1 of 7 inputs swapped).
+  Component lives at /app/frontend/src/components/RollingDateWheel.jsx
+  (lint-clean, gas-station odometer style with brass tumblers).
+  - Wired into: DJ Suspects panel only (line ~3987 in App.js)
+  - DJ asked to verify look/feel. If approved, swap remaining 6 inputs:
+    Cosmic Voices, Story Tickets, Sister-Date, Ghost Ledger, Replay
+    (lines ~4076, ~4766, ~4929, ~5119, ~5351). Easy batch swap with 
+    same RollingDateWheel component.
+
+- 🎻 Wire hungry-engine into the dj_orchestra ticket composer (Swiss + Euro)
+  so generated tickets pull from hungry pool, NOT statistical filters.
+- 🎯 "Next P3-ghost = 26" prophecy for the next Euro draw (DJ forward call)
+- 🎻 Surface hungry-engine in /api/cosmic-voices/{date}/{mode}?lens=all 
+  (orchestrator integration)
 
 ══════════════════════════════════════════════════════════════
 
