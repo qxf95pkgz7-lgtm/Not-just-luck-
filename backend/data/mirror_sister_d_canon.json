@@ -1,0 +1,2431 @@
+{
+  "pairs": [
+    {
+      "mirror_date": "04.06.2004",
+      "mirror_qd": [
+        2,
+        10
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        9,
+        13,
+        34,
+        41,
+        42
+      ],
+      "mirror_stars": [
+        3,
+        7
+      ],
+      "sister_d": 4,
+      "sister_date": "23.04.2004",
+      "sister_mains": [
+        6,
+        10,
+        21,
+        45,
+        49
+      ],
+      "sister_stars": [
+        3,
+        5
+      ],
+      "qmirror_d": 8,
+      "qmirror_date": "21.05.2004",
+      "qmirror_mains": [
+        15,
+        29,
+        37,
+        39,
+        49
+      ]
+    },
+    {
+      "mirror_date": "05.08.2005",
+      "mirror_qd": [
+        3,
+        6
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        2,
+        11,
+        21,
+        22,
+        30
+      ],
+      "mirror_stars": [
+        4,
+        6
+      ],
+      "sister_d": 5,
+      "sister_date": "29.07.2005",
+      "sister_mains": [
+        3,
+        19,
+        26,
+        49,
+        50
+      ],
+      "sister_stars": [
+        4,
+        5
+      ],
+      "qmirror_d": 10,
+      "qmirror_date": "02.09.2005",
+      "qmirror_mains": [
+        3,
+        4,
+        14,
+        43,
+        50
+      ]
+    },
+    {
+      "mirror_date": "21.02.2012",
+      "mirror_qd": [
+        1,
+        15
+      ],
+      "mirror_code": "M2",
+      "mirror_mains": [
+        11,
+        14,
+        24,
+        25,
+        29
+      ],
+      "mirror_stars": [
+        7,
+        11
+      ],
+      "sister_d": 3,
+      "sister_date": "10.01.2012",
+      "sister_mains": [
+        4,
+        9,
+        10,
+        30,
+        40
+      ],
+      "sister_stars": [
+        2,
+        9
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "12.06.2012",
+      "mirror_qd": [
+        2,
+        21
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        8,
+        15,
+        26,
+        30,
+        48
+      ],
+      "mirror_stars": [
+        9,
+        10
+      ],
+      "sister_d": 3,
+      "sister_date": "10.04.2012",
+      "sister_mains": [
+        22,
+        25,
+        27,
+        36,
+        37
+      ],
+      "sister_stars": [
+        5,
+        9
+      ],
+      "qmirror_d": 24,
+      "qmirror_date": "22.06.2012",
+      "qmirror_mains": [
+        14,
+        18,
+        19,
+        43,
+        49
+      ]
+    },
+    {
+      "mirror_date": "21.08.2012",
+      "mirror_qd": [
+        3,
+        15
+      ],
+      "mirror_code": "M2",
+      "mirror_mains": [
+        4,
+        5,
+        17,
+        38,
+        48
+      ],
+      "mirror_stars": [
+        3,
+        4
+      ],
+      "sister_d": 3,
+      "sister_date": "10.07.2012",
+      "sister_mains": [
+        1,
+        3,
+        16,
+        24,
+        37
+      ],
+      "sister_stars": [
+        1,
+        8
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "21.09.2012",
+      "mirror_qd": [
+        3,
+        24
+      ],
+      "mirror_code": "M2",
+      "mirror_mains": [
+        4,
+        19,
+        34,
+        41,
+        43
+      ],
+      "mirror_stars": [
+        7,
+        11
+      ],
+      "sister_d": 3,
+      "sister_date": "10.07.2012",
+      "sister_mains": [
+        1,
+        3,
+        16,
+        24,
+        37
+      ],
+      "sister_stars": [
+        1,
+        8
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "12.10.2012",
+      "mirror_qd": [
+        4,
+        4
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        6,
+        7,
+        17,
+        35,
+        43
+      ],
+      "mirror_stars": [
+        2,
+        8
+      ],
+      "sister_d": 3,
+      "sister_date": "09.10.2012",
+      "sister_mains": [
+        2,
+        8,
+        10,
+        23,
+        25
+      ],
+      "sister_stars": [
+        8,
+        9
+      ],
+      "qmirror_d": 24,
+      "qmirror_date": "21.12.2012",
+      "qmirror_mains": [
+        3,
+        5,
+        22,
+        40,
+        42
+      ]
+    },
+    {
+      "mirror_date": "21.12.2012",
+      "mirror_qd": [
+        4,
+        24
+      ],
+      "mirror_code": "M2",
+      "mirror_mains": [
+        3,
+        5,
+        22,
+        40,
+        42
+      ],
+      "mirror_stars": [
+        3,
+        10
+      ],
+      "sister_d": 3,
+      "sister_date": "09.10.2012",
+      "sister_mains": [
+        2,
+        8,
+        10,
+        23,
+        25
+      ],
+      "sister_stars": [
+        8,
+        9
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "31.05.2013",
+      "mirror_qd": [
+        2,
+        18
+      ],
+      "mirror_code": "M2",
+      "mirror_mains": [
+        27,
+        28,
+        29,
+        34,
+        43
+      ],
+      "mirror_stars": [
+        5,
+        10
+      ],
+      "sister_d": 4,
+      "sister_date": "12.04.2013",
+      "sister_mains": [
+        5,
+        10,
+        15,
+        28,
+        45
+      ],
+      "sister_stars": [
+        3,
+        9
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "13.08.2013",
+      "mirror_qd": [
+        3,
+        13
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        5,
+        17,
+        20,
+        47,
+        50
+      ],
+      "mirror_stars": [
+        1,
+        4
+      ],
+      "sister_d": 4,
+      "sister_date": "12.07.2013",
+      "sister_mains": [
+        18,
+        26,
+        32,
+        33,
+        42
+      ],
+      "sister_stars": [
+        2,
+        3
+      ],
+      "qmirror_d": 26,
+      "qmirror_date": "27.09.2013",
+      "qmirror_mains": [
+        11,
+        15,
+        38,
+        41,
+        43
+      ]
+    },
+    {
+      "mirror_date": "13.09.2013",
+      "mirror_qd": [
+        3,
+        22
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        4,
+        6,
+        14,
+        27,
+        33
+      ],
+      "mirror_stars": [
+        5,
+        10
+      ],
+      "sister_d": 4,
+      "sister_date": "12.07.2013",
+      "sister_mains": [
+        18,
+        26,
+        32,
+        33,
+        42
+      ],
+      "sister_stars": [
+        2,
+        3
+      ],
+      "qmirror_d": 26,
+      "qmirror_date": "27.09.2013",
+      "qmirror_mains": [
+        11,
+        15,
+        38,
+        41,
+        43
+      ]
+    },
+    {
+      "mirror_date": "13.12.2013",
+      "mirror_qd": [
+        4,
+        22
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        1,
+        22,
+        23,
+        24,
+        31
+      ],
+      "mirror_stars": [
+        6,
+        11
+      ],
+      "sister_d": 4,
+      "sister_date": "11.10.2013",
+      "sister_mains": [
+        6,
+        12,
+        17,
+        23,
+        43
+      ],
+      "sister_stars": [
+        5,
+        9
+      ],
+      "qmirror_d": 26,
+      "qmirror_date": "27.12.2013",
+      "qmirror_mains": [
+        1,
+        6,
+        13,
+        22,
+        28
+      ]
+    },
+    {
+      "mirror_date": "31.12.2013",
+      "mirror_qd": [
+        4,
+        27
+      ],
+      "mirror_code": "M2",
+      "mirror_mains": [
+        13,
+        20,
+        24,
+        29,
+        45
+      ],
+      "mirror_stars": [
+        3,
+        7
+      ],
+      "sister_d": 4,
+      "sister_date": "11.10.2013",
+      "sister_mains": [
+        6,
+        12,
+        17,
+        23,
+        43
+      ],
+      "sister_stars": [
+        5,
+        9
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "14.01.2014",
+      "mirror_qd": [
+        1,
+        4
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        18,
+        20,
+        25,
+        26,
+        37
+      ],
+      "mirror_stars": [
+        10,
+        11
+      ],
+      "sister_d": 5,
+      "sister_date": "17.01.2014",
+      "sister_mains": [
+        19,
+        26,
+        32,
+        33,
+        42
+      ],
+      "sister_stars": [
+        4,
+        10
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "14.02.2014",
+      "mirror_qd": [
+        1,
+        13
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        2,
+        4,
+        6,
+        19,
+        39
+      ],
+      "mirror_stars": [
+        2,
+        7
+      ],
+      "sister_d": 5,
+      "sister_date": "17.01.2014",
+      "sister_mains": [
+        19,
+        26,
+        32,
+        33,
+        42
+      ],
+      "sister_stars": [
+        4,
+        10
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "14.03.2014",
+      "mirror_qd": [
+        1,
+        21
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        6,
+        24,
+        25,
+        27,
+        30
+      ],
+      "mirror_stars": [
+        5,
+        9
+      ],
+      "sister_d": 5,
+      "sister_date": "17.01.2014",
+      "sister_mains": [
+        19,
+        26,
+        32,
+        33,
+        42
+      ],
+      "sister_stars": [
+        4,
+        10
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "14.10.2014",
+      "mirror_qd": [
+        4,
+        4
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        4,
+        5,
+        15,
+        23,
+        32
+      ],
+      "mirror_stars": [
+        3,
+        7
+      ],
+      "sister_d": 5,
+      "sister_date": "17.10.2014",
+      "sister_mains": [
+        1,
+        13,
+        40,
+        48,
+        49
+      ],
+      "sister_stars": [
+        8,
+        10
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "14.11.2014",
+      "mirror_qd": [
+        4,
+        13
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        17,
+        32,
+        36,
+        38,
+        48
+      ],
+      "mirror_stars": [
+        5,
+        8
+      ],
+      "sister_d": 5,
+      "sister_date": "17.10.2014",
+      "sister_mains": [
+        1,
+        13,
+        40,
+        48,
+        49
+      ],
+      "sister_stars": [
+        8,
+        10
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "15.05.2015",
+      "mirror_qd": [
+        2,
+        13
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        5,
+        35,
+        42,
+        44,
+        47
+      ],
+      "mirror_stars": [
+        8,
+        9
+      ],
+      "sister_d": 6,
+      "sister_date": "21.04.2015",
+      "sister_mains": [
+        6,
+        14,
+        17,
+        42,
+        45
+      ],
+      "sister_stars": [
+        1,
+        8
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "15.09.2015",
+      "mirror_qd": [
+        3,
+        22
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        8,
+        15,
+        17,
+        44,
+        49
+      ],
+      "mirror_stars": [
+        5,
+        8
+      ],
+      "sister_d": 6,
+      "sister_date": "21.07.2015",
+      "sister_mains": [
+        14,
+        20,
+        27,
+        29,
+        44
+      ],
+      "sister_stars": [
+        7,
+        10
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "15.12.2015",
+      "mirror_qd": [
+        4,
+        22
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        8,
+        11,
+        23,
+        27,
+        35
+      ],
+      "mirror_stars": [
+        4,
+        11
+      ],
+      "sister_d": 6,
+      "sister_date": "20.10.2015",
+      "sister_mains": [
+        17,
+        19,
+        21,
+        30,
+        45
+      ],
+      "sister_stars": [
+        8,
+        10
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "16.02.2016",
+      "mirror_qd": [
+        1,
+        14
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        3,
+        10,
+        22,
+        37,
+        50
+      ],
+      "mirror_stars": [
+        6,
+        10
+      ],
+      "sister_d": 7,
+      "sister_date": "22.01.2016",
+      "sister_mains": [
+        10,
+        12,
+        27,
+        30,
+        47
+      ],
+      "sister_stars": [
+        8,
+        9
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "16.08.2016",
+      "mirror_qd": [
+        3,
+        17
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        2,
+        26,
+        34,
+        37,
+        46
+      ],
+      "mirror_stars": [
+        4,
+        8
+      ],
+      "sister_d": 7,
+      "sister_date": "12.07.2016",
+      "sister_mains": [
+        3,
+        7,
+        26,
+        33,
+        41
+      ],
+      "sister_stars": [
+        2,
+        10
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "16.09.2016",
+      "mirror_qd": [
+        3,
+        26
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        5,
+        8,
+        14,
+        22,
+        32
+      ],
+      "mirror_stars": [
+        2,
+        11
+      ],
+      "sister_d": 7,
+      "sister_date": "12.07.2016",
+      "sister_mains": [
+        3,
+        7,
+        26,
+        33,
+        41
+      ],
+      "sister_stars": [
+        2,
+        10
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "16.12.2016",
+      "mirror_qd": [
+        4,
+        22
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        6,
+        10,
+        30,
+        41,
+        45
+      ],
+      "mirror_stars": [
+        4,
+        11
+      ],
+      "sister_d": 7,
+      "sister_date": "25.10.2016",
+      "sister_mains": [
+        3,
+        15,
+        20,
+        21,
+        28
+      ],
+      "sister_stars": [
+        1,
+        5
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "17.01.2017",
+      "mirror_qd": [
+        1,
+        5
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        4,
+        6,
+        25,
+        43,
+        47
+      ],
+      "mirror_stars": [
+        2,
+        10
+      ],
+      "sister_d": 8,
+      "sister_date": "27.01.2017",
+      "sister_mains": [
+        17,
+        20,
+        28,
+        45,
+        48
+      ],
+      "sister_stars": [
+        5,
+        9
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "17.02.2017",
+      "mirror_qd": [
+        1,
+        14
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        19,
+        25,
+        33,
+        36,
+        48
+      ],
+      "mirror_stars": [
+        2,
+        9
+      ],
+      "sister_d": 8,
+      "sister_date": "27.01.2017",
+      "sister_mains": [
+        17,
+        20,
+        28,
+        45,
+        48
+      ],
+      "sister_stars": [
+        5,
+        9
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "17.03.2017",
+      "mirror_qd": [
+        1,
+        22
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        6,
+        10,
+        19,
+        29,
+        36
+      ],
+      "mirror_stars": [
+        3,
+        9
+      ],
+      "sister_d": 8,
+      "sister_date": "27.01.2017",
+      "sister_mains": [
+        17,
+        20,
+        28,
+        45,
+        48
+      ],
+      "sister_stars": [
+        5,
+        9
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "17.10.2017",
+      "mirror_qd": [
+        4,
+        5
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        13,
+        17,
+        19,
+        26,
+        36
+      ],
+      "mirror_stars": [
+        2,
+        3
+      ],
+      "sister_d": 8,
+      "sister_date": "27.10.2017",
+      "sister_mains": [
+        3,
+        16,
+        23,
+        32,
+        39
+      ],
+      "sister_stars": [
+        1,
+        4
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "17.11.2017",
+      "mirror_qd": [
+        4,
+        14
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        20,
+        26,
+        35,
+        36,
+        42
+      ],
+      "mirror_stars": [
+        5,
+        12
+      ],
+      "sister_d": 8,
+      "sister_date": "27.10.2017",
+      "sister_mains": [
+        3,
+        16,
+        23,
+        32,
+        39
+      ],
+      "sister_stars": [
+        1,
+        4
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "18.05.2018",
+      "mirror_qd": [
+        2,
+        14
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        5,
+        8,
+        10,
+        13,
+        31
+      ],
+      "mirror_stars": [
+        3,
+        6
+      ],
+      "sister_d": 9,
+      "sister_date": "01.05.2018",
+      "sister_mains": [
+        6,
+        15,
+        17,
+        42,
+        48
+      ],
+      "sister_stars": [
+        4,
+        6
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "18.09.2018",
+      "mirror_qd": [
+        3,
+        23
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        3,
+        8,
+        10,
+        32,
+        45
+      ],
+      "mirror_stars": [
+        4,
+        12
+      ],
+      "sister_d": 9,
+      "sister_date": "31.07.2018",
+      "sister_mains": [
+        20,
+        25,
+        34,
+        42,
+        45
+      ],
+      "sister_stars": [
+        6,
+        11
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "18.12.2018",
+      "mirror_qd": [
+        4,
+        23
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        1,
+        9,
+        18,
+        39,
+        48
+      ],
+      "mirror_stars": [
+        5,
+        7
+      ],
+      "sister_d": 9,
+      "sister_date": "30.10.2018",
+      "sister_mains": [
+        17,
+        23,
+        27,
+        43,
+        44
+      ],
+      "sister_stars": [
+        1,
+        12
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "19.02.2019",
+      "mirror_qd": [
+        1,
+        15
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        1,
+        8,
+        18,
+        19,
+        39
+      ],
+      "mirror_stars": [
+        7,
+        9
+      ],
+      "sister_d": 10,
+      "sister_date": "01.02.2019",
+      "sister_mains": [
+        3,
+        21,
+        26,
+        41,
+        46
+      ],
+      "sister_stars": [
+        1,
+        6
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "19.03.2019",
+      "mirror_qd": [
+        1,
+        23
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        1,
+        6,
+        9,
+        34,
+        47
+      ],
+      "mirror_stars": [
+        7,
+        12
+      ],
+      "sister_d": 10,
+      "sister_date": "01.02.2019",
+      "sister_mains": [
+        3,
+        21,
+        26,
+        41,
+        46
+      ],
+      "sister_stars": [
+        1,
+        6
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "19.04.2019",
+      "mirror_qd": [
+        2,
+        6
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        7,
+        8,
+        32,
+        41,
+        49
+      ],
+      "mirror_stars": [
+        5,
+        11
+      ],
+      "sister_d": 10,
+      "sister_date": "03.05.2019",
+      "sister_mains": [
+        2,
+        9,
+        20,
+        27,
+        43
+      ],
+      "sister_stars": [
+        5,
+        6
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "19.07.2019",
+      "mirror_qd": [
+        3,
+        6
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        13,
+        14,
+        17,
+        26,
+        28
+      ],
+      "mirror_stars": [
+        2,
+        7
+      ],
+      "sister_d": 10,
+      "sister_date": "02.08.2019",
+      "sister_mains": [
+        13,
+        22,
+        33,
+        44,
+        50
+      ],
+      "sister_stars": [
+        2,
+        5
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "19.11.2019",
+      "mirror_qd": [
+        4,
+        15
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        8,
+        10,
+        15,
+        30,
+        42
+      ],
+      "mirror_stars": [
+        4,
+        6
+      ],
+      "sister_d": 10,
+      "sister_date": "01.11.2019",
+      "sister_mains": [
+        2,
+        20,
+        39,
+        44,
+        48
+      ],
+      "sister_stars": [
+        5,
+        7
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "20.03.2020",
+      "mirror_qd": [
+        1,
+        23
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        3,
+        9,
+        20,
+        34,
+        40
+      ],
+      "mirror_stars": [
+        6,
+        12
+      ],
+      "sister_d": 2,
+      "sister_date": "07.01.2020",
+      "sister_mains": [
+        5,
+        8,
+        12,
+        37,
+        43
+      ],
+      "sister_stars": [
+        6,
+        11
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "02.06.2020",
+      "mirror_qd": [
+        2,
+        18
+      ],
+      "mirror_code": "M2",
+      "mirror_mains": [
+        10,
+        12,
+        22,
+        26,
+        49
+      ],
+      "mirror_stars": [
+        7,
+        11
+      ],
+      "sister_d": 2,
+      "sister_date": "07.04.2020",
+      "sister_mains": [
+        4,
+        5,
+        14,
+        33,
+        48
+      ],
+      "sister_stars": [
+        7,
+        12
+      ],
+      "qmirror_d": 22,
+      "qmirror_date": "16.06.2020",
+      "qmirror_mains": [
+        4,
+        9,
+        11,
+        17,
+        39
+      ]
+    },
+    {
+      "mirror_date": "02.10.2020",
+      "mirror_qd": [
+        4,
+        1
+      ],
+      "mirror_code": "M2",
+      "mirror_mains": [
+        6,
+        12,
+        15,
+        40,
+        45
+      ],
+      "mirror_stars": [
+        3,
+        9
+      ],
+      "sister_d": 2,
+      "sister_date": "06.10.2020",
+      "sister_mains": [
+        4,
+        21,
+        36,
+        41,
+        47
+      ],
+      "sister_stars": [
+        9,
+        11
+      ],
+      "qmirror_d": 22,
+      "qmirror_date": "15.12.2020",
+      "qmirror_mains": [
+        9,
+        13,
+        21,
+        29,
+        35
+      ]
+    },
+    {
+      "mirror_date": "20.10.2020",
+      "mirror_qd": [
+        4,
+        6
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        5,
+        6,
+        15,
+        37,
+        42
+      ],
+      "mirror_stars": [
+        3,
+        4
+      ],
+      "sister_d": 2,
+      "sister_date": "06.10.2020",
+      "sister_mains": [
+        4,
+        21,
+        36,
+        41,
+        47
+      ],
+      "sister_stars": [
+        9,
+        11
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "20.11.2020",
+      "mirror_qd": [
+        4,
+        15
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        28,
+        29,
+        39,
+        48,
+        50
+      ],
+      "mirror_stars": [
+        5,
+        7
+      ],
+      "sister_d": 2,
+      "sister_date": "06.10.2020",
+      "sister_mains": [
+        4,
+        21,
+        36,
+        41,
+        47
+      ],
+      "sister_stars": [
+        9,
+        11
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "12.01.2021",
+      "mirror_qd": [
+        1,
+        4
+      ],
+      "mirror_code": "M2",
+      "mirror_mains": [
+        2,
+        10,
+        18,
+        34,
+        35
+      ],
+      "mirror_stars": [
+        6,
+        9
+      ],
+      "sister_d": 3,
+      "sister_date": "08.01.2021",
+      "sister_mains": [
+        18,
+        23,
+        37,
+        41,
+        42
+      ],
+      "sister_stars": [
+        4,
+        6
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "12.02.2021",
+      "mirror_qd": [
+        1,
+        13
+      ],
+      "mirror_code": "M2",
+      "mirror_mains": [
+        7,
+        23,
+        30,
+        32,
+        36
+      ],
+      "mirror_stars": [
+        8,
+        12
+      ],
+      "sister_d": 3,
+      "sister_date": "08.01.2021",
+      "sister_mains": [
+        18,
+        23,
+        37,
+        41,
+        42
+      ],
+      "sister_stars": [
+        4,
+        6
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "12.03.2021",
+      "mirror_qd": [
+        1,
+        21
+      ],
+      "mirror_code": "M2",
+      "mirror_mains": [
+        4,
+        6,
+        9,
+        11,
+        44
+      ],
+      "mirror_stars": [
+        10,
+        11
+      ],
+      "sister_d": 3,
+      "sister_date": "08.01.2021",
+      "sister_mains": [
+        18,
+        23,
+        37,
+        41,
+        42
+      ],
+      "sister_stars": [
+        4,
+        6
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "21.05.2021",
+      "mirror_qd": [
+        2,
+        15
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        2,
+        9,
+        13,
+        15,
+        35
+      ],
+      "mirror_stars": [
+        3,
+        10
+      ],
+      "sister_d": 3,
+      "sister_date": "09.04.2021",
+      "sister_mains": [
+        2,
+        8,
+        32,
+        35,
+        44
+      ],
+      "sister_stars": [
+        8,
+        11
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "21.09.2021",
+      "mirror_qd": [
+        3,
+        24
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        20,
+        25,
+        26,
+        30,
+        38
+      ],
+      "mirror_stars": [
+        2,
+        8
+      ],
+      "sister_d": 3,
+      "sister_date": "09.07.2021",
+      "sister_mains": [
+        6,
+        19,
+        36,
+        37,
+        49
+      ],
+      "sister_stars": [
+        4,
+        11
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "12.10.2021",
+      "mirror_qd": [
+        4,
+        4
+      ],
+      "mirror_code": "M2",
+      "mirror_mains": [
+        6,
+        13,
+        22,
+        45,
+        49
+      ],
+      "mirror_stars": [
+        10,
+        11
+      ],
+      "sister_d": 3,
+      "sister_date": "08.10.2021",
+      "sister_mains": [
+        1,
+        10,
+        23,
+        42,
+        46
+      ],
+      "sister_stars": [
+        3,
+        5
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "12.11.2021",
+      "mirror_qd": [
+        4,
+        13
+      ],
+      "mirror_code": "M2",
+      "mirror_mains": [
+        2,
+        9,
+        15,
+        47,
+        50
+      ],
+      "mirror_stars": [
+        6,
+        9
+      ],
+      "sister_d": 3,
+      "sister_date": "08.10.2021",
+      "sister_mains": [
+        1,
+        10,
+        23,
+        42,
+        46
+      ],
+      "sister_stars": [
+        3,
+        5
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "21.12.2021",
+      "mirror_qd": [
+        4,
+        24
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        12,
+        17,
+        21,
+        34,
+        38
+      ],
+      "mirror_stars": [
+        2,
+        3
+      ],
+      "sister_d": 3,
+      "sister_date": "08.10.2021",
+      "sister_mains": [
+        1,
+        10,
+        23,
+        42,
+        46
+      ],
+      "sister_stars": [
+        3,
+        5
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "22.02.2022",
+      "mirror_qd": [
+        1,
+        15
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        5,
+        9,
+        14,
+        26,
+        32
+      ],
+      "mirror_stars": [
+        3,
+        7
+      ],
+      "sister_d": 4,
+      "sister_date": "14.01.2022",
+      "sister_mains": [
+        6,
+        17,
+        25,
+        31,
+        46
+      ],
+      "sister_stars": [
+        9,
+        12
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "22.03.2022",
+      "mirror_qd": [
+        1,
+        23
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        7,
+        17,
+        21,
+        29,
+        40
+      ],
+      "mirror_stars": [
+        8,
+        11
+      ],
+      "sister_d": 4,
+      "sister_date": "14.01.2022",
+      "sister_mains": [
+        6,
+        17,
+        25,
+        31,
+        46
+      ],
+      "sister_stars": [
+        9,
+        12
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "22.04.2022",
+      "mirror_qd": [
+        2,
+        7
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        6,
+        11,
+        21,
+        35,
+        36
+      ],
+      "mirror_stars": [
+        1,
+        9
+      ],
+      "sister_d": 4,
+      "sister_date": "12.04.2022",
+      "sister_mains": [
+        21,
+        30,
+        31,
+        35,
+        47
+      ],
+      "sister_stars": [
+        2,
+        10
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "22.07.2022",
+      "mirror_qd": [
+        3,
+        7
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        16,
+        18,
+        29,
+        32,
+        50
+      ],
+      "mirror_stars": [
+        4,
+        11
+      ],
+      "sister_d": 4,
+      "sister_date": "12.07.2022",
+      "sister_mains": [
+        14,
+        18,
+        24,
+        25,
+        50
+      ],
+      "sister_stars": [
+        6,
+        11
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "22.11.2022",
+      "mirror_qd": [
+        4,
+        15
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        21,
+        22,
+        24,
+        29,
+        42
+      ],
+      "mirror_stars": [
+        3,
+        11
+      ],
+      "sister_d": 4,
+      "sister_date": "14.10.2022",
+      "sister_mains": [
+        24,
+        28,
+        29,
+        34,
+        48
+      ],
+      "sister_stars": [
+        3,
+        7
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "23.05.2023",
+      "mirror_qd": [
+        2,
+        15
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        5,
+        6,
+        14,
+        23,
+        34
+      ],
+      "mirror_stars": [
+        2,
+        11
+      ],
+      "sister_d": 5,
+      "sister_date": "18.04.2023",
+      "sister_mains": [
+        17,
+        21,
+        23,
+        35,
+        37
+      ],
+      "sister_stars": [
+        10,
+        11
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "23.06.2023",
+      "mirror_qd": [
+        2,
+        24
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        1,
+        3,
+        11,
+        33,
+        46
+      ],
+      "mirror_stars": [
+        10,
+        11
+      ],
+      "sister_d": 5,
+      "sister_date": "18.04.2023",
+      "sister_mains": [
+        17,
+        21,
+        23,
+        35,
+        37
+      ],
+      "sister_stars": [
+        10,
+        11
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "24.05.2024",
+      "mirror_qd": [
+        2,
+        16
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        9,
+        12,
+        18,
+        22,
+        50
+      ],
+      "mirror_stars": [
+        1,
+        3
+      ],
+      "sister_d": 6,
+      "sister_date": "19.04.2024",
+      "sister_mains": [
+        10,
+        20,
+        40,
+        44,
+        46
+      ],
+      "sister_stars": [
+        1,
+        3
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "24.09.2024",
+      "mirror_qd": [
+        3,
+        25
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        18,
+        20,
+        21,
+        36,
+        49
+      ],
+      "mirror_stars": [
+        3,
+        5
+      ],
+      "sister_d": 6,
+      "sister_date": "19.07.2024",
+      "sister_mains": [
+        15,
+        22,
+        35,
+        44,
+        48
+      ],
+      "sister_stars": [
+        6,
+        7
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "24.12.2024",
+      "mirror_qd": [
+        4,
+        25
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        6,
+        10,
+        16,
+        23,
+        24
+      ],
+      "mirror_stars": [
+        11,
+        12
+      ],
+      "sister_d": 6,
+      "sister_date": "18.10.2024",
+      "sister_mains": [
+        4,
+        15,
+        23,
+        30,
+        39
+      ],
+      "sister_stars": [
+        1,
+        12
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "25.02.2025",
+      "mirror_qd": [
+        1,
+        16
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        17,
+        22,
+        23,
+        24,
+        44
+      ],
+      "mirror_stars": [
+        6,
+        11
+      ],
+      "sister_d": 7,
+      "sister_date": "24.01.2025",
+      "sister_mains": [
+        2,
+        11,
+        19,
+        30,
+        49
+      ],
+      "sister_stars": [
+        3,
+        8
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "25.03.2025",
+      "mirror_qd": [
+        1,
+        24
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        1,
+        3,
+        18,
+        33,
+        36
+      ],
+      "mirror_stars": [
+        2,
+        6
+      ],
+      "sister_d": 7,
+      "sister_date": "24.01.2025",
+      "sister_mains": [
+        2,
+        11,
+        19,
+        30,
+        49
+      ],
+      "sister_stars": [
+        3,
+        8
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "25.04.2025",
+      "mirror_qd": [
+        2,
+        8
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        13,
+        22,
+        32,
+        39,
+        41
+      ],
+      "mirror_stars": [
+        1,
+        12
+      ],
+      "sister_d": 7,
+      "sister_date": "22.04.2025",
+      "sister_mains": [
+        7,
+        28,
+        33,
+        37,
+        47
+      ],
+      "sister_stars": [
+        9,
+        12
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "25.07.2025",
+      "mirror_qd": [
+        3,
+        8
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        6,
+        7,
+        23,
+        32,
+        36
+      ],
+      "mirror_stars": [
+        11,
+        12
+      ],
+      "sister_d": 7,
+      "sister_date": "22.07.2025",
+      "sister_mains": [
+        8,
+        15,
+        26,
+        33,
+        41
+      ],
+      "sister_stars": [
+        9,
+        10
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "25.11.2025",
+      "mirror_qd": [
+        4,
+        16
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        6,
+        11,
+        17,
+        35,
+        44
+      ],
+      "mirror_stars": [
+        3,
+        7
+      ],
+      "sister_d": 7,
+      "sister_date": "24.10.2025",
+      "sister_mains": [
+        7,
+        8,
+        25,
+        31,
+        45
+      ],
+      "sister_stars": [
+        7,
+        12
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    },
+    {
+      "mirror_date": "26.05.2026",
+      "mirror_qd": [
+        2,
+        16
+      ],
+      "mirror_code": "M1",
+      "mirror_mains": [
+        6,
+        23,
+        25,
+        35,
+        37
+      ],
+      "mirror_stars": [
+        6,
+        12
+      ],
+      "sister_d": 8,
+      "sister_date": "28.04.2026",
+      "sister_mains": [
+        26,
+        29,
+        41,
+        46,
+        47
+      ],
+      "sister_stars": [
+        8,
+        9
+      ],
+      "qmirror_d": null,
+      "qmirror_date": null,
+      "qmirror_mains": null
+    }
+  ],
+  "grammar_count": {
+    "raw_main": 26,
+    "carrier_25": 33,
+    "neighbor_12": 141,
+    "star_raw": 28
+  },
+  "today_projection": {
+    "mirror_date": "02.06.2026",
+    "qd": [
+      2,
+      null
+    ],
+    "sister_d": 2,
+    "sister_date": "07.04.2026",
+    "sister_mains": [
+      11,
+      14,
+      19,
+      36,
+      49
+    ],
+    "sister_stars": [
+      6,
+      7
+    ],
+    "qmirror_d": 28,
+    "qmirror_exists": false
+  }
+}
