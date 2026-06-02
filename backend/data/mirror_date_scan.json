@@ -1,0 +1,9566 @@
+{
+  "scan_date": "2026-06-02T09:39:49.960625",
+  "total_draws": 1630,
+  "mirror_count": 217,
+  "by_code": {
+    "M4": 17,
+    "M1": 55,
+    "M5d": 55,
+    "M5": 96,
+    "M6": 52,
+    "M2": 18,
+    "M3": 13,
+    "M7": 3
+  },
+  "strong_mirrors": [
+    {
+      "date": "04.06.2004",
+      "year": 2004,
+      "q": 2,
+      "d": 10,
+      "mains": [
+        9,
+        13,
+        34,
+        41,
+        42
+      ],
+      "stars": [
+        3,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(4)==year-suffix(4)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(04) \u2282 year-suffix(04)"
+        },
+        {
+          "code": "M5",
+          "desc": "day-digit(4) inside year-suffix(04)"
+        }
+      ]
+    },
+    {
+      "date": "05.08.2005",
+      "year": 2005,
+      "q": 3,
+      "d": 6,
+      "mains": [
+        2,
+        11,
+        21,
+        22,
+        30
+      ],
+      "stars": [
+        4,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(5)==year-suffix(5)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(05) \u2282 year-suffix(05)"
+        },
+        {
+          "code": "M5",
+          "desc": "day-digit(5) inside year-suffix(05)"
+        }
+      ]
+    },
+    {
+      "date": "06.01.2006",
+      "year": 2006,
+      "q": 1,
+      "d": 1,
+      "mains": [
+        2,
+        6,
+        9,
+        14,
+        26
+      ],
+      "stars": [
+        4,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(6)==year-suffix(6)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(06) \u2282 year-suffix(06)"
+        },
+        {
+          "code": "M5",
+          "desc": "day-digit(6) inside year-suffix(06)"
+        }
+      ]
+    },
+    {
+      "date": "21.02.2012",
+      "year": 2012,
+      "q": 1,
+      "d": 15,
+      "mains": [
+        11,
+        14,
+        24,
+        25,
+        29
+      ],
+      "stars": [
+        7,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(21)==flip(year-suffix)(21)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(12)==year-suffix(12)"
+        },
+        {
+          "code": "M7",
+          "desc": "full date palindrome 21022012"
+        }
+      ]
+    },
+    {
+      "date": "12.06.2012",
+      "year": 2012,
+      "q": 2,
+      "d": 21,
+      "mains": [
+        8,
+        15,
+        26,
+        30,
+        48
+      ],
+      "stars": [
+        9,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(12)==year-suffix(12)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(12) \u2282 year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "21.08.2012",
+      "year": 2012,
+      "q": 3,
+      "d": 15,
+      "mains": [
+        4,
+        5,
+        17,
+        38,
+        48
+      ],
+      "stars": [
+        3,
+        4
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(21)==flip(year-suffix)(21)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(12)==year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "21.09.2012",
+      "year": 2012,
+      "q": 3,
+      "d": 24,
+      "mains": [
+        4,
+        19,
+        34,
+        41,
+        43
+      ],
+      "stars": [
+        7,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(21)==flip(year-suffix)(21)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(12)==year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "12.10.2012",
+      "year": 2012,
+      "q": 4,
+      "d": 4,
+      "mains": [
+        6,
+        7,
+        17,
+        35,
+        43
+      ],
+      "stars": [
+        2,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(12)==year-suffix(12)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(12) \u2282 year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "21.12.2012",
+      "year": 2012,
+      "q": 4,
+      "d": 24,
+      "mains": [
+        3,
+        5,
+        22,
+        40,
+        42
+      ],
+      "stars": [
+        3,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(21)==flip(year-suffix)(21)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(12)==year-suffix(12)"
+        },
+        {
+          "code": "M4",
+          "desc": "month(12)==year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "31.05.2013",
+      "year": 2013,
+      "q": 2,
+      "d": 18,
+      "mains": [
+        27,
+        28,
+        29,
+        34,
+        43
+      ],
+      "stars": [
+        5,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(31)==flip(year-suffix)(31)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(13)==year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "13.08.2013",
+      "year": 2013,
+      "q": 3,
+      "d": 13,
+      "mains": [
+        5,
+        17,
+        20,
+        47,
+        50
+      ],
+      "stars": [
+        1,
+        4
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(13)==year-suffix(13)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(13) \u2282 year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "13.09.2013",
+      "year": 2013,
+      "q": 3,
+      "d": 22,
+      "mains": [
+        4,
+        6,
+        14,
+        27,
+        33
+      ],
+      "stars": [
+        5,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(13)==year-suffix(13)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(13) \u2282 year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "13.12.2013",
+      "year": 2013,
+      "q": 4,
+      "d": 22,
+      "mains": [
+        1,
+        22,
+        23,
+        24,
+        31
+      ],
+      "stars": [
+        6,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(13)==year-suffix(13)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(13) \u2282 year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "31.12.2013",
+      "year": 2013,
+      "q": 4,
+      "d": 27,
+      "mains": [
+        13,
+        20,
+        24,
+        29,
+        45
+      ],
+      "stars": [
+        3,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(31)==flip(year-suffix)(31)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(13)==year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "14.01.2014",
+      "year": 2014,
+      "q": 1,
+      "d": 4,
+      "mains": [
+        18,
+        20,
+        25,
+        26,
+        37
+      ],
+      "stars": [
+        10,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(14)==year-suffix(14)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(14) \u2282 year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "14.02.2014",
+      "year": 2014,
+      "q": 1,
+      "d": 13,
+      "mains": [
+        2,
+        4,
+        6,
+        19,
+        39
+      ],
+      "stars": [
+        2,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(14)==year-suffix(14)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(14) \u2282 year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "14.03.2014",
+      "year": 2014,
+      "q": 1,
+      "d": 21,
+      "mains": [
+        6,
+        24,
+        25,
+        27,
+        30
+      ],
+      "stars": [
+        5,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(14)==year-suffix(14)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(14) \u2282 year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "14.10.2014",
+      "year": 2014,
+      "q": 4,
+      "d": 4,
+      "mains": [
+        4,
+        5,
+        15,
+        23,
+        32
+      ],
+      "stars": [
+        3,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(14)==year-suffix(14)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(14) \u2282 year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "14.11.2014",
+      "year": 2014,
+      "q": 4,
+      "d": 13,
+      "mains": [
+        17,
+        32,
+        36,
+        38,
+        48
+      ],
+      "stars": [
+        5,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(14)==year-suffix(14)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(14) \u2282 year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "15.05.2015",
+      "year": 2015,
+      "q": 2,
+      "d": 13,
+      "mains": [
+        5,
+        35,
+        42,
+        44,
+        47
+      ],
+      "stars": [
+        8,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(15)==year-suffix(15)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(15) \u2282 year-suffix(15)"
+        }
+      ]
+    },
+    {
+      "date": "15.09.2015",
+      "year": 2015,
+      "q": 3,
+      "d": 22,
+      "mains": [
+        8,
+        15,
+        17,
+        44,
+        49
+      ],
+      "stars": [
+        5,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(15)==year-suffix(15)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(15) \u2282 year-suffix(15)"
+        }
+      ]
+    },
+    {
+      "date": "15.12.2015",
+      "year": 2015,
+      "q": 4,
+      "d": 22,
+      "mains": [
+        8,
+        11,
+        23,
+        27,
+        35
+      ],
+      "stars": [
+        4,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(15)==year-suffix(15)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(15) \u2282 year-suffix(15)"
+        }
+      ]
+    },
+    {
+      "date": "16.02.2016",
+      "year": 2016,
+      "q": 1,
+      "d": 14,
+      "mains": [
+        3,
+        10,
+        22,
+        37,
+        50
+      ],
+      "stars": [
+        6,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(16)==year-suffix(16)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(16) \u2282 year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "16.08.2016",
+      "year": 2016,
+      "q": 3,
+      "d": 17,
+      "mains": [
+        2,
+        26,
+        34,
+        37,
+        46
+      ],
+      "stars": [
+        4,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(16)==year-suffix(16)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(16) \u2282 year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "16.09.2016",
+      "year": 2016,
+      "q": 3,
+      "d": 26,
+      "mains": [
+        5,
+        8,
+        14,
+        22,
+        32
+      ],
+      "stars": [
+        2,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(16)==year-suffix(16)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(16) \u2282 year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "16.12.2016",
+      "year": 2016,
+      "q": 4,
+      "d": 22,
+      "mains": [
+        6,
+        10,
+        30,
+        41,
+        45
+      ],
+      "stars": [
+        4,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(16)==year-suffix(16)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(16) \u2282 year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "17.01.2017",
+      "year": 2017,
+      "q": 1,
+      "d": 5,
+      "mains": [
+        4,
+        6,
+        25,
+        43,
+        47
+      ],
+      "stars": [
+        2,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(17)==year-suffix(17)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(17) \u2282 year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "17.02.2017",
+      "year": 2017,
+      "q": 1,
+      "d": 14,
+      "mains": [
+        19,
+        25,
+        33,
+        36,
+        48
+      ],
+      "stars": [
+        2,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(17)==year-suffix(17)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(17) \u2282 year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "17.03.2017",
+      "year": 2017,
+      "q": 1,
+      "d": 22,
+      "mains": [
+        6,
+        10,
+        19,
+        29,
+        36
+      ],
+      "stars": [
+        3,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(17)==year-suffix(17)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(17) \u2282 year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "17.10.2017",
+      "year": 2017,
+      "q": 4,
+      "d": 5,
+      "mains": [
+        13,
+        17,
+        19,
+        26,
+        36
+      ],
+      "stars": [
+        2,
+        3
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(17)==year-suffix(17)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(17) \u2282 year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "17.11.2017",
+      "year": 2017,
+      "q": 4,
+      "d": 14,
+      "mains": [
+        20,
+        26,
+        35,
+        36,
+        42
+      ],
+      "stars": [
+        5,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(17)==year-suffix(17)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(17) \u2282 year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "18.05.2018",
+      "year": 2018,
+      "q": 2,
+      "d": 14,
+      "mains": [
+        5,
+        8,
+        10,
+        13,
+        31
+      ],
+      "stars": [
+        3,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(18)==year-suffix(18)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(18) \u2282 year-suffix(18)"
+        }
+      ]
+    },
+    {
+      "date": "18.09.2018",
+      "year": 2018,
+      "q": 3,
+      "d": 23,
+      "mains": [
+        3,
+        8,
+        10,
+        32,
+        45
+      ],
+      "stars": [
+        4,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(18)==year-suffix(18)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(18) \u2282 year-suffix(18)"
+        }
+      ]
+    },
+    {
+      "date": "18.12.2018",
+      "year": 2018,
+      "q": 4,
+      "d": 23,
+      "mains": [
+        1,
+        9,
+        18,
+        39,
+        48
+      ],
+      "stars": [
+        5,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(18)==year-suffix(18)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(18) \u2282 year-suffix(18)"
+        }
+      ]
+    },
+    {
+      "date": "19.02.2019",
+      "year": 2019,
+      "q": 1,
+      "d": 15,
+      "mains": [
+        1,
+        8,
+        18,
+        19,
+        39
+      ],
+      "stars": [
+        7,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(19)==year-suffix(19)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(19) \u2282 year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "19.03.2019",
+      "year": 2019,
+      "q": 1,
+      "d": 23,
+      "mains": [
+        1,
+        6,
+        9,
+        34,
+        47
+      ],
+      "stars": [
+        7,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(19)==year-suffix(19)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(19) \u2282 year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "19.04.2019",
+      "year": 2019,
+      "q": 2,
+      "d": 6,
+      "mains": [
+        7,
+        8,
+        32,
+        41,
+        49
+      ],
+      "stars": [
+        5,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(19)==year-suffix(19)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(19) \u2282 year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "19.07.2019",
+      "year": 2019,
+      "q": 3,
+      "d": 6,
+      "mains": [
+        13,
+        14,
+        17,
+        26,
+        28
+      ],
+      "stars": [
+        2,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(19)==year-suffix(19)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(19) \u2282 year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "19.11.2019",
+      "year": 2019,
+      "q": 4,
+      "d": 15,
+      "mains": [
+        8,
+        10,
+        15,
+        30,
+        42
+      ],
+      "stars": [
+        4,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(19)==year-suffix(19)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(19) \u2282 year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "20.03.2020",
+      "year": 2020,
+      "q": 1,
+      "d": 23,
+      "mains": [
+        3,
+        9,
+        20,
+        34,
+        40
+      ],
+      "stars": [
+        6,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(20)==year-suffix(20)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(20) \u2282 year-suffix(20)"
+        }
+      ]
+    },
+    {
+      "date": "02.06.2020",
+      "year": 2020,
+      "q": 2,
+      "d": 18,
+      "mains": [
+        10,
+        12,
+        22,
+        26,
+        49
+      ],
+      "stars": [
+        7,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(2)==flip(year-suffix)(2)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(20)==year-suffix(20)"
+        },
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(20)"
+        }
+      ]
+    },
+    {
+      "date": "02.10.2020",
+      "year": 2020,
+      "q": 4,
+      "d": 1,
+      "mains": [
+        6,
+        12,
+        15,
+        40,
+        45
+      ],
+      "stars": [
+        3,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(2)==flip(year-suffix)(2)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(20)==year-suffix(20)"
+        },
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(20)"
+        }
+      ]
+    },
+    {
+      "date": "20.10.2020",
+      "year": 2020,
+      "q": 4,
+      "d": 6,
+      "mains": [
+        5,
+        6,
+        15,
+        37,
+        42
+      ],
+      "stars": [
+        3,
+        4
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(20)==year-suffix(20)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(20) \u2282 year-suffix(20)"
+        }
+      ]
+    },
+    {
+      "date": "20.11.2020",
+      "year": 2020,
+      "q": 4,
+      "d": 15,
+      "mains": [
+        28,
+        29,
+        39,
+        48,
+        50
+      ],
+      "stars": [
+        5,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(20)==year-suffix(20)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(20) \u2282 year-suffix(20)"
+        }
+      ]
+    },
+    {
+      "date": "12.01.2021",
+      "year": 2021,
+      "q": 1,
+      "d": 4,
+      "mains": [
+        2,
+        10,
+        18,
+        34,
+        35
+      ],
+      "stars": [
+        6,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(12)==flip(year-suffix)(12)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(21)==year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "12.02.2021",
+      "year": 2021,
+      "q": 1,
+      "d": 13,
+      "mains": [
+        7,
+        23,
+        30,
+        32,
+        36
+      ],
+      "stars": [
+        8,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(12)==flip(year-suffix)(12)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(21)==year-suffix(21)"
+        },
+        {
+          "code": "M7",
+          "desc": "full date palindrome 12022021"
+        }
+      ]
+    },
+    {
+      "date": "12.03.2021",
+      "year": 2021,
+      "q": 1,
+      "d": 21,
+      "mains": [
+        4,
+        6,
+        9,
+        11,
+        44
+      ],
+      "stars": [
+        10,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(12)==flip(year-suffix)(12)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(21)==year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "21.05.2021",
+      "year": 2021,
+      "q": 2,
+      "d": 15,
+      "mains": [
+        2,
+        9,
+        13,
+        15,
+        35
+      ],
+      "stars": [
+        3,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(21)==year-suffix(21)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(21) \u2282 year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "21.09.2021",
+      "year": 2021,
+      "q": 3,
+      "d": 24,
+      "mains": [
+        20,
+        25,
+        26,
+        30,
+        38
+      ],
+      "stars": [
+        2,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(21)==year-suffix(21)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(21) \u2282 year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "12.10.2021",
+      "year": 2021,
+      "q": 4,
+      "d": 4,
+      "mains": [
+        6,
+        13,
+        22,
+        45,
+        49
+      ],
+      "stars": [
+        10,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(12)==flip(year-suffix)(12)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(21)==year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "12.11.2021",
+      "year": 2021,
+      "q": 4,
+      "d": 13,
+      "mains": [
+        2,
+        9,
+        15,
+        47,
+        50
+      ],
+      "stars": [
+        6,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(12)==flip(year-suffix)(12)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(21)==year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "21.12.2021",
+      "year": 2021,
+      "q": 4,
+      "d": 24,
+      "mains": [
+        12,
+        17,
+        21,
+        34,
+        38
+      ],
+      "stars": [
+        2,
+        3
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(21)==year-suffix(21)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(21) \u2282 year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "22.02.2022",
+      "year": 2022,
+      "q": 1,
+      "d": 15,
+      "mains": [
+        5,
+        9,
+        14,
+        26,
+        32
+      ],
+      "stars": [
+        3,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(22)==year-suffix(22)"
+        },
+        {
+          "code": "M2",
+          "desc": "day(22)==flip(year-suffix)(22)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(22) \u2282 year-suffix(22)"
+        },
+        {
+          "code": "M7",
+          "desc": "full date palindrome 22022022"
+        }
+      ]
+    },
+    {
+      "date": "22.03.2022",
+      "year": 2022,
+      "q": 1,
+      "d": 23,
+      "mains": [
+        7,
+        17,
+        21,
+        29,
+        40
+      ],
+      "stars": [
+        8,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(22)==year-suffix(22)"
+        },
+        {
+          "code": "M2",
+          "desc": "day(22)==flip(year-suffix)(22)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(22) \u2282 year-suffix(22)"
+        }
+      ]
+    },
+    {
+      "date": "22.04.2022",
+      "year": 2022,
+      "q": 2,
+      "d": 7,
+      "mains": [
+        6,
+        11,
+        21,
+        35,
+        36
+      ],
+      "stars": [
+        1,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(22)==year-suffix(22)"
+        },
+        {
+          "code": "M2",
+          "desc": "day(22)==flip(year-suffix)(22)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(22) \u2282 year-suffix(22)"
+        }
+      ]
+    },
+    {
+      "date": "22.07.2022",
+      "year": 2022,
+      "q": 3,
+      "d": 7,
+      "mains": [
+        16,
+        18,
+        29,
+        32,
+        50
+      ],
+      "stars": [
+        4,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(22)==year-suffix(22)"
+        },
+        {
+          "code": "M2",
+          "desc": "day(22)==flip(year-suffix)(22)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(22) \u2282 year-suffix(22)"
+        }
+      ]
+    },
+    {
+      "date": "22.11.2022",
+      "year": 2022,
+      "q": 4,
+      "d": 15,
+      "mains": [
+        21,
+        22,
+        24,
+        29,
+        42
+      ],
+      "stars": [
+        3,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(22)==year-suffix(22)"
+        },
+        {
+          "code": "M2",
+          "desc": "day(22)==flip(year-suffix)(22)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(22) \u2282 year-suffix(22)"
+        }
+      ]
+    },
+    {
+      "date": "23.05.2023",
+      "year": 2023,
+      "q": 2,
+      "d": 15,
+      "mains": [
+        5,
+        6,
+        14,
+        23,
+        34
+      ],
+      "stars": [
+        2,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(23)==year-suffix(23)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(23) \u2282 year-suffix(23)"
+        }
+      ]
+    },
+    {
+      "date": "23.06.2023",
+      "year": 2023,
+      "q": 2,
+      "d": 24,
+      "mains": [
+        1,
+        3,
+        11,
+        33,
+        46
+      ],
+      "stars": [
+        10,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(23)==year-suffix(23)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(23) \u2282 year-suffix(23)"
+        }
+      ]
+    },
+    {
+      "date": "24.05.2024",
+      "year": 2024,
+      "q": 2,
+      "d": 16,
+      "mains": [
+        9,
+        12,
+        18,
+        22,
+        50
+      ],
+      "stars": [
+        1,
+        3
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(24)==year-suffix(24)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(24) \u2282 year-suffix(24)"
+        }
+      ]
+    },
+    {
+      "date": "24.09.2024",
+      "year": 2024,
+      "q": 3,
+      "d": 25,
+      "mains": [
+        18,
+        20,
+        21,
+        36,
+        49
+      ],
+      "stars": [
+        3,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(24)==year-suffix(24)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(24) \u2282 year-suffix(24)"
+        }
+      ]
+    },
+    {
+      "date": "24.12.2024",
+      "year": 2024,
+      "q": 4,
+      "d": 25,
+      "mains": [
+        6,
+        10,
+        16,
+        23,
+        24
+      ],
+      "stars": [
+        11,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(24)==year-suffix(24)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(24) \u2282 year-suffix(24)"
+        }
+      ]
+    },
+    {
+      "date": "25.02.2025",
+      "year": 2025,
+      "q": 1,
+      "d": 16,
+      "mains": [
+        17,
+        22,
+        23,
+        24,
+        44
+      ],
+      "stars": [
+        6,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(25)==year-suffix(25)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(25) \u2282 year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "25.03.2025",
+      "year": 2025,
+      "q": 1,
+      "d": 24,
+      "mains": [
+        1,
+        3,
+        18,
+        33,
+        36
+      ],
+      "stars": [
+        2,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(25)==year-suffix(25)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(25) \u2282 year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "25.04.2025",
+      "year": 2025,
+      "q": 2,
+      "d": 8,
+      "mains": [
+        13,
+        22,
+        32,
+        39,
+        41
+      ],
+      "stars": [
+        1,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(25)==year-suffix(25)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(25) \u2282 year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "25.07.2025",
+      "year": 2025,
+      "q": 3,
+      "d": 8,
+      "mains": [
+        6,
+        7,
+        23,
+        32,
+        36
+      ],
+      "stars": [
+        11,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(25)==year-suffix(25)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(25) \u2282 year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "25.11.2025",
+      "year": 2025,
+      "q": 4,
+      "d": 16,
+      "mains": [
+        6,
+        11,
+        17,
+        35,
+        44
+      ],
+      "stars": [
+        3,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(25)==year-suffix(25)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(25) \u2282 year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "26.05.2026",
+      "year": 2026,
+      "q": 2,
+      "d": 16,
+      "mains": [
+        6,
+        23,
+        25,
+        35,
+        37
+      ],
+      "stars": [
+        6,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(26)==year-suffix(26)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(26) \u2282 year-suffix(26)"
+        }
+      ]
+    }
+  ],
+  "today_fires": [
+    [
+      "M5",
+      "day-digit(2) inside year-suffix(26)"
+    ]
+  ],
+  "today_sisters": [
+    {
+      "date": "04.06.2004",
+      "year": 2004,
+      "q": 2,
+      "d": 10,
+      "mains": [
+        9,
+        13,
+        34,
+        41,
+        42
+      ],
+      "stars": [
+        3,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(4)==year-suffix(4)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(04) \u2282 year-suffix(04)"
+        },
+        {
+          "code": "M5",
+          "desc": "day-digit(4) inside year-suffix(04)"
+        }
+      ]
+    },
+    {
+      "date": "05.08.2005",
+      "year": 2005,
+      "q": 3,
+      "d": 6,
+      "mains": [
+        2,
+        11,
+        21,
+        22,
+        30
+      ],
+      "stars": [
+        4,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(5)==year-suffix(5)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(05) \u2282 year-suffix(05)"
+        },
+        {
+          "code": "M5",
+          "desc": "day-digit(5) inside year-suffix(05)"
+        }
+      ]
+    },
+    {
+      "date": "06.01.2006",
+      "year": 2006,
+      "q": 1,
+      "d": 1,
+      "mains": [
+        2,
+        6,
+        9,
+        14,
+        26
+      ],
+      "stars": [
+        4,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(6)==year-suffix(6)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(06) \u2282 year-suffix(06)"
+        },
+        {
+          "code": "M5",
+          "desc": "day-digit(6) inside year-suffix(06)"
+        }
+      ]
+    },
+    {
+      "date": "02.03.2012",
+      "year": 2012,
+      "q": 1,
+      "d": 18,
+      "mains": [
+        5,
+        6,
+        11,
+        30,
+        44
+      ],
+      "stars": [
+        2,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "01.05.2012",
+      "year": 2012,
+      "q": 2,
+      "d": 9,
+      "mains": [
+        4,
+        5,
+        15,
+        19,
+        41
+      ],
+      "stars": [
+        9,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "01.06.2012",
+      "year": 2012,
+      "q": 2,
+      "d": 18,
+      "mains": [
+        2,
+        4,
+        14,
+        26,
+        36
+      ],
+      "stars": [
+        9,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "02.10.2012",
+      "year": 2012,
+      "q": 4,
+      "d": 1,
+      "mains": [
+        4,
+        16,
+        21,
+        36,
+        42
+      ],
+      "stars": [
+        7,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "02.11.2012",
+      "year": 2012,
+      "q": 4,
+      "d": 10,
+      "mains": [
+        3,
+        6,
+        10,
+        11,
+        44
+      ],
+      "stars": [
+        3,
+        4
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "01.01.2013",
+      "year": 2013,
+      "q": 1,
+      "d": 1,
+      "mains": [
+        2,
+        7,
+        8,
+        36,
+        49
+      ],
+      "stars": [
+        1,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(13)"
+        },
+        {
+          "code": "M6",
+          "desc": "month==day=(1) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "01.02.2013",
+      "year": 2013,
+      "q": 1,
+      "d": 10,
+      "mains": [
+        5,
+        21,
+        34,
+        37,
+        38
+      ],
+      "stars": [
+        1,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "01.03.2013",
+      "year": 2013,
+      "q": 1,
+      "d": 18,
+      "mains": [
+        1,
+        11,
+        29,
+        36,
+        42
+      ],
+      "stars": [
+        4,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "03.05.2013",
+      "year": 2013,
+      "q": 2,
+      "d": 10,
+      "mains": [
+        3,
+        5,
+        34,
+        40,
+        49
+      ],
+      "stars": [
+        2,
+        3
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(3) inside year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "03.09.2013",
+      "year": 2013,
+      "q": 3,
+      "d": 19,
+      "mains": [
+        5,
+        9,
+        16,
+        18,
+        42
+      ],
+      "stars": [
+        7,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(3) inside year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "01.10.2013",
+      "year": 2013,
+      "q": 4,
+      "d": 1,
+      "mains": [
+        19,
+        23,
+        25,
+        44,
+        48
+      ],
+      "stars": [
+        8,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "01.11.2013",
+      "year": 2013,
+      "q": 4,
+      "d": 10,
+      "mains": [
+        7,
+        19,
+        29,
+        30,
+        33
+      ],
+      "stars": [
+        3,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "03.12.2013",
+      "year": 2013,
+      "q": 4,
+      "d": 19,
+      "mains": [
+        6,
+        13,
+        15,
+        29,
+        32
+      ],
+      "stars": [
+        2,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(3) inside year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "04.02.2014",
+      "year": 2014,
+      "q": 1,
+      "d": 10,
+      "mains": [
+        1,
+        21,
+        33,
+        37,
+        38
+      ],
+      "stars": [
+        4,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(4) inside year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "04.03.2014",
+      "year": 2014,
+      "q": 1,
+      "d": 18,
+      "mains": [
+        3,
+        5,
+        22,
+        27,
+        44
+      ],
+      "stars": [
+        1,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(4) inside year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "01.04.2014",
+      "year": 2014,
+      "q": 2,
+      "d": 1,
+      "mains": [
+        16,
+        18,
+        26,
+        38,
+        44
+      ],
+      "stars": [
+        8,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "04.04.2014",
+      "year": 2014,
+      "q": 2,
+      "d": 2,
+      "mains": [
+        6,
+        10,
+        28,
+        45,
+        50
+      ],
+      "stars": [
+        10,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(4) inside year-suffix(14)"
+        },
+        {
+          "code": "M6",
+          "desc": "month==day=(4) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "01.07.2014",
+      "year": 2014,
+      "q": 3,
+      "d": 1,
+      "mains": [
+        18,
+        22,
+        25,
+        27,
+        39
+      ],
+      "stars": [
+        5,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "04.07.2014",
+      "year": 2014,
+      "q": 3,
+      "d": 2,
+      "mains": [
+        4,
+        18,
+        39,
+        43,
+        47
+      ],
+      "stars": [
+        2,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(4) inside year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "01.08.2014",
+      "year": 2014,
+      "q": 3,
+      "d": 10,
+      "mains": [
+        24,
+        44,
+        46,
+        48,
+        50
+      ],
+      "stars": [
+        5,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "04.11.2014",
+      "year": 2014,
+      "q": 4,
+      "d": 10,
+      "mains": [
+        1,
+        6,
+        13,
+        17,
+        26
+      ],
+      "stars": [
+        3,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(4) inside year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "01.05.2015",
+      "year": 2015,
+      "q": 2,
+      "d": 9,
+      "mains": [
+        3,
+        19,
+        20,
+        25,
+        26
+      ],
+      "stars": [
+        6,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(15)"
+        }
+      ]
+    },
+    {
+      "date": "05.05.2015",
+      "year": 2015,
+      "q": 2,
+      "d": 10,
+      "mains": [
+        1,
+        10,
+        17,
+        20,
+        42
+      ],
+      "stars": [
+        8,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(5) inside year-suffix(15)"
+        },
+        {
+          "code": "M6",
+          "desc": "month==day=(5) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "05.06.2015",
+      "year": 2015,
+      "q": 2,
+      "d": 19,
+      "mains": [
+        2,
+        7,
+        8,
+        45,
+        48
+      ],
+      "stars": [
+        1,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(5) inside year-suffix(15)"
+        }
+      ]
+    },
+    {
+      "date": "01.09.2015",
+      "year": 2015,
+      "q": 3,
+      "d": 18,
+      "mains": [
+        6,
+        19,
+        21,
+        27,
+        45
+      ],
+      "stars": [
+        1,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(15)"
+        }
+      ]
+    },
+    {
+      "date": "01.12.2015",
+      "year": 2015,
+      "q": 4,
+      "d": 18,
+      "mains": [
+        2,
+        15,
+        25,
+        35,
+        45
+      ],
+      "stars": [
+        8,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(15)"
+        }
+      ]
+    },
+    {
+      "date": "01.01.2016",
+      "year": 2016,
+      "q": 1,
+      "d": 1,
+      "mains": [
+        4,
+        37,
+        38,
+        39,
+        44
+      ],
+      "stars": [
+        4,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(16)"
+        },
+        {
+          "code": "M6",
+          "desc": "month==day=(1) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "01.03.2016",
+      "year": 2016,
+      "q": 1,
+      "d": 18,
+      "mains": [
+        4,
+        7,
+        13,
+        28,
+        37
+      ],
+      "stars": [
+        10,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "01.04.2016",
+      "year": 2016,
+      "q": 2,
+      "d": 1,
+      "mains": [
+        2,
+        16,
+        23,
+        25,
+        49
+      ],
+      "stars": [
+        6,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "06.05.2016",
+      "year": 2016,
+      "q": 2,
+      "d": 19,
+      "mains": [
+        32,
+        34,
+        40,
+        45,
+        48
+      ],
+      "stars": [
+        1,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(6) inside year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "06.05.2016",
+      "year": 2016,
+      "q": 2,
+      "d": 19,
+      "mains": [
+        32,
+        34,
+        40,
+        45,
+        48
+      ],
+      "stars": [
+        1,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(6) inside year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "01.07.2016",
+      "year": 2016,
+      "q": 3,
+      "d": 1,
+      "mains": [
+        2,
+        11,
+        13,
+        40,
+        50
+      ],
+      "stars": [
+        1,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "01.07.2016",
+      "year": 2016,
+      "q": 3,
+      "d": 1,
+      "mains": [
+        2,
+        11,
+        13,
+        40,
+        50
+      ],
+      "stars": [
+        1,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "06.09.2016",
+      "year": 2016,
+      "q": 3,
+      "d": 23,
+      "mains": [
+        12,
+        24,
+        30,
+        34,
+        45
+      ],
+      "stars": [
+        7,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(6) inside year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "01.11.2016",
+      "year": 2016,
+      "q": 4,
+      "d": 9,
+      "mains": [
+        6,
+        10,
+        20,
+        29,
+        37
+      ],
+      "stars": [
+        1,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "06.12.2016",
+      "year": 2016,
+      "q": 4,
+      "d": 19,
+      "mains": [
+        1,
+        7,
+        11,
+        27,
+        45
+      ],
+      "stars": [
+        4,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(6) inside year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "07.02.2017",
+      "year": 2017,
+      "q": 1,
+      "d": 11,
+      "mains": [
+        4,
+        10,
+        31,
+        38,
+        44
+      ],
+      "stars": [
+        8,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(7) inside year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "07.03.2017",
+      "year": 2017,
+      "q": 1,
+      "d": 19,
+      "mains": [
+        6,
+        37,
+        41,
+        48,
+        50
+      ],
+      "stars": [
+        4,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(7) inside year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "07.04.2017",
+      "year": 2017,
+      "q": 2,
+      "d": 2,
+      "mains": [
+        2,
+        10,
+        19,
+        35,
+        50
+      ],
+      "stars": [
+        6,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(7) inside year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "07.07.2017",
+      "year": 2017,
+      "q": 3,
+      "d": 2,
+      "mains": [
+        11,
+        20,
+        35,
+        37,
+        45
+      ],
+      "stars": [
+        3,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(7) inside year-suffix(17)"
+        },
+        {
+          "code": "M6",
+          "desc": "month==day=(7) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "01.08.2017",
+      "year": 2017,
+      "q": 3,
+      "d": 9,
+      "mains": [
+        14,
+        21,
+        24,
+        29,
+        30
+      ],
+      "stars": [
+        8,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "01.09.2017",
+      "year": 2017,
+      "q": 3,
+      "d": 18,
+      "mains": [
+        3,
+        7,
+        8,
+        14,
+        49
+      ],
+      "stars": [
+        5,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "07.11.2017",
+      "year": 2017,
+      "q": 4,
+      "d": 11,
+      "mains": [
+        7,
+        19,
+        20,
+        37,
+        41
+      ],
+      "stars": [
+        2,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(7) inside year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "01.12.2017",
+      "year": 2017,
+      "q": 4,
+      "d": 18,
+      "mains": [
+        5,
+        24,
+        29,
+        35,
+        46
+      ],
+      "stars": [
+        11,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "01.05.2018",
+      "year": 2018,
+      "q": 2,
+      "d": 9,
+      "mains": [
+        6,
+        15,
+        17,
+        42,
+        48
+      ],
+      "stars": [
+        4,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(18)"
+        }
+      ]
+    },
+    {
+      "date": "08.05.2018",
+      "year": 2018,
+      "q": 2,
+      "d": 11,
+      "mains": [
+        17,
+        25,
+        35,
+        39,
+        44
+      ],
+      "stars": [
+        2,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(8) inside year-suffix(18)"
+        }
+      ]
+    },
+    {
+      "date": "01.06.2018",
+      "year": 2018,
+      "q": 2,
+      "d": 18,
+      "mains": [
+        17,
+        18,
+        24,
+        29,
+        40
+      ],
+      "stars": [
+        4,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(18)"
+        }
+      ]
+    },
+    {
+      "date": "08.06.2018",
+      "year": 2018,
+      "q": 2,
+      "d": 20,
+      "mains": [
+        8,
+        19,
+        32,
+        43,
+        46
+      ],
+      "stars": [
+        2,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(8) inside year-suffix(18)"
+        }
+      ]
+    },
+    {
+      "date": "01.01.2019",
+      "year": 2019,
+      "q": 1,
+      "d": 1,
+      "mains": [
+        1,
+        8,
+        11,
+        25,
+        28
+      ],
+      "stars": [
+        4,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(19)"
+        },
+        {
+          "code": "M6",
+          "desc": "month==day=(1) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "01.02.2019",
+      "year": 2019,
+      "q": 1,
+      "d": 10,
+      "mains": [
+        3,
+        21,
+        26,
+        41,
+        46
+      ],
+      "stars": [
+        1,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "01.03.2019",
+      "year": 2019,
+      "q": 1,
+      "d": 18,
+      "mains": [
+        6,
+        9,
+        19,
+        26,
+        31
+      ],
+      "stars": [
+        11,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "09.04.2019",
+      "year": 2019,
+      "q": 2,
+      "d": 3,
+      "mains": [
+        18,
+        21,
+        29,
+        38,
+        41
+      ],
+      "stars": [
+        1,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(9) inside year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "09.07.2019",
+      "year": 2019,
+      "q": 3,
+      "d": 3,
+      "mains": [
+        7,
+        29,
+        32,
+        36,
+        41
+      ],
+      "stars": [
+        6,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(9) inside year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "09.08.2019",
+      "year": 2019,
+      "q": 3,
+      "d": 12,
+      "mains": [
+        2,
+        14,
+        35,
+        41,
+        42
+      ],
+      "stars": [
+        10,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(9) inside year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "01.10.2019",
+      "year": 2019,
+      "q": 4,
+      "d": 1,
+      "mains": [
+        2,
+        11,
+        18,
+        40,
+        46
+      ],
+      "stars": [
+        1,
+        4
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "01.11.2019",
+      "year": 2019,
+      "q": 4,
+      "d": 10,
+      "mains": [
+        2,
+        20,
+        39,
+        44,
+        48
+      ],
+      "stars": [
+        5,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "02.06.2020",
+      "year": 2020,
+      "q": 2,
+      "d": 18,
+      "mains": [
+        10,
+        12,
+        22,
+        26,
+        49
+      ],
+      "stars": [
+        7,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(2)==flip(year-suffix)(2)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(20)==year-suffix(20)"
+        },
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(20)"
+        }
+      ]
+    },
+    {
+      "date": "02.10.2020",
+      "year": 2020,
+      "q": 4,
+      "d": 1,
+      "mains": [
+        6,
+        12,
+        15,
+        40,
+        45
+      ],
+      "stars": [
+        3,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(2)==flip(year-suffix)(2)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(20)==year-suffix(20)"
+        },
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(20)"
+        }
+      ]
+    },
+    {
+      "date": "01.01.2021",
+      "year": 2021,
+      "q": 1,
+      "d": 1,
+      "mains": [
+        16,
+        28,
+        32,
+        44,
+        48
+      ],
+      "stars": [
+        1,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(21)"
+        },
+        {
+          "code": "M6",
+          "desc": "month==day=(1) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "02.02.2021",
+      "year": 2021,
+      "q": 1,
+      "d": 10,
+      "mains": [
+        18,
+        20,
+        35,
+        38,
+        48
+      ],
+      "stars": [
+        9,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(21)"
+        },
+        {
+          "code": "M6",
+          "desc": "month==day=(2) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "02.03.2021",
+      "year": 2021,
+      "q": 1,
+      "d": 18,
+      "mains": [
+        2,
+        19,
+        24,
+        26,
+        49
+      ],
+      "stars": [
+        6,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "02.04.2021",
+      "year": 2021,
+      "q": 2,
+      "d": 1,
+      "mains": [
+        4,
+        21,
+        34,
+        40,
+        47
+      ],
+      "stars": [
+        2,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "01.06.2021",
+      "year": 2021,
+      "q": 2,
+      "d": 18,
+      "mains": [
+        3,
+        10,
+        26,
+        35,
+        44
+      ],
+      "stars": [
+        6,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "02.07.2021",
+      "year": 2021,
+      "q": 3,
+      "d": 1,
+      "mains": [
+        9,
+        14,
+        29,
+        38,
+        49
+      ],
+      "stars": [
+        7,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "01.10.2021",
+      "year": 2021,
+      "q": 4,
+      "d": 1,
+      "mains": [
+        1,
+        15,
+        19,
+        26,
+        48
+      ],
+      "stars": [
+        6,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "02.11.2021",
+      "year": 2021,
+      "q": 4,
+      "d": 10,
+      "mains": [
+        2,
+        3,
+        17,
+        29,
+        43
+      ],
+      "stars": [
+        1,
+        4
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "02.08.2022",
+      "year": 2022,
+      "q": 3,
+      "d": 10,
+      "mains": [
+        7,
+        18,
+        28,
+        40,
+        48
+      ],
+      "stars": [
+        8,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(22)"
+        }
+      ]
+    },
+    {
+      "date": "02.09.2022",
+      "year": 2022,
+      "q": 3,
+      "d": 19,
+      "mains": [
+        7,
+        12,
+        13,
+        20,
+        45
+      ],
+      "stars": [
+        3,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(22)"
+        }
+      ]
+    },
+    {
+      "date": "02.12.2022",
+      "year": 2022,
+      "q": 4,
+      "d": 18,
+      "mains": [
+        12,
+        21,
+        35,
+        39,
+        45
+      ],
+      "stars": [
+        6,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(22)"
+        }
+      ]
+    },
+    {
+      "date": "03.01.2023",
+      "year": 2023,
+      "q": 1,
+      "d": 1,
+      "mains": [
+        20,
+        21,
+        29,
+        45,
+        46
+      ],
+      "stars": [
+        3,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(3) inside year-suffix(23)"
+        }
+      ]
+    },
+    {
+      "date": "03.02.2023",
+      "year": 2023,
+      "q": 1,
+      "d": 10,
+      "mains": [
+        2,
+        14,
+        17,
+        32,
+        45
+      ],
+      "stars": [
+        3,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(3) inside year-suffix(23)"
+        }
+      ]
+    },
+    {
+      "date": "03.03.2023",
+      "year": 2023,
+      "q": 1,
+      "d": 18,
+      "mains": [
+        3,
+        6,
+        8,
+        24,
+        50
+      ],
+      "stars": [
+        10,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(3) inside year-suffix(23)"
+        },
+        {
+          "code": "M6",
+          "desc": "month==day=(3) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "02.05.2023",
+      "year": 2023,
+      "q": 2,
+      "d": 9,
+      "mains": [
+        7,
+        32,
+        44,
+        47,
+        48
+      ],
+      "stars": [
+        7,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(23)"
+        }
+      ]
+    },
+    {
+      "date": "02.06.2023",
+      "year": 2023,
+      "q": 2,
+      "d": 18,
+      "mains": [
+        3,
+        12,
+        15,
+        25,
+        43
+      ],
+      "stars": [
+        10,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(23)"
+        }
+      ]
+    },
+    {
+      "date": "03.10.2023",
+      "year": 2023,
+      "q": 4,
+      "d": 1,
+      "mains": [
+        6,
+        20,
+        22,
+        24,
+        45
+      ],
+      "stars": [
+        4,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(3) inside year-suffix(23)"
+        }
+      ]
+    },
+    {
+      "date": "03.11.2023",
+      "year": 2023,
+      "q": 4,
+      "d": 10,
+      "mains": [
+        8,
+        21,
+        31,
+        39,
+        47
+      ],
+      "stars": [
+        5,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(3) inside year-suffix(23)"
+        }
+      ]
+    },
+    {
+      "date": "02.01.2024",
+      "year": 2024,
+      "q": 1,
+      "d": 1,
+      "mains": [
+        7,
+        15,
+        18,
+        46,
+        49
+      ],
+      "stars": [
+        10,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(24)"
+        }
+      ]
+    },
+    {
+      "date": "02.02.2024",
+      "year": 2024,
+      "q": 1,
+      "d": 10,
+      "mains": [
+        13,
+        20,
+        23,
+        27,
+        42
+      ],
+      "stars": [
+        5,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(24)"
+        },
+        {
+          "code": "M6",
+          "desc": "month==day=(2) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "02.04.2024",
+      "year": 2024,
+      "q": 2,
+      "d": 1,
+      "mains": [
+        1,
+        23,
+        31,
+        36,
+        48
+      ],
+      "stars": [
+        5,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(24)"
+        }
+      ]
+    },
+    {
+      "date": "04.06.2024",
+      "year": 2024,
+      "q": 2,
+      "d": 19,
+      "mains": [
+        6,
+        7,
+        9,
+        14,
+        43
+      ],
+      "stars": [
+        3,
+        4
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(4) inside year-suffix(24)"
+        }
+      ]
+    },
+    {
+      "date": "02.07.2024",
+      "year": 2024,
+      "q": 3,
+      "d": 1,
+      "mains": [
+        2,
+        7,
+        34,
+        35,
+        46
+      ],
+      "stars": [
+        6,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(24)"
+        }
+      ]
+    },
+    {
+      "date": "02.08.2024",
+      "year": 2024,
+      "q": 3,
+      "d": 10,
+      "mains": [
+        5,
+        7,
+        12,
+        33,
+        46
+      ],
+      "stars": [
+        3,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(24)"
+        }
+      ]
+    },
+    {
+      "date": "04.10.2024",
+      "year": 2024,
+      "q": 4,
+      "d": 2,
+      "mains": [
+        4,
+        8,
+        16,
+        17,
+        20
+      ],
+      "stars": [
+        1,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(4) inside year-suffix(24)"
+        }
+      ]
+    },
+    {
+      "date": "02.05.2025",
+      "year": 2025,
+      "q": 2,
+      "d": 10,
+      "mains": [
+        3,
+        5,
+        19,
+        21,
+        49
+      ],
+      "stars": [
+        1,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "05.08.2025",
+      "year": 2025,
+      "q": 3,
+      "d": 11,
+      "mains": [
+        1,
+        3,
+        5,
+        42,
+        47
+      ],
+      "stars": [
+        5,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(5) inside year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "02.09.2025",
+      "year": 2025,
+      "q": 3,
+      "d": 19,
+      "mains": [
+        13,
+        30,
+        31,
+        32,
+        36
+      ],
+      "stars": [
+        1,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "05.09.2025",
+      "year": 2025,
+      "q": 3,
+      "d": 20,
+      "mains": [
+        27,
+        30,
+        31,
+        41,
+        43
+      ],
+      "stars": [
+        5,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(5) inside year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "02.12.2025",
+      "year": 2025,
+      "q": 4,
+      "d": 18,
+      "mains": [
+        4,
+        13,
+        14,
+        20,
+        41
+      ],
+      "stars": [
+        6,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "05.12.2025",
+      "year": 2025,
+      "q": 4,
+      "d": 19,
+      "mains": [
+        9,
+        15,
+        25,
+        34,
+        46
+      ],
+      "stars": [
+        8,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(5) inside year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "02.01.2026",
+      "year": 2026,
+      "q": 1,
+      "d": 1,
+      "mains": [
+        8,
+        27,
+        42,
+        44,
+        46
+      ],
+      "stars": [
+        1,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(26)"
+        }
+      ]
+    },
+    {
+      "date": "06.01.2026",
+      "year": 2026,
+      "q": 1,
+      "d": 2,
+      "mains": [
+        5,
+        14,
+        17,
+        18,
+        31
+      ],
+      "stars": [
+        10,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(6) inside year-suffix(26)"
+        }
+      ]
+    },
+    {
+      "date": "06.02.2026",
+      "year": 2026,
+      "q": 1,
+      "d": 11,
+      "mains": [
+        10,
+        13,
+        20,
+        23,
+        24
+      ],
+      "stars": [
+        6,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(6) inside year-suffix(26)"
+        }
+      ]
+    },
+    {
+      "date": "06.03.2026",
+      "year": 2026,
+      "q": 1,
+      "d": 19,
+      "mains": [
+        15,
+        16,
+        19,
+        28,
+        37
+      ],
+      "stars": [
+        6,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(6) inside year-suffix(26)"
+        }
+      ]
+    }
+  ],
+  "all_mirrors": [
+    {
+      "date": "02.04.2004",
+      "year": 2004,
+      "q": 2,
+      "d": 1,
+      "mains": [
+        4,
+        12,
+        24,
+        27,
+        36
+      ],
+      "stars": [
+        2,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M4",
+          "desc": "month(4)==year-suffix(4)"
+        }
+      ]
+    },
+    {
+      "date": "09.04.2004",
+      "year": 2004,
+      "q": 2,
+      "d": 2,
+      "mains": [
+        1,
+        4,
+        10,
+        19,
+        23
+      ],
+      "stars": [
+        2,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M4",
+          "desc": "month(4)==year-suffix(4)"
+        }
+      ]
+    },
+    {
+      "date": "16.04.2004",
+      "year": 2004,
+      "q": 2,
+      "d": 3,
+      "mains": [
+        14,
+        15,
+        28,
+        35,
+        40
+      ],
+      "stars": [
+        1,
+        3
+      ],
+      "fires": [
+        {
+          "code": "M4",
+          "desc": "month(4)==year-suffix(4)"
+        }
+      ]
+    },
+    {
+      "date": "23.04.2004",
+      "year": 2004,
+      "q": 2,
+      "d": 4,
+      "mains": [
+        6,
+        10,
+        21,
+        45,
+        49
+      ],
+      "stars": [
+        3,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M4",
+          "desc": "month(4)==year-suffix(4)"
+        }
+      ]
+    },
+    {
+      "date": "30.04.2004",
+      "year": 2004,
+      "q": 2,
+      "d": 5,
+      "mains": [
+        5,
+        6,
+        16,
+        23,
+        27
+      ],
+      "stars": [
+        6,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M4",
+          "desc": "month(4)==year-suffix(4)"
+        }
+      ]
+    },
+    {
+      "date": "04.06.2004",
+      "year": 2004,
+      "q": 2,
+      "d": 10,
+      "mains": [
+        9,
+        13,
+        34,
+        41,
+        42
+      ],
+      "stars": [
+        3,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(4)==year-suffix(4)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(04) \u2282 year-suffix(04)"
+        },
+        {
+          "code": "M5",
+          "desc": "day-digit(4) inside year-suffix(04)"
+        }
+      ]
+    },
+    {
+      "date": "06.05.2005",
+      "year": 2005,
+      "q": 2,
+      "d": 6,
+      "mains": [
+        7,
+        12,
+        21,
+        26,
+        44
+      ],
+      "stars": [
+        6,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M4",
+          "desc": "month(5)==year-suffix(5)"
+        }
+      ]
+    },
+    {
+      "date": "13.05.2005",
+      "year": 2005,
+      "q": 2,
+      "d": 7,
+      "mains": [
+        12,
+        17,
+        31,
+        32,
+        40
+      ],
+      "stars": [
+        2,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M4",
+          "desc": "month(5)==year-suffix(5)"
+        }
+      ]
+    },
+    {
+      "date": "20.05.2005",
+      "year": 2005,
+      "q": 2,
+      "d": 8,
+      "mains": [
+        6,
+        7,
+        13,
+        28,
+        47
+      ],
+      "stars": [
+        5,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M4",
+          "desc": "month(5)==year-suffix(5)"
+        }
+      ]
+    },
+    {
+      "date": "27.05.2005",
+      "year": 2005,
+      "q": 2,
+      "d": 9,
+      "mains": [
+        2,
+        24,
+        31,
+        48,
+        50
+      ],
+      "stars": [
+        4,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M4",
+          "desc": "month(5)==year-suffix(5)"
+        }
+      ]
+    },
+    {
+      "date": "05.08.2005",
+      "year": 2005,
+      "q": 3,
+      "d": 6,
+      "mains": [
+        2,
+        11,
+        21,
+        22,
+        30
+      ],
+      "stars": [
+        4,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(5)==year-suffix(5)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(05) \u2282 year-suffix(05)"
+        },
+        {
+          "code": "M5",
+          "desc": "day-digit(5) inside year-suffix(05)"
+        }
+      ]
+    },
+    {
+      "date": "09.09.2005",
+      "year": 2005,
+      "q": 3,
+      "d": 11,
+      "mains": [
+        8,
+        12,
+        19,
+        31,
+        50
+      ],
+      "stars": [
+        6,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(9) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "11.11.2005",
+      "year": 2005,
+      "q": 4,
+      "d": 6,
+      "mains": [
+        15,
+        16,
+        36,
+        41,
+        42
+      ],
+      "stars": [
+        3,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(11) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "06.01.2006",
+      "year": 2006,
+      "q": 1,
+      "d": 1,
+      "mains": [
+        2,
+        6,
+        9,
+        14,
+        26
+      ],
+      "stars": [
+        4,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(6)==year-suffix(6)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(06) \u2282 year-suffix(06)"
+        },
+        {
+          "code": "M5",
+          "desc": "day-digit(6) inside year-suffix(06)"
+        }
+      ]
+    },
+    {
+      "date": "21.02.2012",
+      "year": 2012,
+      "q": 1,
+      "d": 15,
+      "mains": [
+        11,
+        14,
+        24,
+        25,
+        29
+      ],
+      "stars": [
+        7,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(21)==flip(year-suffix)(21)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(12)==year-suffix(12)"
+        },
+        {
+          "code": "M7",
+          "desc": "full date palindrome 21022012"
+        }
+      ]
+    },
+    {
+      "date": "02.03.2012",
+      "year": 2012,
+      "q": 1,
+      "d": 18,
+      "mains": [
+        5,
+        6,
+        11,
+        30,
+        44
+      ],
+      "stars": [
+        2,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "01.05.2012",
+      "year": 2012,
+      "q": 2,
+      "d": 9,
+      "mains": [
+        4,
+        5,
+        15,
+        19,
+        41
+      ],
+      "stars": [
+        9,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "01.06.2012",
+      "year": 2012,
+      "q": 2,
+      "d": 18,
+      "mains": [
+        2,
+        4,
+        14,
+        26,
+        36
+      ],
+      "stars": [
+        9,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "12.06.2012",
+      "year": 2012,
+      "q": 2,
+      "d": 21,
+      "mains": [
+        8,
+        15,
+        26,
+        30,
+        48
+      ],
+      "stars": [
+        9,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(12)==year-suffix(12)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(12) \u2282 year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "21.08.2012",
+      "year": 2012,
+      "q": 3,
+      "d": 15,
+      "mains": [
+        4,
+        5,
+        17,
+        38,
+        48
+      ],
+      "stars": [
+        3,
+        4
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(21)==flip(year-suffix)(21)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(12)==year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "21.09.2012",
+      "year": 2012,
+      "q": 3,
+      "d": 24,
+      "mains": [
+        4,
+        19,
+        34,
+        41,
+        43
+      ],
+      "stars": [
+        7,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(21)==flip(year-suffix)(21)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(12)==year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "02.10.2012",
+      "year": 2012,
+      "q": 4,
+      "d": 1,
+      "mains": [
+        4,
+        16,
+        21,
+        36,
+        42
+      ],
+      "stars": [
+        7,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "12.10.2012",
+      "year": 2012,
+      "q": 4,
+      "d": 4,
+      "mains": [
+        6,
+        7,
+        17,
+        35,
+        43
+      ],
+      "stars": [
+        2,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(12)==year-suffix(12)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(12) \u2282 year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "02.11.2012",
+      "year": 2012,
+      "q": 4,
+      "d": 10,
+      "mains": [
+        3,
+        6,
+        10,
+        11,
+        44
+      ],
+      "stars": [
+        3,
+        4
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "04.12.2012",
+      "year": 2012,
+      "q": 4,
+      "d": 19,
+      "mains": [
+        5,
+        10,
+        28,
+        29,
+        44
+      ],
+      "stars": [
+        2,
+        4
+      ],
+      "fires": [
+        {
+          "code": "M4",
+          "desc": "month(12)==year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "07.12.2012",
+      "year": 2012,
+      "q": 4,
+      "d": 20,
+      "mains": [
+        10,
+        16,
+        18,
+        31,
+        42
+      ],
+      "stars": [
+        2,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M4",
+          "desc": "month(12)==year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "11.12.2012",
+      "year": 2012,
+      "q": 4,
+      "d": 21,
+      "mains": [
+        1,
+        4,
+        9,
+        43,
+        50
+      ],
+      "stars": [
+        6,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M4",
+          "desc": "month(12)==year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "14.12.2012",
+      "year": 2012,
+      "q": 4,
+      "d": 22,
+      "mains": [
+        10,
+        11,
+        29,
+        40,
+        43
+      ],
+      "stars": [
+        3,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M4",
+          "desc": "month(12)==year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "18.12.2012",
+      "year": 2012,
+      "q": 4,
+      "d": 23,
+      "mains": [
+        14,
+        18,
+        20,
+        35,
+        44
+      ],
+      "stars": [
+        2,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M4",
+          "desc": "month(12)==year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "21.12.2012",
+      "year": 2012,
+      "q": 4,
+      "d": 24,
+      "mains": [
+        3,
+        5,
+        22,
+        40,
+        42
+      ],
+      "stars": [
+        3,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(21)==flip(year-suffix)(21)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(12)==year-suffix(12)"
+        },
+        {
+          "code": "M4",
+          "desc": "month(12)==year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "25.12.2012",
+      "year": 2012,
+      "q": 4,
+      "d": 25,
+      "mains": [
+        14,
+        18,
+        20,
+        23,
+        32
+      ],
+      "stars": [
+        3,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M4",
+          "desc": "month(12)==year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "28.12.2012",
+      "year": 2012,
+      "q": 4,
+      "d": 26,
+      "mains": [
+        17,
+        24,
+        26,
+        27,
+        49
+      ],
+      "stars": [
+        3,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M4",
+          "desc": "month(12)==year-suffix(12)"
+        }
+      ]
+    },
+    {
+      "date": "01.01.2013",
+      "year": 2013,
+      "q": 1,
+      "d": 1,
+      "mains": [
+        2,
+        7,
+        8,
+        36,
+        49
+      ],
+      "stars": [
+        1,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(13)"
+        },
+        {
+          "code": "M6",
+          "desc": "month==day=(1) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "01.02.2013",
+      "year": 2013,
+      "q": 1,
+      "d": 10,
+      "mains": [
+        5,
+        21,
+        34,
+        37,
+        38
+      ],
+      "stars": [
+        1,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "01.03.2013",
+      "year": 2013,
+      "q": 1,
+      "d": 18,
+      "mains": [
+        1,
+        11,
+        29,
+        36,
+        42
+      ],
+      "stars": [
+        4,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "03.05.2013",
+      "year": 2013,
+      "q": 2,
+      "d": 10,
+      "mains": [
+        3,
+        5,
+        34,
+        40,
+        49
+      ],
+      "stars": [
+        2,
+        3
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(3) inside year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "31.05.2013",
+      "year": 2013,
+      "q": 2,
+      "d": 18,
+      "mains": [
+        27,
+        28,
+        29,
+        34,
+        43
+      ],
+      "stars": [
+        5,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(31)==flip(year-suffix)(31)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(13)==year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "13.08.2013",
+      "year": 2013,
+      "q": 3,
+      "d": 13,
+      "mains": [
+        5,
+        17,
+        20,
+        47,
+        50
+      ],
+      "stars": [
+        1,
+        4
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(13)==year-suffix(13)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(13) \u2282 year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "03.09.2013",
+      "year": 2013,
+      "q": 3,
+      "d": 19,
+      "mains": [
+        5,
+        9,
+        16,
+        18,
+        42
+      ],
+      "stars": [
+        7,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(3) inside year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "13.09.2013",
+      "year": 2013,
+      "q": 3,
+      "d": 22,
+      "mains": [
+        4,
+        6,
+        14,
+        27,
+        33
+      ],
+      "stars": [
+        5,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(13)==year-suffix(13)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(13) \u2282 year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "01.10.2013",
+      "year": 2013,
+      "q": 4,
+      "d": 1,
+      "mains": [
+        19,
+        23,
+        25,
+        44,
+        48
+      ],
+      "stars": [
+        8,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "01.11.2013",
+      "year": 2013,
+      "q": 4,
+      "d": 10,
+      "mains": [
+        7,
+        19,
+        29,
+        30,
+        33
+      ],
+      "stars": [
+        3,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "03.12.2013",
+      "year": 2013,
+      "q": 4,
+      "d": 19,
+      "mains": [
+        6,
+        13,
+        15,
+        29,
+        32
+      ],
+      "stars": [
+        2,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(3) inside year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "13.12.2013",
+      "year": 2013,
+      "q": 4,
+      "d": 22,
+      "mains": [
+        1,
+        22,
+        23,
+        24,
+        31
+      ],
+      "stars": [
+        6,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(13)==year-suffix(13)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(13) \u2282 year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "31.12.2013",
+      "year": 2013,
+      "q": 4,
+      "d": 27,
+      "mains": [
+        13,
+        20,
+        24,
+        29,
+        45
+      ],
+      "stars": [
+        3,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(31)==flip(year-suffix)(31)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(13)==year-suffix(13)"
+        }
+      ]
+    },
+    {
+      "date": "14.01.2014",
+      "year": 2014,
+      "q": 1,
+      "d": 4,
+      "mains": [
+        18,
+        20,
+        25,
+        26,
+        37
+      ],
+      "stars": [
+        10,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(14)==year-suffix(14)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(14) \u2282 year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "04.02.2014",
+      "year": 2014,
+      "q": 1,
+      "d": 10,
+      "mains": [
+        1,
+        21,
+        33,
+        37,
+        38
+      ],
+      "stars": [
+        4,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(4) inside year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "14.02.2014",
+      "year": 2014,
+      "q": 1,
+      "d": 13,
+      "mains": [
+        2,
+        4,
+        6,
+        19,
+        39
+      ],
+      "stars": [
+        2,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(14)==year-suffix(14)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(14) \u2282 year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "04.03.2014",
+      "year": 2014,
+      "q": 1,
+      "d": 18,
+      "mains": [
+        3,
+        5,
+        22,
+        27,
+        44
+      ],
+      "stars": [
+        1,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(4) inside year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "14.03.2014",
+      "year": 2014,
+      "q": 1,
+      "d": 21,
+      "mains": [
+        6,
+        24,
+        25,
+        27,
+        30
+      ],
+      "stars": [
+        5,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(14)==year-suffix(14)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(14) \u2282 year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "01.04.2014",
+      "year": 2014,
+      "q": 2,
+      "d": 1,
+      "mains": [
+        16,
+        18,
+        26,
+        38,
+        44
+      ],
+      "stars": [
+        8,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "04.04.2014",
+      "year": 2014,
+      "q": 2,
+      "d": 2,
+      "mains": [
+        6,
+        10,
+        28,
+        45,
+        50
+      ],
+      "stars": [
+        10,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(4) inside year-suffix(14)"
+        },
+        {
+          "code": "M6",
+          "desc": "month==day=(4) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "06.06.2014",
+      "year": 2014,
+      "q": 2,
+      "d": 19,
+      "mains": [
+        7,
+        25,
+        34,
+        40,
+        49
+      ],
+      "stars": [
+        9,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(6) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "01.07.2014",
+      "year": 2014,
+      "q": 3,
+      "d": 1,
+      "mains": [
+        18,
+        22,
+        25,
+        27,
+        39
+      ],
+      "stars": [
+        5,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "04.07.2014",
+      "year": 2014,
+      "q": 3,
+      "d": 2,
+      "mains": [
+        4,
+        18,
+        39,
+        43,
+        47
+      ],
+      "stars": [
+        2,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(4) inside year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "01.08.2014",
+      "year": 2014,
+      "q": 3,
+      "d": 10,
+      "mains": [
+        24,
+        44,
+        46,
+        48,
+        50
+      ],
+      "stars": [
+        5,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "08.08.2014",
+      "year": 2014,
+      "q": 3,
+      "d": 12,
+      "mains": [
+        21,
+        29,
+        35,
+        43,
+        46
+      ],
+      "stars": [
+        1,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(8) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "09.09.2014",
+      "year": 2014,
+      "q": 3,
+      "d": 21,
+      "mains": [
+        8,
+        15,
+        19,
+        24,
+        35
+      ],
+      "stars": [
+        8,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(9) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "10.10.2014",
+      "year": 2014,
+      "q": 4,
+      "d": 3,
+      "mains": [
+        6,
+        29,
+        42,
+        45,
+        47
+      ],
+      "stars": [
+        9,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(10) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "14.10.2014",
+      "year": 2014,
+      "q": 4,
+      "d": 4,
+      "mains": [
+        4,
+        5,
+        15,
+        23,
+        32
+      ],
+      "stars": [
+        3,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(14)==year-suffix(14)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(14) \u2282 year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "04.11.2014",
+      "year": 2014,
+      "q": 4,
+      "d": 10,
+      "mains": [
+        1,
+        6,
+        13,
+        17,
+        26
+      ],
+      "stars": [
+        3,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(4) inside year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "11.11.2014",
+      "year": 2014,
+      "q": 4,
+      "d": 12,
+      "mains": [
+        2,
+        14,
+        21,
+        36,
+        46
+      ],
+      "stars": [
+        7,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(11) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "14.11.2014",
+      "year": 2014,
+      "q": 4,
+      "d": 13,
+      "mains": [
+        17,
+        32,
+        36,
+        38,
+        48
+      ],
+      "stars": [
+        5,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(14)==year-suffix(14)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(14) \u2282 year-suffix(14)"
+        }
+      ]
+    },
+    {
+      "date": "12.12.2014",
+      "year": 2014,
+      "q": 4,
+      "d": 21,
+      "mains": [
+        2,
+        15,
+        28,
+        31,
+        37
+      ],
+      "stars": [
+        4,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(12) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "03.03.2015",
+      "year": 2015,
+      "q": 1,
+      "d": 18,
+      "mains": [
+        6,
+        8,
+        11,
+        13,
+        21
+      ],
+      "stars": [
+        7,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(3) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "01.05.2015",
+      "year": 2015,
+      "q": 2,
+      "d": 9,
+      "mains": [
+        3,
+        19,
+        20,
+        25,
+        26
+      ],
+      "stars": [
+        6,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(15)"
+        }
+      ]
+    },
+    {
+      "date": "05.05.2015",
+      "year": 2015,
+      "q": 2,
+      "d": 10,
+      "mains": [
+        1,
+        10,
+        17,
+        20,
+        42
+      ],
+      "stars": [
+        8,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(5) inside year-suffix(15)"
+        },
+        {
+          "code": "M6",
+          "desc": "month==day=(5) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "15.05.2015",
+      "year": 2015,
+      "q": 2,
+      "d": 13,
+      "mains": [
+        5,
+        35,
+        42,
+        44,
+        47
+      ],
+      "stars": [
+        8,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(15)==year-suffix(15)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(15) \u2282 year-suffix(15)"
+        }
+      ]
+    },
+    {
+      "date": "05.06.2015",
+      "year": 2015,
+      "q": 2,
+      "d": 19,
+      "mains": [
+        2,
+        7,
+        8,
+        45,
+        48
+      ],
+      "stars": [
+        1,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(5) inside year-suffix(15)"
+        }
+      ]
+    },
+    {
+      "date": "07.07.2015",
+      "year": 2015,
+      "q": 3,
+      "d": 2,
+      "mains": [
+        6,
+        7,
+        18,
+        33,
+        41
+      ],
+      "stars": [
+        3,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(7) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "01.09.2015",
+      "year": 2015,
+      "q": 3,
+      "d": 18,
+      "mains": [
+        6,
+        19,
+        21,
+        27,
+        45
+      ],
+      "stars": [
+        1,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(15)"
+        }
+      ]
+    },
+    {
+      "date": "15.09.2015",
+      "year": 2015,
+      "q": 3,
+      "d": 22,
+      "mains": [
+        8,
+        15,
+        17,
+        44,
+        49
+      ],
+      "stars": [
+        5,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(15)==year-suffix(15)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(15) \u2282 year-suffix(15)"
+        }
+      ]
+    },
+    {
+      "date": "01.12.2015",
+      "year": 2015,
+      "q": 4,
+      "d": 18,
+      "mains": [
+        2,
+        15,
+        25,
+        35,
+        45
+      ],
+      "stars": [
+        8,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(15)"
+        }
+      ]
+    },
+    {
+      "date": "15.12.2015",
+      "year": 2015,
+      "q": 4,
+      "d": 22,
+      "mains": [
+        8,
+        11,
+        23,
+        27,
+        35
+      ],
+      "stars": [
+        4,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(15)==year-suffix(15)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(15) \u2282 year-suffix(15)"
+        }
+      ]
+    },
+    {
+      "date": "01.01.2016",
+      "year": 2016,
+      "q": 1,
+      "d": 1,
+      "mains": [
+        4,
+        37,
+        38,
+        39,
+        44
+      ],
+      "stars": [
+        4,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(16)"
+        },
+        {
+          "code": "M6",
+          "desc": "month==day=(1) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "02.02.2016",
+      "year": 2016,
+      "q": 1,
+      "d": 10,
+      "mains": [
+        6,
+        9,
+        10,
+        21,
+        36
+      ],
+      "stars": [
+        2,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(2) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "16.02.2016",
+      "year": 2016,
+      "q": 1,
+      "d": 14,
+      "mains": [
+        3,
+        10,
+        22,
+        37,
+        50
+      ],
+      "stars": [
+        6,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(16)==year-suffix(16)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(16) \u2282 year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "01.03.2016",
+      "year": 2016,
+      "q": 1,
+      "d": 18,
+      "mains": [
+        4,
+        7,
+        13,
+        28,
+        37
+      ],
+      "stars": [
+        10,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "01.04.2016",
+      "year": 2016,
+      "q": 2,
+      "d": 1,
+      "mains": [
+        2,
+        16,
+        23,
+        25,
+        49
+      ],
+      "stars": [
+        6,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "06.05.2016",
+      "year": 2016,
+      "q": 2,
+      "d": 19,
+      "mains": [
+        32,
+        34,
+        40,
+        45,
+        48
+      ],
+      "stars": [
+        1,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(6) inside year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "06.05.2016",
+      "year": 2016,
+      "q": 2,
+      "d": 19,
+      "mains": [
+        32,
+        34,
+        40,
+        45,
+        48
+      ],
+      "stars": [
+        1,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(6) inside year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "01.07.2016",
+      "year": 2016,
+      "q": 3,
+      "d": 1,
+      "mains": [
+        2,
+        11,
+        13,
+        40,
+        50
+      ],
+      "stars": [
+        1,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "01.07.2016",
+      "year": 2016,
+      "q": 3,
+      "d": 1,
+      "mains": [
+        2,
+        11,
+        13,
+        40,
+        50
+      ],
+      "stars": [
+        1,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "16.08.2016",
+      "year": 2016,
+      "q": 3,
+      "d": 17,
+      "mains": [
+        2,
+        26,
+        34,
+        37,
+        46
+      ],
+      "stars": [
+        4,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(16)==year-suffix(16)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(16) \u2282 year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "06.09.2016",
+      "year": 2016,
+      "q": 3,
+      "d": 23,
+      "mains": [
+        12,
+        24,
+        30,
+        34,
+        45
+      ],
+      "stars": [
+        7,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(6) inside year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "09.09.2016",
+      "year": 2016,
+      "q": 3,
+      "d": 24,
+      "mains": [
+        4,
+        11,
+        15,
+        17,
+        28
+      ],
+      "stars": [
+        1,
+        3
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(9) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "16.09.2016",
+      "year": 2016,
+      "q": 3,
+      "d": 26,
+      "mains": [
+        5,
+        8,
+        14,
+        22,
+        32
+      ],
+      "stars": [
+        2,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(16)==year-suffix(16)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(16) \u2282 year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "01.11.2016",
+      "year": 2016,
+      "q": 4,
+      "d": 9,
+      "mains": [
+        6,
+        10,
+        20,
+        29,
+        37
+      ],
+      "stars": [
+        1,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "11.11.2016",
+      "year": 2016,
+      "q": 4,
+      "d": 12,
+      "mains": [
+        3,
+        22,
+        23,
+        38,
+        49
+      ],
+      "stars": [
+        2,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(11) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "06.12.2016",
+      "year": 2016,
+      "q": 4,
+      "d": 19,
+      "mains": [
+        1,
+        7,
+        11,
+        27,
+        45
+      ],
+      "stars": [
+        4,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(6) inside year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "16.12.2016",
+      "year": 2016,
+      "q": 4,
+      "d": 22,
+      "mains": [
+        6,
+        10,
+        30,
+        41,
+        45
+      ],
+      "stars": [
+        4,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(16)==year-suffix(16)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(16) \u2282 year-suffix(16)"
+        }
+      ]
+    },
+    {
+      "date": "17.01.2017",
+      "year": 2017,
+      "q": 1,
+      "d": 5,
+      "mains": [
+        4,
+        6,
+        25,
+        43,
+        47
+      ],
+      "stars": [
+        2,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(17)==year-suffix(17)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(17) \u2282 year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "07.02.2017",
+      "year": 2017,
+      "q": 1,
+      "d": 11,
+      "mains": [
+        4,
+        10,
+        31,
+        38,
+        44
+      ],
+      "stars": [
+        8,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(7) inside year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "17.02.2017",
+      "year": 2017,
+      "q": 1,
+      "d": 14,
+      "mains": [
+        19,
+        25,
+        33,
+        36,
+        48
+      ],
+      "stars": [
+        2,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(17)==year-suffix(17)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(17) \u2282 year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "03.03.2017",
+      "year": 2017,
+      "q": 1,
+      "d": 18,
+      "mains": [
+        2,
+        11,
+        29,
+        30,
+        47
+      ],
+      "stars": [
+        1,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(3) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "07.03.2017",
+      "year": 2017,
+      "q": 1,
+      "d": 19,
+      "mains": [
+        6,
+        37,
+        41,
+        48,
+        50
+      ],
+      "stars": [
+        4,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(7) inside year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "17.03.2017",
+      "year": 2017,
+      "q": 1,
+      "d": 22,
+      "mains": [
+        6,
+        10,
+        19,
+        29,
+        36
+      ],
+      "stars": [
+        3,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(17)==year-suffix(17)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(17) \u2282 year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "04.04.2017",
+      "year": 2017,
+      "q": 2,
+      "d": 1,
+      "mains": [
+        1,
+        9,
+        24,
+        33,
+        34
+      ],
+      "stars": [
+        2,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(4) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "07.04.2017",
+      "year": 2017,
+      "q": 2,
+      "d": 2,
+      "mains": [
+        2,
+        10,
+        19,
+        35,
+        50
+      ],
+      "stars": [
+        6,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(7) inside year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "05.05.2017",
+      "year": 2017,
+      "q": 2,
+      "d": 10,
+      "mains": [
+        3,
+        7,
+        30,
+        35,
+        43
+      ],
+      "stars": [
+        1,
+        3
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(5) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "06.06.2017",
+      "year": 2017,
+      "q": 2,
+      "d": 19,
+      "mains": [
+        20,
+        22,
+        25,
+        37,
+        40
+      ],
+      "stars": [
+        3,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(6) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "07.07.2017",
+      "year": 2017,
+      "q": 3,
+      "d": 2,
+      "mains": [
+        11,
+        20,
+        35,
+        37,
+        45
+      ],
+      "stars": [
+        3,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(7) inside year-suffix(17)"
+        },
+        {
+          "code": "M6",
+          "desc": "month==day=(7) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "01.08.2017",
+      "year": 2017,
+      "q": 3,
+      "d": 9,
+      "mains": [
+        14,
+        21,
+        24,
+        29,
+        30
+      ],
+      "stars": [
+        8,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "08.08.2017",
+      "year": 2017,
+      "q": 3,
+      "d": 11,
+      "mains": [
+        15,
+        25,
+        26,
+        40,
+        41
+      ],
+      "stars": [
+        4,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(8) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "01.09.2017",
+      "year": 2017,
+      "q": 3,
+      "d": 18,
+      "mains": [
+        3,
+        7,
+        8,
+        14,
+        49
+      ],
+      "stars": [
+        5,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "10.10.2017",
+      "year": 2017,
+      "q": 4,
+      "d": 3,
+      "mains": [
+        4,
+        21,
+        34,
+        36,
+        37
+      ],
+      "stars": [
+        3,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(10) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "17.10.2017",
+      "year": 2017,
+      "q": 4,
+      "d": 5,
+      "mains": [
+        13,
+        17,
+        19,
+        26,
+        36
+      ],
+      "stars": [
+        2,
+        3
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(17)==year-suffix(17)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(17) \u2282 year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "07.11.2017",
+      "year": 2017,
+      "q": 4,
+      "d": 11,
+      "mains": [
+        7,
+        19,
+        20,
+        37,
+        41
+      ],
+      "stars": [
+        2,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(7) inside year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "17.11.2017",
+      "year": 2017,
+      "q": 4,
+      "d": 14,
+      "mains": [
+        20,
+        26,
+        35,
+        36,
+        42
+      ],
+      "stars": [
+        5,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(17)==year-suffix(17)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(17) \u2282 year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "01.12.2017",
+      "year": 2017,
+      "q": 4,
+      "d": 18,
+      "mains": [
+        5,
+        24,
+        29,
+        35,
+        46
+      ],
+      "stars": [
+        11,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(17)"
+        }
+      ]
+    },
+    {
+      "date": "12.12.2017",
+      "year": 2017,
+      "q": 4,
+      "d": 21,
+      "mains": [
+        20,
+        37,
+        39,
+        44,
+        50
+      ],
+      "stars": [
+        4,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(12) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "02.02.2018",
+      "year": 2018,
+      "q": 1,
+      "d": 10,
+      "mains": [
+        14,
+        34,
+        36,
+        39,
+        48
+      ],
+      "stars": [
+        2,
+        3
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(2) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "01.05.2018",
+      "year": 2018,
+      "q": 2,
+      "d": 9,
+      "mains": [
+        6,
+        15,
+        17,
+        42,
+        48
+      ],
+      "stars": [
+        4,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(18)"
+        }
+      ]
+    },
+    {
+      "date": "08.05.2018",
+      "year": 2018,
+      "q": 2,
+      "d": 11,
+      "mains": [
+        17,
+        25,
+        35,
+        39,
+        44
+      ],
+      "stars": [
+        2,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(8) inside year-suffix(18)"
+        }
+      ]
+    },
+    {
+      "date": "18.05.2018",
+      "year": 2018,
+      "q": 2,
+      "d": 14,
+      "mains": [
+        5,
+        8,
+        10,
+        13,
+        31
+      ],
+      "stars": [
+        3,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(18)==year-suffix(18)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(18) \u2282 year-suffix(18)"
+        }
+      ]
+    },
+    {
+      "date": "01.06.2018",
+      "year": 2018,
+      "q": 2,
+      "d": 18,
+      "mains": [
+        17,
+        18,
+        24,
+        29,
+        40
+      ],
+      "stars": [
+        4,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(18)"
+        }
+      ]
+    },
+    {
+      "date": "08.06.2018",
+      "year": 2018,
+      "q": 2,
+      "d": 20,
+      "mains": [
+        8,
+        19,
+        32,
+        43,
+        46
+      ],
+      "stars": [
+        2,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(8) inside year-suffix(18)"
+        }
+      ]
+    },
+    {
+      "date": "18.09.2018",
+      "year": 2018,
+      "q": 3,
+      "d": 23,
+      "mains": [
+        3,
+        8,
+        10,
+        32,
+        45
+      ],
+      "stars": [
+        4,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(18)==year-suffix(18)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(18) \u2282 year-suffix(18)"
+        }
+      ]
+    },
+    {
+      "date": "18.12.2018",
+      "year": 2018,
+      "q": 4,
+      "d": 23,
+      "mains": [
+        1,
+        9,
+        18,
+        39,
+        48
+      ],
+      "stars": [
+        5,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(18)==year-suffix(18)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(18) \u2282 year-suffix(18)"
+        }
+      ]
+    },
+    {
+      "date": "01.01.2019",
+      "year": 2019,
+      "q": 1,
+      "d": 1,
+      "mains": [
+        1,
+        8,
+        11,
+        25,
+        28
+      ],
+      "stars": [
+        4,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(19)"
+        },
+        {
+          "code": "M6",
+          "desc": "month==day=(1) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "01.02.2019",
+      "year": 2019,
+      "q": 1,
+      "d": 10,
+      "mains": [
+        3,
+        21,
+        26,
+        41,
+        46
+      ],
+      "stars": [
+        1,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "19.02.2019",
+      "year": 2019,
+      "q": 1,
+      "d": 15,
+      "mains": [
+        1,
+        8,
+        18,
+        19,
+        39
+      ],
+      "stars": [
+        7,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(19)==year-suffix(19)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(19) \u2282 year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "01.03.2019",
+      "year": 2019,
+      "q": 1,
+      "d": 18,
+      "mains": [
+        6,
+        9,
+        19,
+        26,
+        31
+      ],
+      "stars": [
+        11,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "19.03.2019",
+      "year": 2019,
+      "q": 1,
+      "d": 23,
+      "mains": [
+        1,
+        6,
+        9,
+        34,
+        47
+      ],
+      "stars": [
+        7,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(19)==year-suffix(19)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(19) \u2282 year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "09.04.2019",
+      "year": 2019,
+      "q": 2,
+      "d": 3,
+      "mains": [
+        18,
+        21,
+        29,
+        38,
+        41
+      ],
+      "stars": [
+        1,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(9) inside year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "19.04.2019",
+      "year": 2019,
+      "q": 2,
+      "d": 6,
+      "mains": [
+        7,
+        8,
+        32,
+        41,
+        49
+      ],
+      "stars": [
+        5,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(19)==year-suffix(19)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(19) \u2282 year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "09.07.2019",
+      "year": 2019,
+      "q": 3,
+      "d": 3,
+      "mains": [
+        7,
+        29,
+        32,
+        36,
+        41
+      ],
+      "stars": [
+        6,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(9) inside year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "19.07.2019",
+      "year": 2019,
+      "q": 3,
+      "d": 6,
+      "mains": [
+        13,
+        14,
+        17,
+        26,
+        28
+      ],
+      "stars": [
+        2,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(19)==year-suffix(19)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(19) \u2282 year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "09.08.2019",
+      "year": 2019,
+      "q": 3,
+      "d": 12,
+      "mains": [
+        2,
+        14,
+        35,
+        41,
+        42
+      ],
+      "stars": [
+        10,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(9) inside year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "01.10.2019",
+      "year": 2019,
+      "q": 4,
+      "d": 1,
+      "mains": [
+        2,
+        11,
+        18,
+        40,
+        46
+      ],
+      "stars": [
+        1,
+        4
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "01.11.2019",
+      "year": 2019,
+      "q": 4,
+      "d": 10,
+      "mains": [
+        2,
+        20,
+        39,
+        44,
+        48
+      ],
+      "stars": [
+        5,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "19.11.2019",
+      "year": 2019,
+      "q": 4,
+      "d": 15,
+      "mains": [
+        8,
+        10,
+        15,
+        30,
+        42
+      ],
+      "stars": [
+        4,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(19)==year-suffix(19)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(19) \u2282 year-suffix(19)"
+        }
+      ]
+    },
+    {
+      "date": "03.03.2020",
+      "year": 2020,
+      "q": 1,
+      "d": 18,
+      "mains": [
+        4,
+        14,
+        27,
+        44,
+        45
+      ],
+      "stars": [
+        1,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(3) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "20.03.2020",
+      "year": 2020,
+      "q": 1,
+      "d": 23,
+      "mains": [
+        3,
+        9,
+        20,
+        34,
+        40
+      ],
+      "stars": [
+        6,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(20)==year-suffix(20)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(20) \u2282 year-suffix(20)"
+        }
+      ]
+    },
+    {
+      "date": "05.05.2020",
+      "year": 2020,
+      "q": 2,
+      "d": 10,
+      "mains": [
+        2,
+        10,
+        22,
+        27,
+        41
+      ],
+      "stars": [
+        2,
+        3
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(5) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "02.06.2020",
+      "year": 2020,
+      "q": 2,
+      "d": 18,
+      "mains": [
+        10,
+        12,
+        22,
+        26,
+        49
+      ],
+      "stars": [
+        7,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(2)==flip(year-suffix)(2)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(20)==year-suffix(20)"
+        },
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(20)"
+        }
+      ]
+    },
+    {
+      "date": "07.07.2020",
+      "year": 2020,
+      "q": 3,
+      "d": 2,
+      "mains": [
+        12,
+        16,
+        23,
+        33,
+        41
+      ],
+      "stars": [
+        8,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(7) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "02.10.2020",
+      "year": 2020,
+      "q": 4,
+      "d": 1,
+      "mains": [
+        6,
+        12,
+        15,
+        40,
+        45
+      ],
+      "stars": [
+        3,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(2)==flip(year-suffix)(2)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(20)==year-suffix(20)"
+        },
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(20)"
+        }
+      ]
+    },
+    {
+      "date": "20.10.2020",
+      "year": 2020,
+      "q": 4,
+      "d": 6,
+      "mains": [
+        5,
+        6,
+        15,
+        37,
+        42
+      ],
+      "stars": [
+        3,
+        4
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(20)==year-suffix(20)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(20) \u2282 year-suffix(20)"
+        }
+      ]
+    },
+    {
+      "date": "20.11.2020",
+      "year": 2020,
+      "q": 4,
+      "d": 15,
+      "mains": [
+        28,
+        29,
+        39,
+        48,
+        50
+      ],
+      "stars": [
+        5,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(20)==year-suffix(20)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(20) \u2282 year-suffix(20)"
+        }
+      ]
+    },
+    {
+      "date": "01.01.2021",
+      "year": 2021,
+      "q": 1,
+      "d": 1,
+      "mains": [
+        16,
+        28,
+        32,
+        44,
+        48
+      ],
+      "stars": [
+        1,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(21)"
+        },
+        {
+          "code": "M6",
+          "desc": "month==day=(1) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "12.01.2021",
+      "year": 2021,
+      "q": 1,
+      "d": 4,
+      "mains": [
+        2,
+        10,
+        18,
+        34,
+        35
+      ],
+      "stars": [
+        6,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(12)==flip(year-suffix)(12)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(21)==year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "02.02.2021",
+      "year": 2021,
+      "q": 1,
+      "d": 10,
+      "mains": [
+        18,
+        20,
+        35,
+        38,
+        48
+      ],
+      "stars": [
+        9,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(21)"
+        },
+        {
+          "code": "M6",
+          "desc": "month==day=(2) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "12.02.2021",
+      "year": 2021,
+      "q": 1,
+      "d": 13,
+      "mains": [
+        7,
+        23,
+        30,
+        32,
+        36
+      ],
+      "stars": [
+        8,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(12)==flip(year-suffix)(12)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(21)==year-suffix(21)"
+        },
+        {
+          "code": "M7",
+          "desc": "full date palindrome 12022021"
+        }
+      ]
+    },
+    {
+      "date": "02.03.2021",
+      "year": 2021,
+      "q": 1,
+      "d": 18,
+      "mains": [
+        2,
+        19,
+        24,
+        26,
+        49
+      ],
+      "stars": [
+        6,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "12.03.2021",
+      "year": 2021,
+      "q": 1,
+      "d": 21,
+      "mains": [
+        4,
+        6,
+        9,
+        11,
+        44
+      ],
+      "stars": [
+        10,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(12)==flip(year-suffix)(12)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(21)==year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "02.04.2021",
+      "year": 2021,
+      "q": 2,
+      "d": 1,
+      "mains": [
+        4,
+        21,
+        34,
+        40,
+        47
+      ],
+      "stars": [
+        2,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "21.05.2021",
+      "year": 2021,
+      "q": 2,
+      "d": 15,
+      "mains": [
+        2,
+        9,
+        13,
+        15,
+        35
+      ],
+      "stars": [
+        3,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(21)==year-suffix(21)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(21) \u2282 year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "01.06.2021",
+      "year": 2021,
+      "q": 2,
+      "d": 18,
+      "mains": [
+        3,
+        10,
+        26,
+        35,
+        44
+      ],
+      "stars": [
+        6,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "02.07.2021",
+      "year": 2021,
+      "q": 3,
+      "d": 1,
+      "mains": [
+        9,
+        14,
+        29,
+        38,
+        49
+      ],
+      "stars": [
+        7,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "21.09.2021",
+      "year": 2021,
+      "q": 3,
+      "d": 24,
+      "mains": [
+        20,
+        25,
+        26,
+        30,
+        38
+      ],
+      "stars": [
+        2,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(21)==year-suffix(21)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(21) \u2282 year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "01.10.2021",
+      "year": 2021,
+      "q": 4,
+      "d": 1,
+      "mains": [
+        1,
+        15,
+        19,
+        26,
+        48
+      ],
+      "stars": [
+        6,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(1) inside year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "12.10.2021",
+      "year": 2021,
+      "q": 4,
+      "d": 4,
+      "mains": [
+        6,
+        13,
+        22,
+        45,
+        49
+      ],
+      "stars": [
+        10,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(12)==flip(year-suffix)(12)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(21)==year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "02.11.2021",
+      "year": 2021,
+      "q": 4,
+      "d": 10,
+      "mains": [
+        2,
+        3,
+        17,
+        29,
+        43
+      ],
+      "stars": [
+        1,
+        4
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "12.11.2021",
+      "year": 2021,
+      "q": 4,
+      "d": 13,
+      "mains": [
+        2,
+        9,
+        15,
+        47,
+        50
+      ],
+      "stars": [
+        6,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M2",
+          "desc": "day(12)==flip(year-suffix)(12)"
+        },
+        {
+          "code": "M3",
+          "desc": "flip(day)(21)==year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "21.12.2021",
+      "year": 2021,
+      "q": 4,
+      "d": 24,
+      "mains": [
+        12,
+        17,
+        21,
+        34,
+        38
+      ],
+      "stars": [
+        2,
+        3
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(21)==year-suffix(21)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(21) \u2282 year-suffix(21)"
+        }
+      ]
+    },
+    {
+      "date": "22.02.2022",
+      "year": 2022,
+      "q": 1,
+      "d": 15,
+      "mains": [
+        5,
+        9,
+        14,
+        26,
+        32
+      ],
+      "stars": [
+        3,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(22)==year-suffix(22)"
+        },
+        {
+          "code": "M2",
+          "desc": "day(22)==flip(year-suffix)(22)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(22) \u2282 year-suffix(22)"
+        },
+        {
+          "code": "M7",
+          "desc": "full date palindrome 22022022"
+        }
+      ]
+    },
+    {
+      "date": "22.03.2022",
+      "year": 2022,
+      "q": 1,
+      "d": 23,
+      "mains": [
+        7,
+        17,
+        21,
+        29,
+        40
+      ],
+      "stars": [
+        8,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(22)==year-suffix(22)"
+        },
+        {
+          "code": "M2",
+          "desc": "day(22)==flip(year-suffix)(22)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(22) \u2282 year-suffix(22)"
+        }
+      ]
+    },
+    {
+      "date": "22.04.2022",
+      "year": 2022,
+      "q": 2,
+      "d": 7,
+      "mains": [
+        6,
+        11,
+        21,
+        35,
+        36
+      ],
+      "stars": [
+        1,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(22)==year-suffix(22)"
+        },
+        {
+          "code": "M2",
+          "desc": "day(22)==flip(year-suffix)(22)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(22) \u2282 year-suffix(22)"
+        }
+      ]
+    },
+    {
+      "date": "22.07.2022",
+      "year": 2022,
+      "q": 3,
+      "d": 7,
+      "mains": [
+        16,
+        18,
+        29,
+        32,
+        50
+      ],
+      "stars": [
+        4,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(22)==year-suffix(22)"
+        },
+        {
+          "code": "M2",
+          "desc": "day(22)==flip(year-suffix)(22)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(22) \u2282 year-suffix(22)"
+        }
+      ]
+    },
+    {
+      "date": "02.08.2022",
+      "year": 2022,
+      "q": 3,
+      "d": 10,
+      "mains": [
+        7,
+        18,
+        28,
+        40,
+        48
+      ],
+      "stars": [
+        8,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(22)"
+        }
+      ]
+    },
+    {
+      "date": "02.09.2022",
+      "year": 2022,
+      "q": 3,
+      "d": 19,
+      "mains": [
+        7,
+        12,
+        13,
+        20,
+        45
+      ],
+      "stars": [
+        3,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(22)"
+        }
+      ]
+    },
+    {
+      "date": "09.09.2022",
+      "year": 2022,
+      "q": 3,
+      "d": 21,
+      "mains": [
+        17,
+        23,
+        24,
+        26,
+        27
+      ],
+      "stars": [
+        4,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(9) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "11.11.2022",
+      "year": 2022,
+      "q": 4,
+      "d": 12,
+      "mains": [
+        2,
+        19,
+        24,
+        25,
+        44
+      ],
+      "stars": [
+        2,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(11) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "22.11.2022",
+      "year": 2022,
+      "q": 4,
+      "d": 15,
+      "mains": [
+        21,
+        22,
+        24,
+        29,
+        42
+      ],
+      "stars": [
+        3,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(22)==year-suffix(22)"
+        },
+        {
+          "code": "M2",
+          "desc": "day(22)==flip(year-suffix)(22)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(22) \u2282 year-suffix(22)"
+        }
+      ]
+    },
+    {
+      "date": "02.12.2022",
+      "year": 2022,
+      "q": 4,
+      "d": 18,
+      "mains": [
+        12,
+        21,
+        35,
+        39,
+        45
+      ],
+      "stars": [
+        6,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(22)"
+        }
+      ]
+    },
+    {
+      "date": "03.01.2023",
+      "year": 2023,
+      "q": 1,
+      "d": 1,
+      "mains": [
+        20,
+        21,
+        29,
+        45,
+        46
+      ],
+      "stars": [
+        3,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(3) inside year-suffix(23)"
+        }
+      ]
+    },
+    {
+      "date": "03.02.2023",
+      "year": 2023,
+      "q": 1,
+      "d": 10,
+      "mains": [
+        2,
+        14,
+        17,
+        32,
+        45
+      ],
+      "stars": [
+        3,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(3) inside year-suffix(23)"
+        }
+      ]
+    },
+    {
+      "date": "03.03.2023",
+      "year": 2023,
+      "q": 1,
+      "d": 18,
+      "mains": [
+        3,
+        6,
+        8,
+        24,
+        50
+      ],
+      "stars": [
+        10,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(3) inside year-suffix(23)"
+        },
+        {
+          "code": "M6",
+          "desc": "month==day=(3) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "04.04.2023",
+      "year": 2023,
+      "q": 2,
+      "d": 1,
+      "mains": [
+        10,
+        16,
+        31,
+        33,
+        50
+      ],
+      "stars": [
+        3,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(4) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "02.05.2023",
+      "year": 2023,
+      "q": 2,
+      "d": 9,
+      "mains": [
+        7,
+        32,
+        44,
+        47,
+        48
+      ],
+      "stars": [
+        7,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(23)"
+        }
+      ]
+    },
+    {
+      "date": "05.05.2023",
+      "year": 2023,
+      "q": 2,
+      "d": 10,
+      "mains": [
+        3,
+        8,
+        18,
+        34,
+        49
+      ],
+      "stars": [
+        3,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(5) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "23.05.2023",
+      "year": 2023,
+      "q": 2,
+      "d": 15,
+      "mains": [
+        5,
+        6,
+        14,
+        23,
+        34
+      ],
+      "stars": [
+        2,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(23)==year-suffix(23)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(23) \u2282 year-suffix(23)"
+        }
+      ]
+    },
+    {
+      "date": "02.06.2023",
+      "year": 2023,
+      "q": 2,
+      "d": 18,
+      "mains": [
+        3,
+        12,
+        15,
+        25,
+        43
+      ],
+      "stars": [
+        10,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(23)"
+        }
+      ]
+    },
+    {
+      "date": "06.06.2023",
+      "year": 2023,
+      "q": 2,
+      "d": 19,
+      "mains": [
+        13,
+        21,
+        32,
+        39,
+        50
+      ],
+      "stars": [
+        2,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(6) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "23.06.2023",
+      "year": 2023,
+      "q": 2,
+      "d": 24,
+      "mains": [
+        1,
+        3,
+        11,
+        33,
+        46
+      ],
+      "stars": [
+        10,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(23)==year-suffix(23)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(23) \u2282 year-suffix(23)"
+        }
+      ]
+    },
+    {
+      "date": "07.07.2023",
+      "year": 2023,
+      "q": 3,
+      "d": 2,
+      "mains": [
+        2,
+        11,
+        12,
+        19,
+        38
+      ],
+      "stars": [
+        4,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(7) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "08.08.2023",
+      "year": 2023,
+      "q": 3,
+      "d": 11,
+      "mains": [
+        8,
+        9,
+        33,
+        35,
+        40
+      ],
+      "stars": [
+        3,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(8) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "03.10.2023",
+      "year": 2023,
+      "q": 4,
+      "d": 1,
+      "mains": [
+        6,
+        20,
+        22,
+        24,
+        45
+      ],
+      "stars": [
+        4,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(3) inside year-suffix(23)"
+        }
+      ]
+    },
+    {
+      "date": "10.10.2023",
+      "year": 2023,
+      "q": 4,
+      "d": 3,
+      "mains": [
+        18,
+        20,
+        22,
+        33,
+        43
+      ],
+      "stars": [
+        3,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(10) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "03.11.2023",
+      "year": 2023,
+      "q": 4,
+      "d": 10,
+      "mains": [
+        8,
+        21,
+        31,
+        39,
+        47
+      ],
+      "stars": [
+        5,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(3) inside year-suffix(23)"
+        }
+      ]
+    },
+    {
+      "date": "12.12.2023",
+      "year": 2023,
+      "q": 4,
+      "d": 21,
+      "mains": [
+        6,
+        28,
+        37,
+        39,
+        43
+      ],
+      "stars": [
+        9,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(12) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "02.01.2024",
+      "year": 2024,
+      "q": 1,
+      "d": 1,
+      "mains": [
+        7,
+        15,
+        18,
+        46,
+        49
+      ],
+      "stars": [
+        10,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(24)"
+        }
+      ]
+    },
+    {
+      "date": "02.02.2024",
+      "year": 2024,
+      "q": 1,
+      "d": 10,
+      "mains": [
+        13,
+        20,
+        23,
+        27,
+        42
+      ],
+      "stars": [
+        5,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(24)"
+        },
+        {
+          "code": "M6",
+          "desc": "month==day=(2) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "02.04.2024",
+      "year": 2024,
+      "q": 2,
+      "d": 1,
+      "mains": [
+        1,
+        23,
+        31,
+        36,
+        48
+      ],
+      "stars": [
+        5,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(24)"
+        }
+      ]
+    },
+    {
+      "date": "24.05.2024",
+      "year": 2024,
+      "q": 2,
+      "d": 16,
+      "mains": [
+        9,
+        12,
+        18,
+        22,
+        50
+      ],
+      "stars": [
+        1,
+        3
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(24)==year-suffix(24)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(24) \u2282 year-suffix(24)"
+        }
+      ]
+    },
+    {
+      "date": "04.06.2024",
+      "year": 2024,
+      "q": 2,
+      "d": 19,
+      "mains": [
+        6,
+        7,
+        9,
+        14,
+        43
+      ],
+      "stars": [
+        3,
+        4
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(4) inside year-suffix(24)"
+        }
+      ]
+    },
+    {
+      "date": "02.07.2024",
+      "year": 2024,
+      "q": 3,
+      "d": 1,
+      "mains": [
+        2,
+        7,
+        34,
+        35,
+        46
+      ],
+      "stars": [
+        6,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(24)"
+        }
+      ]
+    },
+    {
+      "date": "02.08.2024",
+      "year": 2024,
+      "q": 3,
+      "d": 10,
+      "mains": [
+        5,
+        7,
+        12,
+        33,
+        46
+      ],
+      "stars": [
+        3,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(24)"
+        }
+      ]
+    },
+    {
+      "date": "24.09.2024",
+      "year": 2024,
+      "q": 3,
+      "d": 25,
+      "mains": [
+        18,
+        20,
+        21,
+        36,
+        49
+      ],
+      "stars": [
+        3,
+        5
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(24)==year-suffix(24)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(24) \u2282 year-suffix(24)"
+        }
+      ]
+    },
+    {
+      "date": "04.10.2024",
+      "year": 2024,
+      "q": 4,
+      "d": 2,
+      "mains": [
+        4,
+        8,
+        16,
+        17,
+        20
+      ],
+      "stars": [
+        1,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(4) inside year-suffix(24)"
+        }
+      ]
+    },
+    {
+      "date": "24.12.2024",
+      "year": 2024,
+      "q": 4,
+      "d": 25,
+      "mains": [
+        6,
+        10,
+        16,
+        23,
+        24
+      ],
+      "stars": [
+        11,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(24)==year-suffix(24)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(24) \u2282 year-suffix(24)"
+        }
+      ]
+    },
+    {
+      "date": "25.02.2025",
+      "year": 2025,
+      "q": 1,
+      "d": 16,
+      "mains": [
+        17,
+        22,
+        23,
+        24,
+        44
+      ],
+      "stars": [
+        6,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(25)==year-suffix(25)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(25) \u2282 year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "25.03.2025",
+      "year": 2025,
+      "q": 1,
+      "d": 24,
+      "mains": [
+        1,
+        3,
+        18,
+        33,
+        36
+      ],
+      "stars": [
+        2,
+        6
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(25)==year-suffix(25)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(25) \u2282 year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "04.04.2025",
+      "year": 2025,
+      "q": 2,
+      "d": 2,
+      "mains": [
+        27,
+        39,
+        41,
+        45,
+        50
+      ],
+      "stars": [
+        5,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(4) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "25.04.2025",
+      "year": 2025,
+      "q": 2,
+      "d": 8,
+      "mains": [
+        13,
+        22,
+        32,
+        39,
+        41
+      ],
+      "stars": [
+        1,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(25)==year-suffix(25)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(25) \u2282 year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "02.05.2025",
+      "year": 2025,
+      "q": 2,
+      "d": 10,
+      "mains": [
+        3,
+        5,
+        19,
+        21,
+        49
+      ],
+      "stars": [
+        1,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "06.06.2025",
+      "year": 2025,
+      "q": 2,
+      "d": 20,
+      "mains": [
+        20,
+        21,
+        29,
+        30,
+        35
+      ],
+      "stars": [
+        2,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(6) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "25.07.2025",
+      "year": 2025,
+      "q": 3,
+      "d": 8,
+      "mains": [
+        6,
+        7,
+        23,
+        32,
+        36
+      ],
+      "stars": [
+        11,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(25)==year-suffix(25)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(25) \u2282 year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "05.08.2025",
+      "year": 2025,
+      "q": 3,
+      "d": 11,
+      "mains": [
+        1,
+        3,
+        5,
+        42,
+        47
+      ],
+      "stars": [
+        5,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(5) inside year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "08.08.2025",
+      "year": 2025,
+      "q": 3,
+      "d": 12,
+      "mains": [
+        2,
+        12,
+        19,
+        34,
+        44
+      ],
+      "stars": [
+        6,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(8) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "02.09.2025",
+      "year": 2025,
+      "q": 3,
+      "d": 19,
+      "mains": [
+        13,
+        30,
+        31,
+        32,
+        36
+      ],
+      "stars": [
+        1,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "05.09.2025",
+      "year": 2025,
+      "q": 3,
+      "d": 20,
+      "mains": [
+        27,
+        30,
+        31,
+        41,
+        43
+      ],
+      "stars": [
+        5,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(5) inside year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "09.09.2025",
+      "year": 2025,
+      "q": 3,
+      "d": 21,
+      "mains": [
+        3,
+        13,
+        24,
+        39,
+        40
+      ],
+      "stars": [
+        2,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(9) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "10.10.2025",
+      "year": 2025,
+      "q": 4,
+      "d": 3,
+      "mains": [
+        6,
+        7,
+        17,
+        20,
+        21
+      ],
+      "stars": [
+        1,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(10) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "11.11.2025",
+      "year": 2025,
+      "q": 4,
+      "d": 12,
+      "mains": [
+        4,
+        22,
+        32,
+        36,
+        47
+      ],
+      "stars": [
+        2,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(11) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "25.11.2025",
+      "year": 2025,
+      "q": 4,
+      "d": 16,
+      "mains": [
+        6,
+        11,
+        17,
+        35,
+        44
+      ],
+      "stars": [
+        3,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(25)==year-suffix(25)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(25) \u2282 year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "02.12.2025",
+      "year": 2025,
+      "q": 4,
+      "d": 18,
+      "mains": [
+        4,
+        13,
+        14,
+        20,
+        41
+      ],
+      "stars": [
+        6,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "05.12.2025",
+      "year": 2025,
+      "q": 4,
+      "d": 19,
+      "mains": [
+        9,
+        15,
+        25,
+        34,
+        46
+      ],
+      "stars": [
+        8,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(5) inside year-suffix(25)"
+        }
+      ]
+    },
+    {
+      "date": "12.12.2025",
+      "year": 2025,
+      "q": 4,
+      "d": 21,
+      "mains": [
+        7,
+        25,
+        30,
+        37,
+        41
+      ],
+      "stars": [
+        5,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(12) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "02.01.2026",
+      "year": 2026,
+      "q": 1,
+      "d": 1,
+      "mains": [
+        8,
+        27,
+        42,
+        44,
+        46
+      ],
+      "stars": [
+        1,
+        10
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(2) inside year-suffix(26)"
+        }
+      ]
+    },
+    {
+      "date": "06.01.2026",
+      "year": 2026,
+      "q": 1,
+      "d": 2,
+      "mains": [
+        5,
+        14,
+        17,
+        18,
+        31
+      ],
+      "stars": [
+        10,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(6) inside year-suffix(26)"
+        }
+      ]
+    },
+    {
+      "date": "06.02.2026",
+      "year": 2026,
+      "q": 1,
+      "d": 11,
+      "mains": [
+        10,
+        13,
+        20,
+        23,
+        24
+      ],
+      "stars": [
+        6,
+        11
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(6) inside year-suffix(26)"
+        }
+      ]
+    },
+    {
+      "date": "03.03.2026",
+      "year": 2026,
+      "q": 1,
+      "d": 18,
+      "mains": [
+        6,
+        7,
+        24,
+        34,
+        50
+      ],
+      "stars": [
+        5,
+        7
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(3) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "06.03.2026",
+      "year": 2026,
+      "q": 1,
+      "d": 19,
+      "mains": [
+        15,
+        16,
+        19,
+        28,
+        37
+      ],
+      "stars": [
+        6,
+        9
+      ],
+      "fires": [
+        {
+          "code": "M5",
+          "desc": "day-digit(6) inside year-suffix(26)"
+        }
+      ]
+    },
+    {
+      "date": "05.05.2026",
+      "year": 2026,
+      "q": 2,
+      "d": 10,
+      "mains": [
+        3,
+        4,
+        8,
+        20,
+        31
+      ],
+      "stars": [
+        6,
+        8
+      ],
+      "fires": [
+        {
+          "code": "M6",
+          "desc": "month==day=(5) \u2014 twin date"
+        }
+      ]
+    },
+    {
+      "date": "26.05.2026",
+      "year": 2026,
+      "q": 2,
+      "d": 16,
+      "mains": [
+        6,
+        23,
+        25,
+        35,
+        37
+      ],
+      "stars": [
+        6,
+        12
+      ],
+      "fires": [
+        {
+          "code": "M1",
+          "desc": "day(26)==year-suffix(26)"
+        },
+        {
+          "code": "M5d",
+          "desc": "day-string(26) \u2282 year-suffix(26)"
+        }
+      ]
+    }
+  ]
+}
