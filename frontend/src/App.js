@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import "@/App.css";
 import axios from "axios";
 import { Sparkles, RefreshCw, ChevronDown, ChevronUp, Gift, Star, Globe, History, Trash2, Target, TrendingUp, CheckCircle2, XCircle, Clock, Zap, Eye } from "lucide-react";
+import RollingDateWheel from "./components/RollingDateWheel";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -3984,15 +3985,14 @@ function App() {
           ) : (
             <div className="space-y-3" data-testid="dj-suspects-edit-form">
               <div>
-                <label className="text-xs text-slate-400">🎯 Target draw date (dd.mm.yyyy)</label>
-                <input
-                  type="text"
-                  value={djSuspectsTarget}
-                  onChange={(e) => setDjSuspectsTarget(e.target.value)}
-                  placeholder="05.05.2026"
-                  className="w-full mt-1 px-3 py-2 rounded bg-slate-900/60 border border-fuchsia-500/40 text-fuchsia-100 font-mono"
-                  data-testid="dj-suspects-target-input"
-                />
+                <label className="text-xs text-slate-400">🎯 Target draw date</label>
+                <div className="mt-1">
+                  <RollingDateWheel
+                    value={djSuspectsTarget}
+                    onChange={setDjSuspectsTarget}
+                    testId="dj-suspects-target-wheel"
+                  />
+                </div>
               </div>
               <div>
                 <label className="text-xs text-slate-400">💎 Up to 3 big suspects (comma-separated)</label>
