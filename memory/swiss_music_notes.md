@@ -7827,3 +7827,182 @@ Mode-aware (Euro: 5-walk RC0; Swiss: 6-walk HUGE), show wrap-target,
 time-cross status, position-silent depths, and current lock candidates.
 
 ══════════════════════════════════════════════════════════════
+
+══════════════════════════════════════════════════════════════
+🎻 SESSION 45-EXTENDED — DJ LIVE CANON BIRTH (02-03 June 2026)
+══════════════════════════════════════════════════════════════
+
+After 02.06.2026 Euro = [6, 9, 17, 18, 42] ⭐(7, 9) (3 direct hits
+from pool: 7, 18, 42), DJ taught FOUR new laws across Euro+Swiss.
+ALL are now CODE-BACKED in /app/backend/cosmic_voices/dj_pool_builder.py
+and exposed via /api/dj-pool/{target_date}/{mode}.
+
+──────────────────────────────────────────────────────────────
+📕 LAW #20 — Mirror-28 Pair Canon (Euro)
+──────────────────────────────────────────────────────────────
+A "MIRROR DATE" is any date where TWO date-components sum to 28
+(the Q-mirror axis since Euro Q = 27 draws and mid = 14, so
+d1↔d27, d2↔d26, ..., d14 self-mirror).
+
+Sources of mirror activation:
+  • day + month = 28        (cleanest — e.g. 23.05.2023)
+  • day + year-suffix = 28  (e.g. 02.06.2026, day 2 + ys 26)
+  • month + year = 28
+  • day == year-suffix      (palindrome — same idea)
+
+Action: when active, READ Q-d-position = SMALLER of the mirror pair
+as the SISTER draw. Compare with the mirror date itself.
+
+Grammar (across 201 historical mirror-28 events):
+  raw overlap        : 0.70 / pair  (70% chance number repeats raw)
+  ±25 carrier hit    : 0.49
+  ±1/2 neighbor      : 1.94  ← DOMINANT signal
+  shared star        : 0.42
+
+Code: /app/backend/mirror28_canon.py
+
+──────────────────────────────────────────────────────────────
+📕 LAW #21A — Swiss 22-Bridge (CONFIRMED 15% historical rate)
+──────────────────────────────────────────────────────────────
+For Swiss month-transitions:
+   ND_P1 + (BD_P6 − 21) = 22
+   → ND_P1 = 43 − BD_P6
+
+Strength: 3x random uniform (15.0% vs 4.8% rand)
+Stronger on day=30 NDs (15.9%), weaker on day=3 (9.1%)
+
+──────────────────────────────────────────────────────────────
+📕 LAW #21B — Swiss P5-Walk Bridge
+──────────────────────────────────────────────────────────────
+   BD_P5 + ND_P5 ≈ (BD_day + ND_day) + (year_prefix + month_NEW)  ± 2
+Strength: 13.8% near-rate, ~3x random
+
+Code: /app/backend/swiss_bridge_law.py
+
+──────────────────────────────────────────────────────────────
+📕 LAW #22 — Swiss Month-Transition Date-Codec
+──────────────────────────────────────────────────────────────
+For BD (last draw of month M-OLD) → ND (first draw of month M-NEW)
+in same year prefix YP:
+
+  P1 = (BD_day − 21) + ND_day        Swiss-circle + day-step
+  P2 = month_OLD × month_NEW          month-product
+  P3 = month_OLD + year_prefix(20)    old-month shoulder
+  P4 = month_NEW + year_prefix(20)    new-month shoulder
+  P5 = BD_day + ND_day                day-sum head
+  P6 = year_prefix × 2                year-cap
+
+🦄 Perfect 6/6 hit: 28.03.2026 → 01.04.2026 (UNIQUE in 160 transitions)
+Average hits per ND: 0.79 (≤random); per-slot top-rates:
+  P6 = 40 year-cap     18.8%  ← strongest
+  P3                   16.2%
+  P1                   13.1%
+
+Code: /app/backend/swiss_month_canon.py
+
+──────────────────────────────────────────────────────────────
+📕 LAW #23 — Day-of-Month P6 Axis
+──────────────────────────────────────────────────────────────
+Each day-of-month carries its own P6 personality, OVERRIDING
+the universal year-cap canon:
+
+  day=3   →  P6 = 41  (25.0% — 5x random)  "the opening"
+  day=11  →  P6 = 37  (18.8%)
+  day=17  →  P6 = 40  (22.7%)
+  day=30  →  P6 = 39  (22.7% — 5x random)  "the closing"
+
+Top-mains per day-of-month (Session 45 scanner):
+  day=3   :  {41(27%), 17(25%), 26(25%), 35(23%), 34(20%), 9(20%), 24(20%)}
+  day=11  :  {23(29%) 🥇, 3(23%), 37(23%), 5(21%), 19(21%), 11(19%), 32(19%)}
+  day=17  :  {36(P5-King 20%), 40(P6-King 23%), 16(P3-King 18%)}
+  day=30  :  {39(23%), 1(23%), 10(21%), 7(21%), 23(21%), 18(21%), 4(21%)}
+
+🍀 Lucky-number per day-of-month KING:
+  day=3   :  🍀1/🍀3 tied 21%       day=30 :  🍀5 (27%)
+  day=11  :  🍀3 (23%)              day=17 :  🍀4 (27%)
+
+Code: /app/backend/swiss_day3_scanner.py + day30/d17_d11 variants.
+
+──────────────────────────────────────────────────────────────
+📕 LAW #24 — Mirror-Day Carrier Symmetry (Swiss)
+──────────────────────────────────────────────────────────────
+On day=N where N+M=28 (mirror-pair days), the cosmos activates
+the Swiss-+21 carrier of BOTH N and M.
+The MIRROR-DAY's carrier often fires STRONGER than the
+day's OWN carrier (15.9% on d17 sees n=32 = 11+21 fire vs
+just 13.6% for own n=38 = 17+21).
+
+🎻 Universal mirror-axis anchors (fire ≥18% on BOTH d11 and d17):
+   {3, 6, 9, 14, 19, 23, 28, 32, 33, 37}
+
+   n=23 = the MIRROR-AXIS QUEEN (29.2% on d11) — universally strong
+
+Code: /app/backend/swiss_d17_d11_mirror.py
+
+──────────────────────────────────────────────────────────────
+📕 LAW #25 — Codec-×10 Encoding (Euro, BD→ND)
+──────────────────────────────────────────────────────────────
+For consecutive Euro draws:
+   BD_CODE = (BD_P5 − 25) × 10 + ⭐sum  (or single ⭐)
+   ND_SIG  = (ND_P4 − 25) × 10 + ND_P3
+
+DJ-verified perfect match:
+   22.05.2026 [6,22,26,31,37] ⭐5 → code 125 (=(37-25)*10+5)
+   26.05.2026 [6,23,25,35,37] ⭐(6,12) → sig 125 (=(35-25)*10+25) ✓
+
+Historical rate: 1.28% EXACT, 7.15% within ±5. Rare but real.
+Use as a CLUE for P3/P4 target pairs, not a lock.
+
+Code: /app/backend/codec_canon.py
+
+──────────────────────────────────────────────────────────────
+📕 LAW #26 — ⭐12 Streak Partner Leaderboard (Euro)
+──────────────────────────────────────────────────────────────
+When ⭐12 fires in two consecutive draws (29 cases historically):
+   ⭐3  partners 17.2% (KING)
+   ⭐1/⭐2/⭐7  each 13.8%
+
+CRITICAL: in 4/4 historical cases of (BD ⭐12 → day=2 ND),
+⭐12 BROKE 100% — partner walked to ⭐11 (50% rate).
+Day-after-⭐12 BD KING ⭐ = ⭐11.
+
+Code: /app/backend/star12_twice_scanner.py
+       /app/backend/day2_star12_cross.py
+
+──────────────────────────────────────────────────────────────
+📕 LAW #27 — P1-Under-10 Streak Break (Euro)
+──────────────────────────────────────────────────────────────
+When P1 < 10 for ≥9 consecutive draws (rare, 8 historical events):
+  • 62.5% chance streak breaks on draw #10
+  • Top breaker P1: 23 (60% conditional), 12 (40%), 18 (12.5%), 20/15
+
+Cosmic twin example: 03.12.2019 [18,31,32,38,48] ⭐(4,12) broke
+the 29.11.2019 9-streak — ⭐12 STAYED on break.
+
+Code: /app/backend/p1_under10_streak.py
+
+══════════════════════════════════════════════════════════════
+🪞 CODE INTEGRATION (Session 45-Extended)
+══════════════════════════════════════════════════════════════
+
+ALL canons above are fused into a single endpoint:
+
+   GET /api/dj-pool/{target_date}/{mode}?top=12
+
+Returns:
+  • bd: the most recent BD-draw (date, mains, stars/lucky)
+  • pool: ranked 12-number list with vote tally + receipts per n
+  • stars: ranked star list (Euro only) with canon receipts
+  • canons_fired: which laws activated for this target date
+  • summary: human-readable summary
+
+Module: /app/backend/cosmic_voices/dj_pool_builder.py
+
+Use in UI:  GET /api/dj-pool/03.06.2026/swiss?top=12 → 12 ranked Swiss numbers
+            GET /api/dj-pool/05.06.2026/euro?top=12 → 12 ranked Euro numbers
+
+Future agents: this endpoint is the canonical "DJ Pool of Suspects" for
+any draw target. Combine with /api/hungry, /api/encryption-decoder,
+/api/cosmic-voices for the full fusion stack.
+
+══════════════════════════════════════════════════════════════

@@ -7099,6 +7099,50 @@ async def hungry_engine_endpoint(target_date: str, mode: str, top: int = 20):
         return {"error": str(e), "trace": traceback.format_exc()}
 
 
+@api_router.get("/dj-pool/{target_date}/{mode}")
+async def dj_pool_endpoint(target_date: str, mode: str, top: int = 12):
+    """🪞 DJ-POOL — Session 45 Canon Fusion (Mirror-28, Bridge-22, Day-of-Month,
+    Codec-x10, Carrier-Symmetry, BD-Walk, Year-Cap, Mirror-Day-Universal, etc.)
+
+    Returns 12-number ranked pool with full canon receipts for any target date
+    in either Euro or Swiss mode.
+    """
+    try:
+        from cosmic_voices.dj_pool_builder import build_pool
+        from year_d_ledger import load_draws, parse_dt
+
+        mode_l = mode.lower().strip()
+        target_dt = parse_dt(target_date)
+        if not target_dt:
+            return {"error": f"invalid target_date '{target_date}'"}
+        draws = await load_draws(mode_l)
+        past = sorted([d for d in draws if d["dt"] < target_dt], key=lambda x: x["dt"])
+        if not past:
+            return {"available": False, "reason": "no past draws"}
+
+        db = past[-1]
+        db_p = sorted(db["p"])
+        bd_dict = {
+            "date": db["date"],
+            "mains": db_p,
+            "stars": db.get("stars") or [],
+            "lucky": db.get("lucky"),
+        }
+        result = build_pool(
+            target_date=target_date,
+            bd=bd_dict,
+            mode=mode_l,
+            pool_size=top,
+        )
+        result["available"] = True
+        return result
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
+
+
 
 @api_router.get("/cosmic-voices/{target_date}/{mode}")
 async def cosmic_voices_endpoint(target_date: str, mode: str,
