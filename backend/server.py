@@ -30,9 +30,14 @@ from story_pattern_generator import (
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
+# MongoDB connection (with fast-fail timeouts so a slow DB doesn't hang every request)
 mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
+client = AsyncIOMotorClient(
+    mongo_url,
+    serverSelectionTimeoutMS=5000,    # fail Mongo handshake fast (5s vs default 30s)
+    connectTimeoutMS=5000,
+    socketTimeoutMS=10000,
+)
 db = client[os.environ['DB_NAME']]
 
 # Create the main app without a prefix
@@ -479,6 +484,24 @@ def generate_smart_prediction(draws: List[dict], hot_numbers: List[dict]) -> tup
 @api_router.get("/")
 async def root():
     return {"message": "Lucky Jack API - Switzerland Lotto Pattern Analyzer"}
+
+@api_router.get("/healthz")
+async def healthz():
+    """🩺 Liveness probe — DB-FREE, used by orchestrator + uptime checks.
+    Returns immediately so Kubernetes can tell the container is alive
+    even if MongoDB is slow/unreachable."""
+    return {"status": "ok", "service": "lucky-jack-api"}
+
+@api_router.get("/readyz")
+async def readyz():
+    """🩺 Readiness probe — checks DB ping with short timeout."""
+    try:
+        await asyncio.wait_for(client.admin.command("ping"), timeout=3.0)
+        return {"status": "ready", "db": "ok"}
+    except asyncio.TimeoutError:
+        return {"status": "degraded", "db": "timeout"}
+    except Exception as e:
+        return {"status": "degraded", "db": "error", "error": str(e)[:200]}
 
 @api_router.post("/draws", response_model=DrawResponse)
 async def create_draw(input: DrawCreate):
