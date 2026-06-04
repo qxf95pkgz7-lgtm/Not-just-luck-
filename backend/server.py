@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
+import asyncio
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
@@ -7724,92 +7725,98 @@ logger = logging.getLogger(__name__)
 
 @app.on_event("startup")
 async def startup_auto_seed():
-    """Auto-seed the database with real historical draws on startup if empty"""
-    try:
-        # Check if Swiss Lotto draws collection is empty
-        swiss_count = await db.draws.count_documents({})
-        if swiss_count == 0:
-            logger.info("🍀 Swiss Lotto draws collection empty - auto-seeding with real historical data...")
-            from import_real_data import REAL_DRAWS
-            docs = []
-            seen = set()
-            for date_str, numbers, lucky, replay in REAL_DRAWS:
-                if date_str in seen:
-                    continue
-                seen.add(date_str)
-                if len(numbers) != 6:
-                    continue
-                docs.append({
-                    "id": str(uuid.uuid4()),
-                    "date": date_str,
-                    "numbers": sorted(numbers),
-                    "lucky_number": lucky,
-                    "replay_number": replay,
-                    "created_at": datetime.now(timezone.utc).isoformat()
-                })
-            if docs:
-                await db.draws.insert_many(docs)
+    """🚀 Fire DB seeding in BACKGROUND so the server accepts requests
+    immediately on cold start. (Per Emergent Support — production
+    container was timing out on blocking startup work.)
+    """
+    async def _seed_in_background():
+        try:
+            # Check if Swiss Lotto draws collection is empty
             swiss_count = await db.draws.count_documents({})
-            logger.info(f"✅ Auto-seeded {swiss_count} REAL Swiss Lotto draws!")
-        else:
-            logger.info(f"🍀 Swiss Lotto: {swiss_count} draws already in database")
-        
-        # Check if EuroMillions draws collection is empty
-        euro_count = await db.euromillions_draws.count_documents({})
-        if euro_count == 0:
-            logger.info("🇪🇺 EuroMillions draws collection empty - auto-seeding with real historical data...")
-            try:
-                from euromillions_data_2012_2013 import EUROMILLIONS_DRAWS_2012_2013
-                from euromillions_data_2018_2020 import EUROMILLIONS_DRAWS_2018_2020
-                from euromillions_data_2021_2023 import EUROMILLIONS_DRAWS_2021_2023
-                from euromillions_data_2024_2026 import EUROMILLIONS_DRAWS_2024_2026
-                from euromillions_data_missing import EUROMILLIONS_DRAWS_MISSING
-                
-                all_euro_draws = (
-                    EUROMILLIONS_DRAWS_2012_2013 + 
-                    EUROMILLIONS_DRAWS_2018_2020 + 
-                    EUROMILLIONS_DRAWS_2021_2023 + 
-                    EUROMILLIONS_DRAWS_2024_2026 + 
-                    EUROMILLIONS_DRAWS_MISSING
-                )
-                
+            if swiss_count == 0:
+                logger.info("🍀 Swiss Lotto draws collection empty - auto-seeding with real historical data...")
+                from import_real_data import REAL_DRAWS
                 docs = []
                 seen = set()
-                for draw in all_euro_draws:
-                    # Handle dict format: {"date": "...", "numbers": [...], "stars": [...]}
-                    if isinstance(draw, dict):
-                        date_str = draw.get("date", "")
-                        numbers = draw.get("numbers", [])
-                        stars = draw.get("stars", [])
-                    else:
-                        # Handle tuple format: ("date", [numbers], [stars])
-                        date_str = draw[0]
-                        numbers = draw[1]
-                        stars = draw[2] if len(draw) > 2 else []
-                    
+                for date_str, numbers, lucky, replay in REAL_DRAWS:
                     if date_str in seen:
                         continue
                     seen.add(date_str)
-                    if len(numbers) != 5:
+                    if len(numbers) != 6:
                         continue
                     docs.append({
                         "id": str(uuid.uuid4()),
                         "date": date_str,
                         "numbers": sorted(numbers),
-                        "stars": sorted(stars) if stars else [],
+                        "lucky_number": lucky,
+                        "replay_number": replay,
                         "created_at": datetime.now(timezone.utc).isoformat()
                     })
                 if docs:
-                    await db.euromillions_draws.insert_many(docs)
-                euro_count = await db.euromillions_draws.count_documents({})
-                logger.info(f"✅ Auto-seeded {euro_count} REAL EuroMillions draws!")
-            except ImportError as e:
-                logger.warning(f"⚠️ Could not import EuroMillions data files: {e}")
-        else:
-            logger.info(f"🇪🇺 EuroMillions: {euro_count} draws already in database")
-            
-    except Exception as e:
-        logger.error(f"❌ Auto-seed error: {e}")
+                    await db.draws.insert_many(docs)
+                swiss_count = await db.draws.count_documents({})
+                logger.info(f"✅ Auto-seeded {swiss_count} REAL Swiss Lotto draws!")
+            else:
+                logger.info(f"🍀 Swiss Lotto: {swiss_count} draws already in database")
+
+            # Check if EuroMillions draws collection is empty
+            euro_count = await db.euromillions_draws.count_documents({})
+            if euro_count == 0:
+                logger.info("🇪🇺 EuroMillions draws collection empty - auto-seeding with real historical data...")
+                try:
+                    from euromillions_data_2012_2013 import EUROMILLIONS_DRAWS_2012_2013
+                    from euromillions_data_2018_2020 import EUROMILLIONS_DRAWS_2018_2020
+                    from euromillions_data_2021_2023 import EUROMILLIONS_DRAWS_2021_2023
+                    from euromillions_data_2024_2026 import EUROMILLIONS_DRAWS_2024_2026
+                    from euromillions_data_missing import EUROMILLIONS_DRAWS_MISSING
+
+                    all_euro_draws = (
+                        EUROMILLIONS_DRAWS_2012_2013 +
+                        EUROMILLIONS_DRAWS_2018_2020 +
+                        EUROMILLIONS_DRAWS_2021_2023 +
+                        EUROMILLIONS_DRAWS_2024_2026 +
+                        EUROMILLIONS_DRAWS_MISSING
+                    )
+
+                    docs = []
+                    seen = set()
+                    for draw in all_euro_draws:
+                        if isinstance(draw, dict):
+                            date_str = draw.get("date", "")
+                            numbers = draw.get("numbers", [])
+                            stars = draw.get("stars", [])
+                        else:
+                            date_str = draw[0]
+                            numbers = draw[1]
+                            stars = draw[2] if len(draw) > 2 else []
+
+                        if date_str in seen:
+                            continue
+                        seen.add(date_str)
+                        if len(numbers) != 5:
+                            continue
+                        docs.append({
+                            "id": str(uuid.uuid4()),
+                            "date": date_str,
+                            "numbers": sorted(numbers),
+                            "stars": sorted(stars) if stars else [],
+                            "created_at": datetime.now(timezone.utc).isoformat()
+                        })
+                    if docs:
+                        await db.euromillions_draws.insert_many(docs)
+                    euro_count = await db.euromillions_draws.count_documents({})
+                    logger.info(f"✅ Auto-seeded {euro_count} REAL EuroMillions draws!")
+                except ImportError as e:
+                    logger.warning(f"⚠️ Could not import EuroMillions data files: {e}")
+            else:
+                logger.info(f"🇪🇺 EuroMillions: {euro_count} draws already in database")
+
+        except Exception as e:
+            logger.error(f"❌ Auto-seed background task error: {e}")
+
+    # 🚀 Fire-and-forget — never block server startup
+    asyncio.create_task(_seed_in_background())
+    logger.info("🚀 Auto-seed scheduled as BACKGROUND task — server ready immediately")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
@@ -7902,15 +7909,24 @@ async def start_scheduler():
 
 @app.on_event("startup")
 async def sync_data_files_on_startup():
-    """Sync static data files with latest from APIs on startup"""
-    try:
-        from data_sync import startup_sync
-        logger.info("🔄 Starting data file sync on startup...")
-        result = await startup_sync()
-        if result.get("euromillions", {}).get("new", 0) > 0:
-            logger.info(f"✅ Data sync complete: {result['euromillions']['new']} new EuroMillions draws added")
-        else:
-            logger.info("✅ Data files are up to date")
-    except Exception as e:
-        logger.error(f"❌ Data sync failed: {e}")
+    """🚀 Sync static data files with latest from APIs — FIRED AS BACKGROUND TASK
+    so the server accepts requests immediately on cold start. The external
+    EuroMillions API call can hang on rate-limit (429) — never block boot.
+    (Per Emergent Support — production was timing out here.)
+    """
+    async def _sync_in_background():
+        try:
+            from data_sync import startup_sync
+            logger.info("🔄 [BG] Starting data file sync...")
+            result = await startup_sync()
+            if result.get("euromillions", {}).get("new", 0) > 0:
+                logger.info(f"✅ [BG] Data sync complete: {result['euromillions']['new']} new EuroMillions draws added")
+            else:
+                logger.info("✅ [BG] Data files are up to date")
+        except Exception as e:
+            logger.error(f"❌ [BG] Data sync failed: {e}")
+
+    # 🚀 Fire-and-forget — NEVER block server startup on external HTTP
+    asyncio.create_task(_sync_in_background())
+    logger.info("🚀 Data file sync scheduled as BACKGROUND task — server ready immediately")
 
