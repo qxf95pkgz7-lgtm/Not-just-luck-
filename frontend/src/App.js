@@ -428,7 +428,7 @@ const SwissLottoBallMachine = ({ isProcessing, winningNumbers }) => {
       setPhase('spinning'); setSelectedBalls([]); setSelectionIndex(0); setCurrentCatch(null); setCatchPhase('none');
       setBalls(prev => prev.map(b => ({ ...b, captured: false })));
     } else if (!isProcessing && phase === 'spinning' && winningNumbers.length > 0) {
-      const delay = setTimeout(() => setPhase('selecting'), 2000);
+      const delay = setTimeout(() => setPhase('selecting'), 500);
       return () => clearTimeout(delay);
     }
   }, [isProcessing, winningNumbers, phase]);
@@ -438,9 +438,9 @@ const SwissLottoBallMachine = ({ isProcessing, winningNumbers }) => {
       const ballNumber = winningNumbers[selectionIndex];
       setCatchPhase('catching'); setCurrentCatch(ballNumber);
       setBalls(prev => prev.map(b => b.number === ballNumber ? { ...b, captured: true } : b));
-      setTimeout(() => setCatchPhase('rolling'), 600);
-      setTimeout(() => { setCatchPhase('revealed'); setSelectedBalls(prev => [...prev, ballNumber]); }, 1200);
-      setTimeout(() => { setCatchPhase('none'); setCurrentCatch(null); setSelectionIndex(prev => prev + 1); }, 1800);
+      setTimeout(() => setCatchPhase('rolling'), 300);
+      setTimeout(() => { setCatchPhase('revealed'); setSelectedBalls(prev => [...prev, ballNumber]); }, 600);
+      setTimeout(() => { setCatchPhase('none'); setCurrentCatch(null); setSelectionIndex(prev => prev + 1); }, 900);
     } else if (phase === 'selecting' && selectionIndex >= winningNumbers.length && catchPhase === 'none') {
       setPhase('complete');
       setTimeout(() => {
@@ -587,7 +587,7 @@ const EuroMillionsBallMachine = ({ isProcessing, winningNumbers }) => {
       setPhase('spinning'); setSelectedBalls([]); setSelectionIndex(0); setCurrentCatch(null); setCatchPhase('none');
       setBalls(prev => prev.map(b => ({ ...b, captured: false })));
     } else if (!isProcessing && phase === 'spinning' && winningNumbers.length > 0) {
-      const delay = setTimeout(() => setPhase('selecting'), 2000);
+      const delay = setTimeout(() => setPhase('selecting'), 500);
       return () => clearTimeout(delay);
     }
   }, [isProcessing, winningNumbers, phase]);
@@ -597,9 +597,9 @@ const EuroMillionsBallMachine = ({ isProcessing, winningNumbers }) => {
       const ballNumber = winningNumbers[selectionIndex];
       setCatchPhase('catching'); setCurrentCatch(ballNumber);
       setBalls(prev => prev.map(b => b.number === ballNumber ? { ...b, captured: true } : b));
-      setTimeout(() => setCatchPhase('rolling'), 600);
-      setTimeout(() => { setCatchPhase('revealed'); setSelectedBalls(prev => [...prev, ballNumber]); }, 1200);
-      setTimeout(() => { setCatchPhase('none'); setCurrentCatch(null); setSelectionIndex(prev => prev + 1); }, 1800);
+      setTimeout(() => setCatchPhase('rolling'), 300);
+      setTimeout(() => { setCatchPhase('revealed'); setSelectedBalls(prev => [...prev, ballNumber]); }, 600);
+      setTimeout(() => { setCatchPhase('none'); setCurrentCatch(null); setSelectionIndex(prev => prev + 1); }, 900);
     } else if (phase === 'selecting' && selectionIndex >= winningNumbers.length && catchPhase === 'none') {
       setPhase('complete');
       setTimeout(() => {
@@ -1819,7 +1819,8 @@ function App() {
       if (vid) params.push(`visitor_id=${encodeURIComponent(vid)}`);
       if (params.length > 0) url += `?${params.join('&')}`;
       
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Snappier UX: tiny visual settle delay only
+      await new Promise(resolve => setTimeout(resolve, 200));
       
       // EuroMillions uses POST, Swiss Lotto uses GET
       const res = lotteryMode === 'euro' 
@@ -1890,7 +1891,7 @@ function App() {
       }
       
       const ballCount = lotteryMode === 'swiss' ? 6 : 5;
-      setTimeout(() => setWheelSpinning(true), ballCount * 2000);
+      setTimeout(() => setWheelSpinning(true), ballCount * 900);
       fetchTicketCounter();
       fetchPendingTickets(); // Update pending box after generation
     } catch (e) {
@@ -1940,7 +1941,7 @@ function App() {
           alternate_numbers: [3, 11, 19, 27, 33]
         });
       }
-      setTimeout(() => setWheelSpinning(true), 10000);
+      setTimeout(() => setWheelSpinning(true), 5000);
     } finally {
       setLoading(false);
     }
