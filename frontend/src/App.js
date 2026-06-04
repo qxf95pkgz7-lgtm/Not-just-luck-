@@ -1456,17 +1456,30 @@ function App() {
   };
   // 🎻 Redeem promo code
   const redeemPromoCode = async () => {
-    const vid = localStorage.getItem('lj_visitor_id') || '';
-    if (!vid) { setPromoMsg({ ok: false, text: 'Please wait — loading...' }); return; }
+    // 🛡️ Auto-recover visitor_id if missing (iOS Safari race/private-mode safety)
+    let vid = localStorage.getItem('lj_visitor_id') || '';
+    if (!vid) {
+      try {
+        vid = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID()
+          : Math.random().toString(36).slice(2) + Date.now().toString(36);
+        localStorage.setItem('lj_visitor_id', vid);
+      } catch (storageErr) {
+        // localStorage disabled (Safari private) — fall back to in-memory
+        vid = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      }
+    }
     if (!promoCode.trim()) { setPromoMsg({ ok: false, text: 'Enter a code' }); return; }
+    setPromoMsg({ ok: true, text: 'Unlocking…' });
     try {
-      const res = await axios.post(`${API}/redeem-code`, { visitor_id: vid, code: promoCode.trim() });
+      const res = await axios.post(`${API}/redeem-code`, { visitor_id: vid, code: promoCode.trim() }, { timeout: 15000 });
       setIsUnlimited(!!res.data.unlimited);
       setPromoMsg({ ok: true, text: res.data.message || 'VIP unlocked!' });
       setPromoCode('');
       setTimeout(() => setShowCodeInput(false), 1200);
     } catch (e) {
-      setPromoMsg({ ok: false, text: e.response?.data?.detail || 'Invalid code' });
+      const errText = e.response?.data?.detail || e.message || 'Invalid code';
+      setPromoMsg({ ok: false, text: errText });
+      console.error('[redeemPromoCode] Failed:', errText, e);
     }
   };
   useEffect(() => { fetchTicketCounter(); fetchPendingTickets(); fetchUnlimitedStatus(); fetchHuntBoxes(); fetchRandomVsE(); }, [lotteryMode]);
