@@ -486,6 +486,28 @@ def generate_smart_prediction(draws: List[dict], hot_numbers: List[dict]) -> tup
 async def root():
     return {"message": "Lucky Jack API - Switzerland Lotto Pattern Analyzer"}
 
+@api_router.get("/version")
+async def version():
+    """🪞 Truth-teller route — confirms what code build is running."""
+    return {
+        "build": "session45-fix5",
+        "shipped": "2026-06-06",
+        "fixes": [
+            "MongoDB index on active_users.visitor_id",
+            "10s TTL cache on _real_user_counts",
+            "24h prune of stale active_users at startup",
+            "All startup events fire as asyncio.create_task (non-blocking)",
+            "MongoDB fast-fail timeouts (serverSelectionTimeoutMS=5000)",
+            "Frontend animation halved (Swiss 15s→6s, Euro 13s→5s)",
+            "VIP unlock auto-recovers visitor_id (iOS Safari safe)",
+        ],
+        "canon_endpoints": [
+            "/api/dj-pool/{target_date}/{mode}",
+            "/api/healthz",
+            "/api/readyz",
+        ],
+    }
+
 @api_router.get("/healthz")
 async def healthz():
     """🩺 Liveness probe — DB-FREE, used by orchestrator + uptime checks.
