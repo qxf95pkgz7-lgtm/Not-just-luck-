@@ -34,6 +34,7 @@ load_dotenv(ROOT_DIR / '.env')
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(
     mongo_url,
+    maxPoolSize=20,
     serverSelectionTimeoutMS=5000,    # fail Mongo handshake fast (5s vs default 30s)
     connectTimeoutMS=5000,
     socketTimeoutMS=10000,
@@ -4371,10 +4372,10 @@ async def get_prediction_history(limit: int = 100, lottery_type: str = None):
         swiss_draws.sort(key=lambda x: _pd(x.get('date', '')), reverse=True)
         
         euro_draws = []
-        async for d in db.euromillions_draws.find({}, {"_id": 0}):
+        async for d in db.euromillions_draws.find({}, {"_id": 0}).limit(500):
             euro_draws.append({"date": d.get("date", ""), "numbers": d.get("numbers", []), "stars": d.get("stars", [])})
         euro_draws.sort(key=lambda x: _pd(x.get('date', '')), reverse=True)
-        
+
         # Build pattern maps — one for Swiss, one for Euro
         def _build_map(draws):
             if not draws: return {}
@@ -4506,11 +4507,11 @@ async def clear_prediction_history():
 async def get_ticket_counter():
     """Total tickets generated across all lotteries."""
     swiss_gen_count = 0
-    async for g in db.generations.find({}, {'tickets': 1}):
+    async for g in db.generations.find({}, {'tickets': 1}).limit(10000):
         swiss_gen_count += len(g.get('tickets', []))
     swiss_pred_count = await db.prediction_history.count_documents({})
     euro_count = 0
-    async for g in db.euromillions_generations.find({}, {'tickets': 1}):
+    async for g in db.euromillions_generations.find({}, {'tickets': 1}).limit(10000):
         euro_count += len(g.get('tickets', []))
     total = swiss_gen_count + swiss_pred_count + euro_count
 
@@ -4585,7 +4586,7 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
         try:
             from dj_patterns import find_suspects
             euro_draws = []
-            async for d in db.euromillions_draws.find({}, {"_id": 0}):
+            async for d in db.euromillions_draws.find({}, {"_id": 0}).limit(500):
                 euro_draws.append({"date": d.get("date", ""), "numbers": d.get("numbers", []), "stars": d.get("stars", [])})
             # sort by date desc (string sort won't work; parse)
             def _pd(s):
@@ -4777,7 +4778,7 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
         try:
             from dj_patterns import find_suspects
             swiss_draws = []
-            async for d in db.draws.find({}, {"_id": 0}):
+            async for d in db.draws.find({}, {"_id": 0}).limit(500):
                 swiss_draws.append({"date": d.get("date", ""), "numbers": d.get("numbers", [])})
             def _pd(s):
                 try: return datetime.strptime(s, '%d.%m.%Y')
@@ -6202,11 +6203,26 @@ def _is_real_vid(vid: str) -> bool:
     return not any(low.startswith(p) for p in _TEST_VID_PREFIXES)
 
 async def _real_user_counts(now_iso_cutoff: str):
-    """Return (active_unique, total_unique) counting DISTINCT real visitor_ids only."""
-    active_ids = await db.active_users.distinct(
-        "visitor_id", {"last_seen": {"$gte": now_iso_cutoff}}
-    )
-    total_ids = await db.active_users.distinct("visitor_id")
+    """Return (active_unique, total_unique) counting DISTINCT real visitor_ids only.
+
+    🚀 Optimized: uses indexed $group aggregation instead of .distinct() which
+    times out at 10s on production-sized collections. Per Emergent Support.
+    """
+    # Active: visitor_ids seen in the heartbeat window
+    active_pipeline = [
+        {"$match": {"last_seen": {"$gte": now_iso_cutoff}}},
+        {"$group": {"_id": "$visitor_id"}},
+    ]
+    active_cursor = db.active_users.aggregate(active_pipeline, maxTimeMS=8000)
+    active_ids = [doc["_id"] async for doc in active_cursor]
+
+    # Total: all distinct visitor_ids (indexed-grouped, fast)
+    total_pipeline = [
+        {"$group": {"_id": "$visitor_id"}},
+    ]
+    total_cursor = db.active_users.aggregate(total_pipeline, maxTimeMS=8000)
+    total_ids = [doc["_id"] async for doc in total_cursor]
+
     active_real = [v for v in active_ids if _is_real_vid(v)]
     total_real = [v for v in total_ids if _is_real_vid(v)]
     return len(active_real), len(total_real)
@@ -6227,6 +6243,14 @@ async def prune_generations_endpoint(days: int = 3, threshold: int = 2):
     report = await prune_all(db, days=days, threshold=threshold)
     return report
 
+# In-memory cache for /random-vs-engine results.
+# Key: (mode, target_date_str) → (payload_dict, expires_at_monotonic)
+# Short TTL while hits are still being calculated; long TTL once the draw is
+# closed (recap fallback active or all samples are in).
+_rve_cache: dict = {}
+_RVE_TTL_LIVE  = 300    # 5 min — hits may still be trickling in
+_RVE_TTL_FINAL = 3600   # 1 hour — draw closed / recap snapshot in use
+
 @api_router.get("/random-vs-engine")
 async def random_vs_engine(mode: str = "euro", date: str = ""):
     """🎻 Random-vs-E reality check (DJ canon 29.04.2026).
@@ -6246,8 +6270,17 @@ async def random_vs_engine(mode: str = "euro", date: str = ""):
         compute_engine_rates_euro, compute_engine_rates_swiss,
     )
     from datetime import datetime as _dt, timedelta
+    import time as _time
 
     today = _dt.now()
+
+    # Return cached result if still fresh (date="" resolves to latest draw
+    # after the _last_completed_draw lookup, so we cache after resolution).
+    _cache_key_early = (mode, date) if date else None
+    if _cache_key_early:
+        _cached = _rve_cache.get(_cache_key_early)
+        if _cached and _time.monotonic() < _cached[1]:
+            return _cached[0]
 
     async def _last_completed_draw(coll, weekdays):
         """Pick the most recent draw_date that is also stored in coll."""
@@ -6291,6 +6324,11 @@ async def random_vs_engine(mode: str = "euro", date: str = ""):
             target = await _last_completed_draw(
                 db.euromillions_draws, [1, 4]
             )
+        # Post-resolution cache check (covers date="" → latest draw path)
+        if target:
+            _cached = _rve_cache.get((mode, target))
+            if _cached and _time.monotonic() < _cached[1]:
+                return _cached[0]
         actual = await db.euromillions_draws.find_one(
             {"date": target}, {"_id": 0}
         ) if target else None
@@ -6302,7 +6340,7 @@ async def random_vs_engine(mode: str = "euro", date: str = ""):
             cursor = db.euromillions_generations.find(
                 {"target_date": target, "hits_calculated": True},
                 {"_id": 0, "tickets": 1, "hit_results": 1, "mode": 1, "generation_type": 1},
-            )
+            ).limit(1000)
             async for g in cursor:
                 m = (g.get("mode") or g.get("generation_type") or "").lower()
                 hr = g.get("hit_results") or []
@@ -6329,7 +6367,7 @@ async def random_vs_engine(mode: str = "euro", date: str = ""):
                 if not money_pct and recap.get("money", {}).get("n", 0):
                     money_pct = _rates_from_recap(recap["money"], "euro")
 
-        return {
+        _result = {
             "mode": "euro",
             "target_date": target,
             "actual_draw": actual,
@@ -6344,11 +6382,20 @@ async def random_vs_engine(mode: str = "euro", date: str = ""):
             },
             "recap_fallback": recap_used,
         }
+        if target:
+            _ttl = _RVE_TTL_FINAL if (recap_used or any_mode_n > 0) else _RVE_TTL_LIVE
+            _rve_cache[(mode, target)] = (_result, _time.monotonic() + _ttl)
+        return _result
 
     else:  # swiss
         target = date
         if not target:
             target = await _last_completed_draw(db.draws, [2, 5])
+        # Post-resolution cache check (covers date="" → latest draw path)
+        if target:
+            _cached = _rve_cache.get((mode, target))
+            if _cached and _time.monotonic() < _cached[1]:
+                return _cached[0]
         actual = await db.draws.find_one(
             {"date": target}, {"_id": 0}
         ) if target else None
@@ -6360,7 +6407,7 @@ async def random_vs_engine(mode: str = "euro", date: str = ""):
             cursor = db.generations.find(
                 {"target_date": target, "hits_calculated": True},
                 {"_id": 0, "tickets": 1, "hit_results": 1, "generation_type": 1},
-            )
+            ).limit(1000)
             async for g in cursor:
                 gt = (g.get("generation_type") or "").lower()
                 hr = g.get("hit_results") or []
@@ -6386,7 +6433,7 @@ async def random_vs_engine(mode: str = "euro", date: str = ""):
                 if not money_pct and recap.get("money", {}).get("n", 0):
                     money_pct = _rates_from_recap(recap["money"], "swiss")
 
-        return {
+        _result = {
             "mode": "swiss",
             "target_date": target,
             "actual_draw": actual,
@@ -6401,6 +6448,10 @@ async def random_vs_engine(mode: str = "euro", date: str = ""):
             },
             "recap_fallback": recap_used,
         }
+        if target:
+            _ttl = _RVE_TTL_FINAL if (recap_used or any_mode_n > 0) else _RVE_TTL_LIVE
+            _rve_cache[(mode, target)] = (_result, _time.monotonic() + _ttl)
+        return _result
 
 
 @api_router.post("/history/archive-now")
@@ -7747,6 +7798,40 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 @app.on_event("startup")
+async def startup_create_indexes():
+    """🚀 Ensure critical MongoDB indexes exist (per Emergent Support — production
+    was timing out on active_users.distinct because no index on visitor_id).
+    Runs as BACKGROUND task so it never blocks server startup.
+    """
+    async def _ensure_indexes():
+        # Define indexes as (collection, key_spec, name) tuples.
+        # Each is wrapped in try/except so one collision doesn't block the rest.
+        targets = [
+            (db.active_users, "visitor_id", "lj_visitor_id_idx"),
+            (db.active_users, "last_seen", "lj_last_seen_idx"),
+            (db.active_users, [("visitor_id", 1), ("last_seen", -1)], "lj_vid_last_seen_idx"),
+            (db.generations, "visitor_id", "lj_gen_vid_idx"),
+            (db.generations, "target_date", "lj_gen_target_date_idx"),
+            (db.generations, "created_at", "lj_gen_created_at_idx"),
+            (db.draws, "date", "lj_draws_date_idx"),
+            (db.euromillions_draws, "date", "lj_euro_date_idx"),
+        ]
+        for coll, key, name in targets:
+            try:
+                await coll.create_index(key, name=name, background=True)
+            except Exception as ix_err:
+                # Skip IndexOptionsConflict / IndexKeySpecsConflict (already exists with diff opts)
+                msg = str(ix_err)
+                if "already exists" in msg or "IndexOptionsConflict" in msg or "IndexKeySpecsConflict" in msg or "duplicate key" in msg.lower():
+                    continue  # benign — pre-existing index covers us
+                logger.warning(f"⚠️ [BG] Could not create index {name}: {msg[:200]}")
+        logger.info("🚀 [BG] MongoDB index pass complete (idempotent, safe)")
+
+    asyncio.create_task(_ensure_indexes())
+    logger.info("🚀 Index creation scheduled as BACKGROUND task — server ready immediately")
+
+
+@app.on_event("startup")
 async def startup_auto_seed():
     """🚀 Fire DB seeding in BACKGROUND so the server accepts requests
     immediately on cold start. (Per Emergent Support — production
@@ -7952,4 +8037,53 @@ async def sync_data_files_on_startup():
     # 🚀 Fire-and-forget — NEVER block server startup on external HTTP
     asyncio.create_task(_sync_in_background())
     logger.info("🚀 Data file sync scheduled as BACKGROUND task — server ready immediately")
+
+
+@app.on_event("startup")
+async def create_db_indexes():
+    """Ensure MongoDB indexes exist for frequently queried fields."""
+    try:
+        from pymongo import ASCENDING, DESCENDING, IndexModel
+
+        # generations — random_vs_engine, pending-tickets, per-visitor lookups
+        await db.generations.create_indexes([
+            IndexModel([("target_date", ASCENDING), ("hits_calculated", ASCENDING)]),
+            IndexModel([("visitor_id", ASCENDING), ("target_date", ASCENDING)]),
+            IndexModel([("target_date", ASCENDING)]),
+        ])
+
+        # euromillions_generations — same query shapes
+        await db.euromillions_generations.create_indexes([
+            IndexModel([("target_date", ASCENDING), ("hits_calculated", ASCENDING)]),
+            IndexModel([("visitor_id", ASCENDING), ("target_date", ASCENDING)]),
+        ])
+
+        # draws / euromillions_draws — find_one by date, sort by date
+        await db.draws.create_indexes([
+            IndexModel([("date", ASCENDING)], unique=True),
+        ])
+        await db.euromillions_draws.create_indexes([
+            IndexModel([("date", ASCENDING)], unique=True),
+        ])
+
+        # prediction_history — filtered by lottery_type, sorted by created_at
+        await db.prediction_history.create_indexes([
+            IndexModel([("lottery_type", ASCENDING)]),
+            IndexModel([("created_at", DESCENDING)]),
+            IndexModel([("target_draw_date", ASCENDING)]),
+        ])
+
+        # promo_redeemed — find_one by visitor_id
+        await db.promo_redeemed.create_indexes([
+            IndexModel([("visitor_id", ASCENDING)], unique=True),
+        ])
+
+        # hunt_boxes — find_one by id
+        await db.hunt_boxes.create_indexes([
+            IndexModel([("id", ASCENDING)], unique=True),
+        ])
+
+        logger.info("✅ DB indexes ensured")
+    except Exception as e:
+        logger.error(f"❌ DB index creation failed: {e}")
 
