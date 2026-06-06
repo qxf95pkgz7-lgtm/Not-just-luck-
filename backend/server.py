@@ -6227,6 +6227,34 @@ async def _real_user_counts(now_iso_cutoff: str):
     total_real = [v for v in total_ids if _is_real_vid(v)]
     return len(active_real), len(total_real)
 
+
+# ─── HEARTBEAT CACHE — counts only refresh every 10s ──────────────────────
+# The heartbeat endpoint hits per-visitor every few seconds. Recomputing the
+# global active/total counts on EVERY call (even with indexes) wastes I/O at
+# scale. Cache the global counts with a 10-second TTL so multiple concurrent
+# heartbeats share the same result.
+import time as _time
+_user_count_cache = {"active": 0, "total": 0, "expires_at": 0.0}
+_USER_COUNT_TTL = 10.0  # seconds
+
+
+async def _real_user_counts_cached(now_iso_cutoff: str):
+    """TTL-cached wrapper around _real_user_counts. Safe to call from heartbeat."""
+    now = _time.monotonic()
+    if now < _user_count_cache["expires_at"]:
+        return _user_count_cache["active"], _user_count_cache["total"]
+    try:
+        active, total = await _real_user_counts(now_iso_cutoff)
+        _user_count_cache.update({
+            "active": active, "total": total,
+            "expires_at": now + _USER_COUNT_TTL,
+        })
+        return active, total
+    except Exception as e:
+        # If the aggregation times out or fails, return stale cache rather than 5xx
+        logger.warning(f"⚠️ user-count refresh failed (using stale cache): {str(e)[:200]}")
+        return _user_count_cache["active"], _user_count_cache["total"]
+
 @api_router.post("/prune-generations")
 async def prune_generations_endpoint(days: int = 3, threshold: int = 2):
     """🎻 DJ's RAM-saver — prune old generations (default: D+3, keep ≥2 hits).
@@ -6523,25 +6551,27 @@ async def history_export_csv(
 
 @api_router.post("/heartbeat")
 async def user_heartbeat(req: HeartbeatRequest):
-    """Register a heartbeat from a visitor."""
+    """Register a heartbeat from a visitor. Returns cached active/total counts
+    (10s TTL) so heavy traffic never blocks on the count aggregation."""
     now = datetime.now(timezone.utc)
     from datetime import timedelta
+    # Upsert is indexed on visitor_id — fast
     await db.active_users.update_one(
         {"visitor_id": req.visitor_id},
         {"$set": {"last_seen": now.isoformat()}, "$setOnInsert": {"first_seen": now.isoformat()}},
         upsert=True
     )
     cutoff = (now - timedelta(minutes=10)).isoformat()
-    active, total = await _real_user_counts(cutoff)
+    active, total = await _real_user_counts_cached(cutoff)
     return {"active_users": active, "total_users": total}
 
 @api_router.get("/active-users")
 async def get_active_users():
-    """Get count of currently active users."""
+    """Get count of currently active users (cached, 10s TTL)."""
     now = datetime.now(timezone.utc)
     from datetime import timedelta
     cutoff = (now - timedelta(minutes=10)).isoformat()
-    active, total = await _real_user_counts(cutoff)
+    active, total = await _real_user_counts_cached(cutoff)
     return {"active_users": active, "total_users": total}
 
 # ─── TICKET LIMIT (12 per user per draw period — resets when new draw lands) ─────────────
@@ -7820,11 +7850,20 @@ async def startup_create_indexes():
             try:
                 await coll.create_index(key, name=name, background=True)
             except Exception as ix_err:
-                # Skip IndexOptionsConflict / IndexKeySpecsConflict (already exists with diff opts)
                 msg = str(ix_err)
                 if "already exists" in msg or "IndexOptionsConflict" in msg or "IndexKeySpecsConflict" in msg or "duplicate key" in msg.lower():
-                    continue  # benign — pre-existing index covers us
+                    continue
                 logger.warning(f"⚠️ [BG] Could not create index {name}: {msg[:200]}")
+        # 🧹 Prune old active_users records (>24h) — keeps the collection lean
+        # so the aggregation stays fast forever, even on production scale.
+        try:
+            from datetime import timedelta
+            cutoff = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+            res = await db.active_users.delete_many({"last_seen": {"$lt": cutoff}})
+            if res.deleted_count:
+                logger.info(f"🧹 [BG] Pruned {res.deleted_count} stale active_users (>24h old)")
+        except Exception as prune_err:
+            logger.warning(f"⚠️ [BG] active_users prune failed (non-fatal): {str(prune_err)[:200]}")
         logger.info("🚀 [BG] MongoDB index pass complete (idempotent, safe)")
 
     asyncio.create_task(_ensure_indexes())
