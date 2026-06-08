@@ -491,11 +491,13 @@ async def root():
 async def version():
     """🪞 Truth-teller route — confirms what code build is running."""
     return {
-        "build": "session46.1-euro-dedup",
+        "build": "session46.2-mp-cache",
         "shipped": "2026-06-08",
         "fixes": [
-            "🧹 NEW: Euro dedup migration (27 rows) + unique index on euromillions_draws.date (Emergent Support Jun 8 #2)",
-            "🧹 NEW: All 9 insert_one/insert_many for euromillions_draws converted to upsert (idempotent)",
+            "🚀 NEW: 60s in-memory cache on /api/master-predictor (Swiss + Euro) for default-param calls (Emergent Support Jun 8 #3)",
+            "🚀 NEW: Procfile dropped to --workers 1 to free memory on tier_1 (Emergent Support recommendation)",
+            "🧹 Euro dedup migration (27 rows) + unique index on euromillions_draws.date (Emergent Support Jun 8 #2)",
+            "🧹 All 9 insert_one/insert_many for euromillions_draws converted to upsert (idempotent)",
             "🛡️ safe_cursor.safe_find() wrapper with CursorNotFound + ExecutionTimeout retry (Emergent Support Jun 8 #1)",
             "🛡️ NEW: All .to_list(5000+) calls in server.py routed through safe_find (prediction-history, hit-tracker, story endpoints)",
             "🛡️ NEW: .batch_size(200) added to all .to_list(2000+) / .to_list(3000) Motor cursors (server.py, hit_tracker.py, euro_simulation.py)",
@@ -917,6 +919,23 @@ async def get_master_prediction(
     # 🕒 Draw-time generator cutoff (Swiss)
     if visitor_id:
         await _assert_generator_open("swiss", visitor_id)
+    
+    # 🚀 Default-param cache — covers the initial page-load ball-spin call
+    # which is the same for every visitor. 60s TTL is safe because draws only
+    # update on Wed/Sat at 21:00 UTC.
+    _no_params = (
+        birthday is None and name is None and num_tickets == 1
+        and all(v is None for v in [lock_p1, lock_p2, lock_p3, lock_p4, lock_p5, lock_p6])
+    )
+    if _no_params:
+        import time
+        global _MASTER_PRED_CACHE
+        try:
+            _MASTER_PRED_CACHE
+        except NameError:
+            _MASTER_PRED_CACHE = {"ts": 0, "data": None}
+        if _MASTER_PRED_CACHE.get("data") and (time.time() - _MASTER_PRED_CACHE["ts"] < 60):
+            return _MASTER_PRED_CACHE["data"]
     
     # Ticket limit check (VIP-aware)
     if visitor_id:
@@ -3688,6 +3707,12 @@ async def get_master_prediction(
             pass  # actual draw not yet available — recalc later
     except Exception as e:
         logger.warning(f"swiss master-predictor save_to_tracker failed: {e}")
+    
+    # 🚀 Populate default-param cache for next 60s
+    if _no_params:
+        import time as _t
+        _MASTER_PRED_CACHE["ts"] = _t.time()
+        _MASTER_PRED_CACHE["data"] = result
     
     return result
 

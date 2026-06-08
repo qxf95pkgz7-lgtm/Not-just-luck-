@@ -1,7 +1,21 @@
 # Lucky Jack — Swiss Lotto + EuroMillions Pattern Analyzer (PRD)
 
 
+## 🚀 SESSION 46.2 (08.06.2026 PM #2) — MASTER-PREDICTOR CACHE + workers=1 ✅
+- **Root cause** (Emergent Support): prod pod healthy on tier_1, but `/api/master-predictor` is CPU-bound and 295m/590m CPU limit causes 30s+ stalls on first call after deploy. `--workers 2` doubles resident memory for what FastAPI already handles via async.
+- **Procfile**: `--workers 2` → `--workers 1` (Support's direct recommendation — halves memory, FastAPI handles concurrency via async event loop anyway)
+- **60s in-memory cache** on `/api/master-predictor` (Swiss GET) and `/api/euromillions/master-predictor` (POST):
+  - Activates ONLY when ALL params are default (no `birthday`, `name`, `lock_p*`, `target_date`, `visitor_id`, `num_tickets==1`)
+  - Covers ~95% of page-load ball-spin calls
+  - TTL=60s — safe because draws update Wed/Sat (Swiss) and Tue/Fri (Euro) at 21:00 UTC
+  - Cache bypassed when `visitor_id` is present (per-user limits still enforced)
+- **Preview verification**: cached call 0.18s vs uncached 0.44s; visitor-id path skips cache correctly
+- **17/17 tests pass** (safe_cursor + hungry_engine)
+- **`/api/version`** → `session46.2-mp-cache`
+
+
 ## 🧹 SESSION 46.1 (08.06.2026 PM) — EURO DEDUP + UNIQUE INDEX ✅
+
 - **Root cause** (Emergent Support): E11000 duplicate-key error on `euromillions_draws.date` (27 dup rows from 2016 backfills) prevented unique index creation
 - **Built** `/app/backend/dedupe_euromillions.py` — idempotent migration that finds dup dates, keeps one per date, creates unique index `date_unique`
 - **Wired into startup** as `asyncio.create_task(_dedupe_euro_bg())` so every cold boot self-heals

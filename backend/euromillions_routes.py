@@ -2457,6 +2457,24 @@ def create_euromillions_router(db):
             from server import _assert_generator_open
             await _assert_generator_open("euro", request.visitor_id)
         
+        # 🚀 Default-param cache — first ball-spin call on page load uses defaults.
+        # 60s TTL is safe (draws update Tue/Fri at 21:00 UTC).
+        _no_euro_params = (
+            request.num_tickets == 1 and request.birthday is None
+            and request.name is None and not getattr(request, 'locked_positions', None)
+            and not getattr(request, 'target_date', None)
+            and not request.visitor_id
+        )
+        if _no_euro_params:
+            import time as _t
+            global _EURO_MASTER_CACHE
+            try:
+                _EURO_MASTER_CACHE
+            except NameError:
+                _EURO_MASTER_CACHE = {"ts": 0, "data": None}
+            if _EURO_MASTER_CACHE.get("data") and (_t.time() - _EURO_MASTER_CACHE["ts"] < 60):
+                return _EURO_MASTER_CACHE["data"]
+        
         # Ticket limit check (VIP-aware)
         if request.visitor_id:
             from server import _count_visitor_tickets, TICKET_LIMIT, _is_visitor_unlimited
@@ -2592,7 +2610,7 @@ def create_euromillions_router(db):
             except Exception:
                 pass  # Draw not yet available — will be picked up by recalc
         
-        return {
+        _response = {
             "tickets": tickets,
             "total_tickets": len(tickets),
             "price_per_ticket": price_per_ticket,
@@ -2602,6 +2620,12 @@ def create_euromillions_router(db):
             "generation_id": saved_id,
             "engine": "🎧 DJ Pattern Engine 🎻"
         }
+        # 🚀 Populate default-param cache for next 60s
+        if _no_euro_params:
+            import time as _t
+            _EURO_MASTER_CACHE["ts"] = _t.time()
+            _EURO_MASTER_CACHE["data"] = _response
+        return _response
     
     # Helper: auto-save generated tickets to hit tracker
     async def _save_to_tracker(tickets_data, target_date, mode="dreaming", visitor_id="", has_locked=False, locked_positions=None):
