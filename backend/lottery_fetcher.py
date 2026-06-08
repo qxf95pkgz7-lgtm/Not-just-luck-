@@ -250,9 +250,17 @@ async def sync_euromillions_to_db(db, limit: int = 20) -> Dict:
                     "created_at": datetime.now(timezone.utc).isoformat(),
                     "source": "auto_fetch"
                 }
-                await db.euromillions_draws.insert_one(doc)
-                stats["new"] += 1
-                logger.info(f"Added new EuroMillions draw: {draw['date']} - {draw['numbers']}")
+                # Upsert by date — safe with unique index
+                upd = await db.euromillions_draws.update_one(
+                    {"date": draw["date"]},
+                    {"$setOnInsert": doc},
+                    upsert=True,
+                )
+                if upd.upserted_id is not None:
+                    stats["new"] += 1
+                    logger.info(f"Added new EuroMillions draw: {draw['date']} - {draw['numbers']}")
+                else:
+                    stats["existing"] += 1
                 
     except Exception as e:
         logger.error(f"Error syncing EuroMillions: {e}")

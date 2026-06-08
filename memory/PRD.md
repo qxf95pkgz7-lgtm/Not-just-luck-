@@ -1,7 +1,23 @@
 # Lucky Jack — Swiss Lotto + EuroMillions Pattern Analyzer (PRD)
 
 
-## 🛡️ SESSION 46 (08.06.2026) — PRODUCTION CURSOR HARDENING ✅
+## 🧹 SESSION 46.1 (08.06.2026 PM) — EURO DEDUP + UNIQUE INDEX ✅
+- **Root cause** (Emergent Support): E11000 duplicate-key error on `euromillions_draws.date` (27 dup rows from 2016 backfills) prevented unique index creation
+- **Built** `/app/backend/dedupe_euromillions.py` — idempotent migration that finds dup dates, keeps one per date, creates unique index `date_unique`
+- **Wired into startup** as `asyncio.create_task(_dedupe_euro_bg())` so every cold boot self-heals
+- **One-time live run**: 27 dups removed (1632 → 1605 docs), `date_unique` index created
+- **All 9 insert points converted to upserts** (idempotent — no more dup risk on re-seed):
+  - `server.py` startup auto-seed: `bulk_write([UpdateOne, ...], ordered=False)`
+  - `euromillions_routes.py` 7 backfill blocks (2012-2026 data): new `_upsert_euro_draws()` helper
+  - `euromillions_routes.py` add-new endpoint: `update_one(upsert=True)`
+  - `lottery_fetcher.py` `sync_euromillions_to_db`: `update_one(upsert=True)`
+- **Quieted noisy startup logs**: `create_db_indexes` now uses `_safe_create()` helper that catches `IndexOptionsConflict` / `IndexKeySpecsConflict` as INFO instead of ERROR
+- **Tests**: 25/25 (4 safe_cursor + 14 hungry_engine + 7 rc_walks_encryption) PASS
+- **`/api/version`** bumped to `session46.1-euro-dedup`
+- **Production note**: Emergent Support confirmed prod is now alive (post-tier-upgrade rolling pod replacement settled). The 60s timeout window the user observed was the brief rollout gap.
+
+
+## 🛡️ SESSION 46 (08.06.2026 AM) — PRODUCTION CURSOR HARDENING ✅
 - **Root cause** (per Emergent Support): `pymongo.errors.CursorNotFound` wedging single uvicorn worker on `.to_list(2000+)` reads
 - **Built** `/app/backend/safe_cursor.py` — `safe_find()` + `safe_find_sorted()` wrappers
   - `batch_size=200` (default) → each round-trip <1s

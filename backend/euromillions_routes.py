@@ -12,6 +12,23 @@ from typing import List, Optional, Dict
 from datetime import datetime, timezone
 from collections import Counter, defaultdict
 import random as rnd
+from pymongo import UpdateOne
+
+
+async def _upsert_euro_draws(db, documents: List[dict]) -> int:
+    """Idempotent bulk upsert by date — safe even with unique index on `date`."""
+    if not documents:
+        return 0
+    ops = []
+    for d in documents:
+        date = d.get("date")
+        if not date:
+            continue
+        ops.append(UpdateOne({"date": date}, {"$setOnInsert": d}, upsert=True))
+    if not ops:
+        return 0
+    res = await db.euromillions_draws.bulk_write(ops, ordered=False)
+    return res.upserted_count or 0
 
 # Import Lucky Jack's Musical Patterns
 from jack_patterns import (
@@ -641,7 +658,7 @@ def create_euromillions_router(db):
                 "stars": sorted(d["stars"]),
                 "created_at": datetime.now(timezone.utc).isoformat()
             } for d in all_data]
-            await db.euromillions_draws.insert_many(documents)
+            await _upsert_euro_draws(db, documents)
             return len(documents)
         return 0
     
@@ -660,7 +677,7 @@ def create_euromillions_router(db):
                     "stars": sorted(d["stars"]),
                     "created_at": datetime.now(timezone.utc).isoformat()
                 } for d in EUROMILLIONS_DRAWS_2012_2013]
-                await db.euromillions_draws.insert_many(documents)
+                await _upsert_euro_draws(db, documents)
                 added += len(documents)
         except ImportError:
             pass
@@ -676,7 +693,7 @@ def create_euromillions_router(db):
                     "stars": sorted(d["stars"]),
                     "created_at": datetime.now(timezone.utc).isoformat()
                 } for d in EUROMILLIONS_DRAWS_MISSING]
-                await db.euromillions_draws.insert_many(documents)
+                await _upsert_euro_draws(db, documents)
                 added += len(documents)
         except ImportError:
             pass
@@ -692,7 +709,7 @@ def create_euromillions_router(db):
                     "stars": sorted(d["stars"]),
                     "created_at": datetime.now(timezone.utc).isoformat()
                 } for d in EUROMILLIONS_DRAWS_2018_2020]
-                await db.euromillions_draws.insert_many(documents)
+                await _upsert_euro_draws(db, documents)
                 added += len(documents)
         except ImportError:
             pass
@@ -708,7 +725,7 @@ def create_euromillions_router(db):
                     "stars": sorted(d["stars"]),
                     "created_at": datetime.now(timezone.utc).isoformat()
                 } for d in EUROMILLIONS_DRAWS_2021_2023]
-                await db.euromillions_draws.insert_many(documents)
+                await _upsert_euro_draws(db, documents)
                 added += len(documents)
         except ImportError:
             pass
@@ -724,7 +741,7 @@ def create_euromillions_router(db):
                     "stars": sorted(d["stars"]),
                     "created_at": datetime.now(timezone.utc).isoformat()
                 } for d in EUROMILLIONS_DRAWS_2024_2026]
-                await db.euromillions_draws.insert_many(documents)
+                await _upsert_euro_draws(db, documents)
                 added += len(documents)
         except ImportError:
             pass
@@ -2966,8 +2983,14 @@ def create_euromillions_router(db):
                             "created_at": datetime.now(timezone.utc).isoformat()
                         }
                         
-                        await db.euromillions_draws.insert_one(new_draw)
-                        added_count += 1
+                        # Upsert by date (safe with unique index)
+                        upd = await db.euromillions_draws.update_one(
+                            {"date": draw_date},
+                            {"$setOnInsert": new_draw},
+                            upsert=True,
+                        )
+                        if upd.upserted_id is not None:
+                            added_count += 1
             
             total = await db.euromillions_draws.count_documents({})
             

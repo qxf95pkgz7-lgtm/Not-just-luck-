@@ -491,10 +491,12 @@ async def root():
 async def version():
     """🪞 Truth-teller route — confirms what code build is running."""
     return {
-        "build": "session46-cursor-hardening",
+        "build": "session46.1-euro-dedup",
         "shipped": "2026-06-08",
         "fixes": [
-            "🛡️ NEW: safe_cursor.safe_find() wrapper with CursorNotFound + ExecutionTimeout retry (Emergent Support Jun 8)",
+            "🧹 NEW: Euro dedup migration (27 rows) + unique index on euromillions_draws.date (Emergent Support Jun 8 #2)",
+            "🧹 NEW: All 9 insert_one/insert_many for euromillions_draws converted to upsert (idempotent)",
+            "🛡️ safe_cursor.safe_find() wrapper with CursorNotFound + ExecutionTimeout retry (Emergent Support Jun 8 #1)",
             "🛡️ NEW: All .to_list(5000+) calls in server.py routed through safe_find (prediction-history, hit-tracker, story endpoints)",
             "🛡️ NEW: .batch_size(200) added to all .to_list(2000+) / .to_list(3000) Motor cursors (server.py, hit_tracker.py, euro_simulation.py)",
             "🛡️ NEW: socketTimeoutMS bumped 10s→30s (each batch round-trip has breathing room)",
@@ -7908,6 +7910,16 @@ async def startup_create_indexes():
     asyncio.create_task(_ensure_indexes())
     logger.info("🚀 Index creation scheduled as BACKGROUND task — server ready immediately")
 
+    # 🧹 Dedup + unique-index on euromillions_draws.date (Emergent Support 2026-06-08)
+    async def _dedupe_euro_bg():
+        try:
+            from dedupe_euromillions import dedupe_and_index_euromillions
+            res = await dedupe_and_index_euromillions(db)
+            logger.info(f"🧹 [BG] Euro dedup pass complete: {res}")
+        except Exception as e:
+            logger.warning(f"⚠️ [BG] Euro dedup failed (non-fatal): {str(e)[:200]}")
+    asyncio.create_task(_dedupe_euro_bg())
+
 
 @app.on_event("startup")
 async def startup_auto_seed():
@@ -7989,7 +8001,11 @@ async def startup_auto_seed():
                             "created_at": datetime.now(timezone.utc).isoformat()
                         })
                     if docs:
-                        await db.euromillions_draws.insert_many(docs)
+                        # Upsert by date so unique index never trips on re-run
+                        from pymongo import UpdateOne
+                        ops = [UpdateOne({"date": d["date"]}, {"$setOnInsert": d}, upsert=True) for d in docs if d.get("date")]
+                        if ops:
+                            await db.euromillions_draws.bulk_write(ops, ordered=False)
                     euro_count = await db.euromillions_draws.count_documents({})
                     logger.info(f"✅ Auto-seeded {euro_count} REAL EuroMillions draws!")
                 except ImportError as e:
@@ -8120,47 +8136,46 @@ async def sync_data_files_on_startup():
 @app.on_event("startup")
 async def create_db_indexes():
     """Ensure MongoDB indexes exist for frequently queried fields."""
-    try:
-        from pymongo import ASCENDING, DESCENDING, IndexModel
+    from pymongo import ASCENDING, DESCENDING, IndexModel
 
-        # generations — random_vs_engine, pending-tickets, per-visitor lookups
-        await db.generations.create_indexes([
+    async def _safe_create(coll, models, label):
+        try:
+            await coll.create_indexes(models)
+        except Exception as ix_err:
+            msg = str(ix_err)
+            # Benign — conflicting name on an already-existing equivalent index
+            if "IndexOptionsConflict" in msg or "Index already exists" in msg or "IndexKeySpecsConflict" in msg:
+                logger.info(f"ℹ️  Index for {label} already present (skipping)")
+                return
+            logger.warning(f"⚠️ Index creation for {label} failed (non-fatal): {msg[:200]}")
+
+    try:
+        await _safe_create(db.generations, [
             IndexModel([("target_date", ASCENDING), ("hits_calculated", ASCENDING)]),
             IndexModel([("visitor_id", ASCENDING), ("target_date", ASCENDING)]),
             IndexModel([("target_date", ASCENDING)]),
-        ])
-
-        # euromillions_generations — same query shapes
-        await db.euromillions_generations.create_indexes([
+        ], "generations")
+        await _safe_create(db.euromillions_generations, [
             IndexModel([("target_date", ASCENDING), ("hits_calculated", ASCENDING)]),
             IndexModel([("visitor_id", ASCENDING), ("target_date", ASCENDING)]),
-        ])
-
-        # draws / euromillions_draws — find_one by date, sort by date
-        await db.draws.create_indexes([
+        ], "euromillions_generations")
+        await _safe_create(db.draws, [
             IndexModel([("date", ASCENDING)], unique=True),
-        ])
-        await db.euromillions_draws.create_indexes([
+        ], "draws")
+        await _safe_create(db.euromillions_draws, [
             IndexModel([("date", ASCENDING)], unique=True),
-        ])
-
-        # prediction_history — filtered by lottery_type, sorted by created_at
-        await db.prediction_history.create_indexes([
+        ], "euromillions_draws")
+        await _safe_create(db.prediction_history, [
             IndexModel([("lottery_type", ASCENDING)]),
             IndexModel([("created_at", DESCENDING)]),
             IndexModel([("target_draw_date", ASCENDING)]),
-        ])
-
-        # promo_redeemed — find_one by visitor_id
-        await db.promo_redeemed.create_indexes([
+        ], "prediction_history")
+        await _safe_create(db.promo_redeemed, [
             IndexModel([("visitor_id", ASCENDING)], unique=True),
-        ])
-
-        # hunt_boxes — find_one by id
-        await db.hunt_boxes.create_indexes([
+        ], "promo_redeemed")
+        await _safe_create(db.hunt_boxes, [
             IndexModel([("id", ASCENDING)], unique=True),
-        ])
-
+        ], "hunt_boxes")
         logger.info("✅ DB indexes ensured")
     except Exception as e:
         logger.error(f"❌ DB index creation failed: {e}")
