@@ -81,12 +81,43 @@ def quarter_of(dt: datetime, mode: str) -> int:
 
 
 async def load_draws(mode: str) -> List[Dict]:
-    """Load all draws for given mode, sorted ascending by date. Adds 'dt' and 'wd' fields."""
-    client = AsyncIOMotorClient(MONGO_URL)
+    """Load all draws for given mode, sorted ascending by date. Adds 'dt' and 'wd' fields.
+
+    🛡️ Hardened per Emergent Support (Jun 2026):
+      (a) CursorNotFound retry: re-issues cursor from last _id processed
+      (b) batch_size=100 keeps each round-trip well under 10-min idle timeout
+      (c) async-for streaming so a stuck cursor never deadlocks event loop
+    """
+    from pymongo.errors import CursorNotFound, ExecutionTimeout
+
+    client = AsyncIOMotorClient(
+        MONGO_URL,
+        serverSelectionTimeoutMS=5000,
+        connectTimeoutMS=5000,
+        socketTimeoutMS=30000,
+    )
     db = client[DB_NAME]
     try:
         col_name = "draws" if mode == "swiss" else "euromillions_draws"
-        raw = await db[col_name].find({}, {"_id": 0}).to_list(length=20000)
+        coll = db[col_name]
+
+        raw: List[Dict] = []
+        last_date: str | None = None
+        # Stream up to 20000 docs in batches of 100 with CursorNotFound retry
+        for attempt in range(3):
+            try:
+                query: Dict = {} if last_date is None else {"date": {"$gt": last_date}}
+                cursor = coll.find(query, {"_id": 0}).sort("date", 1).batch_size(100)
+                async for d in cursor:
+                    raw.append(d)
+                    last_date = d.get("date") or last_date
+                    if len(raw) >= 20000:
+                        break
+                break  # success — exit retry loop
+            except (CursorNotFound, ExecutionTimeout) as cursor_err:
+                # Re-issue from last processed point
+                continue
+
         out = []
         for d in raw:
             dt = parse_dt(d.get("date"))

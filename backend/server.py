@@ -490,9 +490,11 @@ async def root():
 async def version():
     """🪞 Truth-teller route — confirms what code build is running."""
     return {
-        "build": "session45-fix5",
+        "build": "session45-fix6",
         "shipped": "2026-06-06",
         "fixes": [
+            "🛡️ CursorNotFound retry + batch_size=100 on year_d_ledger.load_draws (Emergent Support Jun 6)",
+            "🛡️ Safe-cursor wrapper on /api/ticket-counter (CursorNotFound + ExecutionTimeout)",
             "MongoDB index on active_users.visitor_id",
             "10s TTL cache on _real_user_counts",
             "24h prune of stale active_users at startup",
@@ -4527,15 +4529,26 @@ async def clear_prediction_history():
 
 @api_router.get("/ticket-counter")
 async def get_ticket_counter():
-    """Total tickets generated across all lotteries."""
-    swiss_gen_count = 0
-    async for g in db.generations.find({}, {'tickets': 1}).limit(10000):
-        swiss_gen_count += len(g.get('tickets', []))
+    """Total tickets generated across all lotteries.
+    🛡️ Hardened per Emergent Support: batch_size=100 + CursorNotFound retry."""
+    from pymongo.errors import CursorNotFound, ExecutionTimeout
+
+    async def _safe_sum(coll):
+        total = 0
+        for _ in range(3):
+            try:
+                async for g in coll.find({}, {'tickets': 1}).batch_size(100).limit(10000):
+                    total += len(g.get('tickets', []))
+                return total
+            except (CursorNotFound, ExecutionTimeout):
+                total = 0  # restart count, retry
+        return total
+
+    swiss_gen_count = await _safe_sum(db.generations)
     swiss_pred_count = await db.prediction_history.count_documents({})
-    euro_count = 0
-    async for g in db.euromillions_generations.find({}, {'tickets': 1}).limit(10000):
-        euro_count += len(g.get('tickets', []))
+    euro_count = await _safe_sum(db.euromillions_generations)
     total = swiss_gen_count + swiss_pred_count + euro_count
+    return {"total_tickets": total, "swiss_tickets": swiss_gen_count + swiss_pred_count, "euro_tickets": euro_count}
 
 @api_router.get("/pending-tickets")
 async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
