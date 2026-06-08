@@ -490,9 +490,10 @@ async def root():
 async def version():
     """🪞 Truth-teller route — confirms what code build is running."""
     return {
-        "build": "session45-fix6",
+        "build": "session45-fix7",
         "shipped": "2026-06-06",
         "fixes": [
+            "🚀 uvicorn --workers 2 via Procfile (Emergent Support Jun 6)",
             "🛡️ CursorNotFound retry + batch_size=100 on year_d_ledger.load_draws (Emergent Support Jun 6)",
             "🛡️ Safe-cursor wrapper on /api/ticket-counter (CursorNotFound + ExecutionTimeout)",
             "MongoDB index on active_users.visitor_id",
