@@ -283,7 +283,7 @@ class HitTracker:
         
         generations = await self.generations_collection.find(
             {"hits_calculated": True}
-        ).to_list(1000)
+        ).batch_size(200).to_list(1000)
         
         if not generations:
             return {

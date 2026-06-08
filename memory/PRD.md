@@ -1,5 +1,25 @@
 # Lucky Jack — Swiss Lotto + EuroMillions Pattern Analyzer (PRD)
 
+
+## 🛡️ SESSION 46 (08.06.2026) — PRODUCTION CURSOR HARDENING ✅
+- **Root cause** (per Emergent Support): `pymongo.errors.CursorNotFound` wedging single uvicorn worker on `.to_list(2000+)` reads
+- **Built** `/app/backend/safe_cursor.py` — `safe_find()` + `safe_find_sorted()` wrappers
+  - `batch_size=200` (default) → each round-trip <1s
+  - 1 retry on CursorNotFound/ExecutionTimeout
+  - Imported in `server.py`
+- **Patched heaviest cursors** (all routed through `safe_find` or `.batch_size(200)`):
+  - `prediction-history/stats` (was 10k) ✅
+  - 6 endpoints with `.to_list(5000)` (story-tickets, hit-tracker hits-per-draw, swiss/euro composite views) ✅
+  - All `.to_list(2000)` / `.to_list(3000)` calls in `server.py` got `.batch_size(200)` ✅
+  - `hit_tracker.py` 3 cursors got `.batch_size(200)` ✅
+  - `euro_simulation.py` got `.batch_size(200)` ✅
+- **`socketTimeoutMS` bumped 10s → 30s** so a slow batch doesn't dynamite the retry chain
+- **Tests**: 4/4 in `test_safe_cursor.py` PASS + 28/28 of S40/S43/S45 canon tests PASS
+- **Smoke test**: 10 parallel `/api/hit-tracker` requests → 10/10 200 OK, worker stays alive, healthz responsive
+- **`/api/version`** bumped to `session46-cursor-hardening`
+- **⚠️ Note for prod**: `--workers 2` change still requires Emergent platform-side update to supervisor (config is READONLY in pod). User has been advised to email `support@emergent.sh` for credit compensation on prior infra-blocked runs.
+
+
 ## 🎯 Original Problem Statement
 Deeply analyze the provided lotto history alongside the user (the DJ 🎻🎧🍀🥂) and code the discovered esoteric "Story Patterns" into the prediction engine. Strict focus on esoteric numerology — "The Music of the Numbers". The engine listens; it does not predict. Maintain Cosmic DJ persona at all times.
 

@@ -12,6 +12,7 @@ import uuid
 from datetime import datetime, timezone
 from collections import Counter
 import random
+from safe_cursor import safe_find, safe_find_sorted
 
 # Import Pattern 60: Story Signs
 from pattern_60_story_signs import analyze_story_signs, get_circle as get_circle_60
@@ -37,7 +38,7 @@ client = AsyncIOMotorClient(
     maxPoolSize=20,
     serverSelectionTimeoutMS=5000,    # fail Mongo handshake fast (5s vs default 30s)
     connectTimeoutMS=5000,
-    socketTimeoutMS=10000,
+    socketTimeoutMS=30000,            # 30s per round-trip; with batch_size=200 each batch is sub-second
 )
 db = client[os.environ['DB_NAME']]
 
@@ -490,17 +491,19 @@ async def root():
 async def version():
     """🪞 Truth-teller route — confirms what code build is running."""
     return {
-        "build": "session45-fix7",
-        "shipped": "2026-06-06",
+        "build": "session46-cursor-hardening",
+        "shipped": "2026-06-08",
         "fixes": [
+            "🛡️ NEW: safe_cursor.safe_find() wrapper with CursorNotFound + ExecutionTimeout retry (Emergent Support Jun 8)",
+            "🛡️ NEW: All .to_list(5000+) calls in server.py routed through safe_find (prediction-history, hit-tracker, story endpoints)",
+            "🛡️ NEW: .batch_size(200) added to all .to_list(2000+) / .to_list(3000) Motor cursors (server.py, hit_tracker.py, euro_simulation.py)",
+            "🛡️ NEW: socketTimeoutMS bumped 10s→30s (each batch round-trip has breathing room)",
             "🚀 uvicorn --workers 2 via Procfile (Emergent Support Jun 6)",
             "🛡️ CursorNotFound retry + batch_size=100 on year_d_ledger.load_draws (Emergent Support Jun 6)",
-            "🛡️ Safe-cursor wrapper on /api/ticket-counter (CursorNotFound + ExecutionTimeout)",
             "MongoDB index on active_users.visitor_id",
             "10s TTL cache on _real_user_counts",
             "24h prune of stale active_users at startup",
             "All startup events fire as asyncio.create_task (non-blocking)",
-            "MongoDB fast-fail timeouts (serverSelectionTimeoutMS=5000)",
             "Frontend animation halved (Swiss 15s→6s, Euro 13s→5s)",
             "VIP unlock auto-recovers visitor_id (iOS Safari safe)",
         ],
@@ -558,7 +561,7 @@ async def create_draw(input: DrawCreate):
 
 @api_router.get("/draws", response_model=List[DrawResponse])
 async def get_draws():
-    draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).to_list(2000)
+    draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).batch_size(200).to_list(2000)
     return [
         DrawResponse(
             id=d.get('id', ''),
@@ -606,7 +609,7 @@ async def delete_draw(draw_id: str):
 
 @api_router.get("/dashboard", response_model=DashboardStats)
 async def get_dashboard():
-    draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).to_list(2000)
+    draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).batch_size(200).to_list(2000)
     
     if not draws:
         return DashboardStats(
@@ -689,7 +692,7 @@ async def get_dashboard():
 
 @api_router.get("/patterns", response_model=PatternData)
 async def get_patterns():
-    draws = await db.draws.find({}, {"_id": 0}).to_list(2000)
+    draws = await db.draws.find({}, {"_id": 0}).batch_size(200).to_list(2000)
     
     all_numbers = []
     for draw in draws:
@@ -703,7 +706,7 @@ async def get_patterns():
 @api_router.get("/advanced-patterns")
 async def get_advanced_patterns(from_year: int = 2020):
     """Get advanced pattern analysis from specified year"""
-    draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).to_list(2000)
+    draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).batch_size(200).to_list(2000)
     
     # Filter from specified year
     filtered = [d for d in draws if d['date'] >= f"{from_year}-01-01"]
@@ -717,7 +720,7 @@ async def get_advanced_patterns(from_year: int = 2020):
 @api_router.get("/position-patterns")
 async def get_position_patterns(from_year: int = 2020):
     """Get position-based pattern analysis (user's digit link system)"""
-    draws = await db.draws.find({}, {"_id": 0}).to_list(2000)
+    draws = await db.draws.find({}, {"_id": 0}).batch_size(200).to_list(2000)
     
     # Filter from specified year
     filtered = [d for d in draws if d['date'] >= f"{from_year}-01-01"]
@@ -730,7 +733,7 @@ async def get_position_patterns(from_year: int = 2020):
 @api_router.get("/quarter-predictor")
 async def get_quarter_prediction():
     """Predict numbers based on quarterly position system"""
-    draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).to_list(2000)
+    draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).batch_size(200).to_list(2000)
     
     if not draws:
         return {"error": "No draws available"}
@@ -948,7 +951,7 @@ async def get_master_prediction(
     _lock_bounds = slot_bounds(locked_positions, n_slots=6,
                                value_min=1, value_max=42) if locked_positions else {}
     
-    draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).to_list(2000)
+    draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).batch_size(200).to_list(2000)
     if not draws:
         return {"error": "No draws available"}
     
@@ -4085,7 +4088,7 @@ async def get_swiss_sleepers():
     next draw, refreshed on every d.
     """
     from datetime import datetime as dt_cls, timedelta as _td
-    swiss_draws = await db.draws.find({}, {"_id": 0}).to_list(5000)
+    swiss_draws = await safe_find(db.draws, limit=5000)
     if not swiss_draws:
         return {"error": "No draws available"}
     
@@ -4170,7 +4173,7 @@ async def simulate_digit_dna_endpoint(target_date: str):
     except ValueError:
         return {"error": "Invalid date format. Use DD.MM.YYYY"}
     
-    draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).to_list(5000)
+    draws = await safe_find_sorted(db.draws, limit=5000)
     if not draws:
         return {"error": "No draws available"}
     
@@ -4304,7 +4307,7 @@ async def simulate_digit_dna_endpoint(target_date: str):
 
 @api_router.get("/predictions", response_model=PredictionData)
 async def get_predictions():
-    draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).to_list(2000)
+    draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).batch_size(200).to_list(2000)
     
     # Get hot numbers for prediction
     all_numbers = []
@@ -4390,7 +4393,7 @@ async def get_prediction_history(limit: int = 100, lottery_type: str = None):
     try:
         from dj_patterns import find_suspects
         
-        swiss_draws = await db.draws.find({}, {"_id": 0}).to_list(5000)
+        swiss_draws = await safe_find(db.draws, limit=5000)
         def _pd(s):
             try: return datetime.strptime(s, '%d.%m.%Y')
             except: return datetime.min
@@ -4923,7 +4926,7 @@ async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
 @api_router.get("/prediction-history/stats")
 async def get_prediction_stats():
     """Get detailed statistics about prediction accuracy"""
-    history = await db.prediction_history.find({"matches": {"$ne": None}}, {"_id": 0}).to_list(10000)
+    history = await safe_find(db.prediction_history, {"matches": {"$ne": None}}, limit=10000)
     
     if not history:
         return {"message": "No compared predictions yet", "stats": {}}
@@ -5150,7 +5153,7 @@ async def get_story_signs_analysis():
     """
     try:
         # Get all Swiss Lotto draws
-        draws = await db.draws.find({}, {"_id": 0}).to_list(3000)
+        draws = await db.draws.find({}, {"_id": 0}).batch_size(200).to_list(3000)
         
         if not draws:
             raise HTTPException(status_code=404, detail="No draws found")
@@ -5260,7 +5263,7 @@ async def generate_story_predictions(target_date: str = None, num_tickets: int =
     try:
         from story_pattern_generator import generate_combined_story_tickets, get_date_numbers as story_get_date_numbers
         
-        draws = await db.draws.find({}, {"_id": 0}).to_list(3000)
+        draws = await db.draws.find({}, {"_id": 0}).batch_size(200).to_list(3000)
         if not draws:
             raise HTTPException(status_code=404, detail="No draws found")
         
@@ -5375,7 +5378,7 @@ async def generate_and_save_story_predictions(target_date: str = None, num_ticke
     try:
         from story_pattern_generator import generate_combined_story_tickets, get_date_numbers as story_get_date_numbers
         
-        draws = await db.draws.find({}, {"_id": 0}).to_list(3000)
+        draws = await db.draws.find({}, {"_id": 0}).batch_size(200).to_list(3000)
         if not draws:
             raise HTTPException(status_code=404, detail="No draws found")
         
@@ -5446,7 +5449,7 @@ async def get_hit_tracker(last_draws: int = 3, limit: int = 100,
         except: return dt_cls.min
     
     # Get last N Swiss draws (sorted properly)
-    all_swiss = await db.draws.find({}, {"_id": 0}).to_list(5000)
+    all_swiss = await safe_find(db.draws, limit=5000)
     all_swiss.sort(key=lambda d: parse_d(d.get('date', '')), reverse=True)
     last_n_draws = all_swiss[:last_draws]
     last_n_dates = set(d['date'] for d in last_n_draws)
@@ -5491,11 +5494,11 @@ async def get_hit_tracker(last_draws: int = 3, limit: int = 100,
     
     # === SWISS GENERATIONS (from hit_tracker/money-mode) ===
     # Pull generated_at + visitor_id too for the enriched view
-    swiss_gens = await db.generations.find({}, {
+    swiss_gens = await safe_find(db.generations, projection={
         "_id": 1, "target_date": 1, "tickets": 1,
         "hits_calculated": 1, "hit_results": 1, "generation_type": 1,
         "generated_at": 1, "visitor_id": 1,
-    }).to_list(5000)
+    }, limit=5000)
 
     # REGROUP by TRUE target (first draw after generated_at), not saved target_date
     # This is what DJ asked: tickets generated before last draw don't count for next draw
@@ -5585,9 +5588,9 @@ async def get_hit_tracker(last_draws: int = 3, limit: int = 100,
                     })
     
     # === SWISS PREDICTION_HISTORY (from master-predictor) ===
-    swiss_preds = await db.prediction_history.find(
-        {"lottery_type": "swiss"}, {"_id": 0}
-    ).to_list(5000)
+    swiss_preds = await safe_find(
+        db.prediction_history, {"lottery_type": "swiss"}, limit=5000
+    )
     
     pred_seq = {}  # target_date -> running count
     for pred in swiss_preds:
@@ -5852,9 +5855,9 @@ async def get_tickets_archive(
     tickets_out: List[dict] = []
 
     # Map target_date -> actual draw (for hit calc)
-    swiss_draws = await db.draws.find({}, {"_id": 0}).to_list(5000)
+    swiss_draws = await safe_find(db.draws, limit=5000)
     swiss_by_date = {d['date']: d for d in swiss_draws if d.get('date')}
-    euro_draws = await db.euromillions_draws.find({}, {"_id": 0}).to_list(5000)
+    euro_draws = await safe_find(db.euromillions_draws, limit=5000)
     euro_by_date = {d['date']: d for d in euro_draws if d.get('date')}
 
     # BD map (previous draw date) per mode

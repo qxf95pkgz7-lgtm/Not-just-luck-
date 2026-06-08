@@ -25,7 +25,7 @@ async def run_simulation(num_dates=20, tickets_per_date=20):
     """Run simulation on random dates from last 2 years"""
     
     # Fetch all Euro draws
-    draws_raw = await db.euromillions_draws.find({}, {"_id": 0}).to_list(5000)
+    draws_raw = await db.euromillions_draws.find({}, {"_id": 0}).batch_size(200).to_list(5000)
     
     def parse_date(d):
         for fmt in ['%d.%m.%Y', '%Y-%m-%d']:
