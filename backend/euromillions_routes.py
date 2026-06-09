@@ -8,6 +8,7 @@ EuroMillions Pattern Analyzer Routes
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+import asyncio
 from typing import List, Optional, Dict
 from datetime import datetime, timezone
 from collections import Counter, defaultdict
@@ -2457,23 +2458,27 @@ def create_euromillions_router(db):
             from server import _assert_generator_open
             await _assert_generator_open("euro", request.visitor_id)
         
-        # 🚀 Default-param cache — first ball-spin call on page load uses defaults.
-        # 60s TTL is safe (draws update Tue/Fri at 21:00 UTC).
-        _no_euro_params = (
-            request.num_tickets == 1 and request.birthday is None
-            and request.name is None and not getattr(request, 'locked_positions', None)
-            and not getattr(request, 'target_date', None)
-            and not request.visitor_id
-        )
-        if _no_euro_params:
-            import time as _t
-            global _EURO_MASTER_CACHE
-            try:
-                _EURO_MASTER_CACHE
-            except NameError:
-                _EURO_MASTER_CACHE = {"ts": 0, "data": None}
-            if _EURO_MASTER_CACHE.get("data") and (_t.time() - _EURO_MASTER_CACHE["ts"] < 60):
-                return _EURO_MASTER_CACHE["data"]
+        # 🚀 Parametrized cache — keyed on ALL inputs, 60s TTL
+        # Skipped when visitor_id is set so per-visitor limits stay enforced.
+        import time as _t
+        global _EURO_MASTER_CACHE
+        try:
+            _EURO_MASTER_CACHE
+        except NameError:
+            _EURO_MASTER_CACHE = {}  # {key: (ts, data)}
+        
+        _euro_cache_key = None
+        if not request.visitor_id:
+            _locked_norm = tuple(sorted((getattr(request, 'locked_positions', None) or {}).items())) if getattr(request, 'locked_positions', None) else ()
+            _euro_cache_key = (
+                request.birthday, request.name, request.num_tickets,
+                _locked_norm, getattr(request, 'target_date', None),
+            )
+            _entry = _EURO_MASTER_CACHE.get(_euro_cache_key)
+            if _entry and (_t.time() - _entry[0] < 60):
+                return _entry[1]
+        # Legacy flag kept for downstream cache-population branch
+        _no_euro_params = _euro_cache_key is not None
         
         # Ticket limit check (VIP-aware)
         if request.visitor_id:
@@ -2502,91 +2507,96 @@ def create_euromillions_router(db):
         except:
             swiss_draws = []
         
-        tickets = []
-        num_tickets = min(request.num_tickets, 50)
-        target_date = getattr(request, 'target_date', None)
+        # 🚀 Run heavy CPU-bound DJ ticket generation off the event loop
+        # (Emergent Support Jun 8 #3 — to_thread releases the event loop)
+        def _euro_compute():
+            tickets = []
+            num_tickets = min(request.num_tickets, 50)
+            target_date = getattr(request, 'target_date', None)
         
-        # 🎧 DJ ENGINE IS THE CORE - ALL TICKETS USE IT! 🎧
-        for ticket_idx in range(num_tickets):
-            # Convert draws to DJ format
-            dj_draws = []
-            for d in draws:
-                dj_draws.append({
-                    'date': d.get('date', '01.01.2025'),
-                    'numbers': d.get('numbers', []),
-                    'stars': d.get('stars', [])
-                })
+            # 🎧 DJ ENGINE IS THE CORE - ALL TICKETS USE IT! 🎧
+            for ticket_idx in range(num_tickets):
+                # Convert draws to DJ format
+                dj_draws = []
+                for d in draws:
+                    dj_draws.append({
+                        'date': d.get('date', '01.01.2025'),
+                        'numbers': d.get('numbers', []),
+                        'stars': d.get('stars', [])
+                    })
             
-            # Handle locked positions
-            locked = {}
-            if request.locked_positions:
-                for pos_key, value in request.locked_positions.items():
-                    pos_idx = int(pos_key.upper().replace("P", "")) - 1
-                    if 0 <= pos_idx < 5 and 1 <= value <= 50:
-                        locked[pos_idx] = value
+                # Handle locked positions
+                locked = {}
+                if request.locked_positions:
+                    for pos_key, value in request.locked_positions.items():
+                        pos_idx = int(pos_key.upper().replace("P", "")) - 1
+                        if 0 <= pos_idx < 5 and 1 <= value <= 50:
+                            locked[pos_idx] = value
             
-            # Generate using DJ Engine - THE CORE!
-            dj_result = dj_generate_ticket(dj_draws, target_date=target_date, locked=locked, swiss_draws=swiss_draws)
+                # Generate using DJ Engine - THE CORE!
+                dj_result = dj_generate_ticket(dj_draws, target_date=target_date, locked=locked, swiss_draws=swiss_draws)
 
-            # 🔒 ENFORCE lock positions on the result (DJ canon 29.04.2026)
-            # dj_generate_ticket returns SORTED numbers; we need to ensure
-            # locked values stay at their pinned slots and unlocked values
-            # are distributed in valid ascending order.
-            if locked:
-                from lock_constraints import (
-                    assemble_with_locks, pick_values_for_gaps,
-                    is_valid_lock_request,
-                )
-                _ok, _msg = is_valid_lock_request(
-                    locked, n_slots=5, value_min=1, value_max=50,
-                )
-                if not _ok:
-                    raise HTTPException(status_code=400,
-                                        detail=f"Invalid lock: {_msg}")
-                gen_nums = [int(x) for x in dj_result.get("numbers", [])
-                            if 1 <= int(x) <= 50]
-                gen_unlocked = [v for v in gen_nums
-                                if v not in locked.values()]
-                # Try direct assembly first
-                assembled = assemble_with_locks(
-                    locked, gen_unlocked, n_slots=5,
-                )
-                if assembled is None:
-                    # Fall back to gap-aware pick using gen ordering as score
-                    score_map = {v: 100 - i for i, v in enumerate(gen_nums)}
-
-                    def _sf(v: int) -> float:
-                        return float(score_map.get(v, 1))
-
-                    new_unlocked = pick_values_for_gaps(
-                        locked, n_slots=5, score_fn=_sf,
-                        value_min=1, value_max=50,
+                # 🔒 ENFORCE lock positions on the result (DJ canon 29.04.2026)
+                # dj_generate_ticket returns SORTED numbers; we need to ensure
+                # locked values stay at their pinned slots and unlocked values
+                # are distributed in valid ascending order.
+                if locked:
+                    from lock_constraints import (
+                        assemble_with_locks, pick_values_for_gaps,
+                        is_valid_lock_request,
                     )
-                    if new_unlocked is not None:
-                        assembled = assemble_with_locks(
-                            locked, new_unlocked, n_slots=5,
-                        )
-                if assembled is None:
-                    # Hard fallback — should never happen due to validator
-                    assembled = sorted(set(list(locked.values()) + gen_nums))[:5]
-                dj_result["numbers"] = assembled
+                    _ok, _msg = is_valid_lock_request(
+                        locked, n_slots=5, value_min=1, value_max=50,
+                    )
+                    if not _ok:
+                        raise HTTPException(status_code=400,
+                                            detail=f"Invalid lock: {_msg}")
+                    gen_nums = [int(x) for x in dj_result.get("numbers", [])
+                                if 1 <= int(x) <= 50]
+                    gen_unlocked = [v for v in gen_nums
+                                    if v not in locked.values()]
+                    # Try direct assembly first
+                    assembled = assemble_with_locks(
+                        locked, gen_unlocked, n_slots=5,
+                    )
+                    if assembled is None:
+                        # Fall back to gap-aware pick using gen ordering as score
+                        score_map = {v: 100 - i for i, v in enumerate(gen_nums)}
 
-            tickets.append({
-                "ticket_number": ticket_idx + 1,
-                "numbers": dj_result["numbers"],
-                "stars": dj_result["stars"],
-                "patterns_used": dj_result["patterns_used"],
-                "confidence": 0.85,
-                "position_reasons": {
-                    "P1": "DJ Engine 🎧",
-                    "P2": "DJ Engine 🎧",
-                    "P3": "DJ Engine 🎧",
-                    "P4": "DJ Engine 🎧",
-                    "P5": "DJ Engine 🎧",
-                },
-                "scenario": "dj"
-            })
+                        def _sf(v: int) -> float:
+                            return float(score_map.get(v, 1))
+
+                        new_unlocked = pick_values_for_gaps(
+                            locked, n_slots=5, score_fn=_sf,
+                            value_min=1, value_max=50,
+                        )
+                        if new_unlocked is not None:
+                            assembled = assemble_with_locks(
+                                locked, new_unlocked, n_slots=5,
+                            )
+                    if assembled is None:
+                        # Hard fallback — should never happen due to validator
+                        assembled = sorted(set(list(locked.values()) + gen_nums))[:5]
+                    dj_result["numbers"] = assembled
+
+                tickets.append({
+                    "ticket_number": ticket_idx + 1,
+                    "numbers": dj_result["numbers"],
+                    "stars": dj_result["stars"],
+                    "patterns_used": dj_result["patterns_used"],
+                    "confidence": 0.85,
+                    "position_reasons": {
+                        "P1": "DJ Engine 🎧",
+                        "P2": "DJ Engine 🎧",
+                        "P3": "DJ Engine 🎧",
+                        "P4": "DJ Engine 🎧",
+                        "P5": "DJ Engine 🎧",
+                    },
+                    "scenario": "dj"
+                })
         
+            return tickets, target_date
+        tickets, target_date = await asyncio.to_thread(_euro_compute)
         price_per_ticket = 3.50
         total_price = len(tickets) * price_per_ticket
         
@@ -2620,11 +2630,12 @@ def create_euromillions_router(db):
             "generation_id": saved_id,
             "engine": "🎧 DJ Pattern Engine 🎻"
         }
-        # 🚀 Populate default-param cache for next 60s
-        if _no_euro_params:
-            import time as _t
-            _EURO_MASTER_CACHE["ts"] = _t.time()
-            _EURO_MASTER_CACHE["data"] = _response
+        # 🚀 Populate parametrized cache for next 60s
+        if _no_euro_params and _euro_cache_key is not None:
+            _EURO_MASTER_CACHE[_euro_cache_key] = (_t.time(), _response)
+            if len(_EURO_MASTER_CACHE) > 256:
+                oldest_key = min(_EURO_MASTER_CACHE, key=lambda k: _EURO_MASTER_CACHE[k][0])
+                _EURO_MASTER_CACHE.pop(oldest_key, None)
         return _response
     
     # Helper: auto-save generated tickets to hit tracker

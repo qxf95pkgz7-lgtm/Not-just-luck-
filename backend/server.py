@@ -491,11 +491,13 @@ async def root():
 async def version():
     """🪞 Truth-teller route — confirms what code build is running."""
     return {
-        "build": "session46.2-mp-cache",
-        "shipped": "2026-06-08",
+        "build": "session46.3-to-thread",
+        "shipped": "2026-06-09",
         "fixes": [
-            "🚀 NEW: 60s in-memory cache on /api/master-predictor (Swiss + Euro) for default-param calls (Emergent Support Jun 8 #3)",
-            "🚀 NEW: Procfile dropped to --workers 1 to free memory on tier_1 (Emergent Support recommendation)",
+            "🚀 NEW: Heavy CPU compute in /api/master-predictor (Swiss + Euro) moved off the event loop via asyncio.to_thread (Emergent Support Jun 9 — THE REAL FIX)",
+            "🚀 NEW: Parametrized 60s cache (any non-visitor params), 256-entry LRU cap",
+            "🚀 60s in-memory cache on /api/master-predictor (Swiss + Euro) for default-param calls",
+            "🚀 Procfile dropped to --workers 1 to free memory on tier_1 (Emergent Support recommendation)",
             "🧹 Euro dedup migration (27 rows) + unique index on euromillions_draws.date (Emergent Support Jun 8 #2)",
             "🧹 All 9 insert_one/insert_many for euromillions_draws converted to upsert (idempotent)",
             "🛡️ safe_cursor.safe_find() wrapper with CursorNotFound + ExecutionTimeout retry (Emergent Support Jun 8 #1)",
@@ -920,22 +922,23 @@ async def get_master_prediction(
     if visitor_id:
         await _assert_generator_open("swiss", visitor_id)
     
-    # 🚀 Default-param cache — covers the initial page-load ball-spin call
-    # which is the same for every visitor. 60s TTL is safe because draws only
-    # update on Wed/Sat at 21:00 UTC.
-    _no_params = (
-        birthday is None and name is None and num_tickets == 1
-        and all(v is None for v in [lock_p1, lock_p2, lock_p3, lock_p4, lock_p5, lock_p6])
-    )
-    if _no_params:
-        import time
-        global _MASTER_PRED_CACHE
-        try:
-            _MASTER_PRED_CACHE
-        except NameError:
-            _MASTER_PRED_CACHE = {"ts": 0, "data": None}
-        if _MASTER_PRED_CACHE.get("data") and (time.time() - _MASTER_PRED_CACHE["ts"] < 60):
-            return _MASTER_PRED_CACHE["data"]
+    # 🚀 Parametrized cache — keyed on ALL inputs, 60s TTL
+    # Skips cache when visitor_id is present (per-visitor limits stay enforced).
+    import time
+    global _MASTER_PRED_CACHE
+    try:
+        _MASTER_PRED_CACHE
+    except NameError:
+        _MASTER_PRED_CACHE = {}  # {key: (ts, data)}
+    
+    _cache_key = None
+    if not visitor_id:
+        _cache_key = (birthday, name, lock_p1, lock_p2, lock_p3, lock_p4, lock_p5, lock_p6, num_tickets)
+        _entry = _MASTER_PRED_CACHE.get(_cache_key)
+        if _entry and (time.time() - _entry[0] < 60):
+            return _entry[1]
+    # Legacy flag kept for downstream cache-population branch
+    _no_params = _cache_key is not None
     
     # Ticket limit check (VIP-aware)
     if visitor_id:
@@ -973,2658 +976,2662 @@ async def get_master_prediction(
                                value_min=1, value_max=42) if locked_positions else {}
     
     draws = await db.draws.find({}, {"_id": 0}).sort("date", -1).batch_size(200).to_list(2000)
-    if not draws:
-        return {"error": "No draws available"}
-    
-    current_year = datetime.now().year
-    year_draws = sorted([d for d in draws if d['date'].startswith(str(current_year))], key=lambda x: x['date'])
-    all_draws_2020 = sorted([d for d in draws if d['date'] >= '2020-01-01'], key=lambda x: x['date'])
-    
-    # Score accumulator for each number 1-42
-    scores = defaultdict(lambda: {"score": 0, "reasons": []})
-    
-    # === NAME MODE (if provided) ===
-    name_numbers = []
-    name_info = None
-    if name:
-        try:
-            name_clean = name.upper().strip()
-            letter_values = {chr(65 + i): i + 1 for i in range(26)}  # A=1, B=2, ... Z=26
-            
-            # Split into words
-            words = name_clean.split()
-            word_sums = []
-            all_letters = []
-            
-            for word in words:
-                word_sum = 0
-                for char in word:
-                    if char in letter_values:
-                        val = letter_values[char]
-                        all_letters.append({"letter": char, "value": val})
-                        word_sum += val
-                        # Individual letter values (if 1-42)
-                        if 1 <= val <= 42:
-                            name_numbers.append({"num": val, "reason": f"Letter {char}={val}"})
-                if word_sum > 0:
-                    word_sums.append({"word": word, "sum": word_sum})
-                    # Word sum (if 1-42)
-                    if 1 <= word_sum <= 42:
-                        name_numbers.append({"num": word_sum, "reason": f"'{word}'={word_sum}"})
-                    # Word sum digits
-                    if word_sum > 42:
-                        d1 = word_sum // 10
-                        d2 = word_sum % 10
-                        if 1 <= d1 <= 42:
-                            name_numbers.append({"num": d1, "reason": f"'{word}' digit {d1}"})
-                        if 1 <= d2 <= 42 and d2 != d1:
-                            name_numbers.append({"num": d2, "reason": f"'{word}' digit {d2}"})
-                        # Digit sum
-                        dsum = sum(int(d) for d in str(word_sum))
-                        if 1 <= dsum <= 42:
-                            name_numbers.append({"num": dsum, "reason": f"'{word}' reduced={dsum}"})
-            
-            # Full name sum
-            full_sum = sum(ws["sum"] for ws in word_sums)
-            if full_sum > 0:
-                # Full sum digits
-                if 1 <= full_sum <= 42:
-                    name_numbers.append({"num": full_sum, "reason": f"Full name={full_sum}"})
-                else:
-                    d1 = (full_sum // 10) % 10
-                    d2 = full_sum % 10
-                    if 1 <= d1 <= 42:
-                        name_numbers.append({"num": d1, "reason": f"Name digit {d1}"})
-                    if 1 <= d2 <= 42 and d2 != d1:
-                        name_numbers.append({"num": d2, "reason": f"Name digit {d2}"})
-                
-                # Reduce to single digit (numerology style)
-                reduced = full_sum
-                while reduced > 9:
-                    reduced = sum(int(d) for d in str(reduced))
-                if 1 <= reduced <= 9:
-                    name_numbers.append({"num": reduced, "reason": f"Name number={reduced}"})
-            
-            name_info = {
-                "name": name,
-                "words": word_sums,
-                "full_sum": full_sum,
-                "letters": all_letters[:10]  # First 10 letters
-            }
-            
-            # Apply name bonuses
-            seen = set()
-            for nn in name_numbers:
-                n = nn["num"]
-                if n not in seen:
-                    scores[n]["score"] += 20
-                    scores[n]["reasons"].append(f"🔤 {nn['reason']} (20%)")
-                    seen.add(n)
-        except:
-            pass
-    
-    # === BIRTHDAY MODE (if provided) ===
-    birthday_numbers = []
-    birthday_info = None
-    if birthday:
-        try:
-            parts = birthday.replace('/', '-').split('-')
-            if len(parts) == 3:
-                day = int(parts[0])
-                month = int(parts[1])
-                year = int(parts[2])
-                
-                birthday_info = {"day": day, "month": month, "year": year}
-                
-                if 1 <= day <= 42:
-                    birthday_numbers.append({"num": day, "reason": f"Birth day {day}"})
-                if 1 <= month <= 42:
-                    birthday_numbers.append({"num": month, "reason": f"Birth month {month}"})
-                
-                year_str = str(year)
-                if len(year_str) == 4:
-                    first_two = int(year_str[:2])
-                    last_two = int(year_str[2:])
-                    if 1 <= first_two <= 42:
-                        birthday_numbers.append({"num": first_two, "reason": f"Year {first_two}"})
-                    if 1 <= last_two <= 42:
-                        birthday_numbers.append({"num": last_two, "reason": f"Year {last_two}"})
-                    
-                    for d in year_str:
-                        digit = int(d)
-                        if 1 <= digit <= 9:
-                            birthday_numbers.append({"num": digit, "reason": f"Year digit {digit}"})
-                
-                day_plus_month = day + month
-                if 1 <= day_plus_month <= 42:
-                    birthday_numbers.append({"num": day_plus_month, "reason": f"D+M={day_plus_month}"})
-                
-                year_digit_sum = sum(int(d) for d in year_str)
-                if 1 <= year_digit_sum <= 42:
-                    birthday_numbers.append({"num": year_digit_sum, "reason": f"Year sum={year_digit_sum}"})
-                
-                if day >= 10:
-                    day_rev = int(str(day)[::-1])
-                    if 1 <= day_rev <= 42:
-                        birthday_numbers.append({"num": day_rev, "reason": f"Day rev {day}→{day_rev}"})
-                
-                total = day + month + sum(int(d) for d in year_str)
-                while total > 9:
-                    total = sum(int(d) for d in str(total))
-                if 1 <= total <= 9:
-                    birthday_numbers.append({"num": total, "reason": f"Life path {total}"})
-                
-                seen = set()
-                for bn in birthday_numbers:
-                    n = bn["num"]
-                    if n not in seen:
-                        scores[n]["score"] += 25
-                        scores[n]["reasons"].append(f"🎂 {bn['reason']} (25%)")
-                        seen.add(n)
-        except:
-            pass
-    
-    # === 1. QUARTERLY POSITION (28% confidence) ===
-    expected_per_quarter = 26
-    current_draw_num = len(year_draws)
-    current_quarter = min(current_draw_num // expected_per_quarter, 3)
-    position_in_quarter = current_draw_num % expected_per_quarter
-    next_position = position_in_quarter + 1
-    if next_position > expected_per_quarter:
-        next_position = 1
-        current_quarter = min(current_quarter + 1, 3)
-    quarter_size = expected_per_quarter if current_quarter < 3 else 27
-    position_from_bottom = quarter_size - next_position + 1
-    
-    if 1 <= next_position <= 42:
-        scores[next_position]["score"] += 28
-        scores[next_position]["reasons"].append(f"Position {next_position} from top (28%)")
-    if 1 <= position_from_bottom <= 42 and position_from_bottom != next_position:
-        scores[position_from_bottom]["score"] += 28
-        scores[position_from_bottom]["reasons"].append(f"Position {position_from_bottom} from bottom (28%)")
-    
-    # === 2. DIGIT LINKS from position numbers (11% confidence) ===
-    for pos_num in [next_position, position_from_bottom]:
-        if 1 <= pos_num <= 42:
-            links = get_digit_links(pos_num)
-            for link in links:
-                if 1 <= link <= 42:
-                    scores[link]["score"] += 11
-                    scores[link]["reasons"].append(f"Digit link from {pos_num} (11%)")
-    
-    # === 3. DATE PATTERNS (15%, 12%, 5%) ===
-    last_draw = year_draws[-1] if year_draws else (draws[0] if draws else None)
-    if last_draw:
-        date_pats = get_date_patterns(last_draw)
-        for dp in date_pats:
-            n = dp["number"]
-            scores[n]["score"] += dp["confidence"]
-            scores[n]["reasons"].append(f"{dp['reason']} ({dp['confidence']}%)")
-    
-    # === 4. DIGIT LINKS from last draw numbers (8% confidence) ===
-    if last_draw:
-        for num in last_draw['numbers']:
-            links = get_digit_links(num)
-            for link in links:
-                if 1 <= link <= 42 and link not in last_draw['numbers']:
-                    scores[link]["score"] += 8
-                    scores[link]["reasons"].append(f"Digit link from {num} (8%)")
-    
-    # === 5. HISTORICAL AT THIS POSITION ===
-    position_freq = defaultdict(int)
-    for year in range(2020, current_year + 1):
-        y_draws = sorted([d for d in draws if d['date'].startswith(str(year))], key=lambda x: x['date'])
-        q_size = len(y_draws) // 4
-        for q in range(4):
-            start = q * q_size
-            end = start + q_size if q < 3 else len(y_draws)
-            quarter_draws = y_draws[start:end]
-            if next_position <= len(quarter_draws):
-                for n in quarter_draws[next_position - 1]['numbers']:
-                    position_freq[n] += 1
-    
-    top_historical = sorted(position_freq.items(), key=lambda x: x[1], reverse=True)[:5]
-    for n, count in top_historical:
-        bonus = min(count * 3, 15)
-        scores[n]["score"] += bonus
-        scores[n]["reasons"].append(f"Historical at pos {next_position}: {count}x ({bonus}%)")
-    
-    # === 6. HOT NUMBERS (global frequency) ===
-    all_nums = []
-    for d in all_draws_2020[-200:]:
-        all_nums.extend(d['numbers'])
-    freq = Counter(all_nums)
-    hot_nums = freq.most_common(10)
-    for n, count in hot_nums:
-        bonus = min(count // 5, 10)
-        if bonus > 0:
-            scores[n]["score"] += bonus
-            scores[n]["reasons"].append(f"Hot number: {count}x ({bonus}%)")
-    
-    # === 7. COLD/DUE NUMBERS ===
-    last_seen = {}
-    sorted_draws_desc = sorted(all_draws_2020, key=lambda x: x['date'], reverse=True)
-    for i, d in enumerate(sorted_draws_desc):
-        for n in d['numbers']:
-            if n not in last_seen:
-                last_seen[n] = i
-    
-    due_numbers = [(n, gap) for n, gap in last_seen.items() if gap > 15]
-    due_numbers.sort(key=lambda x: x[1], reverse=True)
-    for n, gap in due_numbers[:5]:
-        bonus = min(gap // 3, 10)
-        scores[n]["score"] += bonus
-        scores[n]["reasons"].append(f"Due: {gap} draws ago ({bonus}%)")
-    
-    # === 8. VACUUM PATTERN (69.9% hit rate!) ===
-    # When 3+ consecutive numbers leave, nearby/original return
-    last_5 = all_draws_2020[-5:] if len(all_draws_2020) >= 5 else all_draws_2020
-    if len(last_5) >= 3:
-        for idx, draw in enumerate(last_5[:-1]):
-            nums = sorted(draw['numbers'])
-            # Find consecutive sequences
-            seq = [nums[0]]
-            for j in range(1, len(nums)):
-                if nums[j] == nums[j-1] + 1:
-                    seq.append(nums[j])
-                else:
-                    if len(seq) >= 3:
-                        # Consecutive found - boost nearby numbers
-                        nearby_low = seq[0] - 1
-                        nearby_high = seq[-1] + 1
-                        for n in [nearby_low, nearby_high] + seq:
-                            if 1 <= n <= 42:
-                                scores[n]["score"] += 12
-                                scores[n]["reasons"].append(f"🌀 Vacuum: {seq} consecutive")
-                    seq = [nums[j]]
-            if len(seq) >= 3:
-                nearby_low = seq[0] - 1
-                nearby_high = seq[-1] + 1
-                for n in [nearby_low, nearby_high] + seq:
-                    if 1 <= n <= 42:
-                        scores[n]["score"] += 12
-                        scores[n]["reasons"].append(f"🌀 Vacuum: {seq} consecutive")
-    
-    # === 9. HIGH/LOW BALANCE (88.8% hit rate!) ===
-    if last_draw:
-        last_nums = last_draw['numbers']
-        lows = sum(1 for n in last_nums if n <= 21)
-        highs = 6 - lows
-        if lows >= 5:  # Too many lows, boost highs
-            for n in range(22, 43):
-                scores[n]["score"] += 15
-                scores[n]["reasons"].append(f"⚖️ Balance: last had {lows} lows")
-        elif highs >= 5:  # Too many highs, boost lows
-            for n in range(1, 22):
-                scores[n]["score"] += 15
-                scores[n]["reasons"].append(f"⚖️ Balance: last had {highs} highs")
-    
-    # === 10. ODD/EVEN BALANCE (81.6% hit rate!) ===
-    if last_draw:
-        last_nums = last_draw['numbers']
-        odds = sum(1 for n in last_nums if n % 2 == 1)
-        evens = 6 - odds
-        if odds >= 5:  # Too many odds, boost evens
-            for n in range(2, 43, 2):
-                scores[n]["score"] += 12
-                scores[n]["reasons"].append(f"⚖️ Balance: last had {odds} odds")
-        elif evens >= 5:  # Too many evens, boost odds
-            for n in range(1, 43, 2):
-                scores[n]["score"] += 12
-                scores[n]["reasons"].append(f"⚖️ Balance: last had {evens} evens")
-    
-    # === 11. GAP FILLING (64% hit rate!) ===
-    if last_draw:
-        last_nums = sorted(last_draw['numbers'])
-        for j in range(len(last_nums)-1):
-            gap = last_nums[j+1] - last_nums[j]
-            if gap >= 10:  # Big gap
-                middle = (last_nums[j] + last_nums[j+1]) // 2
-                for n in [middle-1, middle, middle+1]:
-                    if 1 <= n <= 42:
-                        scores[n]["score"] += 10
-                        scores[n]["reasons"].append(f"🕳️ Gap fill: {last_nums[j]}-{last_nums[j+1]}")
-    
-    # === 12. DIGIT FAMILY CONNECTION (47.9% hit rate!) ===
-    if last_draw:
-        last_nums = last_draw['numbers']
-        for n in last_nums:
-            digit_family = n % 10  # Last digit
-            # Boost other numbers ending in same digit
-            for other in range(digit_family, 43, 10):
-                if other != n and 1 <= other <= 42:
-                    scores[other]["score"] += 8
-                    scores[other]["reasons"].append(f"👨‍👩‍👧 Family: ends in {digit_family}")
-    
-    # === 13. DISTANCE FAMILY (flip - 42s) ===
-    def get_distance_family(n):
-        flipped_n = int(str(n)[::-1])
-        result = flipped_n
-        while result > 42:
-            result -= 42
-        return result
-    
-    if last_draw:
-        last_nums = last_draw['numbers']
-        for n in last_nums:
-            dist_fam = get_distance_family(n)
-            if dist_fam != n and 1 <= dist_fam <= 42:
-                scores[dist_fam]["score"] += 6
-                scores[dist_fam]["reasons"].append(f"🔄 Distance: {n}→{dist_fam}")
-    
-    # === 14. DATE NUMEROLOGY (year + month) ===
-    current_month = datetime.now().month
-    current_year = datetime.now().year
-    
-    # Year pattern: 2026 → 20+26=46 → 46-42=4
-    year_num = (current_year // 100) + (current_year % 100)  # 20+26=46
-    while year_num > 42:
-        year_num -= 42
-    scores[year_num]["score"] += 8
-    scores[year_num]["reasons"].append(f"📅 Year: {current_year}→{year_num}")
-    
-    # Month + year combo
-    month_year = current_month + (current_year % 100)  # e.g., 4+26=30
-    if 1 <= month_year <= 42:
-        scores[month_year]["score"] += 8
-        scores[month_year]["reasons"].append(f"📅 Month+Year: {current_month}+{current_year%100}={month_year}")
-    elif month_year > 42:
-        month_year -= 42
-        if 1 <= month_year <= 42:
-            scores[month_year]["score"] += 8
-            scores[month_year]["reasons"].append(f"📅 Month+Year: reduced to {month_year}")
-    
-    # === 15. LUCKY NUMBER FAMILY PATTERN (47.2% hit rate!) ===
-    # If last draw had Lucky Number, boost numbers ending in that digit
-    if last_draw and last_draw.get('lucky_number'):
-        lucky = last_draw['lucky_number']
-        # Numbers ending in lucky number digit (e.g., lucky=3 -> 3,13,23,33)
-        for n in range(lucky, 43, 10):
-            if 1 <= n <= 42:
-                scores[n]["score"] += 12
-                scores[n]["reasons"].append(f"🍀 Lucky family: ends in {lucky}")
-        # Also boost the lucky number itself
-        if 1 <= lucky <= 42:
-            scores[lucky]["score"] += 8
-            scores[lucky]["reasons"].append(f"🍀 Lucky number: {lucky}")
-    
-    # === 16. REPLAY NUMBER PATTERN (18.9% hit rate) ===
-    # Replay number has slight tendency to appear in next draw
-    if last_draw and last_draw.get('replay_number'):
-        replay = last_draw['replay_number']
-        if 1 <= replay <= 42:
-            scores[replay]["score"] += 10
-            scores[replay]["reasons"].append(f"🔄 Replay number: {replay}")
-        # Also boost numbers ending in replay's digit
-        replay_digit = replay % 10
-        for n in range(replay_digit, 43, 10):
-            if 1 <= n <= 42 and n != replay:
-                scores[n]["score"] += 5
-                scores[n]["reasons"].append(f"🔄 Replay family: ends in {replay_digit}")
-    
-    # === 17. LUCKY NUMBER → FIRST POSITION PATTERN (13.9% vs 2.4%) ===
-    # Lucky number often equals the first (smallest) number in next draw
-    if last_draw and last_draw.get('lucky_number'):
-        lucky = last_draw['lucky_number']
-        # Boost the lucky number itself (might be first position)
-        if 1 <= lucky <= 6:  # Lucky is 1-6, these are often first position
-            scores[lucky]["score"] += 15
-            scores[lucky]["reasons"].append(f"🎯 Lucky→First: {lucky} (13.9% pattern)")
-    
-    # === 18. POSITION 6 + LUCKY → DIGITS PATTERN (18% P1, 6.4% P2) ===
-    # Sum of Position 6 + Lucky number → digits become next P1 and P2
-    # Example: P6=35, Lucky=1 → 36 → digits 3,6 → next draw P1=3, P2=6
-    if last_draw and last_draw.get('lucky_number'):
-        p6 = last_draw['numbers'][5]  # Position 6 (last/highest number)
-        lucky = last_draw['lucky_number']
-        sum_p6_lucky = p6 + lucky
-        
-        # Extract digits
-        digit1 = sum_p6_lucky // 10  # tens digit
-        digit2 = sum_p6_lucky % 10   # ones digit
-        
-        # Boost digit1 (18% hit rate for P1!)
-        if 1 <= digit1 <= 9:
-            scores[digit1]["score"] += 18
-            scores[digit1]["reasons"].append(f"🔢 P6+Lucky: {p6}+{lucky}={sum_p6_lucky} → digit {digit1} (18%)")
-        
-        # Boost digit2 (6.4% hit rate for P2)
-        if 1 <= digit2 <= 9 and digit2 != digit1:
-            scores[digit2]["score"] += 10
-            scores[digit2]["reasons"].append(f"🔢 P6+Lucky: {p6}+{lucky}={sum_p6_lucky} → digit {digit2}")
-        
-        # Also boost combined number if ≤42
-        if 10 <= sum_p6_lucky <= 42:
-            scores[sum_p6_lucky]["score"] += 8
-            scores[sum_p6_lucky]["reasons"].append(f"🔢 P6+Lucky sum: {sum_p6_lucky}")
-        
-        # Boost numbers starting with digit1 (e.g., digit1=3 → 30,31,32...)
-        if 1 <= digit1 <= 4:
-            for n in range(digit1 * 10, min(digit1 * 10 + 10, 43)):
-                if 1 <= n <= 42:
-                    scores[n]["score"] += 5
-                    scores[n]["reasons"].append(f"🔢 P6+Lucky family: starts with {digit1}")
-    
-    # === 19. QUARTER FIRST SERIES - HIDDEN NUMBER SEQUENCE ===
-    # Pattern: First draw P1 represents hidden number (found via nextP1 - P2)
-    # Count sequence from hidden, track through P1 and P2
-    # P1 sums predict next (5+7=12 → next P1=13)
-    # Serial sequences (32,33,34) minus offset = hidden sequence (11,12,13)
-    
-    # Get quarter draws
-    quarter_size = 27  # First 3 quarters have 27 draws
-    current_quarter_start = (len(year_draws) // quarter_size) * quarter_size
-    quarter_draws = year_draws[current_quarter_start:] if year_draws else []
-    
-    if len(quarter_draws) >= 2:
-        # Find hidden number: nextP1 - P2 from first draw
-        first_draw = quarter_draws[0]
-        second_draw = quarter_draws[1]
-        hidden_num = second_draw['numbers'][0] - first_draw['numbers'][1]
-        
-        if 1 <= abs(hidden_num) <= 20:
-            # Current position in quarter
-            pos_in_quarter = len(quarter_draws)
-            
-            # Calculate expected sequence number
-            seq_num = abs(hidden_num) + pos_in_quarter
-            
-            # Boost sequence number if valid
-            if 1 <= seq_num <= 42:
-                scores[seq_num]["score"] += 15
-                scores[seq_num]["reasons"].append(f"🔮 Quarter hidden seq: {abs(hidden_num)}+{pos_in_quarter}={seq_num}")
-            
-            # P1 sum pattern: sum of last two P1s predicts next
-            if len(quarter_draws) >= 2:
-                last_p1 = quarter_draws[-1]['numbers'][0]
-                prev_p1 = quarter_draws[-2]['numbers'][0]
-                p1_sum = last_p1 + prev_p1
-                
-                # Next P1 might be p1_sum or p1_sum + 1
-                for candidate in [p1_sum, p1_sum + 1]:
-                    if 1 <= candidate <= 42:
-                        scores[candidate]["score"] += 12
-                        scores[candidate]["reasons"].append(f"🔮 P1 sum: {prev_p1}+{last_p1}={p1_sum} → {candidate}")
-            
-            # Serial pattern: look for consecutive runs, missing = appears at P1
-            if last_draw:
-                nums = sorted(last_draw['numbers'])
-                for j in range(len(nums) - 1):
-                    if nums[j+1] - nums[j] == 1:  # Consecutive
-                        # Check what's missing in the run
-                        if j + 2 < len(nums) and nums[j+2] - nums[j+1] == 2:
-                            missing = nums[j+1] + 1
-                            # The missing number minus offset might appear at P1
-                            offset = nums[j] - abs(hidden_num)
-                            predicted = missing - offset
-                            if 1 <= predicted <= 42:
-                                scores[predicted]["score"] += 10
-                                scores[predicted]["reasons"].append(f"🔮 Serial missing: {missing}→P1={predicted}")
-    
-    # === 23. BASE NUMBER PATTERN ===
-    # Base Number = Draw 2 P1 + Hidden
-    # This base number appears at P4 in Draw 1
-    # Can predict P4 early: nextP1 + hidden = P4
-    if len(quarter_draws) >= 2:
-        d1 = quarter_draws[0]
-        d2 = quarter_draws[1]
-        
-        # Hidden number
-        p1_hidden = abs(d2['numbers'][0] - d1['numbers'][1])
-        
-        # Base number = Draw 2 P1 + Hidden
-        base_number = d2['numbers'][0] + p1_hidden
-        
-        if 1 <= base_number <= 42:
-            scores[base_number]["score"] += 15
-            scores[base_number]["reasons"].append(f"🎯 Base number: D2_P1({d2['numbers'][0]})+hidden({p1_hidden})={base_number}")
-        
-        # Also: current P1 + hidden might predict future P4
-        if last_draw:
-            predicted_p4 = last_draw['numbers'][0] + p1_hidden
-            if 1 <= predicted_p4 <= 42:
-                scores[predicted_p4]["score"] += 10
-                scores[predicted_p4]["reasons"].append(f"🎯 P4 predict: lastP1({last_draw['numbers'][0]})+hidden({p1_hidden})={predicted_p4}")
-    
-    # === 22. P4 HIDDEN NUMBER PATTERN ===
-    # P4 Hidden = P1 Hidden + P2 (from first draw)
-    # Then count sequence and track P4 matches
-    if len(quarter_draws) >= 2:
-        d1 = quarter_draws[0]
-        d2 = quarter_draws[1]
-        
-        # P1 hidden
-        p1_hidden = d2['numbers'][0] - d1['numbers'][1]
-        
-        # P4 hidden = P1 hidden + P2 from first draw
-        p4_hidden = abs(p1_hidden) + d1['numbers'][1]
-        
-        # Current position in quarter
-        pos = len(quarter_draws)
-        
-        # P4 sequence number
-        p4_seq = p4_hidden + pos - 1
-        
-        if 1 <= p4_seq <= 42:
-            scores[p4_seq]["score"] += 12
-            scores[p4_seq]["reasons"].append(f"🎲 P4 hidden seq: {p4_hidden}+{pos-1}={p4_seq}")
-        
-        # Also: P4 might equal P4_hidden + P1_hidden
-        p4_combo = p4_hidden + abs(p1_hidden)
-        if 1 <= p4_combo <= 42 and p4_combo != p4_seq:
-            scores[p4_combo]["score"] += 8
-            scores[p4_combo]["reasons"].append(f"🎲 P4 combo: {p4_hidden}+{abs(p1_hidden)}={p4_combo}")
-    
-    # === 21. SAME DATE HISTORY PATTERN ===
-    # Numbers that appeared on same date (month-day) in previous years
-    from collections import Counter as Cnt
-    current_date = datetime.now()
-    current_md = f"{current_date.month:02d}-{current_date.day:02d}"
-    
-    # Find all draws on same month-day from previous years
-    same_date_draws = [d for d in draws if d['date'][5:] == current_md]
-    if len(same_date_draws) >= 2:
-        same_date_nums = []
-        for sd in same_date_draws:
-            same_date_nums.extend(sd['numbers'])
-        
-        sd_freq = Cnt(same_date_nums)
-        # Boost numbers that appeared 2+ times on this date
-        for n, count in sd_freq.items():
-            if count >= 2 and 1 <= n <= 42:
-                bonus = min(count * 5, 15)
-                scores[n]["score"] += bonus
-                scores[n]["reasons"].append(f"📅 Same date history: {count}x on {current_md}")
-    
-    # === 20. P2 DRAW POINTER PATTERN ===
-    # When P2 breaks sequence, P2 value = draw number to find the answer
-    # Example: Draw 5 P2=9 (expected 12) → Draw 9 P1=12!
-    if len(quarter_draws) >= 2:
-        # Get last P2 value - it might point to a future draw
-        last_p2 = quarter_draws[-1]['numbers'][1] if quarter_draws else 0
-        pos_in_q = len(quarter_draws)
-        
-        # If P2 < current position, it pointed backward (already happened)
-        # If P2 > current position, it's pointing forward!
-        if last_p2 > pos_in_q and last_p2 <= 27:
-            # P2 is pointing to a future draw
-            # The sequence number at that draw = hidden + P2 value
-            future_seq = abs(hidden_num) + last_p2 if 'hidden_num' in dir() else last_p2
-            if 1 <= future_seq <= 42:
-                scores[future_seq]["score"] += 12
-                scores[future_seq]["reasons"].append(f"🎯 P2 pointer: P2={last_p2}→Draw {last_p2} expects {future_seq}")
-        
-        # Also: current draw number might be pointed to by earlier P2
-        # If we're at draw N, check if any earlier P2 = N
-        for j, qd in enumerate(quarter_draws[:-1], start=1):
-            if qd['numbers'][1] == pos_in_q:
-                # Earlier draw's P2 pointed to current draw!
-                # Current P1 should relate to sequence
-                expected_seq = abs(hidden_num) + pos_in_q if 'hidden_num' in dir() else pos_in_q
-                if 1 <= expected_seq <= 42:
-                    scores[expected_seq]["score"] += 15
-                    scores[expected_seq]["reasons"].append(f"🎯 P2 pointed here: Draw {j} P2={pos_in_q}→P1={expected_seq}")
-    
-    # === 25. RARE EVENT COUNT SEQUENCE (Your Pattern!) ===
-    # Count from last VERY rare event (5 in same gruppe)
-    # Count number OR its circle partner (+/-21) appears in draws
-    # ALWAYS USE DATE CONNECTION
-    
-    # Find all very rare events (5+ in same gruppe 1-9, 10-19, 20-29, 30-39)
-    def get_gruppe(n):
-        if n <= 9: return "1-9"
-        elif n <= 19: return "10-19"
-        elif n <= 29: return "20-29"
-        elif n <= 39: return "30-39"
-        else: return "40-42"
-    
-    very_rare_events = []
-    sorted_all = sorted(draws, key=lambda x: x['date'])
-    
-    for i, d in enumerate(sorted_all):
-        nums = d['numbers']
-        g1 = len([n for n in nums if 1 <= n <= 9])
-        g2 = len([n for n in nums if 10 <= n <= 19])
-        g3 = len([n for n in nums if 20 <= n <= 29])
-        g4 = len([n for n in nums if 30 <= n <= 39])
-        
-        if max(g1, g2, g3, g4) >= 5:
-            outsider = None
-            if g1 >= 5:
-                outsider = [n for n in nums if n > 9]
-            elif g2 >= 5:
-                outsider = [n for n in nums if n < 10 or n > 19]
-            elif g3 >= 5:
-                outsider = [n for n in nums if n < 20 or n > 29]
-            elif g4 >= 5:
-                outsider = [n for n in nums if n < 30 or n > 39]
-            
-            very_rare_events.append({
-                'index': i,
-                'date': d['date'],
-                'numbers': nums,
-                'outsider': outsider[0] if outsider else None
-            })
-    
-    # Count from most recent very rare event
-    if very_rare_events:
-        last_rare = very_rare_events[-1]
-        current_idx = len(sorted_all)
-        count_from_rare = current_idx - last_rare['index']
-        
-        # The count number (wrapped to 1-42)
-        count_num = count_from_rare if count_from_rare <= 42 else ((count_from_rare - 1) % 42) + 1
-        circle_partner = count_num + 21 if count_num + 21 <= 42 else count_num - 21
-        
-        # Boost count number and circle partner
-        if 1 <= count_num <= 42:
-            scores[count_num]["score"] += 20
-            scores[count_num]["reasons"].append(f"🔢 Rare count: {count_from_rare} from {last_rare['date']}")
-        
-        if 1 <= circle_partner <= 42:
-            scores[circle_partner]["score"] += 18
-            scores[circle_partner]["reasons"].append(f"🔢 Rare circle: {count_num}↔{circle_partner}")
-        
-        # Also boost the outsider's circle partner (key number!)
-        if last_rare['outsider']:
-            out = last_rare['outsider']
-            out_circle = out + 21 if out + 21 <= 42 else out - 21
-            if 1 <= out_circle <= 42:
-                scores[out_circle]["score"] += 15
-                scores[out_circle]["reasons"].append(f"🔢 Rare outsider: {out}↔{out_circle}")
-    
-    # === 26. DATE ALWAYS PATTERN (Always Active!) ===
-    # Date connections are ALWAYS used
-    current_date = datetime.now()
-    day = current_date.day
-    month = current_date.month
-    
-    # Day and its circle
-    day_circle = day + 21 if day + 21 <= 42 else day - 21
-    scores[day]["score"] += 12
-    scores[day]["reasons"].append(f"📅 Date day: {day}")
-    if 1 <= day_circle <= 42:
-        scores[day_circle]["score"] += 12
-        scores[day_circle]["reasons"].append(f"📅 Date day circle: {day}↔{day_circle}")
-    
-    # Month and its circle  
-    month_circle = month + 21 if month + 21 <= 42 else month - 21
-    scores[month]["score"] += 10
-    scores[month]["reasons"].append(f"📅 Date month: {month}")
-    if 1 <= month_circle <= 42:
-        scores[month_circle]["score"] += 10
-        scores[month_circle]["reasons"].append(f"📅 Date month circle: {month}↔{month_circle}")
-    
-    # Day + Month combination
-    day_month_sum = day + month
-    if 1 <= day_month_sum <= 42:
-        scores[day_month_sum]["score"] += 8
-        scores[day_month_sum]["reasons"].append(f"📅 Day+Month: {day}+{month}={day_month_sum}")
-    
-    # === SMART PATTERN SELECTION ===
-    # Not all patterns fire every time - some are situational
-    # Date patterns (25, 26) ALWAYS active
-    # Others activate based on conditions
-    active_patterns = ["Date (always)", "Rare Count (if recent)"]
-    
-    # 15. RARE EVENT COUNTS ===
-    def get_group(n):
-        if n <= 9: return 1
-        elif n <= 19: return 2
-        elif n <= 29: return 3
-        elif n <= 39: return 4
-        else: return 5
-    
-    def count_groups(numbers):
-        groups = {}
-        for n in numbers:
-            g = get_group(n)
-            groups[g] = groups.get(g, 0) + 1
-        return groups
-    
-    rare_events = []
-    for i, draw in enumerate(all_draws_2020):
-        groups = count_groups(draw['numbers'])
-        max_group = max(groups.values())
-        if max_group >= 4:
-            rare_events.append({'index': i, 'date': draw['date'], 'count': max_group})
-    
-    current_draw_idx = len(all_draws_2020)
-    rare_predictions = []
-    for rare in rare_events[-5:]:
-        count_since = current_draw_idx - rare['index']
-        rarity = "🔥🔥🔥" if rare['count'] == 6 else ("🔥🔥" if rare['count'] == 5 else "🔥")
-        
-        if 1 <= count_since <= 42:
-            scores[count_since]["score"] += 15 * (rare['count'] - 3)
-            scores[count_since]["reasons"].append(f"Rare {rarity} +{count_since} draws (15%)")
-            rare_predictions.append({
-                "rare_date": rare['date'],
-                "rarity": rare['count'],
-                "count_since": count_since,
-                "predicted": count_since
-            })
-        
-        if count_since > 42:
-            d1 = count_since // 10
-            d2 = count_since % 10
-            dsum = d1 + d2
-            
-            for digit in [d1, d2]:
-                if 1 <= digit <= 42:
-                    scores[digit]["score"] += 10
-                    scores[digit]["reasons"].append(f"Rare {rarity} +{count_since} digit ({d1},{d2})")
-            
-            if 1 <= dsum <= 42:
-                scores[dsum]["score"] += 10
-                scores[dsum]["reasons"].append(f"Rare {rarity} +{count_since} sum={dsum}")
-    
-    # === 27. STORY TRACKER PATTERN (Position Gap Analysis) ===
-    # Find numbers missing for long at specific positions
-    # Track their connection chain appearing = story building up to return
-    # When connections appear frequently, the missing number is due!
-    
-    def get_number_connections(num):
-        """Get all numbers connected to a number via circle, multiples, digits"""
-        conns = set([num])
-        # Circle partner (+/- 21)
-        if num + 21 <= 42: conns.add(num + 21)
-        if num - 21 >= 1: conns.add(num - 21)
-        # Digit flip
-        if num >= 10:
-            rev = int(str(num)[::-1])
-            if 1 <= rev <= 42: conns.add(rev)
-        # Digit sum
-        dsum = sum(int(d) for d in str(num))
-        if 1 <= dsum <= 42: conns.add(dsum)
-        # Multiples and factors
-        for m in [2, 3, 4, 5, 6, 7]:
-            if num * m <= 42: conns.add(num * m)
-            if num % m == 0 and num // m >= 1: conns.add(num // m)
-        return conns
-    
-    # Track last appearance at each position
-    sorted_draws = sorted(draws, key=lambda x: x['date'], reverse=True)
-    position_gaps = {}  # {(pos, num): gap_count}
-    
-    for pos in range(1, 7):
-        for num in range(1, 43):
-            for i, d in enumerate(sorted_draws):
-                if d['numbers'][pos-1] == num:
-                    position_gaps[(pos, num)] = i
-                    break
-            else:
-                position_gaps[(pos, num)] = len(sorted_draws)  # Never appeared
-    
-    # Find numbers with big gaps (story candidates)
-    story_candidates = []
-    for (pos, num), gap in position_gaps.items():
-        if gap >= 50:  # Missing for 50+ draws at this position
-            conns = get_number_connections(num)
-            story_candidates.append({
-                'pos': pos,
-                'num': num,
-                'gap': gap,
-                'connections': conns
-            })
-    
-    # Sort by gap (longest first)
-    story_candidates.sort(key=lambda x: -x['gap'])
-    
-    # Check recent draws for connection activity (story building)
-    recent_10 = sorted_draws[:10]
-    
-    for story in story_candidates[:10]:  # Top 10 longest gaps
-        conn_hits = 0
-        recent_conn_positions = []
-        
-        for d in recent_10:
-            for conn in story['connections']:
-                if conn in d['numbers']:
-                    conn_hits += 1
-                    recent_conn_positions.append(d['numbers'].index(conn) + 1)
-        
-        # If connections appearing frequently, story is building!
-        if conn_hits >= 3:
-            # Boost the missing number
-            boost = min(25, 10 + conn_hits * 3)  # 13-25 points based on activity
-            scores[story['num']]["score"] += boost
-            scores[story['num']]["reasons"].append(
-                f"📖 Story: {story['num']}@P{story['pos']} missing {story['gap']}x, {conn_hits} conn hits!"
-            )
-            
-            # Also boost numbers that transform INTO the missing number
-            # Based on the 7@P4 pattern: anchor numbers can predict return
-            if last_draw:
-                last_nums = last_draw['numbers']
-                # Check if sum/diff of last numbers = missing number
-                for i in range(6):
-                    for j in range(i+1, 6):
-                        if last_nums[i] + last_nums[j] == story['num']:
-                            scores[story['num']]["score"] += 10
-                            scores[story['num']]["reasons"].append(
-                                f"📖 Transform: {last_nums[i]}+{last_nums[j]}={story['num']}"
-                            )
-                        diff = abs(last_nums[i] - last_nums[j])
-                        if diff == story['num']:
-                            scores[story['num']]["score"] += 10
-                            scores[story['num']]["reasons"].append(
-                                f"📖 Transform: |{last_nums[i]}-{last_nums[j]}|={story['num']}"
-                            )
-    
-    # === 28. LUCKY/REPLAY POSITION FLOW PATTERN ===
-    # Lucky/Replay numbers flow through P1/P2 positions
-    # Lucky from previous draw often appears at P1 in next (77.5%)
-    # Replay from previous draw often appears at P1/P2 in next (87.5% combined)
-    if last_draw:
-        lucky = last_draw.get('lucky_number')
-        replay = last_draw.get('replay_number')
-        
-        if lucky and 1 <= lucky <= 42:
-            # Lucky → P1 prediction (77.5% when it hits)
-            scores[lucky]["score"] += 15
-            scores[lucky]["reasons"].append(f"🍀→P1 Lucky {lucky} flow (15.2% hit, 77.5% at P1)")
-            
-            # Lucky's circle partner
-            lucky_circle = lucky + 21 if lucky + 21 <= 42 else lucky - 21 if lucky - 21 >= 1 else None
-            if lucky_circle and 1 <= lucky_circle <= 42:
-                scores[lucky_circle]["score"] += 10
-                scores[lucky_circle]["reasons"].append(f"🍀 Lucky circle: {lucky}↔{lucky_circle}")
-        
-        if replay and 1 <= replay <= 42:
-            # Replay → P1/P2 prediction (50% P1, 37.5% P2)
-            scores[replay]["score"] += 12
-            scores[replay]["reasons"].append(f"🔄→P1/P2 Replay {replay} flow (14% hit)")
-            
-            # Replay's circle partner
-            replay_circle = replay + 21 if replay + 21 <= 42 else replay - 21 if replay - 21 >= 1 else None
-            if replay_circle and 1 <= replay_circle <= 42:
-                scores[replay_circle]["score"] += 8
-                scores[replay_circle]["reasons"].append(f"🔄 Replay circle: {replay}↔{replay_circle}")
-        
-        # Combined transformation: Lucky - Replay or Replay - Lucky
-        if lucky and replay and lucky != replay:
-            diff = abs(lucky - replay)
-            summ = lucky + replay
-            if 1 <= diff <= 42:
-                scores[diff]["score"] += 8
-                scores[diff]["reasons"].append(f"🍀🔄 |L-R|: |{lucky}-{replay}|={diff}")
-            if 1 <= summ <= 42:
-                scores[summ]["score"] += 8
-                scores[summ]["reasons"].append(f"🍀🔄 L+R: {lucky}+{replay}={summ}")
-    
-    # === 29. ANCHOR TRANSFORMATION PATTERN ===
-    # Based on 7@P4: [1,3,4,7,16,25] → [1,3,4,7,9,23]
-    # Numbers in anchor whose digit sums equal the key number transform!
-    # 1+6=7, 2+5=7 → 25-16=9, 16+7=23
-    if last_draw:
-        last_nums = last_draw['numbers']
-        
-        # Find the "key" - a number whose digit sum matches other numbers' digit sums
-        digit_sums = {n: sum(int(d) for d in str(n)) for n in last_nums}
-        
-        # Group by digit sum
-        sum_groups = {}
-        for n, ds in digit_sums.items():
-            if ds not in sum_groups:
-                sum_groups[ds] = []
-            sum_groups[ds].append(n)
-        
-        # If 2+ numbers share same digit sum = potential key!
-        for ds, nums_with_ds in sum_groups.items():
-            if len(nums_with_ds) >= 2 and ds <= 21:  # Key must be valid
-                # The key is the digit sum
-                key = ds
-                # Predict transformations
-                for i in range(len(nums_with_ds)):
-                    for j in range(i+1, len(nums_with_ds)):
-                        diff = abs(nums_with_ds[i] - nums_with_ds[j])
-                        plus_key = nums_with_ds[0] + key
-                        
-                        if 1 <= diff <= 42:
-                            scores[diff]["score"] += 12
-                            scores[diff]["reasons"].append(
-                                f"🔑 Key {key}: |{nums_with_ds[i]}-{nums_with_ds[j]}|={diff}"
-                            )
-                        if 1 <= plus_key <= 42:
-                            scores[plus_key]["score"] += 10
-                            scores[plus_key]["reasons"].append(
-                                f"🔑 Key {key}: {nums_with_ds[0]}+{key}={plus_key}"
-                            )
-    
-    # === 30. P1/P2 POSITION ANALYSIS PATTERN ===
-    # Analyze historical frequency of numbers at Position 1 (smallest) and Position 2
-    # P1 typically ranges 1-15 (avg ~6), P2 typically ranges 2-20 (avg ~12)
-    # Boost numbers that frequently appear at P1/P2
-    
-    p1_counter = Counter()
-    p2_counter = Counter()
-    
-    for d in draws:
-        nums = sorted(d.get('numbers', []))
-        if len(nums) >= 6:
-            p1_counter[nums[0]] += 1
-            p2_counter[nums[1]] += 1
-    
-    # Top P1 numbers (most frequent at position 1)
-    p1_top = p1_counter.most_common(10)  # Top 10
-    for num, count in p1_top[:5]:  # Top 5 get strong boost
-        pct = count / len(draws) * 100 if draws else 0
-        boost = min(15, int(pct * 1.2))  # Scale boost by frequency
-        scores[num]["score"] += boost
-        scores[num]["reasons"].append(f"🥇P1 hot: {num} appears {count}x ({pct:.1f}%)")
-    
-    # Top P2 numbers (most frequent at position 2)
-    p2_top = p2_counter.most_common(10)
-    for num, count in p2_top[:5]:
-        pct = count / len(draws) * 100 if draws else 0
-        boost = min(12, int(pct * 1.0))
-        scores[num]["score"] += boost
-        scores[num]["reasons"].append(f"🥈P2 hot: {num} appears {count}x ({pct:.1f}%)")
-    
-    # Recent P1/P2 trend analysis (last 20 draws)
-    recent_p1 = []
-    recent_p2 = []
-    for d in sorted(draws, key=lambda x: x['date'], reverse=True)[:20]:
-        nums = sorted(d.get('numbers', []))
-        if len(nums) >= 6:
-            recent_p1.append(nums[0])
-            recent_p2.append(nums[1])
-    
-    # Numbers appearing frequently in recent P1
-    recent_p1_counter = Counter(recent_p1)
-    for num, count in recent_p1_counter.most_common(3):
-        if count >= 2:  # Appeared 2+ times in last 20 at P1
-            scores[num]["score"] += 8
-            scores[num]["reasons"].append(f"🥇P1 trend: {num} hit {count}x in last 20")
-    
-    # Numbers appearing frequently in recent P2
-    recent_p2_counter = Counter(recent_p2)
-    for num, count in recent_p2_counter.most_common(3):
-        if count >= 2:
-            scores[num]["score"] += 6
-            scores[num]["reasons"].append(f"🥈P2 trend: {num} hit {count}x in last 20")
-    
-    # P1/P2 GAP ANALYSIS - numbers overdue at these positions
-    # If a typical P1 number hasn't appeared at P1 recently, it's due
-    p1_typical = set(num for num, _ in p1_top[:8])  # Numbers that often hit P1
-    for num in p1_typical:
-        last_at_p1 = None
-        for i, d in enumerate(sorted(draws, key=lambda x: x['date'], reverse=True)):
-            nums = sorted(d.get('numbers', []))
-            if len(nums) >= 6 and nums[0] == num:
-                last_at_p1 = i
-                break
-        if last_at_p1 is None or last_at_p1 > 30:
-            gap = last_at_p1 if last_at_p1 else 50
-            scores[num]["score"] += min(10, gap // 5)
-            scores[num]["reasons"].append(f"🥇P1 due: {num} missing {gap}+ draws at P1")
-    
-    # === 31. P1/P2 TRANSFORMATION PATTERN ===
-    # |P1 - P2| from last draw often appears at P1 (8.1%) or P2 (4.8%) of next draw
-    # P1 + P2 from last draw often appears somewhere in next draw (14.6%)
-    # Get the absolute most recent draw
-    all_draws_sorted = sorted(draws, key=lambda x: x['date'], reverse=True)
-    most_recent = all_draws_sorted[0] if all_draws_sorted else None
-    
-    if most_recent:
-        last_nums = sorted(most_recent['numbers'])
-        if len(last_nums) >= 2:
-            last_p1 = last_nums[0]
-            last_p2 = last_nums[1]
-            
-            # |P1 - P2| → Strong P1/P2 predictor (12.9% combined)
-            diff = abs(last_p1 - last_p2)
-            if 1 <= diff <= 42:
-                scores[diff]["score"] += 18  # Strong boost
-                scores[diff]["reasons"].append(f"🔗P1-P2: |{last_p1}-{last_p2}|={diff} → likely P1/P2 (12.9%)")
-            
-            # P1 + P2 → Appears somewhere (14.6%)
-            summ = last_p1 + last_p2
-            if 1 <= summ <= 42:
-                scores[summ]["score"] += 12
-                scores[summ]["reasons"].append(f"🔗P1+P2: {last_p1}+{last_p2}={summ} → any pos (14.6%)")
-    
-    # === 32. FAMILY HUNGER PATTERN ===
-    # If multiple numbers from same family (ending in same digit) appeared recently,
-    # the missing family member is "hungry" and likely to appear
-    families = {
-        1: [1, 11, 21, 31, 41],
-        2: [2, 12, 22, 32, 42],
-        3: [3, 13, 23, 33],
-        4: [4, 14, 24, 34],
-        5: [5, 15, 25, 35],
-        6: [6, 16, 26, 36],
-        7: [7, 17, 27, 37],
-        8: [8, 18, 28, 38],
-        9: [9, 19, 29, 39],
-        0: [10, 20, 30, 40],
-    }
-    
-    # Track last appearance
-    num_last_seen = {}
-    for i, d in enumerate(all_draws_sorted):
-        for num in d.get('numbers', []):
-            if num not in num_last_seen:
-                num_last_seen[num] = i
-    
-    # Check last 10 draws for chain building
-    recent_10_nums = set()
-    for d in all_draws_sorted[:10]:
-        recent_10_nums.update(d.get('numbers', []))
-    
-    for digit, family in families.items():
-        appeared = [n for n in family if n in recent_10_nums]
-        missing = [n for n in family if n not in recent_10_nums]
-        
-        if len(appeared) >= 2 and missing:  # Chain building!
-            for m in missing:
-                gap = num_last_seen.get(m, 50)
-                # More chain members = stronger hunger
-                boost = len(appeared) * 5 + min(15, gap // 2)
-                scores[m]["score"] += boost
-                scores[m]["reasons"].append(f"🍽️ Hungry: Family-{digit} chain {appeared}, gap {gap}")
-    
-    # === 33. MIRROR/REVERSE PATTERN (15% hit rate) ===
-    # Numbers from last draw often appear flipped in next draw
-    # e.g., 13→31, 24→42, 30→3
-    if most_recent:
-        for n in most_recent['numbers']:
-            s = str(n)
-            if len(s) == 2:
-                rev = int(s[::-1])
-                if 1 <= rev <= 42 and rev != n:
-                    scores[rev]["score"] += 12
-                    scores[rev]["reasons"].append(f"🔄 Mirror: {n}→{rev} (15% hit)")
-    
-    # === 34. CONSECUTIVE PAIR PREDICTION ===
-    # 54.3% of draws have consecutive pairs. Hot pairs: 13-14, 41-42, 5-6
-    # If one number from a hot pair is likely, boost its partner
-    hot_pairs = [(13, 14), (41, 42), (5, 6), (37, 38), (3, 4), (16, 17), (35, 36), (22, 23)]
-    
-    # Get current top candidates
-    temp_ranked = sorted(scores.items(), key=lambda x: x[1]["score"], reverse=True)
-    top_candidates = [n for n, _ in temp_ranked[:20]]
-    
-    for a, b in hot_pairs:
-        if a in top_candidates and b not in top_candidates:
-            scores[b]["score"] += 10
-            scores[b]["reasons"].append(f"👥 Pair: {a}-{b} hot consecutive")
-        elif b in top_candidates and a not in top_candidates:
-            scores[a]["score"] += 10
-            scores[a]["reasons"].append(f"👥 Pair: {a}-{b} hot consecutive")
-    
-    # === 35. LUCKY NUMBER CONNECTION ===
-    # Lucky × 7 appears in next draw (14.6%), Lucky direct (15.2%), Lucky doubled (6.8%)
-    if most_recent:
-        prev_lucky = most_recent.get('lucky_number')
-        if prev_lucky and 1 <= prev_lucky <= 6:
-            # Lucky × 7 (strongest: 14.6%)
-            times7 = prev_lucky * 7
-            if 1 <= times7 <= 42:
-                scores[times7]["score"] += 12
-                scores[times7]["reasons"].append(f"⭐ Lucky×7: {prev_lucky}×7={times7} (14.6%)")
-            
-            # Lucky direct (15.2%)
-            scores[prev_lucky]["score"] += 10
-            scores[prev_lucky]["reasons"].append(f"⭐ Lucky direct: {prev_lucky} (15.2%)")
-            
-            # Lucky doubled (6.8%) - only for 1-4
-            if prev_lucky <= 4:
-                doubled = prev_lucky * 10 + prev_lucky  # 1→11, 2→22, 3→33, 4→44(invalid)
-                if 1 <= doubled <= 42:
-                    scores[doubled]["score"] += 6
-                    scores[doubled]["reasons"].append(f"⭐ Lucky doubled: {prev_lucky}→{doubled} (6.8%)")
-    
-    # === 36. P3/P4 POSITION ANALYSIS ===
-    # P3 hot numbers (avg 18.2): 21, 19, 14, 17, 16
-    # P4 hot numbers (avg 24.5): 28, 21, 31, 22, 23, 29
-    p3_counter = Counter()
-    p4_counter = Counter()
-    
-    for d in draws:
-        nums = sorted(d.get('numbers', []))
-        if len(nums) >= 6:
-            p3_counter[nums[2]] += 1
-            p4_counter[nums[3]] += 1
-    
-    # Top P3 numbers
-    p3_top = p3_counter.most_common(8)
-    for num, count in p3_top[:5]:
-        pct = count / len(draws) * 100 if draws else 0
-        boost = min(10, int(pct * 1.5))
-        scores[num]["score"] += boost
-        scores[num]["reasons"].append(f"🥉P3 hot: {num} appears {count}x ({pct:.1f}%)")
-    
-    # Top P4 numbers
-    p4_top = p4_counter.most_common(8)
-    for num, count in p4_top[:5]:
-        pct = count / len(draws) * 100 if draws else 0
-        boost = min(10, int(pct * 1.5))
-        scores[num]["score"] += boost
-        scores[num]["reasons"].append(f"🏅P4 hot: {num} appears {count}x ({pct:.1f}%)")
-    
-    # === 37. P3/P4 TRANSFORMATION PATTERNS ===
-    # |P3-P4| → often P1/P2 (14.4%), P3-P1 (16.2%), P4-P2 (14.6%), P3+P1 (13.7%)
-    if most_recent:
-        last_nums = sorted(most_recent['numbers'])
-        if len(last_nums) >= 4:
-            p1, p2, p3, p4 = last_nums[0], last_nums[1], last_nums[2], last_nums[3]
-            
-            # |P3-P4| → likely P1/P2 (14.4%)
-            diff_34 = abs(p3 - p4)
-            if 1 <= diff_34 <= 42:
-                scores[diff_34]["score"] += 12
-                scores[diff_34]["reasons"].append(f"🔗|P3-P4|: |{p3}-{p4}|={diff_34} → P1/P2 (14.4%)")
-            
-            # P3-P1 (16.2% - strongest!)
-            val = p3 - p1
-            if 1 <= val <= 42:
-                scores[val]["score"] += 15
-                scores[val]["reasons"].append(f"🔗P3-P1: {p3}-{p1}={val} (16.2%)")
-            
-            # P4-P2 (14.6%)
-            val = p4 - p2
-            if 1 <= val <= 42:
-                scores[val]["score"] += 12
-                scores[val]["reasons"].append(f"🔗P4-P2: {p4}-{p2}={val} (14.6%)")
-            
-            # P3+P1 (13.7%)
-            val = p3 + p1
-            if 1 <= val <= 42:
-                scores[val]["score"] += 11
-                scores[val]["reasons"].append(f"🔗P3+P1: {p3}+{p1}={val} (13.7%)")
-    
-    # === 38. DATE DIGIT STORY PATTERN (79.3% hit rate!) ===
-    # Previous draw's date digits form combos that appear in next draw
-    # D, M, Y digits combine: e.g., 8/12/26 → 8, 1, 2, 6 → 12, 21, 26, 28, etc.
-    if most_recent:
-        prev_date = most_recent.get('date', '')
-        if prev_date:
-            parts = prev_date.split('-')
-            if len(parts) == 3:
-                day = int(parts[2])
-                month = int(parts[1])
-                y_short = int(parts[0]) % 100
-                
-                # Extract all digits
-                date_digits = []
-                for d in str(day):
-                    date_digits.append(int(d))
-                for d in str(month):
-                    date_digits.append(int(d))
-                for d in str(y_short):
-                    date_digits.append(int(d))
-                
-                # Generate all valid combos
-                date_combos = set()
-                for d in date_digits:
-                    if 1 <= d <= 42:
-                        date_combos.add(d)
-                for i in range(len(date_digits)):
-                    for j in range(len(date_digits)):
-                        if i != j:
-                            val = date_digits[i] * 10 + date_digits[j]
-                            if 1 <= val <= 42:
-                                date_combos.add(val)
-                
-                # Boost all date combos (79.3% hit rate!)
-                for combo in date_combos:
-                    scores[combo]["score"] += 15
-                    scores[combo]["reasons"].append(f"📅 Date story: {prev_date} digits → {combo} (79%)")
-    
-    # === 39. CURRENT DATE PATTERN (75% hit rate) ===
-    # Today's date digits also appear in today's draw
-    from datetime import datetime
-    today = datetime.now()
-    today_day = today.day
-    today_month = today.month
-    today_year = today.year % 100
-    
-    today_digits = []
-    for d in str(today_day):
-        today_digits.append(int(d))
-    for d in str(today_month):
-        today_digits.append(int(d))
-    for d in str(today_year):
-        today_digits.append(int(d))
-    
-    today_combos = set()
-    for d in today_digits:
-        if 1 <= d <= 42:
-            today_combos.add(d)
-    for i in range(len(today_digits)):
-        for j in range(len(today_digits)):
-            if i != j:
-                val = today_digits[i] * 10 + today_digits[j]
-                if 1 <= val <= 42:
-                    today_combos.add(val)
-    
-    for combo in today_combos:
-        scores[combo]["score"] += 10
-        scores[combo]["reasons"].append(f"📅 Today: {today_day}/{today_month} → {combo} (75%)")
-    
-    # === 40. NUMBER 9 AT P1 PREDICTOR ===
-    # Special pattern: When does 9 appear as smallest number (P1)?
-    # Signals: Family 9 (29/39) in prev draw (43%), 9 missing 10+ draws (hunger)
-    if most_recent:
-        last_nums = sorted(most_recent.get('numbers', []))
-        
-        # Check family 9 in last draw
-        family_9_present = [n for n in last_nums if n in [9, 19, 29, 39]]
-        
-        # Check 9 gap
-        nine_gap = 0
-        for d in all_draws_sorted:
-            if 9 in d.get('numbers', []):
-                break
-            nine_gap += 1
-        
-        # Calculate 9@P1 likelihood
-        signals = 0
-        reasons_9 = []
-        
-        if family_9_present:
-            signals += 1
-            reasons_9.append(f"Family 9 {family_9_present} triggers")
-        
-        if nine_gap >= 15:
-            signals += 1
-            reasons_9.append(f"9 hungry ({nine_gap} draws)")
-        
-        if len(last_nums) >= 2 and last_nums[0] in [2, 5, 6, 7, 12]:
-            signals += 1
-            reasons_9.append(f"P1={last_nums[0]} pattern")
-        
-        if signals >= 2:
-            scores[9]["score"] += 20
-            scores[9]["reasons"].append(f"🔢 9@P1 likely: {', '.join(reasons_9)}")
-    
-    # === 41. 9 ↔ 19 CONNECTION PATTERN ===
-    # 19 in prev draw → 9 next (18.8%), 9 in prev → 19 next (15.9%)
-    # Average gap between 9 and 19: 3.2 draws
-    if most_recent:
-        last_nums = most_recent.get('numbers', [])
-        
-        # 19 appeared → boost 9 (18.8%)
-        if 19 in last_nums:
-            scores[9]["score"] += 15
-            scores[9]["reasons"].append(f"🔗 19→9: 19 in prev → 9 likely (18.8%)")
-        
-        # 9 appeared → boost 19 (15.9%)
-        if 9 in last_nums:
-            scores[19]["score"] += 12
-            scores[19]["reasons"].append(f"🔗 9→19: 9 in prev → 19 likely (15.9%)")
-        
-        # Check gaps - if one is due and other appeared recently, boost the due one
-        nine_gap = 0
-        nineteen_gap = 0
-        for i, d in enumerate(all_draws_sorted):
-            if nine_gap == 0 and 9 in d.get('numbers', []):
-                nine_gap = i
-            if nineteen_gap == 0 and 19 in d.get('numbers', []):
-                nineteen_gap = i
-            if nine_gap > 0 and nineteen_gap > 0:
-                break
-        
-        # 9-19 oscillation: if one appeared recently and other is overdue
-        if nineteen_gap <= 3 and nine_gap >= 10:
-            scores[9]["score"] += 12
-            scores[9]["reasons"].append(f"🔗 9↔19 oscillation: 19 recent, 9 due ({nine_gap} gap)")
-        elif nine_gap <= 3 and nineteen_gap >= 10:
-            scores[19]["score"] += 12
-            scores[19]["reasons"].append(f"🔗 9↔19 oscillation: 9 recent, 19 due ({nineteen_gap} gap)")
-    
-    # === 42. GAP DIGITS PATTERN (Last Time Position Count) ===
-    # When a number returns to a specific position (e.g., 9@P1), the number of draws since 
-    # its last appearance at that position predicts accompanying numbers.
-    # Example: 9@P1 last appeared 61 draws ago → digits 6 and 1 → boost 1, 6, 11, 16, 21, 26, 61(if valid)
-    # Validation showed ~25% accuracy for this pattern!
-    
-    # Track position-specific gaps for numbers that might appear at specific positions
-    position_trackers = {}  # {(number, position): draws_since_last}
-    
-    for pos in range(6):  # P1 to P6 (positions 0-5)
-        for d_idx, d in enumerate(all_draws_sorted):
-            nums = sorted(d.get('numbers', []))
-            if len(nums) >= 6:
-                num_at_pos = nums[pos]
-                key = (num_at_pos, pos)
-                if key not in position_trackers:
-                    position_trackers[key] = d_idx  # First time we see it = gap
-    
-    # For numbers likely to appear at specific positions, calculate gap digits boost
-    # Focus on numbers already scoring high for a position
-    temp_ranked = sorted(scores.items(), key=lambda x: x[1]["score"], reverse=True)
-    position_names = ["P1", "P2", "P3", "P4", "P5", "P6"]
-    
-    for num, data in temp_ranked[:20]:  # Check top 20 candidates
-        # Determine likely position for this number based on typical ranges
-        # P1: 1-15, P2: 2-20, P3: 10-25, P4: 15-32, P5: 25-38, P6: 30-42
-        likely_positions = []
-        if num <= 15:
-            likely_positions.append(0)  # P1
-        if 2 <= num <= 20:
-            likely_positions.append(1)  # P2
-        if 10 <= num <= 25:
-            likely_positions.append(2)  # P3
-        if 15 <= num <= 32:
-            likely_positions.append(3)  # P4
-        if 25 <= num <= 38:
-            likely_positions.append(4)  # P5
-        if num >= 30:
-            likely_positions.append(5)  # P6
-        
-        for pos in likely_positions:
-            key = (num, pos)
-            gap = position_trackers.get(key, 0)
-            
-            if gap >= 10:  # Only for significant gaps
-                # Extract digits from the gap number
-                gap_str = str(gap)
-                gap_digits = [int(d) for d in gap_str if d != '0']
-                
-                # Generate numbers containing these digits
-                gap_derived = set()
-                for digit in gap_digits:
-                    if 1 <= digit <= 42:
-                        gap_derived.add(digit)
-                    # Numbers starting with this digit (e.g., 6 → 6, 61, 62...)
-                    for tens in range(0, 5):
-                        val = digit + tens * 10
-                        if 1 <= val <= 42:
-                            gap_derived.add(val)
-                    # Numbers ending with this digit (e.g., 1 → 1, 11, 21, 31, 41)
-                    for tens in range(0, 5):
-                        val = tens * 10 + digit
-                        if 1 <= val <= 42:
-                            gap_derived.add(val)
-                
-                # Also add the gap number itself if valid
-                if 1 <= gap <= 42:
-                    gap_derived.add(gap)
-                
-                # Boost derived numbers (25% hit rate!)
-                for derived in gap_derived:
-                    if derived != num:  # Don't boost the trigger number itself
-                        boost = min(12, 6 + gap // 10)  # Scale with gap size
-                        scores[derived]["score"] += boost
-                        scores[derived]["reasons"].append(
-                            f"🔢 Gap digits: {num}@{position_names[pos]} gap={gap} → digits {gap_digits} (25%)"
-                        )
-    
-    # === 43. P4-P5 DANCE PATTERN ===
-    # P4 and P5 love to dance close together! Average gap only 6.4
-    # Consecutive (P5=P4+1): 13.8%, Small gaps (1-3): 37.7%
-    # Hot pairs: 31-33, 31-32, 30-31, 22-23, 32-33 - Numbers 30-33 dominate!
-    
-    # Analyze recent P4-P5 patterns
-    p4_p5_diffs = []
-    recent_p4_p5_pairs = []
-    for d in all_draws_sorted[:50]:  # Last 50 draws
-        nums = sorted(d.get('numbers', []))
-        if len(nums) >= 6:
-            p4, p5 = nums[3], nums[4]
-            p4_p5_diffs.append(p5 - p4)
-            recent_p4_p5_pairs.append((p4, p5))
-    
-    # Hot P4-P5 dance partners (historically proven)
-    hot_p4_p5_pairs = [(31, 33), (31, 32), (30, 31), (22, 23), (32, 33), (33, 36), (28, 30), (34, 37)]
-    
-    # Boost numbers that frequently appear at P4-P5
-    p4_p5_hot_numbers = {30, 31, 32, 33, 34, 22, 23, 28, 36, 37}
-    for num in p4_p5_hot_numbers:
-        scores[num]["score"] += 8
-        scores[num]["reasons"].append(f"💃 P4-P5 dancer: {num} dominates mid-high positions")
-    
-    # If we see a pattern in recent diffs, predict similar gap
-    if p4_p5_diffs:
-        avg_recent_diff = sum(p4_p5_diffs[:10]) / min(10, len(p4_p5_diffs))
-        # Boost pairs that match recent gap pattern
-        for p4 in range(20, 36):
-            p5_predicted = p4 + int(round(avg_recent_diff))
-            if 1 <= p5_predicted <= 42:
-                scores[p4]["score"] += 5
-                scores[p5_predicted]["score"] += 5
-                scores[p4]["reasons"].append(f"💃 P4-P5 gap pattern: avg diff={avg_recent_diff:.1f}")
-    
-    # Boost hot pairs specifically
-    for p4, p5 in hot_p4_p5_pairs:
-        scores[p4]["score"] += 6
-        scores[p5]["score"] += 6
-        scores[p4]["reasons"].append(f"💃 Hot P4-P5 pair: {p4}-{p5}")
-    
-    # === 44. DATE ±3 WINDOW PATTERN (58.3% hit rate!) ===
-    # Day number has 58% chance to appear within ±3 draws!
-    # This is a strong predictor
-    
-    today = datetime.now()
-    day_num = today.day
-    month_num = today.month
-    
-    # Boost the day number strongly (58% hit rate!)
-    if 1 <= day_num <= 42:
-        scores[day_num]["score"] += 18  # Strong boost for 58% pattern
-        scores[day_num]["reasons"].append(f"📅 Date ±3 window: Day {day_num} (58.3% hit rate!)")
-    
-    # Also boost day ± 1,2,3 (nearby days often hit)
-    for offset in [-3, -2, -1, 1, 2, 3]:
-        nearby_day = day_num + offset
-        if 1 <= nearby_day <= 42:
-            scores[nearby_day]["score"] += 8
-            scores[nearby_day]["reasons"].append(f"📅 Date ±3 window: near day {day_num}")
-    
-    # Month number boost
-    if 1 <= month_num <= 12:
-        scores[month_num]["score"] += 10
-        scores[month_num]["reasons"].append(f"📅 Month {month_num} in play")
-    
-    # Day + Month combinations
-    day_month_sum = day_num + month_num
-    if 1 <= day_month_sum <= 42:
-        scores[day_month_sum]["score"] += 8
-        scores[day_month_sum]["reasons"].append(f"📅 Day+Month: {day_num}+{month_num}={day_month_sum}")
-    
-    day_month_diff = abs(day_num - month_num)
-    if 1 <= day_month_diff <= 42:
-        scores[day_month_diff]["score"] += 6
-        scores[day_month_diff]["reasons"].append(f"📅 |Day-Month|: |{day_num}-{month_num}|={day_month_diff}")
-    
-    # === 45. P5-P6 DANCE PATTERN ===
-    # P5-P6 are the highest positions, they stay close! Average gap: 6.1
-    # Consecutive (P6=P5+1): 13.8%, Small gaps (1-3): 38.6%
-    # Hot pairs: 41-42 (2.2%), 37-40, 40-42, 39-42, 39-41
-    # Hot P6: 42 (14.3%), 40 (12.2%), 41 (11.6%)
-    # Hot P5: 36 (7.1%), 33 (6.9%), 32 (6.7%)
-    
-    # Analyze recent P5-P6 patterns
-    p5_p6_diffs = []
-    recent_p5_p6_pairs = []
-    for d in all_draws_sorted[:50]:
-        nums = sorted(d.get('numbers', []))
-        if len(nums) >= 6:
-            p5, p6 = nums[4], nums[5]
-            p5_p6_diffs.append(p6 - p5)
-            recent_p5_p6_pairs.append((p5, p6))
-    
-    # Hot P5-P6 dance partners
-    hot_p5_p6_pairs = [(41, 42), (37, 40), (40, 42), (39, 42), (39, 41), (37, 38), (39, 40), (36, 42)]
-    
-    # Hot P6 numbers (highest position loves high numbers)
-    p6_hot = {42, 40, 41, 39, 38, 37}
-    for num in p6_hot:
-        boost = 12 if num == 42 else 10 if num in {40, 41} else 8
-        scores[num]["score"] += boost
-        scores[num]["reasons"].append(f"🎯 P6 favorite: {num} dominates P6 ({14 if num==42 else 12 if num==40 else 11}%)")
-    
-    # Hot P5 numbers
-    p5_hot = {36, 33, 32, 37, 35, 31, 30, 34}
-    for num in p5_hot:
-        scores[num]["score"] += 8
-        scores[num]["reasons"].append(f"🎯 P5 favorite: {num} at P5 position")
-    
-    # Boost hot P5-P6 pairs
-    for p5, p6 in hot_p5_p6_pairs:
-        scores[p5]["score"] += 6
-        scores[p6]["score"] += 6
-        scores[p5]["reasons"].append(f"💃 Hot P5-P6 pair: {p5}-{p6}")
-    
-    # Recent gap pattern prediction
-    if p5_p6_diffs:
-        avg_recent_gap = sum(p5_p6_diffs[:10]) / min(10, len(p5_p6_diffs))
-        # If recent gaps are small, boost consecutive high numbers
-        if avg_recent_gap <= 4:
-            for base in [37, 38, 39, 40, 41]:
-                scores[base]["score"] += 4
-                scores[base + 1]["score"] += 4 if base + 1 <= 42 else 0
-                scores[base]["reasons"].append(f"💃 P5-P6 tight gap trend: {avg_recent_gap:.1f}")
-    
-    # === 46. P1P2 DATE CODE + P3 PREDICTOR (43.3% hit rate!) ===
-    # When P1-P2 forms a date pattern (matches day/month or ends in year),
-    # P3 from that draw predicts numbers in the next draw!
-    
-    if last_draw:
-        last_nums = sorted(last_draw.get('numbers', []))
-        if len(last_nums) >= 6:
-            last_p1, last_p2, last_p3 = last_nums[0], last_nums[1], last_nums[2]
-            last_date = last_draw.get('date', '')
-            
-            # Check if last draw's P1P2 matched a date pattern
-            is_date_pattern = False
-            
-            if len(last_date) >= 10:
-                try:
-                    last_month = int(last_date[5:7])
-                    last_day = int(last_date[8:10])
-                    last_year = last_date[2:4]  # e.g., "25" for 2025
-                    
-                    p1p2_str = f"{last_p1:02d}{last_p2:02d}"
-                    
-                    # Pattern checks
-                    if last_p1 == last_day or last_p2 == last_month:
-                        is_date_pattern = True
-                    if last_p1 == last_month or last_p2 == last_day:
-                        is_date_pattern = True
-                    if p1p2_str[-2:] == last_year:
-                        is_date_pattern = True
-                except:
-                    pass
-            
-            if is_date_pattern:
-                # P3 and its derivatives are hot! (43.3% hit rate)
-                p3_digit = last_p3 % 10
-                p3_derived = [last_p3]
-                for tens in [0, 10, 20, 30, 40]:
-                    val = p3_digit + tens
-                    if 1 <= val <= 42:
-                        p3_derived.append(val)
-                
-                for num in set(p3_derived):
-                    boost = 15 if num == last_p3 else 10
-                    scores[num]["score"] += boost
-                    scores[num]["reasons"].append(f"🔢 P1P2 date code: P3={last_p3} predicts {num} (43.3%)")
-    
-    # === 47. DECADE CLUSTER PATTERN (44-54% hit rate!) ===
-    # When 3+ numbers from same decade appear, that decade continues next draw
-    # 30-39 is BEST: 54% continuation!
-    
-    if last_draw:
-        last_nums = last_draw.get('numbers', [])
-        decade_counts = {}
-        for n in last_nums:
-            decade = n // 10  # 0=1-9, 1=10-19, 2=20-29, 3=30-39, 4=40-42
-            decade_counts[decade] = decade_counts.get(decade, 0) + 1
-        
-        for decade, count in decade_counts.items():
-            if count >= 3:
-                # This decade is clustering! Boost numbers in same decade
-                boost = 18 if decade == 3 else 14  # 30s are strongest
-                decade_start = decade * 10 if decade > 0 else 1
-                decade_end = min((decade + 1) * 10 - 1, 42)
-                
-                for num in range(decade_start, decade_end + 1):
-                    if 1 <= num <= 42:
-                        scores[num]["score"] += boost
-                        scores[num]["reasons"].append(f"🎯 Decade cluster: {count}x in {decade*10}s → continues (54%)")
-            elif count == 2:
-                # Weaker cluster, still boost slightly
-                decade_start = decade * 10 if decade > 0 else 1
-                decade_end = min((decade + 1) * 10 - 1, 42)
-                for num in range(decade_start, decade_end + 1):
-                    if 1 <= num <= 42:
-                        scores[num]["score"] += 5
-                        scores[num]["reasons"].append(f"🎯 Decade pair: 2x in {decade*10}s")
-    
-    # === 48. P1+P6 MAGIC SUM PATTERN (up to 54%!) ===
-    # The sum of smallest + largest predicts next draw
-    # Best sums: 53 (54%), 42 (35%), 48 (35%)
-    
-    if last_draw:
-        last_nums = sorted(last_draw.get('numbers', []))
-        if len(last_nums) >= 6:
-            p1, p6 = last_nums[0], last_nums[5]
-            magic_sum = p1 + p6
-            
-            # Boost based on magic sum
-            boost_map = {53: 18, 42: 14, 48: 14, 43: 12, 44: 12, 47: 12, 49: 12}
-            base_boost = boost_map.get(magic_sum, 8)
-            
-            # The magic sum itself (if valid)
-            if 1 <= magic_sum <= 42:
-                scores[magic_sum]["score"] += base_boost
-                scores[magic_sum]["reasons"].append(f"✨ P1+P6 magic sum: {p1}+{p6}={magic_sum}")
-            
-            # Digits of magic sum
-            for d in str(magic_sum):
-                if d != '0':
-                    digit = int(d)
-                    for tens in [0, 10, 20, 30, 40]:
-                        val = digit + tens
-                        if 1 <= val <= 42:
-                            scores[val]["score"] += base_boost // 2
-                            scores[val]["reasons"].append(f"✨ Magic sum digit: {magic_sum}→{d}")
-    
-    # === 49. DIGIT ECHO PATTERN (85-89%!) ===
-    # Digits 1, 2, 3 echo strongly across draws
-    # If last draw has digit X, next draw likely has numbers with digit X
-    
-    if last_draw:
-        last_nums = last_draw.get('numbers', [])
-        last_digits = set()
-        for n in last_nums:
-            for d in str(n):
-                if d != '0':
-                    last_digits.add(int(d))
-        
-        # Boost numbers containing echoing digits
-        # Digits 1, 2, 3 echo strongest (85-87%)
-        for digit in last_digits:
-            if digit in [1, 2, 3]:
-                boost = 12  # Strong echo
-            else:
-                boost = 6   # Weaker echo
-            
-            # Find all numbers containing this digit
-            for num in range(1, 43):
-                if str(digit) in str(num):
-                    scores[num]["score"] += boost
-                    scores[num]["reasons"].append(f"🔊 Digit echo: {digit} repeats ({87 if digit <= 3 else 50}%)")
-    
-    # === 50. REPLAY PREDICTOR PATTERN (up to 50%!) ===
-    # The replay number predicts next draw
-    # Replay 4 → 50%, Replay 6 → 46%, Replay 8 → 45%
-    
-    if last_draw:
-        replay = last_draw.get('replay_number')
-        if replay and 1 <= replay <= 42:
-            # Best replay numbers
-            replay_boost = {4: 16, 6: 14, 8: 14, 3: 12, 5: 12, 10: 12, 12: 12}
-            boost = replay_boost.get(replay, 8)
-            
-            # Boost the replay number itself
-            scores[replay]["score"] += boost
-            scores[replay]["reasons"].append(f"🔄 Replay predictor: {replay} (up to 50%)")
-            
-            # Boost replay ± 1
-            for offset in [-1, 1]:
-                val = replay + offset
-                if 1 <= val <= 42:
-                    scores[val]["score"] += boost // 2
-                    scores[val]["reasons"].append(f"🔄 Near replay: {replay}±1")
-            
-            # Boost replay family
-            replay_digit = replay % 10
-            for tens in [0, 10, 20, 30, 40]:
-                val = replay_digit + tens
-                if 1 <= val <= 42 and val != replay:
-                    scores[val]["score"] += boost // 2
-                    scores[val]["reasons"].append(f"🔄 Replay family: {replay}→{val}")
-    
-    # === 51. P4 > 33 SIGNAL PATTERN ===
-    # P4 > 33 is rare (10.3%) but when it happens:
-    # - P6 = 42: 41% (vs normal 11%) - 3.6x more likely!
-    # - P5 = 37-41 dominates
-    # Signal: Many 30s in previous draws (47%) or P1 very low (35%)
-    
-    if last_draw:
-        last_nums = sorted(last_draw.get('numbers', []))
-        if len(last_nums) >= 6:
-            last_p1 = last_nums[0]
-            last_p4 = last_nums[3]
-            
-            # Count 30s in last draw
-            count_30s = sum(1 for n in last_nums if 30 <= n <= 39)
-            
-            # Signal 1: Previous P1 was very low (1-3) → P4 > 33 likely
-            if last_p1 <= 3:
-                # Boost high P4-P5-P6 numbers
-                for num in range(34, 43):
-                    scores[num]["score"] += 10
-                    scores[num]["reasons"].append(f"📈 P4>33 signal: P1={last_p1} low → high numbers coming")
-            
-            # Signal 2: Many 30s in last draw → more 30s/40s coming
-            if count_30s >= 2:
-                for num in range(35, 43):
-                    scores[num]["score"] += count_30s * 4
-                    scores[num]["reasons"].append(f"📈 30s cluster ({count_30s}x) → 35-42 hot")
-            
-            # Signal 3: If P4 was > 33, P6=42 is 41% likely!
-            if last_p4 > 33:
-                scores[42]["score"] += 15
-                scores[42]["reasons"].append(f"📈 P4>33 ({last_p4}) → P6=42 is 41%!")
-                scores[41]["score"] += 10
-                scores[40]["score"] += 10
-                scores[41]["reasons"].append(f"📈 P4>33 → high P6 expected")
-                scores[40]["reasons"].append(f"📈 P4>33 → high P6 expected")
-    
-    # === 52. MAGIC NUMBER PATTERN (17 & 38 - EuroMillions Bridge) ===
-    # When 17 or 38 appears in a draw, it's a "magic trigger"
-    # 17 + 21 = 38 (Circle partners) - the MAGIC PAIR
-    # 21 in Swiss = 71 in EuroMillions thinking → digits 7,1 = 17
-    # After 17 appears: digit 1 and 7 often appear next
-    # After 38 appears: digit 3 and 8 often appear next
-    # Magic + 21 together = TRIPLE CONNECTION (strongest signal!)
-    
-    if last_draw:
-        last_nums = last_draw.get('numbers', [])
-        has_17 = 17 in last_nums
-        has_38 = 38 in last_nums
-        has_21 = 21 in last_nums
-        
-        if has_17 or has_38:
-            # Magic trigger activated!
-            magic_type = "17+38" if (has_17 and has_38) else ("17" if has_17 else "38")
-            
-            if has_17 and has_38:
-                # DOUBLE MAGIC - both circle partners appeared!
-                # This is very rare - boost their digit echoes strongly
-                scores[1]["score"] += 20
-                scores[7]["score"] += 20
-                scores[3]["score"] += 20
-                scores[8]["score"] += 20
-                scores[1]["reasons"].append(f"✨✨ Double Magic 17+38! Digit 1 echo")
-                scores[7]["reasons"].append(f"✨✨ Double Magic 17+38! Digit 7 echo")
-                scores[3]["reasons"].append(f"✨✨ Double Magic 17+38! Digit 3 echo")
-                scores[8]["reasons"].append(f"✨✨ Double Magic 17+38! Digit 8 echo")
-                
-                # Also boost 17 and 38 family numbers
-                for n in [11, 21, 31, 41, 27, 37]:  # 7-family and 1-family
-                    if 1 <= n <= 42:
-                        scores[n]["score"] += 12
-                        scores[n]["reasons"].append(f"✨✨ Double Magic: 17 family")
-                for n in [13, 23, 33, 18, 28]:  # 3-family and 8-family
-                    if 1 <= n <= 42:
-                        scores[n]["score"] += 12
-                        scores[n]["reasons"].append(f"✨✨ Double Magic: 38 family")
-            
-            elif has_17:
-                # Magic 17 - boost digit echoes
-                scores[1]["score"] += 15
-                scores[7]["score"] += 15
-                scores[17]["score"] += 10  # 17 might repeat
-                scores[1]["reasons"].append(f"✨ Magic 17! Digit 1 echo")
-                scores[7]["reasons"].append(f"✨ Magic 17! Digit 7 echo")
-                scores[17]["reasons"].append(f"✨ Magic 17 might repeat")
-                
-                # 17's circle partner 38 is now activated
-                scores[38]["score"] += 12
-                scores[38]["reasons"].append(f"✨ Magic 17 → Circle 38 activated")
-            
-            elif has_38:
-                # Magic 38 - boost digit echoes
-                scores[3]["score"] += 15
-                scores[8]["score"] += 15
-                scores[38]["score"] += 10  # 38 might repeat
-                scores[3]["reasons"].append(f"✨ Magic 38! Digit 3 echo")
-                scores[8]["reasons"].append(f"✨ Magic 38! Digit 8 echo")
-                scores[38]["reasons"].append(f"✨ Magic 38 might repeat")
-                
-                # 38's circle partner 17 is now activated
-                scores[17]["score"] += 12
-                scores[17]["reasons"].append(f"✨ Magic 38 → Circle 17 activated")
-            
-            # TRIPLE CONNECTION: Magic + 21 together!
-            if has_21 and (has_17 or has_38):
-                # 21 = 71 in Euro thinking = digits 17!
-                # This is the BRIDGE between Swiss and EuroMillions
-                scores[21]["score"] += 18
-                scores[21]["reasons"].append(f"✨✨✨ TRIPLE: Magic + 21 (Euro bridge)")
-                
-                # 21's connections get boost
-                scores[12]["score"] += 15  # 21 reversed = 12
-                scores[12]["reasons"].append(f"✨✨✨ TRIPLE: 21↔12 flip active")
-                
-                # Circle partners of 21
-                scores[42]["score"] += 12  # 21 + 21 = 42
-                scores[42]["reasons"].append(f"✨✨✨ TRIPLE: 21 circle to 42")
-            
-            # ESSENCE PREDICTION when magic appears
-            # Most common essences: E=9 (6x), E=8 (5x), E=10 (4x)
-            # Boost numbers that create these essences
-            magic_essences = [9, 8, 10]
-            for target_e in magic_essences:
-                # Numbers whose digit sum = target essence
-                for n in range(1, 43):
-                    if sum(int(d) for d in str(n)) == target_e:
-                        scores[n]["score"] += 6
-                        scores[n]["reasons"].append(f"✨ Magic essence E={target_e}")
-    
-    # Check for 12↔21 reversal pattern (the BRIDGE)
-    # This reversal appeared multiple times with magic numbers
-    if last_draw:
-        last_nums = last_draw.get('numbers', [])
-        if 12 in last_nums and 21 in last_nums:
-            # The reversal pair is present - strong magic signal!
-            scores[17]["score"] += 15
-            scores[38]["score"] += 15
-            scores[17]["reasons"].append(f"🔮 12↔21 reversal → Magic 17 likely")
-            scores[38]["reasons"].append(f"🔮 12↔21 reversal → Magic 38 likely")
-        elif 12 in last_nums:
-            scores[21]["score"] += 12
-            scores[21]["reasons"].append(f"🔮 12 present → 21 reversal likely")
-        elif 21 in last_nums:
-            scores[12]["score"] += 12
-            scores[12]["reasons"].append(f"🔮 21 present → 12 reversal likely")
-    
-    # === 53. SHADOW NUMBER STRATEGY (Missing 9 Pattern) ===
-    # When a number is "missing" (avoided), boost its echoes instead:
-    # - Circle partner (+/- 21)
-    # - Multiples (×2, ×3, ×4)
-    # - Digit sum family
-    # - Neighborhood (±1)
-    # This is the "Shadow 9" strategy from our analysis
-    
-    def get_shadow_echoes(n):
-        """Get all echo numbers for a 'shadow' number we're avoiding"""
-        echoes = set()
-        # Circle partner
-        circle = n + 21 if n + 21 <= 42 else n - 21 if n - 21 >= 1 else None
-        if circle and 1 <= circle <= 42:
-            echoes.add((circle, f"circle {n}↔{circle}"))
-        # Multiples
-        for mult in [2, 3, 4]:
-            if 1 <= n * mult <= 42:
-                echoes.add((n * mult, f"×{mult}={n*mult}"))
-        # Digit sum family (numbers with same essence)
-        essence = sum(int(d) for d in str(n))
-        for x in range(1, 43):
-            if sum(int(d) for d in str(x)) == essence and x != n:
-                echoes.add((x, f"essence={essence}"))
-        # Neighborhood
-        if 1 <= n - 1 <= 42:
-            echoes.add((n - 1, f"neighbor-"))
-        if 1 <= n + 1 <= 42:
-            echoes.add((n + 1, f"neighbor+"))
-        return echoes
-    
-    # Check for "shadow" numbers - numbers that are overdue but we invoke via echoes
-    shadow_numbers = []
-    for num in range(1, 43):
-        gap = num_last_seen.get(num, 100)
-        if gap >= 20:  # Missing for 20+ draws = potential shadow
-            shadow_numbers.append((num, gap))
-    
-    # Boost shadows' echoes (especially 9 if missing long)
-    for shadow_num, gap in sorted(shadow_numbers, key=lambda x: x[1], reverse=True)[:3]:
-        echoes = get_shadow_echoes(shadow_num)
-        boost = min(20, gap // 3)
-        for echo_num, echo_type in echoes:
-            if echo_num != shadow_num:  # Don't boost the shadow itself
-                scores[echo_num]["score"] += boost
-                scores[echo_num]["reasons"].append(f"👻 Shadow {shadow_num} ({gap} gap): {echo_type}")
-    
-    # === 54. P6 MOMENTUM TRACKING ===
-    # When the same number appears at P6 (highest position) multiple times recently,
-    # it has "momentum" - either continue riding it or transform to its circle
-    
-    p6_counter = Counter()
-    for d in all_draws_sorted[:20]:  # Last 20 draws
-        nums = sorted(d.get('numbers', []))
-        if len(nums) >= 6:
-            p6_counter[nums[5]] += 1  # P6 = index 5
-    
-    # Find P6 with momentum (appeared 2+ times in last 20)
-    p6_momentum = [(num, count) for num, count in p6_counter.items() if count >= 2]
-    
-    for p6_num, count in p6_momentum:
-        # Boost the momentum number - INSERT AT FRONT for visibility
-        boost = count * 12  # Increased from count * 8
-        scores[p6_num]["score"] += boost
-        scores[p6_num]["reasons"].insert(0, f"🎯 P6 MOMENTUM: {p6_num} hit {count}x at P6 ({boost}%)")
-        
-        # Also boost its circle partner (transformation option)
-        p6_circle = p6_num + 21 if p6_num + 21 <= 42 else p6_num - 21 if p6_num - 21 >= 1 else None
-        if p6_circle and 1 <= p6_circle <= 42:
-            circle_boost = count * 10  # Increased from count * 6
-            scores[p6_circle]["score"] += circle_boost
-            scores[p6_circle]["reasons"].insert(0, f"🌀 P6 CIRCLE: {p6_num}↔{p6_circle} ({circle_boost}%)")
-    
-    # === 55. AIR PATTERN (P1+P2 Sum Analysis) ===
-    # When P1+P2 from recent draws sums to a specific value (like 20),
-    # boost that "Air" number and its family
-    # Air family: the sum, its factors, its circle, numbers that create it
-    
-    p1p2_sums = []
-    for d in all_draws_sorted[:10]:  # Last 10 draws
-        nums = sorted(d.get('numbers', []))
-        if len(nums) >= 2:
-            p1p2_sums.append(nums[0] + nums[1])
-    
-    # Find recurring P1+P2 sums
-    sum_counter = Counter(p1p2_sums)
-    air_numbers = [(s, c) for s, c in sum_counter.items() if c >= 2 and 1 <= s <= 42]
-    
-    for air_sum, count in air_numbers:
-        # Boost the Air number itself
-        scores[air_sum]["score"] += count * 10
-        scores[air_sum]["reasons"].append(f"💨 AIR: P1+P2={air_sum} appeared {count}x")
-        
-        # Air circle
-        air_circle = air_sum + 21 if air_sum + 21 <= 42 else air_sum - 21 if air_sum - 21 >= 1 else None
-        if air_circle and 1 <= air_circle <= 42:
-            scores[air_circle]["score"] += count * 8
-            scores[air_circle]["reasons"].append(f"💨 AIR circle: {air_sum}↔{air_circle}")
-        
-        # Numbers that sum to Air (P1+P2 candidates)
-        for a in range(1, min(air_sum, 22)):
-            b = air_sum - a
-            if 1 <= b <= 42 and a < b:
-                scores[a]["score"] += 4
-                scores[b]["score"] += 4
-                scores[a]["reasons"].append(f"💨 AIR pair: {a}+{b}={air_sum}")
-                scores[b]["reasons"].append(f"💨 AIR pair: {a}+{b}={air_sum}")
-    
-    # === 56. POSITION ANCHORS (Quarterly Repeat Detection) ===
-    # Detect numbers that repeat at specific positions in recent draws
-    # These become "anchors" with high confidence
-    
-    # Track position frequencies for P3, P4, P5, P6 in last quarter (~27 draws)
-    quarter_draws = all_draws_sorted[-27:] if len(all_draws_sorted) >= 27 else all_draws_sorted
-    
-    position_counters = {
-        3: Counter(),  # P3
-        4: Counter(),  # P4
-        5: Counter(),  # P5
-        6: Counter(),  # P6
-    }
-    
-    for d in quarter_draws:
-        nums = sorted(d.get('numbers', []))
-        if len(nums) >= 6:
-            position_counters[3][nums[2]] += 1
-            position_counters[4][nums[3]] += 1
-            position_counters[5][nums[4]] += 1
-            position_counters[6][nums[5]] += 1
-    
-    # Find position anchors (appeared 3+ times at same position)
-    position_names = {3: "P3", 4: "P4", 5: "P5", 6: "P6"}
-    for pos, counter in position_counters.items():
-        anchors = [(num, count) for num, count in counter.items() if count >= 3]
-        for anchor_num, count in anchors:
-            boost = count * 6
-            scores[anchor_num]["score"] += boost
-            scores[anchor_num]["reasons"].append(f"⚓ {position_names[pos]} anchor: {anchor_num} hit {count}x")
-    
-    # === 57. CIRCLE TRANSFORMATION STRATEGY ===
-    # For top scoring numbers, also boost their circle partners
-    # This creates the "RIDE vs SWAP" strategy options
-    
-    # Get current top 10 candidates
-    temp_ranked = sorted(scores.items(), key=lambda x: x[1]["score"], reverse=True)[:10]
-    
-    for num, data in temp_ranked:
-        if data["score"] >= 50:  # Only for strong candidates
-            circle = num + 21 if num + 21 <= 42 else num - 21 if num - 21 >= 1 else None
-            if circle and 1 <= circle <= 42:
-                # Add smaller boost to circle (transformation option)
-                circle_boost = min(15, data["score"] // 5)
-                scores[circle]["score"] += circle_boost
-                scores[circle]["reasons"].append(f"🔄 Circle of hot {num}: {num}↔{circle}")
-    
-    # === 58. DATE ESSENCE DOUBLING ===
-    # When date digits repeat (like 4/4), that essence is DOUBLED in power
-    # Boost that number and its entire family heavily
-    # INSERT AT BEGINNING of reasons list for visibility!
-    
-    today = datetime.now()
-    if today.day == today.month:  # Same day and month!
-        double_essence = today.day
-        
-        # Heavy boost to the doubled number - INSERT AT FRONT
-        if 1 <= double_essence <= 42:
-            scores[double_essence]["score"] += 50  # Increased from 25
-            scores[double_essence]["reasons"].insert(0, f"✨✨ DATE DOUBLE: {double_essence}/{double_essence}! (50%)")
-        
-        # Boost circle partner - INSERT AT FRONT
-        double_circle = double_essence + 21 if double_essence + 21 <= 42 else double_essence - 21
-        if 1 <= double_circle <= 42:
-            scores[double_circle]["score"] += 40  # Increased from 20
-            scores[double_circle]["reasons"].insert(0, f"✨✨ DATE DOUBLE circle: {double_essence}↔{double_circle} (40%)")
-        
-        # Boost family (numbers ending in that digit) - INSERT AT FRONT
-        for n in range(double_essence + 10, 43, 10):
-            scores[n]["score"] += 20  # Increased from 12
-            scores[n]["reasons"].insert(0, f"✨ DATE family: ends in {double_essence} (20%)")
-    
-    # === 59. COMBINED D PATTERN (72.1% hit rate!) ===
-    # The "D" (Day) from draw dates combined with previous draw positions
-    # creates high-probability number predictions:
-    # - D (target day) + P1 from previous draw
-    # - D (target day) + P2 from previous draw
-    # - D(-1) + D(-2) (sum of days from last two draws)
-    # - D + M (day + month of target draw)
-    # This pattern shows 72.1% connection rate across 1374 Swiss Lotto draws!
-    
-    if most_recent and len(all_draws_sorted) >= 2:
-        # Get previous draws data
-        prev_draw_1 = all_draws_sorted[0]  # Most recent
-        prev_draw_2 = all_draws_sorted[1] if len(all_draws_sorted) >= 2 else None
-        
-        # Extract day numbers from previous draws
-        def get_day_from_date(date_str):
-            """Extract day number from YYYY-MM-DD format"""
+    # 🚀 Run heavy CPU-bound prediction off the event loop (Emergent Support Jun 8 #3)
+    # 125s blocking compute was pinning workers — to_thread releases the loop
+    def _heavy_compute():
+        if not draws:
+            return {"error": "No draws available"}
+    
+        current_year = datetime.now().year
+        year_draws = sorted([d for d in draws if d['date'].startswith(str(current_year))], key=lambda x: x['date'])
+        all_draws_2020 = sorted([d for d in draws if d['date'] >= '2020-01-01'], key=lambda x: x['date'])
+    
+        # Score accumulator for each number 1-42
+        scores = defaultdict(lambda: {"score": 0, "reasons": []})
+    
+        # === NAME MODE (if provided) ===
+        name_numbers = []
+        name_info = None
+        if name:
             try:
-                parts = date_str.split('-')
-                if len(parts) == 3:
-                    return int(parts[2])
+                name_clean = name.upper().strip()
+                letter_values = {chr(65 + i): i + 1 for i in range(26)}  # A=1, B=2, ... Z=26
+            
+                # Split into words
+                words = name_clean.split()
+                word_sums = []
+                all_letters = []
+            
+                for word in words:
+                    word_sum = 0
+                    for char in word:
+                        if char in letter_values:
+                            val = letter_values[char]
+                            all_letters.append({"letter": char, "value": val})
+                            word_sum += val
+                            # Individual letter values (if 1-42)
+                            if 1 <= val <= 42:
+                                name_numbers.append({"num": val, "reason": f"Letter {char}={val}"})
+                    if word_sum > 0:
+                        word_sums.append({"word": word, "sum": word_sum})
+                        # Word sum (if 1-42)
+                        if 1 <= word_sum <= 42:
+                            name_numbers.append({"num": word_sum, "reason": f"'{word}'={word_sum}"})
+                        # Word sum digits
+                        if word_sum > 42:
+                            d1 = word_sum // 10
+                            d2 = word_sum % 10
+                            if 1 <= d1 <= 42:
+                                name_numbers.append({"num": d1, "reason": f"'{word}' digit {d1}"})
+                            if 1 <= d2 <= 42 and d2 != d1:
+                                name_numbers.append({"num": d2, "reason": f"'{word}' digit {d2}"})
+                            # Digit sum
+                            dsum = sum(int(d) for d in str(word_sum))
+                            if 1 <= dsum <= 42:
+                                name_numbers.append({"num": dsum, "reason": f"'{word}' reduced={dsum}"})
+            
+                # Full name sum
+                full_sum = sum(ws["sum"] for ws in word_sums)
+                if full_sum > 0:
+                    # Full sum digits
+                    if 1 <= full_sum <= 42:
+                        name_numbers.append({"num": full_sum, "reason": f"Full name={full_sum}"})
+                    else:
+                        d1 = (full_sum // 10) % 10
+                        d2 = full_sum % 10
+                        if 1 <= d1 <= 42:
+                            name_numbers.append({"num": d1, "reason": f"Name digit {d1}"})
+                        if 1 <= d2 <= 42 and d2 != d1:
+                            name_numbers.append({"num": d2, "reason": f"Name digit {d2}"})
+                
+                    # Reduce to single digit (numerology style)
+                    reduced = full_sum
+                    while reduced > 9:
+                        reduced = sum(int(d) for d in str(reduced))
+                    if 1 <= reduced <= 9:
+                        name_numbers.append({"num": reduced, "reason": f"Name number={reduced}"})
+            
+                name_info = {
+                    "name": name,
+                    "words": word_sums,
+                    "full_sum": full_sum,
+                    "letters": all_letters[:10]  # First 10 letters
+                }
+            
+                # Apply name bonuses
+                seen = set()
+                for nn in name_numbers:
+                    n = nn["num"]
+                    if n not in seen:
+                        scores[n]["score"] += 20
+                        scores[n]["reasons"].append(f"🔤 {nn['reason']} (20%)")
+                        seen.add(n)
             except:
                 pass
-            return None
-        
-        prev_day_1 = get_day_from_date(prev_draw_1.get('date', ''))
-        prev_day_2 = get_day_from_date(prev_draw_2.get('date', '')) if prev_draw_2 else None
-        
-        # Get P1 and P2 from most recent draw
-        prev_nums = sorted(prev_draw_1.get('numbers', []))
-        prev_p1 = prev_nums[0] if len(prev_nums) >= 1 else None
-        prev_p2 = prev_nums[1] if len(prev_nums) >= 2 else None
-        
-        # Today's date for target predictions
-        target_day = today.day
-        target_month = today.month
-        
-        # Pattern 59a: D (target) + P1 (previous) - STRONGEST
-        if prev_p1 and target_day:
-            d_plus_p1 = target_day + prev_p1
-            if 1 <= d_plus_p1 <= 42:
-                scores[d_plus_p1]["score"] += 25
-                scores[d_plus_p1]["reasons"].insert(0, f"🔷 D+P1: {target_day}+{prev_p1}={d_plus_p1} (72%!)")
-            elif d_plus_p1 > 42:
-                # Reduce to valid range
-                reduced = d_plus_p1 - 42
-                if 1 <= reduced <= 42:
-                    scores[reduced]["score"] += 18
-                    scores[reduced]["reasons"].insert(0, f"🔷 D+P1 reduced: {d_plus_p1}→{reduced}")
-        
-        # Pattern 59b: D (target) + P2 (previous)
-        if prev_p2 and target_day:
-            d_plus_p2 = target_day + prev_p2
-            if 1 <= d_plus_p2 <= 42:
-                scores[d_plus_p2]["score"] += 22
-                scores[d_plus_p2]["reasons"].insert(0, f"🔷 D+P2: {target_day}+{prev_p2}={d_plus_p2} (72%!)")
-            elif d_plus_p2 > 42:
-                reduced = d_plus_p2 - 42
-                if 1 <= reduced <= 42:
-                    scores[reduced]["score"] += 15
-                    scores[reduced]["reasons"].insert(0, f"🔷 D+P2 reduced: {d_plus_p2}→{reduced}")
-        
-        # Pattern 59c: D(-1) + D(-2) (sum of days from last two draws)
-        if prev_day_1 and prev_day_2:
-            d_sum = prev_day_1 + prev_day_2
-            if 1 <= d_sum <= 42:
-                scores[d_sum]["score"] += 20
-                scores[d_sum]["reasons"].insert(0, f"🔷 D(-1)+D(-2): {prev_day_1}+{prev_day_2}={d_sum} (72%!)")
-            elif d_sum > 42:
-                reduced = d_sum - 42
-                if 1 <= reduced <= 42:
-                    scores[reduced]["score"] += 14
-                    scores[reduced]["reasons"].insert(0, f"🔷 D(-1)+D(-2) reduced: {d_sum}→{reduced}")
-        
-        # Pattern 59d: D + M (target day + month)
-        d_plus_m = target_day + target_month
-        if 1 <= d_plus_m <= 42:
-            scores[d_plus_m]["score"] += 18
-            scores[d_plus_m]["reasons"].insert(0, f"🔷 D+M: {target_day}+{target_month}={d_plus_m}")
-        
-        # Pattern 59e: Previous D + P1 from -2 draw (chain pattern)
-        if prev_day_1 and prev_draw_2:
-            prev_2_nums = sorted(prev_draw_2.get('numbers', []))
-            if len(prev_2_nums) >= 1:
-                prev_2_p1 = prev_2_nums[0]
-                chain_val = prev_day_1 + prev_2_p1
-                if 1 <= chain_val <= 42:
-                    scores[chain_val]["score"] += 16
-                    scores[chain_val]["reasons"].insert(0, f"🔷 D(-1)+P1(-2): {prev_day_1}+{prev_2_p1}={chain_val}")
-        
-        # Pattern 59f: Circle partners of D patterns (transformation)
-        for d_pattern_num in [d_plus_p1 if prev_p1 else 0, d_plus_p2 if prev_p2 else 0]:
-            if d_pattern_num and 1 <= d_pattern_num <= 42:
-                d_circle = d_pattern_num + 21 if d_pattern_num + 21 <= 42 else d_pattern_num - 21 if d_pattern_num - 21 >= 1 else None
-                if d_circle and 1 <= d_circle <= 42:
-                    scores[d_circle]["score"] += 12
-                    scores[d_circle]["reasons"].append(f"🔷 D-circle: {d_pattern_num}↔{d_circle}")
     
-    # === 60. STORY SIGNS PATTERN (Pattern 60 - The Ultimate!) ===
-    # Analyzes circles, hunger, consecutive sequences, P1+P2 sums,
-    # secret counting, family tracking, position memory, and date codes
-    # This pattern discovered:
-    # - 07/02/2026: 4 consecutive numbers (35-36-37-38) AND 4 consecutive circles (14-15-16-17)!
-    # - Circle warming: When circle appears at position multiple times, actual number comes next
-    # - Hunger pattern: Neighbors appear without the number = number is coming
-    # - Secret counting: value + gap = next value at same position
-    # - Mirror to 42: last_P4 + next_P4 often = 42
-    
-    try:
-        # Analyze story signs from all draws
-        story_result = analyze_story_signs(draws, quarter_size=27)
-        
-        if story_result and story_result.get("scores"):
-            for num, data in story_result["scores"].items():
-                if 1 <= num <= 42 and data.get("score", 0) > 0:
-                    # Apply story sign scores (capped at 30 to balance with other patterns)
-                    story_bonus = min(data["score"], 30)
-                    scores[num]["score"] += story_bonus
-                    # Add reasons (max 3 to avoid clutter)
-                    for reason in data.get("reasons", [])[:3]:
-                        scores[num]["reasons"].append(reason)
-        
-        # Log rare events if found
-        if story_result.get("rare_events"):
-            for event in story_result["rare_events"]:
-                logging.info(f"Story Pattern - Rare Event: {event}")
+        # === BIRTHDAY MODE (if provided) ===
+        birthday_numbers = []
+        birthday_info = None
+        if birthday:
+            try:
+                parts = birthday.replace('/', '-').split('-')
+                if len(parts) == 3:
+                    day = int(parts[0])
+                    month = int(parts[1])
+                    year = int(parts[2])
                 
-    except Exception as e:
-        logging.warning(f"Pattern 60 Story Signs error: {e}")
+                    birthday_info = {"day": day, "month": month, "year": year}
+                
+                    if 1 <= day <= 42:
+                        birthday_numbers.append({"num": day, "reason": f"Birth day {day}"})
+                    if 1 <= month <= 42:
+                        birthday_numbers.append({"num": month, "reason": f"Birth month {month}"})
+                
+                    year_str = str(year)
+                    if len(year_str) == 4:
+                        first_two = int(year_str[:2])
+                        last_two = int(year_str[2:])
+                        if 1 <= first_two <= 42:
+                            birthday_numbers.append({"num": first_two, "reason": f"Year {first_two}"})
+                        if 1 <= last_two <= 42:
+                            birthday_numbers.append({"num": last_two, "reason": f"Year {last_two}"})
+                    
+                        for d in year_str:
+                            digit = int(d)
+                            if 1 <= digit <= 9:
+                                birthday_numbers.append({"num": digit, "reason": f"Year digit {digit}"})
+                
+                    day_plus_month = day + month
+                    if 1 <= day_plus_month <= 42:
+                        birthday_numbers.append({"num": day_plus_month, "reason": f"D+M={day_plus_month}"})
+                
+                    year_digit_sum = sum(int(d) for d in year_str)
+                    if 1 <= year_digit_sum <= 42:
+                        birthday_numbers.append({"num": year_digit_sum, "reason": f"Year sum={year_digit_sum}"})
+                
+                    if day >= 10:
+                        day_rev = int(str(day)[::-1])
+                        if 1 <= day_rev <= 42:
+                            birthday_numbers.append({"num": day_rev, "reason": f"Day rev {day}→{day_rev}"})
+                
+                    total = day + month + sum(int(d) for d in year_str)
+                    while total > 9:
+                        total = sum(int(d) for d in str(total))
+                    if 1 <= total <= 9:
+                        birthday_numbers.append({"num": total, "reason": f"Life path {total}"})
+                
+                    seen = set()
+                    for bn in birthday_numbers:
+                        n = bn["num"]
+                        if n not in seen:
+                            scores[n]["score"] += 25
+                            scores[n]["reasons"].append(f"🎂 {bn['reason']} (25%)")
+                            seen.add(n)
+            except:
+                pass
     
-    # === 61. STORY NUMBERS MEGA BOOST (THE AVI PATTERNS!) ===
-    # These are the numbers discovered through deep numerology analysis:
-    # - 13 Family: Mr. 13 the hero, escaped from Replay Jail
-    # - 26 Family: The connector number, circle partner of 5
-    # - 18-39 Circle: The reunion couple, gap of 21
-    # - 33-12 Tragic Love: 30 draws apart, waiting for reunion
-    # - 7 Ladder: 7, 14, 21, 28, 35, 42 - the complete ladder
+        # === 1. QUARTERLY POSITION (28% confidence) ===
+        expected_per_quarter = 26
+        current_draw_num = len(year_draws)
+        current_quarter = min(current_draw_num // expected_per_quarter, 3)
+        position_in_quarter = current_draw_num % expected_per_quarter
+        next_position = position_in_quarter + 1
+        if next_position > expected_per_quarter:
+            next_position = 1
+            current_quarter = min(current_quarter + 1, 3)
+        quarter_size = expected_per_quarter if current_quarter < 3 else 27
+        position_from_bottom = quarter_size - next_position + 1
     
-    # === 13 FAMILY - MR. 13 THE HERO ===
-    FAMILY_13 = [10, 13, 14, 15, 21, 23, 31, 34]
-    for num in FAMILY_13:
-        scores[num]["score"] += 25
-        scores[num]["reasons"].append(f"🦸 13 FAMILY: Mr. 13's crew")
-    scores[13]["score"] += 35  # Extra boost for the hero himself
-    scores[13]["reasons"].append("🦸 MR. 13: The HERO!")
+        if 1 <= next_position <= 42:
+            scores[next_position]["score"] += 28
+            scores[next_position]["reasons"].append(f"Position {next_position} from top (28%)")
+        if 1 <= position_from_bottom <= 42 and position_from_bottom != next_position:
+            scores[position_from_bottom]["score"] += 28
+            scores[position_from_bottom]["reasons"].append(f"Position {position_from_bottom} from bottom (28%)")
     
-    # === 26 FAMILY - THE CONNECTOR ===
-    FAMILY_26 = [5, 13, 26, 27, 30, 31, 38]  # From the 42 tickets
-    for num in FAMILY_26:
-        scores[num]["score"] += 25
-        scores[num]["reasons"].append(f"👨‍👩‍👧‍👦 26 FAMILY: The connector")
-    scores[26]["score"] += 35  # Extra for 26 itself
-    scores[26]["reasons"].append("👨‍👩‍👧‍👦 26: Family head (circle=5)")
-    scores[5]["score"] += 20  # Circle partner
-    scores[5]["reasons"].append("⭕ 26↔5: Circle reunion")
+        # === 2. DIGIT LINKS from position numbers (11% confidence) ===
+        for pos_num in [next_position, position_from_bottom]:
+            if 1 <= pos_num <= 42:
+                links = get_digit_links(pos_num)
+                for link in links:
+                    if 1 <= link <= 42:
+                        scores[link]["score"] += 11
+                        scores[link]["reasons"].append(f"Digit link from {pos_num} (11%)")
     
-    # === 18-39 CIRCLE PARTNERSHIP ===
-    scores[18]["score"] += 40
-    scores[18]["reasons"].append("💑 18-39 CIRCLE: Reunion at P3!")
-    scores[39]["score"] += 40
-    scores[39]["reasons"].append("💑 18-39 CIRCLE: Reunion at P6!")
-    # Common companions
-    for num in [32, 11, 25, 4, 42]:
-        scores[num]["score"] += 15
-        scores[num]["reasons"].append("💑 18-39 companions")
+        # === 3. DATE PATTERNS (15%, 12%, 5%) ===
+        last_draw = year_draws[-1] if year_draws else (draws[0] if draws else None)
+        if last_draw:
+            date_pats = get_date_patterns(last_draw)
+            for dp in date_pats:
+                n = dp["number"]
+                scores[n]["score"] += dp["confidence"]
+                scores[n]["reasons"].append(f"{dp['reason']} ({dp['confidence']}%)")
     
-    # === 33-12 TRAGIC LOVE STORY ===
-    scores[33]["score"] += 35
-    scores[33]["reasons"].append("💔 33-12 REUNION: Waiting 30 draws!")
-    scores[12]["score"] += 35
-    scores[12]["reasons"].append("💔 33-12 REUNION: The blocker becomes friend!")
-    # Related numbers
-    for num in [10, 11, 36, 38]:
-        scores[num]["score"] += 12
-        scores[num]["reasons"].append("💔 33-12 neighbors")
+        # === 4. DIGIT LINKS from last draw numbers (8% confidence) ===
+        if last_draw:
+            for num in last_draw['numbers']:
+                links = get_digit_links(num)
+                for link in links:
+                    if 1 <= link <= 42 and link not in last_draw['numbers']:
+                        scores[link]["score"] += 8
+                        scores[link]["reasons"].append(f"Digit link from {num} (8%)")
     
-    # === 7 LADDER (P1 + P6 = 42) ===
-    SEVEN_LADDER = [7, 14, 21, 28, 35, 42]
-    for num in SEVEN_LADDER:
-        scores[num]["score"] += 30
-        scores[num]["reasons"].append("🪜 7 LADDER: P1+P6=42!")
+        # === 5. HISTORICAL AT THIS POSITION ===
+        position_freq = defaultdict(int)
+        for year in range(2020, current_year + 1):
+            y_draws = sorted([d for d in draws if d['date'].startswith(str(year))], key=lambda x: x['date'])
+            q_size = len(y_draws) // 4
+            for q in range(4):
+                start = q * q_size
+                end = start + q_size if q < 3 else len(y_draws)
+                quarter_draws = y_draws[start:end]
+                if next_position <= len(quarter_draws):
+                    for n in quarter_draws[next_position - 1]['numbers']:
+                        position_freq[n] += 1
     
-    # === CIRCLE CONSTANT (+/-21) ===
-    # Apply circle awareness to hot numbers
-    if last_draw:
-        for num in last_draw['numbers']:
-            circle_up = num + 21 if num + 21 <= 42 else num + 21 - 42
-            circle_down = num - 21 if num > 21 else num - 21 + 42
-            if 1 <= circle_up <= 42:
-                scores[circle_up]["score"] += 15
-                scores[circle_up]["reasons"].append(f"⭕ Circle of {num}")
-            if 1 <= circle_down <= 42 and circle_down != circle_up:
-                scores[circle_down]["score"] += 15
-                scores[circle_down]["reasons"].append(f"⭕ Circle of {num}")
+        top_historical = sorted(position_freq.items(), key=lambda x: x[1], reverse=True)[:5]
+        for n, count in top_historical:
+            bonus = min(count * 3, 15)
+            scores[n]["score"] += bonus
+            scores[n]["reasons"].append(f"Historical at pos {next_position}: {count}x ({bonus}%)")
     
-    # === DATE DANCE BOOST ===
-    # D, M, D+M, D-M, D*M often appear
-    today = datetime.now()
-    d, m = today.day, today.month
-    date_numbers = [
-        (d, f"📅 Day={d}"),
-        (m, f"📅 Month={m}"),
-        (d + m, f"📅 D+M={d+m}"),
-        (abs(d - m), f"📅 |D-M|={abs(d-m)}"),
-        (d * m, f"📅 D×M={d*m}"),
-    ]
-    for num, reason in date_numbers:
-        if 1 <= num <= 42:
-            scores[num]["score"] += 20
-            scores[num]["reasons"].append(reason)
+        # === 6. HOT NUMBERS (global frequency) ===
+        all_nums = []
+        for d in all_draws_2020[-200:]:
+            all_nums.extend(d['numbers'])
+        freq = Counter(all_nums)
+        hot_nums = freq.most_common(10)
+        for n, count in hot_nums:
+            bonus = min(count // 5, 10)
+            if bonus > 0:
+                scores[n]["score"] += bonus
+                scores[n]["reasons"].append(f"Hot number: {count}x ({bonus}%)")
     
-    # === COMPILE FINAL PREDICTIONS ===
-    # Filter out locked numbers from candidates
-    locked_nums_set = set(locked_positions.values()) if locked_positions else set()
-    ranked = sorted(
-        [(n, data) for n, data in scores.items() if n not in locked_nums_set],
-        key=lambda x: x[1]["score"], 
-        reverse=True
-    )
+        # === 7. COLD/DUE NUMBERS ===
+        last_seen = {}
+        sorted_draws_desc = sorted(all_draws_2020, key=lambda x: x['date'], reverse=True)
+        for i, d in enumerate(sorted_draws_desc):
+            for n in d['numbers']:
+                if n not in last_seen:
+                    last_seen[n] = i
     
-    # Calculate how many positions we need to fill
-    positions_to_fill = 6 - len(locked_positions)
+        due_numbers = [(n, gap) for n, gap in last_seen.items() if gap > 15]
+        due_numbers.sort(key=lambda x: x[1], reverse=True)
+        for n, gap in due_numbers[:5]:
+            bonus = min(gap // 3, 10)
+            scores[n]["score"] += bonus
+            scores[n]["reasons"].append(f"Due: {gap} draws ago ({bonus}%)")
     
-    # Add slight randomization to top candidates for variety
-    # Take top 15 and randomly select needed positions weighted by score
-    top_candidates = ranked[:15]
-    if len(top_candidates) >= positions_to_fill:
-        weights = [max(1, data["score"]) for n, data in top_candidates]
-        selected_indices = set()
-        selected = []
-        while len(selected) < positions_to_fill and len(selected_indices) < len(top_candidates):
-            remaining = [(i, top_candidates[i], weights[i]) for i in range(len(top_candidates)) if i not in selected_indices]
-            if not remaining:
-                break
-            total_weight = sum(w for _, _, w in remaining)
-            r = random.random() * total_weight
-            cumulative = 0
-            for idx, (n, data), w in remaining:
-                cumulative += w
-                if r <= cumulative:
-                    selected.append({"number": n, "score": data["score"], "reasons": data["reasons"][:10]})
-                    selected_indices.add(idx)
+        # === 8. VACUUM PATTERN (69.9% hit rate!) ===
+        # When 3+ consecutive numbers leave, nearby/original return
+        last_5 = all_draws_2020[-5:] if len(all_draws_2020) >= 5 else all_draws_2020
+        if len(last_5) >= 3:
+            for idx, draw in enumerate(last_5[:-1]):
+                nums = sorted(draw['numbers'])
+                # Find consecutive sequences
+                seq = [nums[0]]
+                for j in range(1, len(nums)):
+                    if nums[j] == nums[j-1] + 1:
+                        seq.append(nums[j])
+                    else:
+                        if len(seq) >= 3:
+                            # Consecutive found - boost nearby numbers
+                            nearby_low = seq[0] - 1
+                            nearby_high = seq[-1] + 1
+                            for n in [nearby_low, nearby_high] + seq:
+                                if 1 <= n <= 42:
+                                    scores[n]["score"] += 12
+                                    scores[n]["reasons"].append(f"🌀 Vacuum: {seq} consecutive")
+                        seq = [nums[j]]
+                if len(seq) >= 3:
+                    nearby_low = seq[0] - 1
+                    nearby_high = seq[-1] + 1
+                    for n in [nearby_low, nearby_high] + seq:
+                        if 1 <= n <= 42:
+                            scores[n]["score"] += 12
+                            scores[n]["reasons"].append(f"🌀 Vacuum: {seq} consecutive")
+    
+        # === 9. HIGH/LOW BALANCE (88.8% hit rate!) ===
+        if last_draw:
+            last_nums = last_draw['numbers']
+            lows = sum(1 for n in last_nums if n <= 21)
+            highs = 6 - lows
+            if lows >= 5:  # Too many lows, boost highs
+                for n in range(22, 43):
+                    scores[n]["score"] += 15
+                    scores[n]["reasons"].append(f"⚖️ Balance: last had {lows} lows")
+            elif highs >= 5:  # Too many highs, boost lows
+                for n in range(1, 22):
+                    scores[n]["score"] += 15
+                    scores[n]["reasons"].append(f"⚖️ Balance: last had {highs} highs")
+    
+        # === 10. ODD/EVEN BALANCE (81.6% hit rate!) ===
+        if last_draw:
+            last_nums = last_draw['numbers']
+            odds = sum(1 for n in last_nums if n % 2 == 1)
+            evens = 6 - odds
+            if odds >= 5:  # Too many odds, boost evens
+                for n in range(2, 43, 2):
+                    scores[n]["score"] += 12
+                    scores[n]["reasons"].append(f"⚖️ Balance: last had {odds} odds")
+            elif evens >= 5:  # Too many evens, boost odds
+                for n in range(1, 43, 2):
+                    scores[n]["score"] += 12
+                    scores[n]["reasons"].append(f"⚖️ Balance: last had {evens} evens")
+    
+        # === 11. GAP FILLING (64% hit rate!) ===
+        if last_draw:
+            last_nums = sorted(last_draw['numbers'])
+            for j in range(len(last_nums)-1):
+                gap = last_nums[j+1] - last_nums[j]
+                if gap >= 10:  # Big gap
+                    middle = (last_nums[j] + last_nums[j+1]) // 2
+                    for n in [middle-1, middle, middle+1]:
+                        if 1 <= n <= 42:
+                            scores[n]["score"] += 10
+                            scores[n]["reasons"].append(f"🕳️ Gap fill: {last_nums[j]}-{last_nums[j+1]}")
+    
+        # === 12. DIGIT FAMILY CONNECTION (47.9% hit rate!) ===
+        if last_draw:
+            last_nums = last_draw['numbers']
+            for n in last_nums:
+                digit_family = n % 10  # Last digit
+                # Boost other numbers ending in same digit
+                for other in range(digit_family, 43, 10):
+                    if other != n and 1 <= other <= 42:
+                        scores[other]["score"] += 8
+                        scores[other]["reasons"].append(f"👨‍👩‍👧 Family: ends in {digit_family}")
+    
+        # === 13. DISTANCE FAMILY (flip - 42s) ===
+        def get_distance_family(n):
+            flipped_n = int(str(n)[::-1])
+            result = flipped_n
+            while result > 42:
+                result -= 42
+            return result
+    
+        if last_draw:
+            last_nums = last_draw['numbers']
+            for n in last_nums:
+                dist_fam = get_distance_family(n)
+                if dist_fam != n and 1 <= dist_fam <= 42:
+                    scores[dist_fam]["score"] += 6
+                    scores[dist_fam]["reasons"].append(f"🔄 Distance: {n}→{dist_fam}")
+    
+        # === 14. DATE NUMEROLOGY (year + month) ===
+        current_month = datetime.now().month
+        current_year = datetime.now().year
+    
+        # Year pattern: 2026 → 20+26=46 → 46-42=4
+        year_num = (current_year // 100) + (current_year % 100)  # 20+26=46
+        while year_num > 42:
+            year_num -= 42
+        scores[year_num]["score"] += 8
+        scores[year_num]["reasons"].append(f"📅 Year: {current_year}→{year_num}")
+    
+        # Month + year combo
+        month_year = current_month + (current_year % 100)  # e.g., 4+26=30
+        if 1 <= month_year <= 42:
+            scores[month_year]["score"] += 8
+            scores[month_year]["reasons"].append(f"📅 Month+Year: {current_month}+{current_year%100}={month_year}")
+        elif month_year > 42:
+            month_year -= 42
+            if 1 <= month_year <= 42:
+                scores[month_year]["score"] += 8
+                scores[month_year]["reasons"].append(f"📅 Month+Year: reduced to {month_year}")
+    
+        # === 15. LUCKY NUMBER FAMILY PATTERN (47.2% hit rate!) ===
+        # If last draw had Lucky Number, boost numbers ending in that digit
+        if last_draw and last_draw.get('lucky_number'):
+            lucky = last_draw['lucky_number']
+            # Numbers ending in lucky number digit (e.g., lucky=3 -> 3,13,23,33)
+            for n in range(lucky, 43, 10):
+                if 1 <= n <= 42:
+                    scores[n]["score"] += 12
+                    scores[n]["reasons"].append(f"🍀 Lucky family: ends in {lucky}")
+            # Also boost the lucky number itself
+            if 1 <= lucky <= 42:
+                scores[lucky]["score"] += 8
+                scores[lucky]["reasons"].append(f"🍀 Lucky number: {lucky}")
+    
+        # === 16. REPLAY NUMBER PATTERN (18.9% hit rate) ===
+        # Replay number has slight tendency to appear in next draw
+        if last_draw and last_draw.get('replay_number'):
+            replay = last_draw['replay_number']
+            if 1 <= replay <= 42:
+                scores[replay]["score"] += 10
+                scores[replay]["reasons"].append(f"🔄 Replay number: {replay}")
+            # Also boost numbers ending in replay's digit
+            replay_digit = replay % 10
+            for n in range(replay_digit, 43, 10):
+                if 1 <= n <= 42 and n != replay:
+                    scores[n]["score"] += 5
+                    scores[n]["reasons"].append(f"🔄 Replay family: ends in {replay_digit}")
+    
+        # === 17. LUCKY NUMBER → FIRST POSITION PATTERN (13.9% vs 2.4%) ===
+        # Lucky number often equals the first (smallest) number in next draw
+        if last_draw and last_draw.get('lucky_number'):
+            lucky = last_draw['lucky_number']
+            # Boost the lucky number itself (might be first position)
+            if 1 <= lucky <= 6:  # Lucky is 1-6, these are often first position
+                scores[lucky]["score"] += 15
+                scores[lucky]["reasons"].append(f"🎯 Lucky→First: {lucky} (13.9% pattern)")
+    
+        # === 18. POSITION 6 + LUCKY → DIGITS PATTERN (18% P1, 6.4% P2) ===
+        # Sum of Position 6 + Lucky number → digits become next P1 and P2
+        # Example: P6=35, Lucky=1 → 36 → digits 3,6 → next draw P1=3, P2=6
+        if last_draw and last_draw.get('lucky_number'):
+            p6 = last_draw['numbers'][5]  # Position 6 (last/highest number)
+            lucky = last_draw['lucky_number']
+            sum_p6_lucky = p6 + lucky
+        
+            # Extract digits
+            digit1 = sum_p6_lucky // 10  # tens digit
+            digit2 = sum_p6_lucky % 10   # ones digit
+        
+            # Boost digit1 (18% hit rate for P1!)
+            if 1 <= digit1 <= 9:
+                scores[digit1]["score"] += 18
+                scores[digit1]["reasons"].append(f"🔢 P6+Lucky: {p6}+{lucky}={sum_p6_lucky} → digit {digit1} (18%)")
+        
+            # Boost digit2 (6.4% hit rate for P2)
+            if 1 <= digit2 <= 9 and digit2 != digit1:
+                scores[digit2]["score"] += 10
+                scores[digit2]["reasons"].append(f"🔢 P6+Lucky: {p6}+{lucky}={sum_p6_lucky} → digit {digit2}")
+        
+            # Also boost combined number if ≤42
+            if 10 <= sum_p6_lucky <= 42:
+                scores[sum_p6_lucky]["score"] += 8
+                scores[sum_p6_lucky]["reasons"].append(f"🔢 P6+Lucky sum: {sum_p6_lucky}")
+        
+            # Boost numbers starting with digit1 (e.g., digit1=3 → 30,31,32...)
+            if 1 <= digit1 <= 4:
+                for n in range(digit1 * 10, min(digit1 * 10 + 10, 43)):
+                    if 1 <= n <= 42:
+                        scores[n]["score"] += 5
+                        scores[n]["reasons"].append(f"🔢 P6+Lucky family: starts with {digit1}")
+    
+        # === 19. QUARTER FIRST SERIES - HIDDEN NUMBER SEQUENCE ===
+        # Pattern: First draw P1 represents hidden number (found via nextP1 - P2)
+        # Count sequence from hidden, track through P1 and P2
+        # P1 sums predict next (5+7=12 → next P1=13)
+        # Serial sequences (32,33,34) minus offset = hidden sequence (11,12,13)
+    
+        # Get quarter draws
+        quarter_size = 27  # First 3 quarters have 27 draws
+        current_quarter_start = (len(year_draws) // quarter_size) * quarter_size
+        quarter_draws = year_draws[current_quarter_start:] if year_draws else []
+    
+        if len(quarter_draws) >= 2:
+            # Find hidden number: nextP1 - P2 from first draw
+            first_draw = quarter_draws[0]
+            second_draw = quarter_draws[1]
+            hidden_num = second_draw['numbers'][0] - first_draw['numbers'][1]
+        
+            if 1 <= abs(hidden_num) <= 20:
+                # Current position in quarter
+                pos_in_quarter = len(quarter_draws)
+            
+                # Calculate expected sequence number
+                seq_num = abs(hidden_num) + pos_in_quarter
+            
+                # Boost sequence number if valid
+                if 1 <= seq_num <= 42:
+                    scores[seq_num]["score"] += 15
+                    scores[seq_num]["reasons"].append(f"🔮 Quarter hidden seq: {abs(hidden_num)}+{pos_in_quarter}={seq_num}")
+            
+                # P1 sum pattern: sum of last two P1s predicts next
+                if len(quarter_draws) >= 2:
+                    last_p1 = quarter_draws[-1]['numbers'][0]
+                    prev_p1 = quarter_draws[-2]['numbers'][0]
+                    p1_sum = last_p1 + prev_p1
+                
+                    # Next P1 might be p1_sum or p1_sum + 1
+                    for candidate in [p1_sum, p1_sum + 1]:
+                        if 1 <= candidate <= 42:
+                            scores[candidate]["score"] += 12
+                            scores[candidate]["reasons"].append(f"🔮 P1 sum: {prev_p1}+{last_p1}={p1_sum} → {candidate}")
+            
+                # Serial pattern: look for consecutive runs, missing = appears at P1
+                if last_draw:
+                    nums = sorted(last_draw['numbers'])
+                    for j in range(len(nums) - 1):
+                        if nums[j+1] - nums[j] == 1:  # Consecutive
+                            # Check what's missing in the run
+                            if j + 2 < len(nums) and nums[j+2] - nums[j+1] == 2:
+                                missing = nums[j+1] + 1
+                                # The missing number minus offset might appear at P1
+                                offset = nums[j] - abs(hidden_num)
+                                predicted = missing - offset
+                                if 1 <= predicted <= 42:
+                                    scores[predicted]["score"] += 10
+                                    scores[predicted]["reasons"].append(f"🔮 Serial missing: {missing}→P1={predicted}")
+    
+        # === 23. BASE NUMBER PATTERN ===
+        # Base Number = Draw 2 P1 + Hidden
+        # This base number appears at P4 in Draw 1
+        # Can predict P4 early: nextP1 + hidden = P4
+        if len(quarter_draws) >= 2:
+            d1 = quarter_draws[0]
+            d2 = quarter_draws[1]
+        
+            # Hidden number
+            p1_hidden = abs(d2['numbers'][0] - d1['numbers'][1])
+        
+            # Base number = Draw 2 P1 + Hidden
+            base_number = d2['numbers'][0] + p1_hidden
+        
+            if 1 <= base_number <= 42:
+                scores[base_number]["score"] += 15
+                scores[base_number]["reasons"].append(f"🎯 Base number: D2_P1({d2['numbers'][0]})+hidden({p1_hidden})={base_number}")
+        
+            # Also: current P1 + hidden might predict future P4
+            if last_draw:
+                predicted_p4 = last_draw['numbers'][0] + p1_hidden
+                if 1 <= predicted_p4 <= 42:
+                    scores[predicted_p4]["score"] += 10
+                    scores[predicted_p4]["reasons"].append(f"🎯 P4 predict: lastP1({last_draw['numbers'][0]})+hidden({p1_hidden})={predicted_p4}")
+    
+        # === 22. P4 HIDDEN NUMBER PATTERN ===
+        # P4 Hidden = P1 Hidden + P2 (from first draw)
+        # Then count sequence and track P4 matches
+        if len(quarter_draws) >= 2:
+            d1 = quarter_draws[0]
+            d2 = quarter_draws[1]
+        
+            # P1 hidden
+            p1_hidden = d2['numbers'][0] - d1['numbers'][1]
+        
+            # P4 hidden = P1 hidden + P2 from first draw
+            p4_hidden = abs(p1_hidden) + d1['numbers'][1]
+        
+            # Current position in quarter
+            pos = len(quarter_draws)
+        
+            # P4 sequence number
+            p4_seq = p4_hidden + pos - 1
+        
+            if 1 <= p4_seq <= 42:
+                scores[p4_seq]["score"] += 12
+                scores[p4_seq]["reasons"].append(f"🎲 P4 hidden seq: {p4_hidden}+{pos-1}={p4_seq}")
+        
+            # Also: P4 might equal P4_hidden + P1_hidden
+            p4_combo = p4_hidden + abs(p1_hidden)
+            if 1 <= p4_combo <= 42 and p4_combo != p4_seq:
+                scores[p4_combo]["score"] += 8
+                scores[p4_combo]["reasons"].append(f"🎲 P4 combo: {p4_hidden}+{abs(p1_hidden)}={p4_combo}")
+    
+        # === 21. SAME DATE HISTORY PATTERN ===
+        # Numbers that appeared on same date (month-day) in previous years
+        from collections import Counter as Cnt
+        current_date = datetime.now()
+        current_md = f"{current_date.month:02d}-{current_date.day:02d}"
+    
+        # Find all draws on same month-day from previous years
+        same_date_draws = [d for d in draws if d['date'][5:] == current_md]
+        if len(same_date_draws) >= 2:
+            same_date_nums = []
+            for sd in same_date_draws:
+                same_date_nums.extend(sd['numbers'])
+        
+            sd_freq = Cnt(same_date_nums)
+            # Boost numbers that appeared 2+ times on this date
+            for n, count in sd_freq.items():
+                if count >= 2 and 1 <= n <= 42:
+                    bonus = min(count * 5, 15)
+                    scores[n]["score"] += bonus
+                    scores[n]["reasons"].append(f"📅 Same date history: {count}x on {current_md}")
+    
+        # === 20. P2 DRAW POINTER PATTERN ===
+        # When P2 breaks sequence, P2 value = draw number to find the answer
+        # Example: Draw 5 P2=9 (expected 12) → Draw 9 P1=12!
+        if len(quarter_draws) >= 2:
+            # Get last P2 value - it might point to a future draw
+            last_p2 = quarter_draws[-1]['numbers'][1] if quarter_draws else 0
+            pos_in_q = len(quarter_draws)
+        
+            # If P2 < current position, it pointed backward (already happened)
+            # If P2 > current position, it's pointing forward!
+            if last_p2 > pos_in_q and last_p2 <= 27:
+                # P2 is pointing to a future draw
+                # The sequence number at that draw = hidden + P2 value
+                future_seq = abs(hidden_num) + last_p2 if 'hidden_num' in dir() else last_p2
+                if 1 <= future_seq <= 42:
+                    scores[future_seq]["score"] += 12
+                    scores[future_seq]["reasons"].append(f"🎯 P2 pointer: P2={last_p2}→Draw {last_p2} expects {future_seq}")
+        
+            # Also: current draw number might be pointed to by earlier P2
+            # If we're at draw N, check if any earlier P2 = N
+            for j, qd in enumerate(quarter_draws[:-1], start=1):
+                if qd['numbers'][1] == pos_in_q:
+                    # Earlier draw's P2 pointed to current draw!
+                    # Current P1 should relate to sequence
+                    expected_seq = abs(hidden_num) + pos_in_q if 'hidden_num' in dir() else pos_in_q
+                    if 1 <= expected_seq <= 42:
+                        scores[expected_seq]["score"] += 15
+                        scores[expected_seq]["reasons"].append(f"🎯 P2 pointed here: Draw {j} P2={pos_in_q}→P1={expected_seq}")
+    
+        # === 25. RARE EVENT COUNT SEQUENCE (Your Pattern!) ===
+        # Count from last VERY rare event (5 in same gruppe)
+        # Count number OR its circle partner (+/-21) appears in draws
+        # ALWAYS USE DATE CONNECTION
+    
+        # Find all very rare events (5+ in same gruppe 1-9, 10-19, 20-29, 30-39)
+        def get_gruppe(n):
+            if n <= 9: return "1-9"
+            elif n <= 19: return "10-19"
+            elif n <= 29: return "20-29"
+            elif n <= 39: return "30-39"
+            else: return "40-42"
+    
+        very_rare_events = []
+        sorted_all = sorted(draws, key=lambda x: x['date'])
+    
+        for i, d in enumerate(sorted_all):
+            nums = d['numbers']
+            g1 = len([n for n in nums if 1 <= n <= 9])
+            g2 = len([n for n in nums if 10 <= n <= 19])
+            g3 = len([n for n in nums if 20 <= n <= 29])
+            g4 = len([n for n in nums if 30 <= n <= 39])
+        
+            if max(g1, g2, g3, g4) >= 5:
+                outsider = None
+                if g1 >= 5:
+                    outsider = [n for n in nums if n > 9]
+                elif g2 >= 5:
+                    outsider = [n for n in nums if n < 10 or n > 19]
+                elif g3 >= 5:
+                    outsider = [n for n in nums if n < 20 or n > 29]
+                elif g4 >= 5:
+                    outsider = [n for n in nums if n < 30 or n > 39]
+            
+                very_rare_events.append({
+                    'index': i,
+                    'date': d['date'],
+                    'numbers': nums,
+                    'outsider': outsider[0] if outsider else None
+                })
+    
+        # Count from most recent very rare event
+        if very_rare_events:
+            last_rare = very_rare_events[-1]
+            current_idx = len(sorted_all)
+            count_from_rare = current_idx - last_rare['index']
+        
+            # The count number (wrapped to 1-42)
+            count_num = count_from_rare if count_from_rare <= 42 else ((count_from_rare - 1) % 42) + 1
+            circle_partner = count_num + 21 if count_num + 21 <= 42 else count_num - 21
+        
+            # Boost count number and circle partner
+            if 1 <= count_num <= 42:
+                scores[count_num]["score"] += 20
+                scores[count_num]["reasons"].append(f"🔢 Rare count: {count_from_rare} from {last_rare['date']}")
+        
+            if 1 <= circle_partner <= 42:
+                scores[circle_partner]["score"] += 18
+                scores[circle_partner]["reasons"].append(f"🔢 Rare circle: {count_num}↔{circle_partner}")
+        
+            # Also boost the outsider's circle partner (key number!)
+            if last_rare['outsider']:
+                out = last_rare['outsider']
+                out_circle = out + 21 if out + 21 <= 42 else out - 21
+                if 1 <= out_circle <= 42:
+                    scores[out_circle]["score"] += 15
+                    scores[out_circle]["reasons"].append(f"🔢 Rare outsider: {out}↔{out_circle}")
+    
+        # === 26. DATE ALWAYS PATTERN (Always Active!) ===
+        # Date connections are ALWAYS used
+        current_date = datetime.now()
+        day = current_date.day
+        month = current_date.month
+    
+        # Day and its circle
+        day_circle = day + 21 if day + 21 <= 42 else day - 21
+        scores[day]["score"] += 12
+        scores[day]["reasons"].append(f"📅 Date day: {day}")
+        if 1 <= day_circle <= 42:
+            scores[day_circle]["score"] += 12
+            scores[day_circle]["reasons"].append(f"📅 Date day circle: {day}↔{day_circle}")
+    
+        # Month and its circle  
+        month_circle = month + 21 if month + 21 <= 42 else month - 21
+        scores[month]["score"] += 10
+        scores[month]["reasons"].append(f"📅 Date month: {month}")
+        if 1 <= month_circle <= 42:
+            scores[month_circle]["score"] += 10
+            scores[month_circle]["reasons"].append(f"📅 Date month circle: {month}↔{month_circle}")
+    
+        # Day + Month combination
+        day_month_sum = day + month
+        if 1 <= day_month_sum <= 42:
+            scores[day_month_sum]["score"] += 8
+            scores[day_month_sum]["reasons"].append(f"📅 Day+Month: {day}+{month}={day_month_sum}")
+    
+        # === SMART PATTERN SELECTION ===
+        # Not all patterns fire every time - some are situational
+        # Date patterns (25, 26) ALWAYS active
+        # Others activate based on conditions
+        active_patterns = ["Date (always)", "Rare Count (if recent)"]
+    
+        # 15. RARE EVENT COUNTS ===
+        def get_group(n):
+            if n <= 9: return 1
+            elif n <= 19: return 2
+            elif n <= 29: return 3
+            elif n <= 39: return 4
+            else: return 5
+    
+        def count_groups(numbers):
+            groups = {}
+            for n in numbers:
+                g = get_group(n)
+                groups[g] = groups.get(g, 0) + 1
+            return groups
+    
+        rare_events = []
+        for i, draw in enumerate(all_draws_2020):
+            groups = count_groups(draw['numbers'])
+            max_group = max(groups.values())
+            if max_group >= 4:
+                rare_events.append({'index': i, 'date': draw['date'], 'count': max_group})
+    
+        current_draw_idx = len(all_draws_2020)
+        rare_predictions = []
+        for rare in rare_events[-5:]:
+            count_since = current_draw_idx - rare['index']
+            rarity = "🔥🔥🔥" if rare['count'] == 6 else ("🔥🔥" if rare['count'] == 5 else "🔥")
+        
+            if 1 <= count_since <= 42:
+                scores[count_since]["score"] += 15 * (rare['count'] - 3)
+                scores[count_since]["reasons"].append(f"Rare {rarity} +{count_since} draws (15%)")
+                rare_predictions.append({
+                    "rare_date": rare['date'],
+                    "rarity": rare['count'],
+                    "count_since": count_since,
+                    "predicted": count_since
+                })
+        
+            if count_since > 42:
+                d1 = count_since // 10
+                d2 = count_since % 10
+                dsum = d1 + d2
+            
+                for digit in [d1, d2]:
+                    if 1 <= digit <= 42:
+                        scores[digit]["score"] += 10
+                        scores[digit]["reasons"].append(f"Rare {rarity} +{count_since} digit ({d1},{d2})")
+            
+                if 1 <= dsum <= 42:
+                    scores[dsum]["score"] += 10
+                    scores[dsum]["reasons"].append(f"Rare {rarity} +{count_since} sum={dsum}")
+    
+        # === 27. STORY TRACKER PATTERN (Position Gap Analysis) ===
+        # Find numbers missing for long at specific positions
+        # Track their connection chain appearing = story building up to return
+        # When connections appear frequently, the missing number is due!
+    
+        def get_number_connections(num):
+            """Get all numbers connected to a number via circle, multiples, digits"""
+            conns = set([num])
+            # Circle partner (+/- 21)
+            if num + 21 <= 42: conns.add(num + 21)
+            if num - 21 >= 1: conns.add(num - 21)
+            # Digit flip
+            if num >= 10:
+                rev = int(str(num)[::-1])
+                if 1 <= rev <= 42: conns.add(rev)
+            # Digit sum
+            dsum = sum(int(d) for d in str(num))
+            if 1 <= dsum <= 42: conns.add(dsum)
+            # Multiples and factors
+            for m in [2, 3, 4, 5, 6, 7]:
+                if num * m <= 42: conns.add(num * m)
+                if num % m == 0 and num // m >= 1: conns.add(num // m)
+            return conns
+    
+        # Track last appearance at each position
+        sorted_draws = sorted(draws, key=lambda x: x['date'], reverse=True)
+        position_gaps = {}  # {(pos, num): gap_count}
+    
+        for pos in range(1, 7):
+            for num in range(1, 43):
+                for i, d in enumerate(sorted_draws):
+                    if d['numbers'][pos-1] == num:
+                        position_gaps[(pos, num)] = i
+                        break
+                else:
+                    position_gaps[(pos, num)] = len(sorted_draws)  # Never appeared
+    
+        # Find numbers with big gaps (story candidates)
+        story_candidates = []
+        for (pos, num), gap in position_gaps.items():
+            if gap >= 50:  # Missing for 50+ draws at this position
+                conns = get_number_connections(num)
+                story_candidates.append({
+                    'pos': pos,
+                    'num': num,
+                    'gap': gap,
+                    'connections': conns
+                })
+    
+        # Sort by gap (longest first)
+        story_candidates.sort(key=lambda x: -x['gap'])
+    
+        # Check recent draws for connection activity (story building)
+        recent_10 = sorted_draws[:10]
+    
+        for story in story_candidates[:10]:  # Top 10 longest gaps
+            conn_hits = 0
+            recent_conn_positions = []
+        
+            for d in recent_10:
+                for conn in story['connections']:
+                    if conn in d['numbers']:
+                        conn_hits += 1
+                        recent_conn_positions.append(d['numbers'].index(conn) + 1)
+        
+            # If connections appearing frequently, story is building!
+            if conn_hits >= 3:
+                # Boost the missing number
+                boost = min(25, 10 + conn_hits * 3)  # 13-25 points based on activity
+                scores[story['num']]["score"] += boost
+                scores[story['num']]["reasons"].append(
+                    f"📖 Story: {story['num']}@P{story['pos']} missing {story['gap']}x, {conn_hits} conn hits!"
+                )
+            
+                # Also boost numbers that transform INTO the missing number
+                # Based on the 7@P4 pattern: anchor numbers can predict return
+                if last_draw:
+                    last_nums = last_draw['numbers']
+                    # Check if sum/diff of last numbers = missing number
+                    for i in range(6):
+                        for j in range(i+1, 6):
+                            if last_nums[i] + last_nums[j] == story['num']:
+                                scores[story['num']]["score"] += 10
+                                scores[story['num']]["reasons"].append(
+                                    f"📖 Transform: {last_nums[i]}+{last_nums[j]}={story['num']}"
+                                )
+                            diff = abs(last_nums[i] - last_nums[j])
+                            if diff == story['num']:
+                                scores[story['num']]["score"] += 10
+                                scores[story['num']]["reasons"].append(
+                                    f"📖 Transform: |{last_nums[i]}-{last_nums[j]}|={story['num']}"
+                                )
+    
+        # === 28. LUCKY/REPLAY POSITION FLOW PATTERN ===
+        # Lucky/Replay numbers flow through P1/P2 positions
+        # Lucky from previous draw often appears at P1 in next (77.5%)
+        # Replay from previous draw often appears at P1/P2 in next (87.5% combined)
+        if last_draw:
+            lucky = last_draw.get('lucky_number')
+            replay = last_draw.get('replay_number')
+        
+            if lucky and 1 <= lucky <= 42:
+                # Lucky → P1 prediction (77.5% when it hits)
+                scores[lucky]["score"] += 15
+                scores[lucky]["reasons"].append(f"🍀→P1 Lucky {lucky} flow (15.2% hit, 77.5% at P1)")
+            
+                # Lucky's circle partner
+                lucky_circle = lucky + 21 if lucky + 21 <= 42 else lucky - 21 if lucky - 21 >= 1 else None
+                if lucky_circle and 1 <= lucky_circle <= 42:
+                    scores[lucky_circle]["score"] += 10
+                    scores[lucky_circle]["reasons"].append(f"🍀 Lucky circle: {lucky}↔{lucky_circle}")
+        
+            if replay and 1 <= replay <= 42:
+                # Replay → P1/P2 prediction (50% P1, 37.5% P2)
+                scores[replay]["score"] += 12
+                scores[replay]["reasons"].append(f"🔄→P1/P2 Replay {replay} flow (14% hit)")
+            
+                # Replay's circle partner
+                replay_circle = replay + 21 if replay + 21 <= 42 else replay - 21 if replay - 21 >= 1 else None
+                if replay_circle and 1 <= replay_circle <= 42:
+                    scores[replay_circle]["score"] += 8
+                    scores[replay_circle]["reasons"].append(f"🔄 Replay circle: {replay}↔{replay_circle}")
+        
+            # Combined transformation: Lucky - Replay or Replay - Lucky
+            if lucky and replay and lucky != replay:
+                diff = abs(lucky - replay)
+                summ = lucky + replay
+                if 1 <= diff <= 42:
+                    scores[diff]["score"] += 8
+                    scores[diff]["reasons"].append(f"🍀🔄 |L-R|: |{lucky}-{replay}|={diff}")
+                if 1 <= summ <= 42:
+                    scores[summ]["score"] += 8
+                    scores[summ]["reasons"].append(f"🍀🔄 L+R: {lucky}+{replay}={summ}")
+    
+        # === 29. ANCHOR TRANSFORMATION PATTERN ===
+        # Based on 7@P4: [1,3,4,7,16,25] → [1,3,4,7,9,23]
+        # Numbers in anchor whose digit sums equal the key number transform!
+        # 1+6=7, 2+5=7 → 25-16=9, 16+7=23
+        if last_draw:
+            last_nums = last_draw['numbers']
+        
+            # Find the "key" - a number whose digit sum matches other numbers' digit sums
+            digit_sums = {n: sum(int(d) for d in str(n)) for n in last_nums}
+        
+            # Group by digit sum
+            sum_groups = {}
+            for n, ds in digit_sums.items():
+                if ds not in sum_groups:
+                    sum_groups[ds] = []
+                sum_groups[ds].append(n)
+        
+            # If 2+ numbers share same digit sum = potential key!
+            for ds, nums_with_ds in sum_groups.items():
+                if len(nums_with_ds) >= 2 and ds <= 21:  # Key must be valid
+                    # The key is the digit sum
+                    key = ds
+                    # Predict transformations
+                    for i in range(len(nums_with_ds)):
+                        for j in range(i+1, len(nums_with_ds)):
+                            diff = abs(nums_with_ds[i] - nums_with_ds[j])
+                            plus_key = nums_with_ds[0] + key
+                        
+                            if 1 <= diff <= 42:
+                                scores[diff]["score"] += 12
+                                scores[diff]["reasons"].append(
+                                    f"🔑 Key {key}: |{nums_with_ds[i]}-{nums_with_ds[j]}|={diff}"
+                                )
+                            if 1 <= plus_key <= 42:
+                                scores[plus_key]["score"] += 10
+                                scores[plus_key]["reasons"].append(
+                                    f"🔑 Key {key}: {nums_with_ds[0]}+{key}={plus_key}"
+                                )
+    
+        # === 30. P1/P2 POSITION ANALYSIS PATTERN ===
+        # Analyze historical frequency of numbers at Position 1 (smallest) and Position 2
+        # P1 typically ranges 1-15 (avg ~6), P2 typically ranges 2-20 (avg ~12)
+        # Boost numbers that frequently appear at P1/P2
+    
+        p1_counter = Counter()
+        p2_counter = Counter()
+    
+        for d in draws:
+            nums = sorted(d.get('numbers', []))
+            if len(nums) >= 6:
+                p1_counter[nums[0]] += 1
+                p2_counter[nums[1]] += 1
+    
+        # Top P1 numbers (most frequent at position 1)
+        p1_top = p1_counter.most_common(10)  # Top 10
+        for num, count in p1_top[:5]:  # Top 5 get strong boost
+            pct = count / len(draws) * 100 if draws else 0
+            boost = min(15, int(pct * 1.2))  # Scale boost by frequency
+            scores[num]["score"] += boost
+            scores[num]["reasons"].append(f"🥇P1 hot: {num} appears {count}x ({pct:.1f}%)")
+    
+        # Top P2 numbers (most frequent at position 2)
+        p2_top = p2_counter.most_common(10)
+        for num, count in p2_top[:5]:
+            pct = count / len(draws) * 100 if draws else 0
+            boost = min(12, int(pct * 1.0))
+            scores[num]["score"] += boost
+            scores[num]["reasons"].append(f"🥈P2 hot: {num} appears {count}x ({pct:.1f}%)")
+    
+        # Recent P1/P2 trend analysis (last 20 draws)
+        recent_p1 = []
+        recent_p2 = []
+        for d in sorted(draws, key=lambda x: x['date'], reverse=True)[:20]:
+            nums = sorted(d.get('numbers', []))
+            if len(nums) >= 6:
+                recent_p1.append(nums[0])
+                recent_p2.append(nums[1])
+    
+        # Numbers appearing frequently in recent P1
+        recent_p1_counter = Counter(recent_p1)
+        for num, count in recent_p1_counter.most_common(3):
+            if count >= 2:  # Appeared 2+ times in last 20 at P1
+                scores[num]["score"] += 8
+                scores[num]["reasons"].append(f"🥇P1 trend: {num} hit {count}x in last 20")
+    
+        # Numbers appearing frequently in recent P2
+        recent_p2_counter = Counter(recent_p2)
+        for num, count in recent_p2_counter.most_common(3):
+            if count >= 2:
+                scores[num]["score"] += 6
+                scores[num]["reasons"].append(f"🥈P2 trend: {num} hit {count}x in last 20")
+    
+        # P1/P2 GAP ANALYSIS - numbers overdue at these positions
+        # If a typical P1 number hasn't appeared at P1 recently, it's due
+        p1_typical = set(num for num, _ in p1_top[:8])  # Numbers that often hit P1
+        for num in p1_typical:
+            last_at_p1 = None
+            for i, d in enumerate(sorted(draws, key=lambda x: x['date'], reverse=True)):
+                nums = sorted(d.get('numbers', []))
+                if len(nums) >= 6 and nums[0] == num:
+                    last_at_p1 = i
                     break
-        generated_picks = selected
-    else:
-        generated_picks = [{"number": n, "score": data["score"], "reasons": data["reasons"][:10]} for n, data in ranked[:positions_to_fill]]
+            if last_at_p1 is None or last_at_p1 > 30:
+                gap = last_at_p1 if last_at_p1 else 50
+                scores[num]["score"] += min(10, gap // 5)
+                scores[num]["reasons"].append(f"🥇P1 due: {num} missing {gap}+ draws at P1")
     
-    # Build final 6-number array respecting locked positions
-    # Position 0 = P1 (smallest), Position 5 = P6 (largest)
-    final_numbers = [None] * 6
+        # === 31. P1/P2 TRANSFORMATION PATTERN ===
+        # |P1 - P2| from last draw often appears at P1 (8.1%) or P2 (4.8%) of next draw
+        # P1 + P2 from last draw often appears somewhere in next draw (14.6%)
+        # Get the absolute most recent draw
+        all_draws_sorted = sorted(draws, key=lambda x: x['date'], reverse=True)
+        most_recent = all_draws_sorted[0] if all_draws_sorted else None
     
-    # Place locked numbers first
-    for pos_idx, locked_num in locked_positions.items():
-        final_numbers[pos_idx] = {
-            "number": locked_num, 
-            "score": 999,  # Special score for locked
-            "reasons": [f"🔒 Locked at P{pos_idx + 1}"],
-            "locked": True
+        if most_recent:
+            last_nums = sorted(most_recent['numbers'])
+            if len(last_nums) >= 2:
+                last_p1 = last_nums[0]
+                last_p2 = last_nums[1]
+            
+                # |P1 - P2| → Strong P1/P2 predictor (12.9% combined)
+                diff = abs(last_p1 - last_p2)
+                if 1 <= diff <= 42:
+                    scores[diff]["score"] += 18  # Strong boost
+                    scores[diff]["reasons"].append(f"🔗P1-P2: |{last_p1}-{last_p2}|={diff} → likely P1/P2 (12.9%)")
+            
+                # P1 + P2 → Appears somewhere (14.6%)
+                summ = last_p1 + last_p2
+                if 1 <= summ <= 42:
+                    scores[summ]["score"] += 12
+                    scores[summ]["reasons"].append(f"🔗P1+P2: {last_p1}+{last_p2}={summ} → any pos (14.6%)")
+    
+        # === 32. FAMILY HUNGER PATTERN ===
+        # If multiple numbers from same family (ending in same digit) appeared recently,
+        # the missing family member is "hungry" and likely to appear
+        families = {
+            1: [1, 11, 21, 31, 41],
+            2: [2, 12, 22, 32, 42],
+            3: [3, 13, 23, 33],
+            4: [4, 14, 24, 34],
+            5: [5, 15, 25, 35],
+            6: [6, 16, 26, 36],
+            7: [7, 17, 27, 37],
+            8: [8, 18, 28, 38],
+            9: [9, 19, 29, 39],
+            0: [10, 20, 30, 40],
         }
     
-    # Fill remaining positions with generated picks
-    gen_idx = 0
-    for i in range(6):
-        if final_numbers[i] is None and gen_idx < len(generated_picks):
-            pick = generated_picks[gen_idx].copy() if isinstance(generated_picks[gen_idx], dict) else generated_picks[gen_idx]
-            if isinstance(pick, dict):
-                pick["locked"] = False
-            final_numbers[i] = pick
-            gen_idx += 1
+        # Track last appearance
+        num_last_seen = {}
+        for i, d in enumerate(all_draws_sorted):
+            for num in d.get('numbers', []):
+                if num not in num_last_seen:
+                    num_last_seen[num] = i
     
-    # Sort the final array by number value (P1 smallest to P6 largest)
-    # with full respect for locked-position constraints (DJ 29.04.2026).
-    # Use lock_constraints.assemble_with_locks: locked values pin their slot,
-    # unlocked values fill the gaps in strict ascending order.
-    if locked_positions:
-        from lock_constraints import assemble_with_locks as _assemble
-        from lock_constraints import pick_values_for_gaps as _pick_gaps
-        positions_to_fill_local = 6 - len(locked_positions)
-
-        # Build score lookup from generated_picks + ranked
-        _score_map = {e["number"]: e.get("score", 0) for e in generated_picks}
-        for n, data in ranked:
-            if n not in _score_map:
-                _score_map[n] = data.get("score", 0)
-
-        def _score_fn_first(v: int) -> float:
-            return float(_score_map.get(v, 0))
-
-        # Gap-aware pick: each gap gets exactly the right count of values
-        # strictly within (gap_lower, gap_upper).
-        unlocked_values = _pick_gaps(
-            locked_positions, n_slots=6, score_fn=_score_fn_first,
-            used=set(), value_min=1, value_max=42,
-            randomize=False,
+        # Check last 10 draws for chain building
+        recent_10_nums = set()
+        for d in all_draws_sorted[:10]:
+            recent_10_nums.update(d.get('numbers', []))
+    
+        for digit, family in families.items():
+            appeared = [n for n in family if n in recent_10_nums]
+            missing = [n for n in family if n not in recent_10_nums]
+        
+            if len(appeared) >= 2 and missing:  # Chain building!
+                for m in missing:
+                    gap = num_last_seen.get(m, 50)
+                    # More chain members = stronger hunger
+                    boost = len(appeared) * 5 + min(15, gap // 2)
+                    scores[m]["score"] += boost
+                    scores[m]["reasons"].append(f"🍽️ Hungry: Family-{digit} chain {appeared}, gap {gap}")
+    
+        # === 33. MIRROR/REVERSE PATTERN (15% hit rate) ===
+        # Numbers from last draw often appear flipped in next draw
+        # e.g., 13→31, 24→42, 30→3
+        if most_recent:
+            for n in most_recent['numbers']:
+                s = str(n)
+                if len(s) == 2:
+                    rev = int(s[::-1])
+                    if 1 <= rev <= 42 and rev != n:
+                        scores[rev]["score"] += 12
+                        scores[rev]["reasons"].append(f"🔄 Mirror: {n}→{rev} (15% hit)")
+    
+        # === 34. CONSECUTIVE PAIR PREDICTION ===
+        # 54.3% of draws have consecutive pairs. Hot pairs: 13-14, 41-42, 5-6
+        # If one number from a hot pair is likely, boost its partner
+        hot_pairs = [(13, 14), (41, 42), (5, 6), (37, 38), (3, 4), (16, 17), (35, 36), (22, 23)]
+    
+        # Get current top candidates
+        temp_ranked = sorted(scores.items(), key=lambda x: x[1]["score"], reverse=True)
+        top_candidates = [n for n, _ in temp_ranked[:20]]
+    
+        for a, b in hot_pairs:
+            if a in top_candidates and b not in top_candidates:
+                scores[b]["score"] += 10
+                scores[b]["reasons"].append(f"👥 Pair: {a}-{b} hot consecutive")
+            elif b in top_candidates and a not in top_candidates:
+                scores[a]["score"] += 10
+                scores[a]["reasons"].append(f"👥 Pair: {a}-{b} hot consecutive")
+    
+        # === 35. LUCKY NUMBER CONNECTION ===
+        # Lucky × 7 appears in next draw (14.6%), Lucky direct (15.2%), Lucky doubled (6.8%)
+        if most_recent:
+            prev_lucky = most_recent.get('lucky_number')
+            if prev_lucky and 1 <= prev_lucky <= 6:
+                # Lucky × 7 (strongest: 14.6%)
+                times7 = prev_lucky * 7
+                if 1 <= times7 <= 42:
+                    scores[times7]["score"] += 12
+                    scores[times7]["reasons"].append(f"⭐ Lucky×7: {prev_lucky}×7={times7} (14.6%)")
+            
+                # Lucky direct (15.2%)
+                scores[prev_lucky]["score"] += 10
+                scores[prev_lucky]["reasons"].append(f"⭐ Lucky direct: {prev_lucky} (15.2%)")
+            
+                # Lucky doubled (6.8%) - only for 1-4
+                if prev_lucky <= 4:
+                    doubled = prev_lucky * 10 + prev_lucky  # 1→11, 2→22, 3→33, 4→44(invalid)
+                    if 1 <= doubled <= 42:
+                        scores[doubled]["score"] += 6
+                        scores[doubled]["reasons"].append(f"⭐ Lucky doubled: {prev_lucky}→{doubled} (6.8%)")
+    
+        # === 36. P3/P4 POSITION ANALYSIS ===
+        # P3 hot numbers (avg 18.2): 21, 19, 14, 17, 16
+        # P4 hot numbers (avg 24.5): 28, 21, 31, 22, 23, 29
+        p3_counter = Counter()
+        p4_counter = Counter()
+    
+        for d in draws:
+            nums = sorted(d.get('numbers', []))
+            if len(nums) >= 6:
+                p3_counter[nums[2]] += 1
+                p4_counter[nums[3]] += 1
+    
+        # Top P3 numbers
+        p3_top = p3_counter.most_common(8)
+        for num, count in p3_top[:5]:
+            pct = count / len(draws) * 100 if draws else 0
+            boost = min(10, int(pct * 1.5))
+            scores[num]["score"] += boost
+            scores[num]["reasons"].append(f"🥉P3 hot: {num} appears {count}x ({pct:.1f}%)")
+    
+        # Top P4 numbers
+        p4_top = p4_counter.most_common(8)
+        for num, count in p4_top[:5]:
+            pct = count / len(draws) * 100 if draws else 0
+            boost = min(10, int(pct * 1.5))
+            scores[num]["score"] += boost
+            scores[num]["reasons"].append(f"🏅P4 hot: {num} appears {count}x ({pct:.1f}%)")
+    
+        # === 37. P3/P4 TRANSFORMATION PATTERNS ===
+        # |P3-P4| → often P1/P2 (14.4%), P3-P1 (16.2%), P4-P2 (14.6%), P3+P1 (13.7%)
+        if most_recent:
+            last_nums = sorted(most_recent['numbers'])
+            if len(last_nums) >= 4:
+                p1, p2, p3, p4 = last_nums[0], last_nums[1], last_nums[2], last_nums[3]
+            
+                # |P3-P4| → likely P1/P2 (14.4%)
+                diff_34 = abs(p3 - p4)
+                if 1 <= diff_34 <= 42:
+                    scores[diff_34]["score"] += 12
+                    scores[diff_34]["reasons"].append(f"🔗|P3-P4|: |{p3}-{p4}|={diff_34} → P1/P2 (14.4%)")
+            
+                # P3-P1 (16.2% - strongest!)
+                val = p3 - p1
+                if 1 <= val <= 42:
+                    scores[val]["score"] += 15
+                    scores[val]["reasons"].append(f"🔗P3-P1: {p3}-{p1}={val} (16.2%)")
+            
+                # P4-P2 (14.6%)
+                val = p4 - p2
+                if 1 <= val <= 42:
+                    scores[val]["score"] += 12
+                    scores[val]["reasons"].append(f"🔗P4-P2: {p4}-{p2}={val} (14.6%)")
+            
+                # P3+P1 (13.7%)
+                val = p3 + p1
+                if 1 <= val <= 42:
+                    scores[val]["score"] += 11
+                    scores[val]["reasons"].append(f"🔗P3+P1: {p3}+{p1}={val} (13.7%)")
+    
+        # === 38. DATE DIGIT STORY PATTERN (79.3% hit rate!) ===
+        # Previous draw's date digits form combos that appear in next draw
+        # D, M, Y digits combine: e.g., 8/12/26 → 8, 1, 2, 6 → 12, 21, 26, 28, etc.
+        if most_recent:
+            prev_date = most_recent.get('date', '')
+            if prev_date:
+                parts = prev_date.split('-')
+                if len(parts) == 3:
+                    day = int(parts[2])
+                    month = int(parts[1])
+                    y_short = int(parts[0]) % 100
+                
+                    # Extract all digits
+                    date_digits = []
+                    for d in str(day):
+                        date_digits.append(int(d))
+                    for d in str(month):
+                        date_digits.append(int(d))
+                    for d in str(y_short):
+                        date_digits.append(int(d))
+                
+                    # Generate all valid combos
+                    date_combos = set()
+                    for d in date_digits:
+                        if 1 <= d <= 42:
+                            date_combos.add(d)
+                    for i in range(len(date_digits)):
+                        for j in range(len(date_digits)):
+                            if i != j:
+                                val = date_digits[i] * 10 + date_digits[j]
+                                if 1 <= val <= 42:
+                                    date_combos.add(val)
+                
+                    # Boost all date combos (79.3% hit rate!)
+                    for combo in date_combos:
+                        scores[combo]["score"] += 15
+                        scores[combo]["reasons"].append(f"📅 Date story: {prev_date} digits → {combo} (79%)")
+    
+        # === 39. CURRENT DATE PATTERN (75% hit rate) ===
+        # Today's date digits also appear in today's draw
+        today = datetime.now()
+        today_day = today.day
+        today_month = today.month
+        today_year = today.year % 100
+    
+        today_digits = []
+        for d in str(today_day):
+            today_digits.append(int(d))
+        for d in str(today_month):
+            today_digits.append(int(d))
+        for d in str(today_year):
+            today_digits.append(int(d))
+    
+        today_combos = set()
+        for d in today_digits:
+            if 1 <= d <= 42:
+                today_combos.add(d)
+        for i in range(len(today_digits)):
+            for j in range(len(today_digits)):
+                if i != j:
+                    val = today_digits[i] * 10 + today_digits[j]
+                    if 1 <= val <= 42:
+                        today_combos.add(val)
+    
+        for combo in today_combos:
+            scores[combo]["score"] += 10
+            scores[combo]["reasons"].append(f"📅 Today: {today_day}/{today_month} → {combo} (75%)")
+    
+        # === 40. NUMBER 9 AT P1 PREDICTOR ===
+        # Special pattern: When does 9 appear as smallest number (P1)?
+        # Signals: Family 9 (29/39) in prev draw (43%), 9 missing 10+ draws (hunger)
+        if most_recent:
+            last_nums = sorted(most_recent.get('numbers', []))
+        
+            # Check family 9 in last draw
+            family_9_present = [n for n in last_nums if n in [9, 19, 29, 39]]
+        
+            # Check 9 gap
+            nine_gap = 0
+            for d in all_draws_sorted:
+                if 9 in d.get('numbers', []):
+                    break
+                nine_gap += 1
+        
+            # Calculate 9@P1 likelihood
+            signals = 0
+            reasons_9 = []
+        
+            if family_9_present:
+                signals += 1
+                reasons_9.append(f"Family 9 {family_9_present} triggers")
+        
+            if nine_gap >= 15:
+                signals += 1
+                reasons_9.append(f"9 hungry ({nine_gap} draws)")
+        
+            if len(last_nums) >= 2 and last_nums[0] in [2, 5, 6, 7, 12]:
+                signals += 1
+                reasons_9.append(f"P1={last_nums[0]} pattern")
+        
+            if signals >= 2:
+                scores[9]["score"] += 20
+                scores[9]["reasons"].append(f"🔢 9@P1 likely: {', '.join(reasons_9)}")
+    
+        # === 41. 9 ↔ 19 CONNECTION PATTERN ===
+        # 19 in prev draw → 9 next (18.8%), 9 in prev → 19 next (15.9%)
+        # Average gap between 9 and 19: 3.2 draws
+        if most_recent:
+            last_nums = most_recent.get('numbers', [])
+        
+            # 19 appeared → boost 9 (18.8%)
+            if 19 in last_nums:
+                scores[9]["score"] += 15
+                scores[9]["reasons"].append(f"🔗 19→9: 19 in prev → 9 likely (18.8%)")
+        
+            # 9 appeared → boost 19 (15.9%)
+            if 9 in last_nums:
+                scores[19]["score"] += 12
+                scores[19]["reasons"].append(f"🔗 9→19: 9 in prev → 19 likely (15.9%)")
+        
+            # Check gaps - if one is due and other appeared recently, boost the due one
+            nine_gap = 0
+            nineteen_gap = 0
+            for i, d in enumerate(all_draws_sorted):
+                if nine_gap == 0 and 9 in d.get('numbers', []):
+                    nine_gap = i
+                if nineteen_gap == 0 and 19 in d.get('numbers', []):
+                    nineteen_gap = i
+                if nine_gap > 0 and nineteen_gap > 0:
+                    break
+        
+            # 9-19 oscillation: if one appeared recently and other is overdue
+            if nineteen_gap <= 3 and nine_gap >= 10:
+                scores[9]["score"] += 12
+                scores[9]["reasons"].append(f"🔗 9↔19 oscillation: 19 recent, 9 due ({nine_gap} gap)")
+            elif nine_gap <= 3 and nineteen_gap >= 10:
+                scores[19]["score"] += 12
+                scores[19]["reasons"].append(f"🔗 9↔19 oscillation: 9 recent, 19 due ({nineteen_gap} gap)")
+    
+        # === 42. GAP DIGITS PATTERN (Last Time Position Count) ===
+        # When a number returns to a specific position (e.g., 9@P1), the number of draws since 
+        # its last appearance at that position predicts accompanying numbers.
+        # Example: 9@P1 last appeared 61 draws ago → digits 6 and 1 → boost 1, 6, 11, 16, 21, 26, 61(if valid)
+        # Validation showed ~25% accuracy for this pattern!
+    
+        # Track position-specific gaps for numbers that might appear at specific positions
+        position_trackers = {}  # {(number, position): draws_since_last}
+    
+        for pos in range(6):  # P1 to P6 (positions 0-5)
+            for d_idx, d in enumerate(all_draws_sorted):
+                nums = sorted(d.get('numbers', []))
+                if len(nums) >= 6:
+                    num_at_pos = nums[pos]
+                    key = (num_at_pos, pos)
+                    if key not in position_trackers:
+                        position_trackers[key] = d_idx  # First time we see it = gap
+    
+        # For numbers likely to appear at specific positions, calculate gap digits boost
+        # Focus on numbers already scoring high for a position
+        temp_ranked = sorted(scores.items(), key=lambda x: x[1]["score"], reverse=True)
+        position_names = ["P1", "P2", "P3", "P4", "P5", "P6"]
+    
+        for num, data in temp_ranked[:20]:  # Check top 20 candidates
+            # Determine likely position for this number based on typical ranges
+            # P1: 1-15, P2: 2-20, P3: 10-25, P4: 15-32, P5: 25-38, P6: 30-42
+            likely_positions = []
+            if num <= 15:
+                likely_positions.append(0)  # P1
+            if 2 <= num <= 20:
+                likely_positions.append(1)  # P2
+            if 10 <= num <= 25:
+                likely_positions.append(2)  # P3
+            if 15 <= num <= 32:
+                likely_positions.append(3)  # P4
+            if 25 <= num <= 38:
+                likely_positions.append(4)  # P5
+            if num >= 30:
+                likely_positions.append(5)  # P6
+        
+            for pos in likely_positions:
+                key = (num, pos)
+                gap = position_trackers.get(key, 0)
+            
+                if gap >= 10:  # Only for significant gaps
+                    # Extract digits from the gap number
+                    gap_str = str(gap)
+                    gap_digits = [int(d) for d in gap_str if d != '0']
+                
+                    # Generate numbers containing these digits
+                    gap_derived = set()
+                    for digit in gap_digits:
+                        if 1 <= digit <= 42:
+                            gap_derived.add(digit)
+                        # Numbers starting with this digit (e.g., 6 → 6, 61, 62...)
+                        for tens in range(0, 5):
+                            val = digit + tens * 10
+                            if 1 <= val <= 42:
+                                gap_derived.add(val)
+                        # Numbers ending with this digit (e.g., 1 → 1, 11, 21, 31, 41)
+                        for tens in range(0, 5):
+                            val = tens * 10 + digit
+                            if 1 <= val <= 42:
+                                gap_derived.add(val)
+                
+                    # Also add the gap number itself if valid
+                    if 1 <= gap <= 42:
+                        gap_derived.add(gap)
+                
+                    # Boost derived numbers (25% hit rate!)
+                    for derived in gap_derived:
+                        if derived != num:  # Don't boost the trigger number itself
+                            boost = min(12, 6 + gap // 10)  # Scale with gap size
+                            scores[derived]["score"] += boost
+                            scores[derived]["reasons"].append(
+                                f"🔢 Gap digits: {num}@{position_names[pos]} gap={gap} → digits {gap_digits} (25%)"
+                            )
+    
+        # === 43. P4-P5 DANCE PATTERN ===
+        # P4 and P5 love to dance close together! Average gap only 6.4
+        # Consecutive (P5=P4+1): 13.8%, Small gaps (1-3): 37.7%
+        # Hot pairs: 31-33, 31-32, 30-31, 22-23, 32-33 - Numbers 30-33 dominate!
+    
+        # Analyze recent P4-P5 patterns
+        p4_p5_diffs = []
+        recent_p4_p5_pairs = []
+        for d in all_draws_sorted[:50]:  # Last 50 draws
+            nums = sorted(d.get('numbers', []))
+            if len(nums) >= 6:
+                p4, p5 = nums[3], nums[4]
+                p4_p5_diffs.append(p5 - p4)
+                recent_p4_p5_pairs.append((p4, p5))
+    
+        # Hot P4-P5 dance partners (historically proven)
+        hot_p4_p5_pairs = [(31, 33), (31, 32), (30, 31), (22, 23), (32, 33), (33, 36), (28, 30), (34, 37)]
+    
+        # Boost numbers that frequently appear at P4-P5
+        p4_p5_hot_numbers = {30, 31, 32, 33, 34, 22, 23, 28, 36, 37}
+        for num in p4_p5_hot_numbers:
+            scores[num]["score"] += 8
+            scores[num]["reasons"].append(f"💃 P4-P5 dancer: {num} dominates mid-high positions")
+    
+        # If we see a pattern in recent diffs, predict similar gap
+        if p4_p5_diffs:
+            avg_recent_diff = sum(p4_p5_diffs[:10]) / min(10, len(p4_p5_diffs))
+            # Boost pairs that match recent gap pattern
+            for p4 in range(20, 36):
+                p5_predicted = p4 + int(round(avg_recent_diff))
+                if 1 <= p5_predicted <= 42:
+                    scores[p4]["score"] += 5
+                    scores[p5_predicted]["score"] += 5
+                    scores[p4]["reasons"].append(f"💃 P4-P5 gap pattern: avg diff={avg_recent_diff:.1f}")
+    
+        # Boost hot pairs specifically
+        for p4, p5 in hot_p4_p5_pairs:
+            scores[p4]["score"] += 6
+            scores[p5]["score"] += 6
+            scores[p4]["reasons"].append(f"💃 Hot P4-P5 pair: {p4}-{p5}")
+    
+        # === 44. DATE ±3 WINDOW PATTERN (58.3% hit rate!) ===
+        # Day number has 58% chance to appear within ±3 draws!
+        # This is a strong predictor
+    
+        today = datetime.now()
+        day_num = today.day
+        month_num = today.month
+    
+        # Boost the day number strongly (58% hit rate!)
+        if 1 <= day_num <= 42:
+            scores[day_num]["score"] += 18  # Strong boost for 58% pattern
+            scores[day_num]["reasons"].append(f"📅 Date ±3 window: Day {day_num} (58.3% hit rate!)")
+    
+        # Also boost day ± 1,2,3 (nearby days often hit)
+        for offset in [-3, -2, -1, 1, 2, 3]:
+            nearby_day = day_num + offset
+            if 1 <= nearby_day <= 42:
+                scores[nearby_day]["score"] += 8
+                scores[nearby_day]["reasons"].append(f"📅 Date ±3 window: near day {day_num}")
+    
+        # Month number boost
+        if 1 <= month_num <= 12:
+            scores[month_num]["score"] += 10
+            scores[month_num]["reasons"].append(f"📅 Month {month_num} in play")
+    
+        # Day + Month combinations
+        day_month_sum = day_num + month_num
+        if 1 <= day_month_sum <= 42:
+            scores[day_month_sum]["score"] += 8
+            scores[day_month_sum]["reasons"].append(f"📅 Day+Month: {day_num}+{month_num}={day_month_sum}")
+    
+        day_month_diff = abs(day_num - month_num)
+        if 1 <= day_month_diff <= 42:
+            scores[day_month_diff]["score"] += 6
+            scores[day_month_diff]["reasons"].append(f"📅 |Day-Month|: |{day_num}-{month_num}|={day_month_diff}")
+    
+        # === 45. P5-P6 DANCE PATTERN ===
+        # P5-P6 are the highest positions, they stay close! Average gap: 6.1
+        # Consecutive (P6=P5+1): 13.8%, Small gaps (1-3): 38.6%
+        # Hot pairs: 41-42 (2.2%), 37-40, 40-42, 39-42, 39-41
+        # Hot P6: 42 (14.3%), 40 (12.2%), 41 (11.6%)
+        # Hot P5: 36 (7.1%), 33 (6.9%), 32 (6.7%)
+    
+        # Analyze recent P5-P6 patterns
+        p5_p6_diffs = []
+        recent_p5_p6_pairs = []
+        for d in all_draws_sorted[:50]:
+            nums = sorted(d.get('numbers', []))
+            if len(nums) >= 6:
+                p5, p6 = nums[4], nums[5]
+                p5_p6_diffs.append(p6 - p5)
+                recent_p5_p6_pairs.append((p5, p6))
+    
+        # Hot P5-P6 dance partners
+        hot_p5_p6_pairs = [(41, 42), (37, 40), (40, 42), (39, 42), (39, 41), (37, 38), (39, 40), (36, 42)]
+    
+        # Hot P6 numbers (highest position loves high numbers)
+        p6_hot = {42, 40, 41, 39, 38, 37}
+        for num in p6_hot:
+            boost = 12 if num == 42 else 10 if num in {40, 41} else 8
+            scores[num]["score"] += boost
+            scores[num]["reasons"].append(f"🎯 P6 favorite: {num} dominates P6 ({14 if num==42 else 12 if num==40 else 11}%)")
+    
+        # Hot P5 numbers
+        p5_hot = {36, 33, 32, 37, 35, 31, 30, 34}
+        for num in p5_hot:
+            scores[num]["score"] += 8
+            scores[num]["reasons"].append(f"🎯 P5 favorite: {num} at P5 position")
+    
+        # Boost hot P5-P6 pairs
+        for p5, p6 in hot_p5_p6_pairs:
+            scores[p5]["score"] += 6
+            scores[p6]["score"] += 6
+            scores[p5]["reasons"].append(f"💃 Hot P5-P6 pair: {p5}-{p6}")
+    
+        # Recent gap pattern prediction
+        if p5_p6_diffs:
+            avg_recent_gap = sum(p5_p6_diffs[:10]) / min(10, len(p5_p6_diffs))
+            # If recent gaps are small, boost consecutive high numbers
+            if avg_recent_gap <= 4:
+                for base in [37, 38, 39, 40, 41]:
+                    scores[base]["score"] += 4
+                    scores[base + 1]["score"] += 4 if base + 1 <= 42 else 0
+                    scores[base]["reasons"].append(f"💃 P5-P6 tight gap trend: {avg_recent_gap:.1f}")
+    
+        # === 46. P1P2 DATE CODE + P3 PREDICTOR (43.3% hit rate!) ===
+        # When P1-P2 forms a date pattern (matches day/month or ends in year),
+        # P3 from that draw predicts numbers in the next draw!
+    
+        if last_draw:
+            last_nums = sorted(last_draw.get('numbers', []))
+            if len(last_nums) >= 6:
+                last_p1, last_p2, last_p3 = last_nums[0], last_nums[1], last_nums[2]
+                last_date = last_draw.get('date', '')
+            
+                # Check if last draw's P1P2 matched a date pattern
+                is_date_pattern = False
+            
+                if len(last_date) >= 10:
+                    try:
+                        last_month = int(last_date[5:7])
+                        last_day = int(last_date[8:10])
+                        last_year = last_date[2:4]  # e.g., "25" for 2025
+                    
+                        p1p2_str = f"{last_p1:02d}{last_p2:02d}"
+                    
+                        # Pattern checks
+                        if last_p1 == last_day or last_p2 == last_month:
+                            is_date_pattern = True
+                        if last_p1 == last_month or last_p2 == last_day:
+                            is_date_pattern = True
+                        if p1p2_str[-2:] == last_year:
+                            is_date_pattern = True
+                    except:
+                        pass
+            
+                if is_date_pattern:
+                    # P3 and its derivatives are hot! (43.3% hit rate)
+                    p3_digit = last_p3 % 10
+                    p3_derived = [last_p3]
+                    for tens in [0, 10, 20, 30, 40]:
+                        val = p3_digit + tens
+                        if 1 <= val <= 42:
+                            p3_derived.append(val)
+                
+                    for num in set(p3_derived):
+                        boost = 15 if num == last_p3 else 10
+                        scores[num]["score"] += boost
+                        scores[num]["reasons"].append(f"🔢 P1P2 date code: P3={last_p3} predicts {num} (43.3%)")
+    
+        # === 47. DECADE CLUSTER PATTERN (44-54% hit rate!) ===
+        # When 3+ numbers from same decade appear, that decade continues next draw
+        # 30-39 is BEST: 54% continuation!
+    
+        if last_draw:
+            last_nums = last_draw.get('numbers', [])
+            decade_counts = {}
+            for n in last_nums:
+                decade = n // 10  # 0=1-9, 1=10-19, 2=20-29, 3=30-39, 4=40-42
+                decade_counts[decade] = decade_counts.get(decade, 0) + 1
+        
+            for decade, count in decade_counts.items():
+                if count >= 3:
+                    # This decade is clustering! Boost numbers in same decade
+                    boost = 18 if decade == 3 else 14  # 30s are strongest
+                    decade_start = decade * 10 if decade > 0 else 1
+                    decade_end = min((decade + 1) * 10 - 1, 42)
+                
+                    for num in range(decade_start, decade_end + 1):
+                        if 1 <= num <= 42:
+                            scores[num]["score"] += boost
+                            scores[num]["reasons"].append(f"🎯 Decade cluster: {count}x in {decade*10}s → continues (54%)")
+                elif count == 2:
+                    # Weaker cluster, still boost slightly
+                    decade_start = decade * 10 if decade > 0 else 1
+                    decade_end = min((decade + 1) * 10 - 1, 42)
+                    for num in range(decade_start, decade_end + 1):
+                        if 1 <= num <= 42:
+                            scores[num]["score"] += 5
+                            scores[num]["reasons"].append(f"🎯 Decade pair: 2x in {decade*10}s")
+    
+        # === 48. P1+P6 MAGIC SUM PATTERN (up to 54%!) ===
+        # The sum of smallest + largest predicts next draw
+        # Best sums: 53 (54%), 42 (35%), 48 (35%)
+    
+        if last_draw:
+            last_nums = sorted(last_draw.get('numbers', []))
+            if len(last_nums) >= 6:
+                p1, p6 = last_nums[0], last_nums[5]
+                magic_sum = p1 + p6
+            
+                # Boost based on magic sum
+                boost_map = {53: 18, 42: 14, 48: 14, 43: 12, 44: 12, 47: 12, 49: 12}
+                base_boost = boost_map.get(magic_sum, 8)
+            
+                # The magic sum itself (if valid)
+                if 1 <= magic_sum <= 42:
+                    scores[magic_sum]["score"] += base_boost
+                    scores[magic_sum]["reasons"].append(f"✨ P1+P6 magic sum: {p1}+{p6}={magic_sum}")
+            
+                # Digits of magic sum
+                for d in str(magic_sum):
+                    if d != '0':
+                        digit = int(d)
+                        for tens in [0, 10, 20, 30, 40]:
+                            val = digit + tens
+                            if 1 <= val <= 42:
+                                scores[val]["score"] += base_boost // 2
+                                scores[val]["reasons"].append(f"✨ Magic sum digit: {magic_sum}→{d}")
+    
+        # === 49. DIGIT ECHO PATTERN (85-89%!) ===
+        # Digits 1, 2, 3 echo strongly across draws
+        # If last draw has digit X, next draw likely has numbers with digit X
+    
+        if last_draw:
+            last_nums = last_draw.get('numbers', [])
+            last_digits = set()
+            for n in last_nums:
+                for d in str(n):
+                    if d != '0':
+                        last_digits.add(int(d))
+        
+            # Boost numbers containing echoing digits
+            # Digits 1, 2, 3 echo strongest (85-87%)
+            for digit in last_digits:
+                if digit in [1, 2, 3]:
+                    boost = 12  # Strong echo
+                else:
+                    boost = 6   # Weaker echo
+            
+                # Find all numbers containing this digit
+                for num in range(1, 43):
+                    if str(digit) in str(num):
+                        scores[num]["score"] += boost
+                        scores[num]["reasons"].append(f"🔊 Digit echo: {digit} repeats ({87 if digit <= 3 else 50}%)")
+    
+        # === 50. REPLAY PREDICTOR PATTERN (up to 50%!) ===
+        # The replay number predicts next draw
+        # Replay 4 → 50%, Replay 6 → 46%, Replay 8 → 45%
+    
+        if last_draw:
+            replay = last_draw.get('replay_number')
+            if replay and 1 <= replay <= 42:
+                # Best replay numbers
+                replay_boost = {4: 16, 6: 14, 8: 14, 3: 12, 5: 12, 10: 12, 12: 12}
+                boost = replay_boost.get(replay, 8)
+            
+                # Boost the replay number itself
+                scores[replay]["score"] += boost
+                scores[replay]["reasons"].append(f"🔄 Replay predictor: {replay} (up to 50%)")
+            
+                # Boost replay ± 1
+                for offset in [-1, 1]:
+                    val = replay + offset
+                    if 1 <= val <= 42:
+                        scores[val]["score"] += boost // 2
+                        scores[val]["reasons"].append(f"🔄 Near replay: {replay}±1")
+            
+                # Boost replay family
+                replay_digit = replay % 10
+                for tens in [0, 10, 20, 30, 40]:
+                    val = replay_digit + tens
+                    if 1 <= val <= 42 and val != replay:
+                        scores[val]["score"] += boost // 2
+                        scores[val]["reasons"].append(f"🔄 Replay family: {replay}→{val}")
+    
+        # === 51. P4 > 33 SIGNAL PATTERN ===
+        # P4 > 33 is rare (10.3%) but when it happens:
+        # - P6 = 42: 41% (vs normal 11%) - 3.6x more likely!
+        # - P5 = 37-41 dominates
+        # Signal: Many 30s in previous draws (47%) or P1 very low (35%)
+    
+        if last_draw:
+            last_nums = sorted(last_draw.get('numbers', []))
+            if len(last_nums) >= 6:
+                last_p1 = last_nums[0]
+                last_p4 = last_nums[3]
+            
+                # Count 30s in last draw
+                count_30s = sum(1 for n in last_nums if 30 <= n <= 39)
+            
+                # Signal 1: Previous P1 was very low (1-3) → P4 > 33 likely
+                if last_p1 <= 3:
+                    # Boost high P4-P5-P6 numbers
+                    for num in range(34, 43):
+                        scores[num]["score"] += 10
+                        scores[num]["reasons"].append(f"📈 P4>33 signal: P1={last_p1} low → high numbers coming")
+            
+                # Signal 2: Many 30s in last draw → more 30s/40s coming
+                if count_30s >= 2:
+                    for num in range(35, 43):
+                        scores[num]["score"] += count_30s * 4
+                        scores[num]["reasons"].append(f"📈 30s cluster ({count_30s}x) → 35-42 hot")
+            
+                # Signal 3: If P4 was > 33, P6=42 is 41% likely!
+                if last_p4 > 33:
+                    scores[42]["score"] += 15
+                    scores[42]["reasons"].append(f"📈 P4>33 ({last_p4}) → P6=42 is 41%!")
+                    scores[41]["score"] += 10
+                    scores[40]["score"] += 10
+                    scores[41]["reasons"].append(f"📈 P4>33 → high P6 expected")
+                    scores[40]["reasons"].append(f"📈 P4>33 → high P6 expected")
+    
+        # === 52. MAGIC NUMBER PATTERN (17 & 38 - EuroMillions Bridge) ===
+        # When 17 or 38 appears in a draw, it's a "magic trigger"
+        # 17 + 21 = 38 (Circle partners) - the MAGIC PAIR
+        # 21 in Swiss = 71 in EuroMillions thinking → digits 7,1 = 17
+        # After 17 appears: digit 1 and 7 often appear next
+        # After 38 appears: digit 3 and 8 often appear next
+        # Magic + 21 together = TRIPLE CONNECTION (strongest signal!)
+    
+        if last_draw:
+            last_nums = last_draw.get('numbers', [])
+            has_17 = 17 in last_nums
+            has_38 = 38 in last_nums
+            has_21 = 21 in last_nums
+        
+            if has_17 or has_38:
+                # Magic trigger activated!
+                magic_type = "17+38" if (has_17 and has_38) else ("17" if has_17 else "38")
+            
+                if has_17 and has_38:
+                    # DOUBLE MAGIC - both circle partners appeared!
+                    # This is very rare - boost their digit echoes strongly
+                    scores[1]["score"] += 20
+                    scores[7]["score"] += 20
+                    scores[3]["score"] += 20
+                    scores[8]["score"] += 20
+                    scores[1]["reasons"].append(f"✨✨ Double Magic 17+38! Digit 1 echo")
+                    scores[7]["reasons"].append(f"✨✨ Double Magic 17+38! Digit 7 echo")
+                    scores[3]["reasons"].append(f"✨✨ Double Magic 17+38! Digit 3 echo")
+                    scores[8]["reasons"].append(f"✨✨ Double Magic 17+38! Digit 8 echo")
+                
+                    # Also boost 17 and 38 family numbers
+                    for n in [11, 21, 31, 41, 27, 37]:  # 7-family and 1-family
+                        if 1 <= n <= 42:
+                            scores[n]["score"] += 12
+                            scores[n]["reasons"].append(f"✨✨ Double Magic: 17 family")
+                    for n in [13, 23, 33, 18, 28]:  # 3-family and 8-family
+                        if 1 <= n <= 42:
+                            scores[n]["score"] += 12
+                            scores[n]["reasons"].append(f"✨✨ Double Magic: 38 family")
+            
+                elif has_17:
+                    # Magic 17 - boost digit echoes
+                    scores[1]["score"] += 15
+                    scores[7]["score"] += 15
+                    scores[17]["score"] += 10  # 17 might repeat
+                    scores[1]["reasons"].append(f"✨ Magic 17! Digit 1 echo")
+                    scores[7]["reasons"].append(f"✨ Magic 17! Digit 7 echo")
+                    scores[17]["reasons"].append(f"✨ Magic 17 might repeat")
+                
+                    # 17's circle partner 38 is now activated
+                    scores[38]["score"] += 12
+                    scores[38]["reasons"].append(f"✨ Magic 17 → Circle 38 activated")
+            
+                elif has_38:
+                    # Magic 38 - boost digit echoes
+                    scores[3]["score"] += 15
+                    scores[8]["score"] += 15
+                    scores[38]["score"] += 10  # 38 might repeat
+                    scores[3]["reasons"].append(f"✨ Magic 38! Digit 3 echo")
+                    scores[8]["reasons"].append(f"✨ Magic 38! Digit 8 echo")
+                    scores[38]["reasons"].append(f"✨ Magic 38 might repeat")
+                
+                    # 38's circle partner 17 is now activated
+                    scores[17]["score"] += 12
+                    scores[17]["reasons"].append(f"✨ Magic 38 → Circle 17 activated")
+            
+                # TRIPLE CONNECTION: Magic + 21 together!
+                if has_21 and (has_17 or has_38):
+                    # 21 = 71 in Euro thinking = digits 17!
+                    # This is the BRIDGE between Swiss and EuroMillions
+                    scores[21]["score"] += 18
+                    scores[21]["reasons"].append(f"✨✨✨ TRIPLE: Magic + 21 (Euro bridge)")
+                
+                    # 21's connections get boost
+                    scores[12]["score"] += 15  # 21 reversed = 12
+                    scores[12]["reasons"].append(f"✨✨✨ TRIPLE: 21↔12 flip active")
+                
+                    # Circle partners of 21
+                    scores[42]["score"] += 12  # 21 + 21 = 42
+                    scores[42]["reasons"].append(f"✨✨✨ TRIPLE: 21 circle to 42")
+            
+                # ESSENCE PREDICTION when magic appears
+                # Most common essences: E=9 (6x), E=8 (5x), E=10 (4x)
+                # Boost numbers that create these essences
+                magic_essences = [9, 8, 10]
+                for target_e in magic_essences:
+                    # Numbers whose digit sum = target essence
+                    for n in range(1, 43):
+                        if sum(int(d) for d in str(n)) == target_e:
+                            scores[n]["score"] += 6
+                            scores[n]["reasons"].append(f"✨ Magic essence E={target_e}")
+    
+        # Check for 12↔21 reversal pattern (the BRIDGE)
+        # This reversal appeared multiple times with magic numbers
+        if last_draw:
+            last_nums = last_draw.get('numbers', [])
+            if 12 in last_nums and 21 in last_nums:
+                # The reversal pair is present - strong magic signal!
+                scores[17]["score"] += 15
+                scores[38]["score"] += 15
+                scores[17]["reasons"].append(f"🔮 12↔21 reversal → Magic 17 likely")
+                scores[38]["reasons"].append(f"🔮 12↔21 reversal → Magic 38 likely")
+            elif 12 in last_nums:
+                scores[21]["score"] += 12
+                scores[21]["reasons"].append(f"🔮 12 present → 21 reversal likely")
+            elif 21 in last_nums:
+                scores[12]["score"] += 12
+                scores[12]["reasons"].append(f"🔮 21 present → 12 reversal likely")
+    
+        # === 53. SHADOW NUMBER STRATEGY (Missing 9 Pattern) ===
+        # When a number is "missing" (avoided), boost its echoes instead:
+        # - Circle partner (+/- 21)
+        # - Multiples (×2, ×3, ×4)
+        # - Digit sum family
+        # - Neighborhood (±1)
+        # This is the "Shadow 9" strategy from our analysis
+    
+        def get_shadow_echoes(n):
+            """Get all echo numbers for a 'shadow' number we're avoiding"""
+            echoes = set()
+            # Circle partner
+            circle = n + 21 if n + 21 <= 42 else n - 21 if n - 21 >= 1 else None
+            if circle and 1 <= circle <= 42:
+                echoes.add((circle, f"circle {n}↔{circle}"))
+            # Multiples
+            for mult in [2, 3, 4]:
+                if 1 <= n * mult <= 42:
+                    echoes.add((n * mult, f"×{mult}={n*mult}"))
+            # Digit sum family (numbers with same essence)
+            essence = sum(int(d) for d in str(n))
+            for x in range(1, 43):
+                if sum(int(d) for d in str(x)) == essence and x != n:
+                    echoes.add((x, f"essence={essence}"))
+            # Neighborhood
+            if 1 <= n - 1 <= 42:
+                echoes.add((n - 1, f"neighbor-"))
+            if 1 <= n + 1 <= 42:
+                echoes.add((n + 1, f"neighbor+"))
+            return echoes
+    
+        # Check for "shadow" numbers - numbers that are overdue but we invoke via echoes
+        shadow_numbers = []
+        for num in range(1, 43):
+            gap = num_last_seen.get(num, 100)
+            if gap >= 20:  # Missing for 20+ draws = potential shadow
+                shadow_numbers.append((num, gap))
+    
+        # Boost shadows' echoes (especially 9 if missing long)
+        for shadow_num, gap in sorted(shadow_numbers, key=lambda x: x[1], reverse=True)[:3]:
+            echoes = get_shadow_echoes(shadow_num)
+            boost = min(20, gap // 3)
+            for echo_num, echo_type in echoes:
+                if echo_num != shadow_num:  # Don't boost the shadow itself
+                    scores[echo_num]["score"] += boost
+                    scores[echo_num]["reasons"].append(f"👻 Shadow {shadow_num} ({gap} gap): {echo_type}")
+    
+        # === 54. P6 MOMENTUM TRACKING ===
+        # When the same number appears at P6 (highest position) multiple times recently,
+        # it has "momentum" - either continue riding it or transform to its circle
+    
+        p6_counter = Counter()
+        for d in all_draws_sorted[:20]:  # Last 20 draws
+            nums = sorted(d.get('numbers', []))
+            if len(nums) >= 6:
+                p6_counter[nums[5]] += 1  # P6 = index 5
+    
+        # Find P6 with momentum (appeared 2+ times in last 20)
+        p6_momentum = [(num, count) for num, count in p6_counter.items() if count >= 2]
+    
+        for p6_num, count in p6_momentum:
+            # Boost the momentum number - INSERT AT FRONT for visibility
+            boost = count * 12  # Increased from count * 8
+            scores[p6_num]["score"] += boost
+            scores[p6_num]["reasons"].insert(0, f"🎯 P6 MOMENTUM: {p6_num} hit {count}x at P6 ({boost}%)")
+        
+            # Also boost its circle partner (transformation option)
+            p6_circle = p6_num + 21 if p6_num + 21 <= 42 else p6_num - 21 if p6_num - 21 >= 1 else None
+            if p6_circle and 1 <= p6_circle <= 42:
+                circle_boost = count * 10  # Increased from count * 6
+                scores[p6_circle]["score"] += circle_boost
+                scores[p6_circle]["reasons"].insert(0, f"🌀 P6 CIRCLE: {p6_num}↔{p6_circle} ({circle_boost}%)")
+    
+        # === 55. AIR PATTERN (P1+P2 Sum Analysis) ===
+        # When P1+P2 from recent draws sums to a specific value (like 20),
+        # boost that "Air" number and its family
+        # Air family: the sum, its factors, its circle, numbers that create it
+    
+        p1p2_sums = []
+        for d in all_draws_sorted[:10]:  # Last 10 draws
+            nums = sorted(d.get('numbers', []))
+            if len(nums) >= 2:
+                p1p2_sums.append(nums[0] + nums[1])
+    
+        # Find recurring P1+P2 sums
+        sum_counter = Counter(p1p2_sums)
+        air_numbers = [(s, c) for s, c in sum_counter.items() if c >= 2 and 1 <= s <= 42]
+    
+        for air_sum, count in air_numbers:
+            # Boost the Air number itself
+            scores[air_sum]["score"] += count * 10
+            scores[air_sum]["reasons"].append(f"💨 AIR: P1+P2={air_sum} appeared {count}x")
+        
+            # Air circle
+            air_circle = air_sum + 21 if air_sum + 21 <= 42 else air_sum - 21 if air_sum - 21 >= 1 else None
+            if air_circle and 1 <= air_circle <= 42:
+                scores[air_circle]["score"] += count * 8
+                scores[air_circle]["reasons"].append(f"💨 AIR circle: {air_sum}↔{air_circle}")
+        
+            # Numbers that sum to Air (P1+P2 candidates)
+            for a in range(1, min(air_sum, 22)):
+                b = air_sum - a
+                if 1 <= b <= 42 and a < b:
+                    scores[a]["score"] += 4
+                    scores[b]["score"] += 4
+                    scores[a]["reasons"].append(f"💨 AIR pair: {a}+{b}={air_sum}")
+                    scores[b]["reasons"].append(f"💨 AIR pair: {a}+{b}={air_sum}")
+    
+        # === 56. POSITION ANCHORS (Quarterly Repeat Detection) ===
+        # Detect numbers that repeat at specific positions in recent draws
+        # These become "anchors" with high confidence
+    
+        # Track position frequencies for P3, P4, P5, P6 in last quarter (~27 draws)
+        quarter_draws = all_draws_sorted[-27:] if len(all_draws_sorted) >= 27 else all_draws_sorted
+    
+        position_counters = {
+            3: Counter(),  # P3
+            4: Counter(),  # P4
+            5: Counter(),  # P5
+            6: Counter(),  # P6
+        }
+    
+        for d in quarter_draws:
+            nums = sorted(d.get('numbers', []))
+            if len(nums) >= 6:
+                position_counters[3][nums[2]] += 1
+                position_counters[4][nums[3]] += 1
+                position_counters[5][nums[4]] += 1
+                position_counters[6][nums[5]] += 1
+    
+        # Find position anchors (appeared 3+ times at same position)
+        position_names = {3: "P3", 4: "P4", 5: "P5", 6: "P6"}
+        for pos, counter in position_counters.items():
+            anchors = [(num, count) for num, count in counter.items() if count >= 3]
+            for anchor_num, count in anchors:
+                boost = count * 6
+                scores[anchor_num]["score"] += boost
+                scores[anchor_num]["reasons"].append(f"⚓ {position_names[pos]} anchor: {anchor_num} hit {count}x")
+    
+        # === 57. CIRCLE TRANSFORMATION STRATEGY ===
+        # For top scoring numbers, also boost their circle partners
+        # This creates the "RIDE vs SWAP" strategy options
+    
+        # Get current top 10 candidates
+        temp_ranked = sorted(scores.items(), key=lambda x: x[1]["score"], reverse=True)[:10]
+    
+        for num, data in temp_ranked:
+            if data["score"] >= 50:  # Only for strong candidates
+                circle = num + 21 if num + 21 <= 42 else num - 21 if num - 21 >= 1 else None
+                if circle and 1 <= circle <= 42:
+                    # Add smaller boost to circle (transformation option)
+                    circle_boost = min(15, data["score"] // 5)
+                    scores[circle]["score"] += circle_boost
+                    scores[circle]["reasons"].append(f"🔄 Circle of hot {num}: {num}↔{circle}")
+    
+        # === 58. DATE ESSENCE DOUBLING ===
+        # When date digits repeat (like 4/4), that essence is DOUBLED in power
+        # Boost that number and its entire family heavily
+        # INSERT AT BEGINNING of reasons list for visibility!
+    
+        today = datetime.now()
+        if today.day == today.month:  # Same day and month!
+            double_essence = today.day
+        
+            # Heavy boost to the doubled number - INSERT AT FRONT
+            if 1 <= double_essence <= 42:
+                scores[double_essence]["score"] += 50  # Increased from 25
+                scores[double_essence]["reasons"].insert(0, f"✨✨ DATE DOUBLE: {double_essence}/{double_essence}! (50%)")
+        
+            # Boost circle partner - INSERT AT FRONT
+            double_circle = double_essence + 21 if double_essence + 21 <= 42 else double_essence - 21
+            if 1 <= double_circle <= 42:
+                scores[double_circle]["score"] += 40  # Increased from 20
+                scores[double_circle]["reasons"].insert(0, f"✨✨ DATE DOUBLE circle: {double_essence}↔{double_circle} (40%)")
+        
+            # Boost family (numbers ending in that digit) - INSERT AT FRONT
+            for n in range(double_essence + 10, 43, 10):
+                scores[n]["score"] += 20  # Increased from 12
+                scores[n]["reasons"].insert(0, f"✨ DATE family: ends in {double_essence} (20%)")
+    
+        # === 59. COMBINED D PATTERN (72.1% hit rate!) ===
+        # The "D" (Day) from draw dates combined with previous draw positions
+        # creates high-probability number predictions:
+        # - D (target day) + P1 from previous draw
+        # - D (target day) + P2 from previous draw
+        # - D(-1) + D(-2) (sum of days from last two draws)
+        # - D + M (day + month of target draw)
+        # This pattern shows 72.1% connection rate across 1374 Swiss Lotto draws!
+    
+        if most_recent and len(all_draws_sorted) >= 2:
+            # Get previous draws data
+            prev_draw_1 = all_draws_sorted[0]  # Most recent
+            prev_draw_2 = all_draws_sorted[1] if len(all_draws_sorted) >= 2 else None
+        
+            # Extract day numbers from previous draws
+            def get_day_from_date(date_str):
+                """Extract day number from YYYY-MM-DD format"""
+                try:
+                    parts = date_str.split('-')
+                    if len(parts) == 3:
+                        return int(parts[2])
+                except:
+                    pass
+                return None
+        
+            prev_day_1 = get_day_from_date(prev_draw_1.get('date', ''))
+            prev_day_2 = get_day_from_date(prev_draw_2.get('date', '')) if prev_draw_2 else None
+        
+            # Get P1 and P2 from most recent draw
+            prev_nums = sorted(prev_draw_1.get('numbers', []))
+            prev_p1 = prev_nums[0] if len(prev_nums) >= 1 else None
+            prev_p2 = prev_nums[1] if len(prev_nums) >= 2 else None
+        
+            # Today's date for target predictions
+            target_day = today.day
+            target_month = today.month
+        
+            # Pattern 59a: D (target) + P1 (previous) - STRONGEST
+            if prev_p1 and target_day:
+                d_plus_p1 = target_day + prev_p1
+                if 1 <= d_plus_p1 <= 42:
+                    scores[d_plus_p1]["score"] += 25
+                    scores[d_plus_p1]["reasons"].insert(0, f"🔷 D+P1: {target_day}+{prev_p1}={d_plus_p1} (72%!)")
+                elif d_plus_p1 > 42:
+                    # Reduce to valid range
+                    reduced = d_plus_p1 - 42
+                    if 1 <= reduced <= 42:
+                        scores[reduced]["score"] += 18
+                        scores[reduced]["reasons"].insert(0, f"🔷 D+P1 reduced: {d_plus_p1}→{reduced}")
+        
+            # Pattern 59b: D (target) + P2 (previous)
+            if prev_p2 and target_day:
+                d_plus_p2 = target_day + prev_p2
+                if 1 <= d_plus_p2 <= 42:
+                    scores[d_plus_p2]["score"] += 22
+                    scores[d_plus_p2]["reasons"].insert(0, f"🔷 D+P2: {target_day}+{prev_p2}={d_plus_p2} (72%!)")
+                elif d_plus_p2 > 42:
+                    reduced = d_plus_p2 - 42
+                    if 1 <= reduced <= 42:
+                        scores[reduced]["score"] += 15
+                        scores[reduced]["reasons"].insert(0, f"🔷 D+P2 reduced: {d_plus_p2}→{reduced}")
+        
+            # Pattern 59c: D(-1) + D(-2) (sum of days from last two draws)
+            if prev_day_1 and prev_day_2:
+                d_sum = prev_day_1 + prev_day_2
+                if 1 <= d_sum <= 42:
+                    scores[d_sum]["score"] += 20
+                    scores[d_sum]["reasons"].insert(0, f"🔷 D(-1)+D(-2): {prev_day_1}+{prev_day_2}={d_sum} (72%!)")
+                elif d_sum > 42:
+                    reduced = d_sum - 42
+                    if 1 <= reduced <= 42:
+                        scores[reduced]["score"] += 14
+                        scores[reduced]["reasons"].insert(0, f"🔷 D(-1)+D(-2) reduced: {d_sum}→{reduced}")
+        
+            # Pattern 59d: D + M (target day + month)
+            d_plus_m = target_day + target_month
+            if 1 <= d_plus_m <= 42:
+                scores[d_plus_m]["score"] += 18
+                scores[d_plus_m]["reasons"].insert(0, f"🔷 D+M: {target_day}+{target_month}={d_plus_m}")
+        
+            # Pattern 59e: Previous D + P1 from -2 draw (chain pattern)
+            if prev_day_1 and prev_draw_2:
+                prev_2_nums = sorted(prev_draw_2.get('numbers', []))
+                if len(prev_2_nums) >= 1:
+                    prev_2_p1 = prev_2_nums[0]
+                    chain_val = prev_day_1 + prev_2_p1
+                    if 1 <= chain_val <= 42:
+                        scores[chain_val]["score"] += 16
+                        scores[chain_val]["reasons"].insert(0, f"🔷 D(-1)+P1(-2): {prev_day_1}+{prev_2_p1}={chain_val}")
+        
+            # Pattern 59f: Circle partners of D patterns (transformation)
+            for d_pattern_num in [d_plus_p1 if prev_p1 else 0, d_plus_p2 if prev_p2 else 0]:
+                if d_pattern_num and 1 <= d_pattern_num <= 42:
+                    d_circle = d_pattern_num + 21 if d_pattern_num + 21 <= 42 else d_pattern_num - 21 if d_pattern_num - 21 >= 1 else None
+                    if d_circle and 1 <= d_circle <= 42:
+                        scores[d_circle]["score"] += 12
+                        scores[d_circle]["reasons"].append(f"🔷 D-circle: {d_pattern_num}↔{d_circle}")
+    
+        # === 60. STORY SIGNS PATTERN (Pattern 60 - The Ultimate!) ===
+        # Analyzes circles, hunger, consecutive sequences, P1+P2 sums,
+        # secret counting, family tracking, position memory, and date codes
+        # This pattern discovered:
+        # - 07/02/2026: 4 consecutive numbers (35-36-37-38) AND 4 consecutive circles (14-15-16-17)!
+        # - Circle warming: When circle appears at position multiple times, actual number comes next
+        # - Hunger pattern: Neighbors appear without the number = number is coming
+        # - Secret counting: value + gap = next value at same position
+        # - Mirror to 42: last_P4 + next_P4 often = 42
+    
+        try:
+            # Analyze story signs from all draws
+            story_result = analyze_story_signs(draws, quarter_size=27)
+        
+            if story_result and story_result.get("scores"):
+                for num, data in story_result["scores"].items():
+                    if 1 <= num <= 42 and data.get("score", 0) > 0:
+                        # Apply story sign scores (capped at 30 to balance with other patterns)
+                        story_bonus = min(data["score"], 30)
+                        scores[num]["score"] += story_bonus
+                        # Add reasons (max 3 to avoid clutter)
+                        for reason in data.get("reasons", [])[:3]:
+                            scores[num]["reasons"].append(reason)
+        
+            # Log rare events if found
+            if story_result.get("rare_events"):
+                for event in story_result["rare_events"]:
+                    logging.info(f"Story Pattern - Rare Event: {event}")
+                
+        except Exception as e:
+            logging.warning(f"Pattern 60 Story Signs error: {e}")
+    
+        # === 61. STORY NUMBERS MEGA BOOST (THE AVI PATTERNS!) ===
+        # These are the numbers discovered through deep numerology analysis:
+        # - 13 Family: Mr. 13 the hero, escaped from Replay Jail
+        # - 26 Family: The connector number, circle partner of 5
+        # - 18-39 Circle: The reunion couple, gap of 21
+        # - 33-12 Tragic Love: 30 draws apart, waiting for reunion
+        # - 7 Ladder: 7, 14, 21, 28, 35, 42 - the complete ladder
+    
+        # === 13 FAMILY - MR. 13 THE HERO ===
+        FAMILY_13 = [10, 13, 14, 15, 21, 23, 31, 34]
+        for num in FAMILY_13:
+            scores[num]["score"] += 25
+            scores[num]["reasons"].append(f"🦸 13 FAMILY: Mr. 13's crew")
+        scores[13]["score"] += 35  # Extra boost for the hero himself
+        scores[13]["reasons"].append("🦸 MR. 13: The HERO!")
+    
+        # === 26 FAMILY - THE CONNECTOR ===
+        FAMILY_26 = [5, 13, 26, 27, 30, 31, 38]  # From the 42 tickets
+        for num in FAMILY_26:
+            scores[num]["score"] += 25
+            scores[num]["reasons"].append(f"👨‍👩‍👧‍👦 26 FAMILY: The connector")
+        scores[26]["score"] += 35  # Extra for 26 itself
+        scores[26]["reasons"].append("👨‍👩‍👧‍👦 26: Family head (circle=5)")
+        scores[5]["score"] += 20  # Circle partner
+        scores[5]["reasons"].append("⭕ 26↔5: Circle reunion")
+    
+        # === 18-39 CIRCLE PARTNERSHIP ===
+        scores[18]["score"] += 40
+        scores[18]["reasons"].append("💑 18-39 CIRCLE: Reunion at P3!")
+        scores[39]["score"] += 40
+        scores[39]["reasons"].append("💑 18-39 CIRCLE: Reunion at P6!")
+        # Common companions
+        for num in [32, 11, 25, 4, 42]:
+            scores[num]["score"] += 15
+            scores[num]["reasons"].append("💑 18-39 companions")
+    
+        # === 33-12 TRAGIC LOVE STORY ===
+        scores[33]["score"] += 35
+        scores[33]["reasons"].append("💔 33-12 REUNION: Waiting 30 draws!")
+        scores[12]["score"] += 35
+        scores[12]["reasons"].append("💔 33-12 REUNION: The blocker becomes friend!")
+        # Related numbers
+        for num in [10, 11, 36, 38]:
+            scores[num]["score"] += 12
+            scores[num]["reasons"].append("💔 33-12 neighbors")
+    
+        # === 7 LADDER (P1 + P6 = 42) ===
+        SEVEN_LADDER = [7, 14, 21, 28, 35, 42]
+        for num in SEVEN_LADDER:
+            scores[num]["score"] += 30
+            scores[num]["reasons"].append("🪜 7 LADDER: P1+P6=42!")
+    
+        # === CIRCLE CONSTANT (+/-21) ===
+        # Apply circle awareness to hot numbers
+        if last_draw:
+            for num in last_draw['numbers']:
+                circle_up = num + 21 if num + 21 <= 42 else num + 21 - 42
+                circle_down = num - 21 if num > 21 else num - 21 + 42
+                if 1 <= circle_up <= 42:
+                    scores[circle_up]["score"] += 15
+                    scores[circle_up]["reasons"].append(f"⭕ Circle of {num}")
+                if 1 <= circle_down <= 42 and circle_down != circle_up:
+                    scores[circle_down]["score"] += 15
+                    scores[circle_down]["reasons"].append(f"⭕ Circle of {num}")
+    
+        # === DATE DANCE BOOST ===
+        # D, M, D+M, D-M, D*M often appear
+        today = datetime.now()
+        d, m = today.day, today.month
+        date_numbers = [
+            (d, f"📅 Day={d}"),
+            (m, f"📅 Month={m}"),
+            (d + m, f"📅 D+M={d+m}"),
+            (abs(d - m), f"📅 |D-M|={abs(d-m)}"),
+            (d * m, f"📅 D×M={d*m}"),
+        ]
+        for num, reason in date_numbers:
+            if 1 <= num <= 42:
+                scores[num]["score"] += 20
+                scores[num]["reasons"].append(reason)
+    
+        # === COMPILE FINAL PREDICTIONS ===
+        # Filter out locked numbers from candidates
+        locked_nums_set = set(locked_positions.values()) if locked_positions else set()
+        ranked = sorted(
+            [(n, data) for n, data in scores.items() if n not in locked_nums_set],
+            key=lambda x: x[1]["score"], 
+            reverse=True
         )
-        if unlocked_values is None:
-            # Should not happen after is_valid_lock_request, but guard anyway
-            unlocked_values = [n for n in range(1, 43)
-                               if n not in locked_nums_set][:positions_to_fill_local]
-
-        assembled = _assemble(locked_positions, unlocked_values, n_slots=6)
-        if assembled is None:
-            # Greedy fallback
-            assembled = [None] * 6
-            for s, v in locked_positions.items():
-                assembled[s] = v
-            sorted_unlocked = sorted(unlocked_values)
-            j = 0
-            for s in range(6):
-                if assembled[s] is None and j < len(sorted_unlocked):
-                    assembled[s] = sorted_unlocked[j]
-                    j += 1
-
-        # Build top_6 with details for each value
-        meta_lookup = {e["number"]: e for e in generated_picks}
-        top_6 = []
-        for s in range(6):
-            v = assembled[s]
-            if s in locked_positions:
-                top_6.append({
-                    "number": v, "score": 999,
-                    "reasons": [f"🔒 Locked at P{s+1}"],
-                    "locked": True,
-                })
-            else:
-                m = meta_lookup.get(v) or {
-                    "number": v,
-                    "score": _score_map.get(v, 0),
-                    "reasons": ["Pattern fill (locked-bound)"],
-                }
-                top_6.append({**m, "locked": False, "number": v})
-    else:
-        # No locks → original sorted-by-number flow
-        unlocked_entries = [(i, final_numbers[i]) for i in range(6)
-                            if final_numbers[i]
-                            and not final_numbers[i].get("locked")]
-        unlocked_nums = sorted([e[1]["number"] for e in unlocked_entries])
-        top_6 = [None] * 6
-        unlocked_idx = 0
-        for i in range(6):
-            if unlocked_idx < len(unlocked_nums):
-                num = unlocked_nums[unlocked_idx]
-                for entry in generated_picks:
-                    if entry["number"] == num:
-                        top_6[i] = {**entry, "locked": False}
+    
+        # Calculate how many positions we need to fill
+        positions_to_fill = 6 - len(locked_positions)
+    
+        # Add slight randomization to top candidates for variety
+        # Take top 15 and randomly select needed positions weighted by score
+        top_candidates = ranked[:15]
+        if len(top_candidates) >= positions_to_fill:
+            weights = [max(1, data["score"]) for n, data in top_candidates]
+            selected_indices = set()
+            selected = []
+            while len(selected) < positions_to_fill and len(selected_indices) < len(top_candidates):
+                remaining = [(i, top_candidates[i], weights[i]) for i in range(len(top_candidates)) if i not in selected_indices]
+                if not remaining:
+                    break
+                total_weight = sum(w for _, _, w in remaining)
+                r = random.random() * total_weight
+                cumulative = 0
+                for idx, (n, data), w in remaining:
+                    cumulative += w
+                    if r <= cumulative:
+                        selected.append({"number": n, "score": data["score"], "reasons": data["reasons"][:10]})
+                        selected_indices.add(idx)
                         break
-                unlocked_idx += 1
+            generated_picks = selected
+        else:
+            generated_picks = [{"number": n, "score": data["score"], "reasons": data["reasons"][:10]} for n, data in ranked[:positions_to_fill]]
+    
+        # Build final 6-number array respecting locked positions
+        # Position 0 = P1 (smallest), Position 5 = P6 (largest)
+        final_numbers = [None] * 6
+    
+        # Place locked numbers first
+        for pos_idx, locked_num in locked_positions.items():
+            final_numbers[pos_idx] = {
+                "number": locked_num, 
+                "score": 999,  # Special score for locked
+                "reasons": [f"🔒 Locked at P{pos_idx + 1}"],
+                "locked": True
+            }
+    
+        # Fill remaining positions with generated picks
+        gen_idx = 0
         for i in range(6):
-            if top_6[i] is None and generated_picks:
-                top_6[i] = {**generated_picks[0], "locked": False}
+            if final_numbers[i] is None and gen_idx < len(generated_picks):
+                pick = generated_picks[gen_idx].copy() if isinstance(generated_picks[gen_idx], dict) else generated_picks[gen_idx]
+                if isinstance(pick, dict):
+                    pick["locked"] = False
+                final_numbers[i] = pick
+                gen_idx += 1
     
-    # === GENERATE MULTIPLE TICKETS (if num_tickets > 1) ===
-    all_tickets = []
-    
-    # First ticket is the main prediction (top_6)
-    # Build numbers array RESPECTING locked slots (do NOT re-sort if locks!)
-    if locked_positions:
-        ticket_1_numbers = [t["number"] for t in top_6 if t]
-    else:
-        ticket_1_numbers = sorted([t["number"] for t in top_6 if t])
-    all_tickets.append({
-        "ticket_num": 1,
-        "numbers": ticket_1_numbers,
-        "details": top_6,
-        "confidence": sum(t["score"] for t in top_6 if t and not t.get("locked")) / max(1, positions_to_fill)
-    })
-    
-    # Generate additional tickets from remaining candidates
-    if num_tickets > 1:
-        used_numbers = set(ticket_1_numbers)
-        used_numbers.update(locked_nums_set)
-        
-        # Get all available numbers sorted by score
-        available = [(n, data) for n, data in ranked if n not in locked_nums_set]
-        
-        for ticket_idx in range(2, num_tickets + 1):
-            ticket_details = []
+        # Sort the final array by number value (P1 smallest to P6 largest)
+        # with full respect for locked-position constraints (DJ 29.04.2026).
+        # Use lock_constraints.assemble_with_locks: locked values pin their slot,
+        # unlocked values fill the gaps in strict ascending order.
+        if locked_positions:
+            from lock_constraints import assemble_with_locks as _assemble
+            from lock_constraints import pick_values_for_gaps as _pick_gaps
+            positions_to_fill_local = 6 - len(locked_positions)
 
-            # Place locked numbers (their slot is fixed)
-            for pos_idx, locked_num in locked_positions.items():
-                ticket_details.append({
-                    "pos_idx": pos_idx,
-                    "number": locked_num,
-                    "score": 999,
-                    "reasons": [f"🔒 Locked at P{pos_idx + 1}"],
-                    "locked": True
-                })
+            # Build score lookup from generated_picks + ranked
+            _score_map = {e["number"]: e.get("score", 0) for e in generated_picks}
+            for n, data in ranked:
+                if n not in _score_map:
+                    _score_map[n] = data.get("score", 0)
 
-            # GAP-AWARE picking — each gap between locks gets exactly the
-            # right number of distinct values from its valid value range.
-            score_lookup = {n: data.get("score", 0) for n, data in available}
+            def _score_fn_first(v: int) -> float:
+                return float(_score_map.get(v, 0))
 
-            def _score_fn(v: int) -> float:
-                base = score_lookup.get(v, 0)
-                # Slight de-emphasis based on ticket_idx for variety
-                return max(1, base - (ticket_idx - 1) * 5)
+            # Gap-aware pick: each gap gets exactly the right count of values
+            # strictly within (gap_lower, gap_upper).
+            unlocked_values = _pick_gaps(
+                locked_positions, n_slots=6, score_fn=_score_fn_first,
+                used=set(), value_min=1, value_max=42,
+                randomize=False,
+            )
+            if unlocked_values is None:
+                # Should not happen after is_valid_lock_request, but guard anyway
+                unlocked_values = [n for n in range(1, 43)
+                                   if n not in locked_nums_set][:positions_to_fill_local]
 
-            from lock_constraints import pick_values_for_gaps
-            picked_unlocked = None
-            if locked_positions:
-                picked_unlocked = pick_values_for_gaps(
-                    locked_positions, n_slots=6, score_fn=_score_fn,
-                    used=set(), value_min=1, value_max=42,
-                    randomize=True, rng=random,
-                )
-            if picked_unlocked is None:
-                # No locks (or rare exhaustion) — fall back to weighted pick
-                positions_to_fill_local = 6 - len(locked_positions)
-                pool = [(n, d) for n, d in available
-                        if n not in locked_nums_set]
-                picks_so_far_pairs = []
-                while (len(picks_so_far_pairs) < positions_to_fill_local
-                       and pool):
-                    weights = [max(1, d.get("score", 0) - (ticket_idx - 1) * 5)
-                               for n, d in pool]
-                    total_weight = sum(weights)
-                    if total_weight <= 0:
-                        n, data = pool[0]
-                    else:
-                        r = random.random() * total_weight
-                        cumulative = 0
-                        n, data = pool[0]
-                        for (nn, dd), w in zip(pool, weights):
-                            cumulative += w
-                            if r <= cumulative:
-                                n, data = nn, dd
-                                break
-                    picks_so_far_pairs.append((n, data))
-                    pool = [(nn, dd) for nn, dd in pool if nn != n]
-                picked_unlocked = sorted(n for n, _ in picks_so_far_pairs)
-
-            # Assemble using lock_constraints
-            assembled = assemble_with_locks(
-                locked_positions, picked_unlocked, n_slots=6,
-            ) if locked_positions else sorted(picked_unlocked)
-
+            assembled = _assemble(locked_positions, unlocked_values, n_slots=6)
             if assembled is None:
-                # Greedy fallback: place locked, sort unlocked into gaps
+                # Greedy fallback
                 assembled = [None] * 6
                 for s, v in locked_positions.items():
                     assembled[s] = v
-                sorted_unlocked = sorted(picked_unlocked)
+                sorted_unlocked = sorted(unlocked_values)
                 j = 0
                 for s in range(6):
                     if assembled[s] is None and j < len(sorted_unlocked):
                         assembled[s] = sorted_unlocked[j]
                         j += 1
 
-            # Build final ticket details with correct ordering
-            details_by_value = {n: {"score": score_lookup.get(n, 0),
-                                    "reasons": next(
-                                        (d.get("reasons", []) for nn, d in available
-                                         if nn == n), [])}
-                                for n in (picked_unlocked or [])}
-            full_details = []
+            # Build top_6 with details for each value
+            meta_lookup = {e["number"]: e for e in generated_picks}
+            top_6 = []
             for s in range(6):
                 v = assembled[s]
-                if v is None:
-                    continue
                 if s in locked_positions:
-                    full_details.append({
+                    top_6.append({
                         "number": v, "score": 999,
                         "reasons": [f"🔒 Locked at P{s+1}"],
                         "locked": True,
                     })
                 else:
-                    d = details_by_value.get(v, {"score": 0, "reasons": []})
-                    full_details.append({
+                    m = meta_lookup.get(v) or {
                         "number": v,
-                        "score": d.get("score", 0),
-                        "reasons": d.get("reasons", [])[:3],
-                        "locked": False,
+                        "score": _score_map.get(v, 0),
+                        "reasons": ["Pattern fill (locked-bound)"],
+                    }
+                    top_6.append({**m, "locked": False, "number": v})
+        else:
+            # No locks → original sorted-by-number flow
+            unlocked_entries = [(i, final_numbers[i]) for i in range(6)
+                                if final_numbers[i]
+                                and not final_numbers[i].get("locked")]
+            unlocked_nums = sorted([e[1]["number"] for e in unlocked_entries])
+            top_6 = [None] * 6
+            unlocked_idx = 0
+            for i in range(6):
+                if unlocked_idx < len(unlocked_nums):
+                    num = unlocked_nums[unlocked_idx]
+                    for entry in generated_picks:
+                        if entry["number"] == num:
+                            top_6[i] = {**entry, "locked": False}
+                            break
+                    unlocked_idx += 1
+            for i in range(6):
+                if top_6[i] is None and generated_picks:
+                    top_6[i] = {**generated_picks[0], "locked": False}
+    
+        # === GENERATE MULTIPLE TICKETS (if num_tickets > 1) ===
+        all_tickets = []
+    
+        # First ticket is the main prediction (top_6)
+        # Build numbers array RESPECTING locked slots (do NOT re-sort if locks!)
+        if locked_positions:
+            ticket_1_numbers = [t["number"] for t in top_6 if t]
+        else:
+            ticket_1_numbers = sorted([t["number"] for t in top_6 if t])
+        all_tickets.append({
+            "ticket_num": 1,
+            "numbers": ticket_1_numbers,
+            "details": top_6,
+            "confidence": sum(t["score"] for t in top_6 if t and not t.get("locked")) / max(1, positions_to_fill)
+        })
+    
+        # Generate additional tickets from remaining candidates
+        if num_tickets > 1:
+            used_numbers = set(ticket_1_numbers)
+            used_numbers.update(locked_nums_set)
+        
+            # Get all available numbers sorted by score
+            available = [(n, data) for n, data in ranked if n not in locked_nums_set]
+        
+            for ticket_idx in range(2, num_tickets + 1):
+                ticket_details = []
+
+                # Place locked numbers (their slot is fixed)
+                for pos_idx, locked_num in locked_positions.items():
+                    ticket_details.append({
+                        "pos_idx": pos_idx,
+                        "number": locked_num,
+                        "score": 999,
+                        "reasons": [f"🔒 Locked at P{pos_idx + 1}"],
+                        "locked": True
                     })
 
-            # Numbers in final SLOT order (NOT re-sorted when locks present)
-            final_numbers_ordered = [v for v in assembled if v is not None]
-            confidence_vals = [d["score"] for d in full_details
-                               if not d.get("locked")]
-            confidence = (sum(confidence_vals) / max(1, len(confidence_vals))
-                          if confidence_vals else 0)
+                # GAP-AWARE picking — each gap between locks gets exactly the
+                # right number of distinct values from its valid value range.
+                score_lookup = {n: data.get("score", 0) for n, data in available}
 
-            all_tickets.append({
-                "ticket_num": ticket_idx,
-                "numbers": final_numbers_ordered,
-                "details": full_details,
-                "confidence": round(confidence, 1)
-            })
+                def _score_fn(v: int) -> float:
+                    base = score_lookup.get(v, 0)
+                    # Slight de-emphasis based on ticket_idx for variety
+                    return max(1, base - (ticket_idx - 1) * 5)
+
+                from lock_constraints import pick_values_for_gaps
+                picked_unlocked = None
+                if locked_positions:
+                    picked_unlocked = pick_values_for_gaps(
+                        locked_positions, n_slots=6, score_fn=_score_fn,
+                        used=set(), value_min=1, value_max=42,
+                        randomize=True, rng=random,
+                    )
+                if picked_unlocked is None:
+                    # No locks (or rare exhaustion) — fall back to weighted pick
+                    positions_to_fill_local = 6 - len(locked_positions)
+                    pool = [(n, d) for n, d in available
+                            if n not in locked_nums_set]
+                    picks_so_far_pairs = []
+                    while (len(picks_so_far_pairs) < positions_to_fill_local
+                           and pool):
+                        weights = [max(1, d.get("score", 0) - (ticket_idx - 1) * 5)
+                                   for n, d in pool]
+                        total_weight = sum(weights)
+                        if total_weight <= 0:
+                            n, data = pool[0]
+                        else:
+                            r = random.random() * total_weight
+                            cumulative = 0
+                            n, data = pool[0]
+                            for (nn, dd), w in zip(pool, weights):
+                                cumulative += w
+                                if r <= cumulative:
+                                    n, data = nn, dd
+                                    break
+                        picks_so_far_pairs.append((n, data))
+                        pool = [(nn, dd) for nn, dd in pool if nn != n]
+                    picked_unlocked = sorted(n for n, _ in picks_so_far_pairs)
+
+                # Assemble using lock_constraints
+                assembled = assemble_with_locks(
+                    locked_positions, picked_unlocked, n_slots=6,
+                ) if locked_positions else sorted(picked_unlocked)
+
+                if assembled is None:
+                    # Greedy fallback: place locked, sort unlocked into gaps
+                    assembled = [None] * 6
+                    for s, v in locked_positions.items():
+                        assembled[s] = v
+                    sorted_unlocked = sorted(picked_unlocked)
+                    j = 0
+                    for s in range(6):
+                        if assembled[s] is None and j < len(sorted_unlocked):
+                            assembled[s] = sorted_unlocked[j]
+                            j += 1
+
+                # Build final ticket details with correct ordering
+                details_by_value = {n: {"score": score_lookup.get(n, 0),
+                                        "reasons": next(
+                                            (d.get("reasons", []) for nn, d in available
+                                             if nn == n), [])}
+                                    for n in (picked_unlocked or [])}
+                full_details = []
+                for s in range(6):
+                    v = assembled[s]
+                    if v is None:
+                        continue
+                    if s in locked_positions:
+                        full_details.append({
+                            "number": v, "score": 999,
+                            "reasons": [f"🔒 Locked at P{s+1}"],
+                            "locked": True,
+                        })
+                    else:
+                        d = details_by_value.get(v, {"score": 0, "reasons": []})
+                        full_details.append({
+                            "number": v,
+                            "score": d.get("score", 0),
+                            "reasons": d.get("reasons", [])[:3],
+                            "locked": False,
+                        })
+
+                # Numbers in final SLOT order (NOT re-sorted when locks present)
+                final_numbers_ordered = [v for v in assembled if v is not None]
+                confidence_vals = [d["score"] for d in full_details
+                                   if not d.get("locked")]
+                confidence = (sum(confidence_vals) / max(1, len(confidence_vals))
+                              if confidence_vals else 0)
+
+                all_tickets.append({
+                    "ticket_num": ticket_idx,
+                    "numbers": final_numbers_ordered,
+                    "details": full_details,
+                    "confidence": round(confidence, 1)
+                })
     
-    alternates = [{"number": n, "score": data["score"], "reasons": data["reasons"][:2]} for n, data in ranked[positions_to_fill:positions_to_fill+6]]
+        alternates = [{"number": n, "score": data["score"], "reasons": data["reasons"][:2]} for n, data in ranked[positions_to_fill:positions_to_fill+6]]
     
-    avg_score = sum(t["score"] for t in top_6 if t and not t.get("locked")) / max(1, positions_to_fill) if top_6 else 0
+        avg_score = sum(t["score"] for t in top_6 if t and not t.get("locked")) / max(1, positions_to_fill) if top_6 else 0
     
-    # === PREDICT LUCKY NUMBER (1-6) ===
-    # Based on patterns: Story (gaps), P1/P2 of last draw, last Lucky, last Replay, date
-    lucky_candidates = []
+        # === PREDICT LUCKY NUMBER (1-6) ===
+        # Based on patterns: Story (gaps), P1/P2 of last draw, last Lucky, last Replay, date
+        lucky_candidates = []
     
-    # STORY PATTERN: Track Lucky number gaps (which ones haven't appeared)
-    lucky_history = []
-    for d in sorted(draws, key=lambda x: x['date'], reverse=True)[:50]:  # Last 50 draws
-        ln = d.get('lucky_number', 0)
-        if 1 <= ln <= 6:
-            lucky_history.append(ln)
+        # STORY PATTERN: Track Lucky number gaps (which ones haven't appeared)
+        lucky_history = []
+        for d in sorted(draws, key=lambda x: x['date'], reverse=True)[:50]:  # Last 50 draws
+            ln = d.get('lucky_number', 0)
+            if 1 <= ln <= 6:
+                lucky_history.append(ln)
     
-    # Find gaps for each Lucky number (1-6)
-    lucky_gaps = {}
-    for num in range(1, 7):
-        try:
-            gap = lucky_history.index(num)
-        except ValueError:
-            gap = 50  # Not found in last 50
-        lucky_gaps[num] = gap
+        # Find gaps for each Lucky number (1-6)
+        lucky_gaps = {}
+        for num in range(1, 7):
+            try:
+                gap = lucky_history.index(num)
+            except ValueError:
+                gap = 50  # Not found in last 50
+            lucky_gaps[num] = gap
     
-    # Story: Numbers with bigger gaps are more due!
-    print(f"Lucky number gaps: {lucky_gaps}")  # Debug
-    for num, gap in lucky_gaps.items():
-        if gap >= 8:  # Missing 8+ draws = story building
-            score = min(40, 15 + gap * 2)  # Higher gap = higher score
-            lucky_candidates.append((num, score, f"📖 Story: missing {gap} draws"))
-        elif gap >= 5:
-            lucky_candidates.append((num, 12, f"Due: missing {gap} draws"))
+        # Story: Numbers with bigger gaps are more due!
+        print(f"Lucky number gaps: {lucky_gaps}")  # Debug
+        for num, gap in lucky_gaps.items():
+            if gap >= 8:  # Missing 8+ draws = story building
+                score = min(40, 15 + gap * 2)  # Higher gap = higher score
+                lucky_candidates.append((num, score, f"📖 Story: missing {gap} draws"))
+            elif gap >= 5:
+                lucky_candidates.append((num, 12, f"Due: missing {gap} draws"))
     
-    if last_draw:
-        p1 = last_draw['numbers'][0]
-        p2 = last_draw['numbers'][1]
-        last_lucky = last_draw.get('lucky_number', 0)
-        last_replay = last_draw.get('replay_number', 0)
+        if last_draw:
+            p1 = last_draw['numbers'][0]
+            p2 = last_draw['numbers'][1]
+            last_lucky = last_draw.get('lucky_number', 0)
+            last_replay = last_draw.get('replay_number', 0)
         
-        # P1 if <= 6
-        if 1 <= p1 <= 6:
-            lucky_candidates.append((p1, 20, "P1 of last draw"))
+            # P1 if <= 6
+            if 1 <= p1 <= 6:
+                lucky_candidates.append((p1, 20, "P1 of last draw"))
         
-        # P2 if <= 6
-        if 1 <= p2 <= 6:
-            lucky_candidates.append((p2, 15, "P2 of last draw"))
+            # P2 if <= 6
+            if 1 <= p2 <= 6:
+                lucky_candidates.append((p2, 15, "P2 of last draw"))
         
-        # Last Lucky - might repeat or move to next
-        if 1 <= last_lucky <= 6:
-            # Repeat chance
-            lucky_candidates.append((last_lucky, 18, "Last Lucky repeat"))
-            # Next in sequence (Lucky numbers often follow pattern)
-            next_lucky = (last_lucky % 6) + 1
-            lucky_candidates.append((next_lucky, 22, f"Lucky sequence: {last_lucky}→{next_lucky}"))
-            # Circle pattern: +3 or -3 (half of 6)
-            circle_lucky = ((last_lucky + 2) % 6) + 1  # +3 mod 6
-            lucky_candidates.append((circle_lucky, 12, f"Lucky circle: {last_lucky}→{circle_lucky}"))
+            # Last Lucky - might repeat or move to next
+            if 1 <= last_lucky <= 6:
+                # Repeat chance
+                lucky_candidates.append((last_lucky, 18, "Last Lucky repeat"))
+                # Next in sequence (Lucky numbers often follow pattern)
+                next_lucky = (last_lucky % 6) + 1
+                lucky_candidates.append((next_lucky, 22, f"Lucky sequence: {last_lucky}→{next_lucky}"))
+                # Circle pattern: +3 or -3 (half of 6)
+                circle_lucky = ((last_lucky + 2) % 6) + 1  # +3 mod 6
+                lucky_candidates.append((circle_lucky, 12, f"Lucky circle: {last_lucky}→{circle_lucky}"))
         
-        # Last Replay if <= 6
-        if 1 <= last_replay <= 6:
-            lucky_candidates.append((last_replay, 15, "Last Replay"))
+            # Last Replay if <= 6
+            if 1 <= last_replay <= 6:
+                lucky_candidates.append((last_replay, 15, "Last Replay"))
         
-        # Digit connections from main numbers
-        for n in last_draw['numbers'][:3]:  # P1, P2, P3
-            digit = n % 10 if n % 10 != 0 else n // 10
-            if 1 <= digit <= 6:
-                lucky_candidates.append((digit, 8, f"Digit of P{last_draw['numbers'].index(n)+1}"))
+            # Digit connections from main numbers
+            for n in last_draw['numbers'][:3]:  # P1, P2, P3
+                digit = n % 10 if n % 10 != 0 else n // 10
+                if 1 <= digit <= 6:
+                    lucky_candidates.append((digit, 8, f"Digit of P{last_draw['numbers'].index(n)+1}"))
     
-    # Date-based
-    day = datetime.now().day
-    month = datetime.now().month
-    day_mod = ((day - 1) % 6) + 1  # 1-6
-    month_mod = ((month - 1) % 6) + 1  # 1-6
-    lucky_candidates.append((day_mod, 8, f"Day {day}→{day_mod}"))
-    lucky_candidates.append((month_mod, 6, f"Month {month}→{month_mod}"))
+        # Date-based
+        day = datetime.now().day
+        month = datetime.now().month
+        day_mod = ((day - 1) % 6) + 1  # 1-6
+        month_mod = ((month - 1) % 6) + 1  # 1-6
+        lucky_candidates.append((day_mod, 8, f"Day {day}→{day_mod}"))
+        lucky_candidates.append((month_mod, 6, f"Month {month}→{month_mod}"))
     
-    # Weighted random selection for Lucky Number
-    if lucky_candidates:
-        # Combine scores for same numbers
-        combined_scores = {}
-        combined_reasons = {}
-        for num, weight, reason in lucky_candidates:
-            if num not in combined_scores:
-                combined_scores[num] = 0
-                combined_reasons[num] = []
-            combined_scores[num] += weight
-            combined_reasons[num].append(reason)
+        # Weighted random selection for Lucky Number
+        if lucky_candidates:
+            # Combine scores for same numbers
+            combined_scores = {}
+            combined_reasons = {}
+            for num, weight, reason in lucky_candidates:
+                if num not in combined_scores:
+                    combined_scores[num] = 0
+                    combined_reasons[num] = []
+                combined_scores[num] += weight
+                combined_reasons[num].append(reason)
         
-        total_weight = sum(combined_scores.values())
-        r = random.random() * total_weight
-        cumulative = 0
-        lucky_prediction = 1
-        lucky_reason = "Random"
+            total_weight = sum(combined_scores.values())
+            r = random.random() * total_weight
+            cumulative = 0
+            lucky_prediction = 1
+            lucky_reason = "Random"
         
-        for num in sorted(combined_scores.keys(), key=lambda x: -combined_scores[x]):
-            cumulative += combined_scores[num]
-            if r <= cumulative:
-                lucky_prediction = num
-                lucky_reason = combined_reasons[num][0]  # Primary reason
-                break
-    else:
-        lucky_prediction = random.randint(1, 6)
-        lucky_reason = "Random"
+            for num in sorted(combined_scores.keys(), key=lambda x: -combined_scores[x]):
+                cumulative += combined_scores[num]
+                if r <= cumulative:
+                    lucky_prediction = num
+                    lucky_reason = combined_reasons[num][0]  # Primary reason
+                    break
+        else:
+            lucky_prediction = random.randint(1, 6)
+            lucky_reason = "Random"
     
-    result = {
-        "prediction_date": datetime.now().isoformat(),
-        "for_draw": {
-            "year": current_year,
-            "draw_number": current_draw_num + 1,
-            "quarter": current_quarter + 1,
-            "position": next_position
-        },
-        "last_draw": {
-            "date": last_draw["date"],
-            "numbers": last_draw["numbers"]
-        } if last_draw else None,
-        "main_prediction": sorted([t["number"] for t in top_6 if t]),
-        "main_prediction_details": top_6,
-        "locked_positions": {f"P{k+1}": v for k, v in locked_positions.items()} if locked_positions else None,
-        "num_tickets": num_tickets,
-        "all_tickets": all_tickets if num_tickets > 1 else None,
-        "lucky_prediction": lucky_prediction,
-        "lucky_reason": lucky_reason,
-        "alternate_numbers": sorted([a["number"] for a in alternates]),
-        "alternate_details": alternates,
-        "average_confidence": round(avg_score, 1),
-        "rare_event_predictions": rare_predictions,
-        "patterns_used": [
-            "Quarterly position (28%)",
-            "Digit links (11%)",
-            "Date patterns (15%, 12%, 5%)",
-            "Historical at position",
-            "Hot numbers",
-            "Due numbers",
-            "Rare event counts",
-            "✨ Magic Number (17/38 EuroMillions Bridge)"
-        ],
-        "magic_status": {
-            "last_draw_magic": (17 in last_draw.get('numbers', []) or 38 in last_draw.get('numbers', [])) if last_draw else False,
-            "has_17": 17 in last_draw.get('numbers', []) if last_draw else False,
-            "has_38": 38 in last_draw.get('numbers', []) if last_draw else False,
-            "has_21": 21 in last_draw.get('numbers', []) if last_draw else False,
-            "triple_connection": (21 in last_draw.get('numbers', []) and (17 in last_draw.get('numbers', []) or 38 in last_draw.get('numbers', []))) if last_draw else False
+        result = {
+            "prediction_date": datetime.now().isoformat(),
+            "for_draw": {
+                "year": current_year,
+                "draw_number": current_draw_num + 1,
+                "quarter": current_quarter + 1,
+                "position": next_position
+            },
+            "last_draw": {
+                "date": last_draw["date"],
+                "numbers": last_draw["numbers"]
+            } if last_draw else None,
+            "main_prediction": sorted([t["number"] for t in top_6 if t]),
+            "main_prediction_details": top_6,
+            "locked_positions": {f"P{k+1}": v for k, v in locked_positions.items()} if locked_positions else None,
+            "num_tickets": num_tickets,
+            "all_tickets": all_tickets if num_tickets > 1 else None,
+            "lucky_prediction": lucky_prediction,
+            "lucky_reason": lucky_reason,
+            "alternate_numbers": sorted([a["number"] for a in alternates]),
+            "alternate_details": alternates,
+            "average_confidence": round(avg_score, 1),
+            "rare_event_predictions": rare_predictions,
+            "patterns_used": [
+                "Quarterly position (28%)",
+                "Digit links (11%)",
+                "Date patterns (15%, 12%, 5%)",
+                "Historical at position",
+                "Hot numbers",
+                "Due numbers",
+                "Rare event counts",
+                "✨ Magic Number (17/38 EuroMillions Bridge)"
+            ],
+            "magic_status": {
+                "last_draw_magic": (17 in last_draw.get('numbers', []) or 38 in last_draw.get('numbers', [])) if last_draw else False,
+                "has_17": 17 in last_draw.get('numbers', []) if last_draw else False,
+                "has_38": 38 in last_draw.get('numbers', []) if last_draw else False,
+                "has_21": 21 in last_draw.get('numbers', []) if last_draw else False,
+                "triple_connection": (21 in last_draw.get('numbers', []) and (17 in last_draw.get('numbers', []) or 38 in last_draw.get('numbers', []))) if last_draw else False
+            }
         }
-    }
     
-    if birthday_info:
-        result["birthday_mode"] = {
-            "birthday": birthday,
-            "parsed": birthday_info,
-            "lucky_numbers": list(set([bn["num"] for bn in birthday_numbers]))[:8]
-        }
-        result["patterns_used"].append("🎂 Birthday mode (25%)")
+        if birthday_info:
+            result["birthday_mode"] = {
+                "birthday": birthday,
+                "parsed": birthday_info,
+                "lucky_numbers": list(set([bn["num"] for bn in birthday_numbers]))[:8]
+            }
+            result["patterns_used"].append("🎂 Birthday mode (25%)")
     
-    if name_info:
-        result["name_mode"] = {
-            "name": name,
-            "words": name_info["words"],
-            "full_sum": name_info["full_sum"],
-            "lucky_numbers": list(set([nn["num"] for nn in name_numbers]))[:8]
-        }
-        result["patterns_used"].append("🔤 Name mode (20%)")
+        if name_info:
+            result["name_mode"] = {
+                "name": name,
+                "words": name_info["words"],
+                "full_sum": name_info["full_sum"],
+                "lucky_numbers": list(set([nn["num"] for nn in name_numbers]))[:8]
+            }
+            result["patterns_used"].append("🔤 Name mode (20%)")
     
-    # === SAVE ALL TICKETS TO PREDICTION HISTORY ===
-    tickets_to_save = all_tickets if num_tickets > 1 else [{
-        "ticket_num": 1,
-        "numbers": sorted([t["number"] for t in top_6 if t]),
-        "details": top_6,
-        "confidence": round(avg_score, 1)
-    }]
+        # === SAVE ALL TICKETS TO PREDICTION HISTORY ===
+        tickets_to_save = all_tickets if num_tickets > 1 else [{
+            "ticket_num": 1,
+            "numbers": sorted([t["number"] for t in top_6 if t]),
+            "details": top_6,
+            "confidence": round(avg_score, 1)
+        }]
     
+        return result, tickets_to_save, lucky_prediction, top_6, all_tickets, avg_score
+    result, tickets_to_save, lucky_prediction, top_6, all_tickets, avg_score = await asyncio.to_thread(_heavy_compute)
     for ticket in tickets_to_save:
         # Get top reasons from ticket details
         top_reasons = []
@@ -3708,11 +3715,14 @@ async def get_master_prediction(
     except Exception as e:
         logger.warning(f"swiss master-predictor save_to_tracker failed: {e}")
     
-    # 🚀 Populate default-param cache for next 60s
-    if _no_params:
+    # 🚀 Populate parametrized cache for next 60s
+    if _no_params and _cache_key is not None:
         import time as _t
-        _MASTER_PRED_CACHE["ts"] = _t.time()
-        _MASTER_PRED_CACHE["data"] = result
+        _MASTER_PRED_CACHE[_cache_key] = (_t.time(), result)
+        # Cap cache size at 256 entries (LRU-ish — drop oldest)
+        if len(_MASTER_PRED_CACHE) > 256:
+            oldest_key = min(_MASTER_PRED_CACHE, key=lambda k: _MASTER_PRED_CACHE[k][0])
+            _MASTER_PRED_CACHE.pop(oldest_key, None)
     
     return result
 
@@ -4560,38 +4570,38 @@ async def clear_prediction_history():
 
 @api_router.get("/ticket-counter")
 async def get_ticket_counter():
-    """Total tickets generated across all lotteries.
-    🛡️ Hardened per Emergent Support: batch_size=100 + CursorNotFound retry."""
-    from pymongo.errors import CursorNotFound, ExecutionTimeout
+    """Total tickets generated across all lotteries (server-side aggregation)."""
+    async def _agg_count(coll):
+        pipeline = [
+            {"$project": {"_id": 0, "n": {"$size": {"$ifNull": ["$tickets", []]}}}},
+            {"$group": {"_id": None, "total": {"$sum": "$n"}}},
+        ]
+        result = await coll.aggregate(pipeline).to_list(1)
+        return result[0]["total"] if result else 0
 
-    async def _safe_sum(coll):
-        total = 0
-        for _ in range(3):
-            try:
-                async for g in coll.find({}, {'tickets': 1}).batch_size(100).limit(10000):
-                    total += len(g.get('tickets', []))
-                return total
-            except (CursorNotFound, ExecutionTimeout):
-                total = 0  # restart count, retry
-        return total
-
-    swiss_gen_count = await _safe_sum(db.generations)
+    swiss_gen_count = await _agg_count(db.generations)
     swiss_pred_count = await db.prediction_history.count_documents({})
-    euro_count = await _safe_sum(db.euromillions_generations)
+    euro_count = await _agg_count(db.euromillions_generations)
     total = swiss_gen_count + swiss_pred_count + euro_count
     return {"total_tickets": total, "swiss_tickets": swiss_gen_count + swiss_pred_count, "euro_tickets": euro_count}
 
 @api_router.get("/pending-tickets")
 async def get_pending_tickets(mode: str = "swiss", visitor_id: str = ""):
-    """
-    Get tickets generated for the NEXT upcoming draw.
-    
-    🎻 ALL tickets are included, including those with LOCKED positions.
-        Locked tickets are tagged with `locked_positions` so the user can
-        recognise their own pinned slots in the pending widget.
-    🎧 Returns the TOP 10 best tickets (ranked by V2 Detective conviction for the next draw)
-       plus "archive files" grouped by 50 tickets (sorted by generation time, newest first).
-    """
+    """Get tickets for the NEXT upcoming draw (top 10 + archive). 90s timeout guard."""
+    import asyncio
+    try:
+        return await asyncio.wait_for(
+            _pending_tickets_impl(mode, visitor_id), timeout=90.0
+        )
+    except asyncio.TimeoutError:
+        return {
+            "next_date": None, "count": 0, "top_count": 0,
+            "tickets": [], "archive_files": [],
+            "timed_out": True,
+        }
+
+
+async def _pending_tickets_impl(mode: str = "swiss", visitor_id: str = ""):
     from datetime import timedelta
     today = datetime.now()
 
@@ -8123,8 +8133,10 @@ scheduler.add_job(scheduled_sync_job, CronTrigger(day_of_week='sat', hour=21, mi
 # 🧹 Daily prune at 04:00 UTC — keeps only ≥2-hit tickets after D+3
 scheduler.add_job(scheduled_prune_job, CronTrigger(hour=4, minute=0), id='daily_prune')
 
-# Also run once at startup (30 seconds after start to let everything initialize)
-scheduler.add_job(scheduled_sync_job, 'date', run_date=datetime.now(timezone.utc).replace(microsecond=0) + __import__('datetime').timedelta(seconds=30), id='startup_sync')
+# Also run once at startup (120s + jitter to let everything initialize and avoid pod-race 429s)
+import random as _random_jitter
+_startup_delay = 120 + _random_jitter.randint(0, 30)
+scheduler.add_job(scheduled_sync_job, 'date', run_date=datetime.now(timezone.utc).replace(microsecond=0) + __import__('datetime').timedelta(seconds=_startup_delay), id='startup_sync')
 
 @app.on_event("startup")
 async def start_scheduler():
@@ -8181,6 +8193,7 @@ async def create_db_indexes():
             IndexModel([("target_date", ASCENDING)]),
         ], "generations")
         await _safe_create(db.euromillions_generations, [
+            IndexModel([("target_date", ASCENDING)]),
             IndexModel([("target_date", ASCENDING), ("hits_calculated", ASCENDING)]),
             IndexModel([("visitor_id", ASCENDING), ("target_date", ASCENDING)]),
         ], "euromillions_generations")

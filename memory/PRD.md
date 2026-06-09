@@ -1,7 +1,26 @@
 # Lucky Jack — Swiss Lotto + EuroMillions Pattern Analyzer (PRD)
 
 
+## 🚀 SESSION 46.3 (09.06.2026) — asyncio.to_thread + PARAMETRIZED CACHE ✅ THE REAL FIX
+- **Root cause** (Emergent Support reproduced + traced): `/api/master-predictor` ran ~125 seconds of synchronous CPU compute **inside** an async route handler. A single call pinned its worker for 125s. With `--workers 2` + page-load firing Swiss+Euro simultaneously, both workers got pinned → **every other endpoint** (heartbeat, dashboard, last-draw, login) queued behind → 524 timeouts. Preview never showed it because one request at a time.
+- **Fix #1 — Off the event loop** (Support's THE real fix):
+  - Swiss `/api/master-predictor`: wrapped the 2652-line heavy compute body into a nested sync `_heavy_compute()` and call it via `await asyncio.to_thread(_heavy_compute)`. The async route now releases the event loop while the threadpool runs the math.
+  - Euro `/api/euromillions/master-predictor`: wrapped the 85-line DJ ticket generation loop the same way.
+  - Removed inner `from datetime import datetime` (line 2181) that broke closure scoping.
+- **Fix #2 — Parametrized cache** (was default-only, now keyed on all inputs):
+  - Both endpoints: 60s TTL cache keyed on `(birthday, name, locks, num_tickets, target_date)` — visitor_id always skips
+  - 256-entry LRU cap to bound memory
+- **Fix #3 — Swiss `draws.date` unique index**: verified clean (0 dups, `date_1` unique index already in place — was the Euro one that needed dedup, Swiss is clean)
+- **Verification (preview)**:
+  - 10 concurrent heavy calls (5 Swiss + 5 Euro at exact same time) ALL return 200 in 4-6s
+  - DURING that load: `/api/healthz` 0.9s, `/api/dashboard` 1.2s, `/api/last-draw` 0.7s, `/api/ticket-counter` 0.4s, `/api/euromillions/last-draw` 0.4s — ALL responsive
+  - Before fix: lightweight endpoints would 524-timeout for 60s when heavy compute ran concurrently
+  - 25/25 regression tests PASS
+- **`/api/version`** → `session46.3-to-thread`
+
+
 ## 🚀 SESSION 46.2 (08.06.2026 PM #2) — MASTER-PREDICTOR CACHE + workers=1 ✅
+
 - **Root cause** (Emergent Support): prod pod healthy on tier_1, but `/api/master-predictor` is CPU-bound and 295m/590m CPU limit causes 30s+ stalls on first call after deploy. `--workers 2` doubles resident memory for what FastAPI already handles via async.
 - **Procfile**: `--workers 2` → `--workers 1` (Support's direct recommendation — halves memory, FastAPI handles concurrency via async event loop anyway)
 - **60s in-memory cache** on `/api/master-predictor` (Swiss GET) and `/api/euromillions/master-predictor` (POST):
