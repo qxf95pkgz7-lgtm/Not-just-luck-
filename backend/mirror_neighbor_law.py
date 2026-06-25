@@ -22,11 +22,14 @@ BD_STARS = [6, 8]
 print(f"🎯 BD (today 05.05): mains {BD} ⭐{BD_STARS}\n")
 
 def mirrors(n, pool_max=50):
-    """Compute all natural mirrors of a number."""
-    m = set()
-    if n+10 <= pool_max: m.add(n+10)  # decade up
-    if n-10 >= 1: m.add(n-10)         # decade down
-    m.add(pool_max+1-n)               # pool mirror (1↔50, 2↔49, ...)
+    """🪞 ONE LAW (Canon 32): mirror = circle (Euro carrier).
+    Returns the canonical circle pair + decade/flip companions for richer expansion.
+    """
+    from mirror_canon import mirror_pair as _mc_pair
+    mode = "euro" if pool_max == 50 else "swiss"
+    m = set(_mc_pair(n, mode))
+    if n+10 <= pool_max: m.add(n+10)  # decade up (extra companion)
+    if n-10 >= 1: m.add(n-10)         # decade down (extra companion)
     rev = int(str(n).zfill(2)[::-1].lstrip('0') or '0')
     if 1<=rev<=pool_max: m.add(rev)
     if 1<=rev+10<=pool_max: m.add(rev+10)

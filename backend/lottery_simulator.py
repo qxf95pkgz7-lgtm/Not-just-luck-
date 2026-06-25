@@ -71,11 +71,15 @@ def circle(n: int, mode: str) -> int:
     c = CFG[mode]["circle"]
     return ((n - 1 + c) % m) + 1
 
-def mirror_low(n: int) -> int:   # low-band pivot 14 (pair-sum 28)
-    return 28 - n if 1 <= 28 - n <= 50 else None
+def mirror_low(n: int) -> int:
+    """🪞 ONE LAW (Canon 32): defers to circle (Euro)."""
+    from mirror_canon import mirror_of as _mc_of
+    return _mc_of(n, "euro")
 
-def mirror_high(n: int) -> int:  # high-band pivot 28 (pair-sum 56)
-    return 56 - n if 1 <= 56 - n <= 50 else None
+def mirror_high(n: int) -> int:
+    """🪞 ONE LAW (Canon 32): same as mirror_low — both fold to the One Law."""
+    from mirror_canon import mirror_of as _mc_of
+    return _mc_of(n, "euro")
 
 def digits_of_date(date_str: str) -> List[int]:
     """17.04 → [1,7,0,4]  (ignore year)."""

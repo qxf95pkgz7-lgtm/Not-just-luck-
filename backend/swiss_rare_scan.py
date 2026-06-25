@@ -39,13 +39,9 @@ def swiss_circle(n):
 
 
 def mirror28(n, max_n=42):
-    """28-mirror with mod wrap into 1..max_n range."""
-    v = 28 - n
-    if v <= 0:
-        v = v % max_n
-        if v == 0:
-            v = max_n
-    return v
+    """🪞 ONE LAW (Canon 32): Swiss mirror = circle (n + 21 wrap)."""
+    from mirror_canon import mirror_of as _mc_of
+    return _mc_of(n, "swiss")
 
 
 def decade_family(nums):

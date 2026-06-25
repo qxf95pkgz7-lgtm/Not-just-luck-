@@ -40,13 +40,15 @@ def euro_circle(n: int) -> int:
 
 
 def swiss_mirror(n: int) -> int:
-    """Pair-sum 43 mirror (1↔42, 2↔41, ..., 21↔22)."""
-    return SWISS_PAIR_SUM - n
+    """🪞 ONE LAW (Canon 32): mirror = circle. Swiss n → n+21 wrap."""
+    from mirror_canon import mirror_of as _mc_of
+    return _mc_of(n, "swiss")
 
 
 def euro_mirror(n: int) -> int:
-    """Pair-sum 51 mirror (1↔50, 2↔49, ..., 25↔26)."""
-    return EURO_PAIR_SUM - n
+    """🪞 ONE LAW (Canon 32): mirror = circle. Euro n → n+25 wrap."""
+    from mirror_canon import mirror_of as _mc_of
+    return _mc_of(n, "euro")
 
 
 def project_back_closer(p1_candidate: int, mode: str) -> Dict:

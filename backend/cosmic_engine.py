@@ -35,13 +35,20 @@ def circle_euro(n: int) -> int:
 
 
 def mirror28(n: int) -> int:
-    r = (PIVOT_28 - n) % EURO_RANGE
-    return r if r else EURO_RANGE
+    """🪞 ONE LAW (Canon 32) — alias preserved for back-compat.
+    Euro mirror = circle: n → n+25 wrap (or n-25 wrap).
+    For both directions use mirror_canon.mirror_pair(n, 'euro').
+    """
+    from mirror_canon import mirror_of as _mc_of
+    return _mc_of(n, "euro")
 
 
 def mirror30(n: int) -> int:
-    r = (PIVOT_30 - n) % EURO_RANGE
-    return r if r else EURO_RANGE
+    """🪞 ONE LAW (Canon 32) — alias preserved for back-compat.
+    The "mirror30" hybrid was wrong; defers to the One Law (Euro circle).
+    """
+    from mirror_canon import mirror_of as _mc_of
+    return _mc_of(n, "euro")
 
 
 def flip_wrap(n: int) -> int:

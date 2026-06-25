@@ -52,13 +52,15 @@ def circle(n: int) -> int:
 
 
 def mirror28(n: int) -> int:
-    """28-fold mirror (low band, sum=28)."""
-    return 28 - n if 0 < 28 - n <= EURO_MAX else None
+    """🪞 ONE LAW (Canon 32): mirror = Euro circle (n + 25 wrap)."""
+    from mirror_canon import mirror_of as _mc_of
+    return _mc_of(n, "euro")
 
 
 def mirror56(n: int) -> int:
-    """56-fold mirror (high band, sum=56)."""
-    return 56 - n if 0 < 56 - n <= EURO_MAX else None
+    """🪞 ONE LAW (Canon 32): alias for mirror28 — both fold to the One Law."""
+    from mirror_canon import mirror_of as _mc_of
+    return _mc_of(n, "euro")
 
 
 def flip(n: int) -> int:

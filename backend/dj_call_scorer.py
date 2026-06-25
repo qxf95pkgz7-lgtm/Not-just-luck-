@@ -14,16 +14,21 @@ Three rule families derived from DJ Session-3:
 import json
 import os
 from typing import List, Dict, Optional
+from mirror_canon import mirror_of as _mirror_of_canon, mirror_pair as _mirror_pair_canon
 
 
-def mirror_of(n: int) -> int:
-    """Pair-sum 28 mirror for n≤27 (pivot 14); pair-sum 56 mirror for n≥29
-    (pivot 28). n=28 is self-mirror."""
-    if n <= 27:
-        return 28 - n
-    if n >= 29:
-        return 56 - n
-    return 28  # n == 28
+def mirror_of(n: int, mode: str = "euro") -> int:
+    """🪞 ONE LAW (Canon 32): mirror = circle.
+
+    Euro:  n → n+25 wrap   (e.g. 19→44, 9→34, 1→26)
+    Swiss: n → n+21 wrap   (e.g. 4→25, 1→22, 24→3)
+    """
+    return _mirror_of_canon(n, mode)
+
+
+def mirror_pair(n: int, mode: str = "euro") -> List[int]:
+    """Returns BOTH circle directions: {n+carrier wrap, n-carrier wrap}."""
+    return _mirror_pair_canon(n, mode)
 
 
 def euro_circle(n: int) -> int:

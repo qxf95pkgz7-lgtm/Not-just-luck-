@@ -30,7 +30,24 @@ WELCOME_COMPANION: Dict[int, Dict[int, int]] = {
 }
 
 # 28-mirror couples among silents (n1 + n2 = 28)
-MIRROR_COUPLES_28 = [(16, 12), (17, 11), (15, 13), (7, 21)]
+def _build_canon_couples():
+    """🪞 ONE LAW (Canon 32): mirror = circle. Pairs are (n, n+carrier wrap).
+    Computed from the One Law instead of hardcoded sum-28 values.
+    """
+    from mirror_canon import mirror_of as _mc_of
+    seen = set()
+    pairs = []
+    for n in range(1, 22):  # 1..21; carrier shifts 21 → 42 covers the rest
+        m = _mc_of(n, "swiss")
+        key = tuple(sorted((n, m)))
+        if key in seen or n == m:
+            continue
+        seen.add(key)
+        pairs.append(key)
+    return pairs
+
+
+MIRROR_COUPLES_28 = _build_canon_couples()
 
 # HUGE-twin lock: each silent's +21 Swiss-circle is a HUGE 07.02.2026 member
 # HUGE = [30, 33, 35, 36, 37, 38]

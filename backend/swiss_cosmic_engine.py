@@ -42,9 +42,13 @@ def circle_swiss(n: int) -> int:
 
 
 def mirror28(n: int) -> int:
-    """28 - n, wrap into 1..42."""
-    r = (PIVOT_28 - n) % SWISS_RANGE
-    return r if r else SWISS_RANGE
+    """🪞 ONE LAW (Canon 32) — alias preserved for back-compat.
+    Swiss mirror = circle: n → n+21 wrap (or n-21 wrap).
+    The old name "mirror28" is misleading; this returns the +carrier side.
+    For both directions use mirror_canon.mirror_pair(n, 'swiss').
+    """
+    from mirror_canon import mirror_of as _mc_of
+    return _mc_of(n, "swiss")
 
 
 def flip_wrap_swiss(n: int) -> int:

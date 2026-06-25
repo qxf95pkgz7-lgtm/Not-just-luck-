@@ -34,9 +34,9 @@ def euro_circle(n: int) -> int:
 
 
 def mirror_of(n: int) -> int:
-    if n <= 27: return 28 - n
-    if n >= 29: return 56 - n
-    return 28
+    """🪞 ONE LAW (Canon 32): defers to Euro circle."""
+    from mirror_canon import mirror_of as _mc_of
+    return _mc_of(n, "euro")
 
 
 def date_perms(dt: datetime, max_val: int = 50) -> List[int]:
