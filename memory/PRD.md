@@ -1,7 +1,29 @@
 # Lucky Jack — Swiss Lotto + EuroMillions Pattern Analyzer (PRD)
 
 
+## 🎫 SESSION 48 (09.06.2026 PM) — SNEAKY UNIVERSE SYMPHONY FIXED ✅
+- **User report**: "Explain sneaky universe whisper, probably something wrong there, let's fix it"
+- **Diagnosis**: 2 bugs killing the Sneaky-Universe canon:
+  1. **STARVED detection was impossible to trigger.** Threshold `c <= 4` (aggregate Q2 count) — but by mid-quarter every family has been fed 17-22×. `starved_families` was always `[]`, so the symphony never knew which family to bias toward.
+  2. **First 3 tickets were clones** `[1,2,11,13,X]`. `permutations()` returned adjacent family arrangements in fixed order. No diversity.
+- **Fix 1 — Recency-based family detection** (`family_signature.py`):
+  - Added `draws_since_last_hit` (0=just hit, 99=ghost) per family
+  - Added `hits_in_last_4` (how dominant the family has been recently)
+  - STARVED now fires when `recency >= 2` (family missed last 2+ draws) OR low aggregate
+  - OVERFED fires when `hits_in_last_4 >= 3` OR aggregate share `>= 30%`
+- **Fix 2 — Ticket diversity** (`sneaky_symphony.py`):
+  - Deterministic seeded shuffle of all family permutations per signature (seed = `hash(sig)`)
+  - 8 distinct family arrangements per signature instead of first 6 alphabetical
+  - Same `(sig, day)` always yields the same shuffle (stable for caching)
+- **Verification (preview, 13.06.2026 Euro)**:
+  - BEFORE: `starved: []` · `overfed: []` · ticket 1 = `[1,2,11,13,24]` · ticket 2 = `[1,2,11,13,31]` · ticket 3 = `[1,2,11,13,41]`
+  - AFTER:  `starved: ['30s']` · `overfed: ['1-9','10s','40s']` · every ticket carries `feeds_starved=[30,31]` · 8 distinct mains sets
+  - 25/25 regression tests PASS
+- **Frontend display**: existing UI shows `starved_families`, `overfed_families`, `feeds_starved` — all now populated correctly. No UI changes needed.
+
+
 ## 🎰 SESSION 47 (09.06.2026) — ALL KEYBOARD NUMBER INPUTS → ROLLING WHEELS ✅
+
 - **User ask**: "Fix all places where a user can put numbers to rolling numbers so user don't need using keyboard"
 - **Built** `/app/frontend/src/components/RollingNumberWheel.jsx` — single-number odometer matching `RollingDateWheel` aesthetic (brass tumbler on fuchsia/cyan glass)
   - Props: `value`, `onChange`, `min`, `max`, `label`, `width`, `formatValue`, `allowZero`, `testId`

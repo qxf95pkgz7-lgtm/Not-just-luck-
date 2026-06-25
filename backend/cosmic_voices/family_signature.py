@@ -157,24 +157,49 @@ def family_signature_stats(target_dt: datetime, draws: List[Dict],
                 "pct": round(100 * c / nxt_total, 1) if nxt_total else 0,
             })
 
-    # ── 5. Family feeding — current Q2 imbalance
+    # ── 5. Family feeding — Sneaky-Universe canon (recency > aggregate)
+    # Two signals:
+    #   A) Aggregate Q2 imbalance (worked early in quarter; degrades by end)
+    #   B) Recency — draws since this family's last hit (the live signal)
     feeding = Counter()
     for d in current:
         for n in d["p"]:
             feeding[family_of(n)] += 1
     feed_total = sum(feeding.values()) or 1
+    # Recency: scan from most-recent draw backwards
+    last_hit_idx: Dict[str, int] = {}
+    for back_i, d in enumerate(reversed(current)):
+        for n in d["p"]:
+            f = family_of(n)
+            if f not in last_hit_idx:
+                last_hit_idx[f] = back_i  # 0 = last draw, 1 = 2 draws ago, ...
+    # Hit-rate over last 4 draws (overfed signal)
+    last4 = current[-4:] if len(current) >= 4 else current
+    last4_hits: Counter = Counter()
+    for d in last4:
+        seen_fams_in_draw = set(family_of(n) for n in d["p"])
+        for f in seen_fams_in_draw:
+            last4_hits[f] += 1
+
     fam_status = []
     for f in ["1-9", "10s", "20s", "30s", "40s"]:
         c = feeding[f]
         pct = round(100 * c / feed_total, 1)
-        if c <= 4 and len(current) >= 6:
+        recency = last_hit_idx.get(f, 99)  # large = hasn't fired
+        recent_rate = last4_hits.get(f, 0)
+        # STARVED = hasn't fired in last 2+ draws, OR very low aggregate count
+        if recency >= 2 or (c <= 4 and len(current) >= 6):
             tag = "STARVED"
-        elif pct >= 30:
+        # OVERFED = fired in 3+ of last 4 draws, OR very high aggregate share
+        elif recent_rate >= 3 or pct >= 30:
             tag = "OVERFED"
         else:
             tag = "balanced"
         fam_status.append({
-            "family": f, "fed_count": c, "pct": pct, "status": tag,
+            "family": f, "fed_count": c, "pct": pct,
+            "draws_since_last_hit": recency,
+            "hits_in_last_4": recent_rate,
+            "status": tag,
         })
     starved = [f["family"] for f in fam_status if f["status"] == "STARVED"]
     overfed = [f["family"] for f in fam_status if f["status"] == "OVERFED"]

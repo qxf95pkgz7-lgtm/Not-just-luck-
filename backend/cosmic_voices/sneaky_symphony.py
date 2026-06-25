@@ -41,26 +41,31 @@ def _signature_to_family_plan(sig: str, starved: List[str],
     Example for '2-2-1' with starved=['30s'], overfed=['40s']:
       [['10s','10s','30s','30s','20s'], ['1-9','1-9','30s','30s','20s'], ...]
     """
+    import random as _rnd
     parts = [int(x) for x in sig.split("-")]
     families = ["1-9", "10s", "20s", "30s", "40s"]
-    # Prefer plans that include the starved family at any count slot.
     plans: List[List[str]] = []
 
     def emit_plan(family_assignment: List[str]) -> List[str]:
-        # family_assignment is one family per group; expand by counts
         out = []
         for fam, cnt in zip(family_assignment, parts):
             out.extend([fam] * cnt)
         return out
 
-    # Generate diverse family arrangements; bias toward starved family present
+    # Build all valid family arrangements honoring starved/overfed
     seen = set()
     from itertools import permutations
-    for arr in permutations(families, len(parts)):
-        # require starved present if possible
+    all_arrs = list(permutations(families, len(parts)))
+    # Deterministic shuffle (seeded on sig string) — different sigs get
+    # different orderings, but the result for a given (sig, day) is stable
+    rng = _rnd.Random(hash(sig) & 0xffffffff)
+    rng.shuffle(all_arrs)
+
+    for arr in all_arrs:
+        # require starved present if any starved family exists
         if starved and not any(f in starved for f in arr):
             continue
-        # avoid arrangements where overfed gets the LARGEST count slot
+        # avoid overfed sitting in the LARGEST count slot (first position)
         if overfed and arr[0] in overfed:
             continue
         key = tuple(arr)
@@ -68,14 +73,14 @@ def _signature_to_family_plan(sig: str, starved: List[str],
             continue
         seen.add(key)
         plans.append(emit_plan(list(arr)))
-        if len(plans) >= 6:
+        if len(plans) >= 8:
             break
 
     # Fallback: if nothing matched the constraints, allow any permutation
     if not plans:
-        for arr in permutations(families, len(parts)):
+        for arr in all_arrs:
             plans.append(emit_plan(list(arr)))
-            if len(plans) >= 6:
+            if len(plans) >= 8:
                 break
     return plans
 
