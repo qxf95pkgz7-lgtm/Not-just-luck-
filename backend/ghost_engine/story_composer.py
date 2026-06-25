@@ -703,6 +703,69 @@ def _inject_p1_9_swiss(
     return stories
 
 
+def _enforce_p3_low_cap(stories: List[Dict], mode: str, count: int) -> List[Dict]:
+    """🪞 DJ Canon (09.06.2026) — P3 < 10 cap.
+
+    Of `count` tickets, at most `floor(count / 5)` (≈2 per 10) may have P3 < 10.
+    Excess tickets get their offending low number lifted via the One Law circle
+    (`mirror_canon.mirror_of` — Swiss +21, Euro +25).
+
+    P3 = the 3rd-lowest main = mains[2] (0-indexed, sorted ascending).
+    """
+    try:
+        from mirror_canon import mirror_of as _circle
+    except Exception:
+        return stories  # canon unavailable — skip silently
+
+    max_n = 42 if mode == "swiss" else 50
+    cap = max(1, count // 5)  # 2 of 10, 3 of 15, etc.
+
+    # Tag offenders (P3<10) sorted by COSMIC score ascending —
+    # weakest stories get lifted first, strongest keep their natural shape.
+    offenders = [
+        (i, s) for i, s in enumerate(stories)
+        if len(s.get("mains") or []) >= 3 and sorted(s["mains"])[2] < 10
+    ]
+    if len(offenders) <= cap:
+        return stories
+
+    offenders.sort(key=lambda kv: kv[1].get("cosmic_score", 0))
+    to_lift = offenders[:len(offenders) - cap]
+
+    for idx, story in to_lift:
+        mains_sorted = sorted(story["mains"])
+        p3_old = mains_sorted[2]
+        circle_partner = _circle(p3_old, mode)
+        # Validate: must be in universe, not already present
+        if not (1 <= circle_partner <= max_n) or circle_partner in mains_sorted:
+            # fallback: try lifting P2 or P1 instead
+            for back_pos in (1, 0):
+                p_old = mains_sorted[back_pos]
+                if p_old >= 10:
+                    continue
+                alt = _circle(p_old, mode)
+                if 1 <= alt <= max_n and alt not in mains_sorted:
+                    circle_partner = alt
+                    p3_old = p_old
+                    break
+            else:
+                continue  # can't safely lift — leave it
+        new_mains = sorted(n for n in mains_sorted if n != p3_old) + [circle_partner]
+        new_mains.sort()
+        story["mains"] = new_mains
+        # Annotate the lift for transparency
+        lifts = story.setdefault("p3_low_lifts", [])
+        lifts.append(f"{p3_old}→{circle_partner} (One Law circle)")
+        # Stamp the narrative so the UI shows what happened
+        arc = story.get("story_arc") or []
+        arc.append(f"🪞 P3<10 cap → circled {p3_old}→{circle_partner}")
+        story["story_arc"] = arc
+
+    return stories
+
+
+
+
 async def compose_stories(
     target_date: str,
     mode: str = "swiss",
@@ -944,6 +1007,10 @@ async def compose_stories(
     # 🎯 P1=9 INJECT MANDATE (Swiss only — Canon 28 silent debt enforcement)
     if mode == "swiss":
         stories = _inject_p1_9_swiss(stories, palette, signals, count)
+
+    # 🪞 P3<10 CAP (DJ Canon, 09.06.2026) — max 2 of 10 tickets may have P3<10.
+    # When over, lift the offending P3 via the One Law circle (Canon 32).
+    stories = _enforce_p3_low_cap(stories, mode, count)
 
     # Sort: highest cosmic_score first
     stories.sort(key=lambda s: -s.get("cosmic_score", 0))
