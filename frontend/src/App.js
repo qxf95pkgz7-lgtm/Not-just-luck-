@@ -3,6 +3,7 @@ import "@/App.css";
 import axios from "axios";
 import { Sparkles, RefreshCw, ChevronDown, ChevronUp, Gift, Star, Globe, History, Trash2, Target, TrendingUp, CheckCircle2, XCircle, Clock, Zap, Eye } from "lucide-react";
 import RollingDateWheel from "./components/RollingDateWheel";
+import RollingNumberWheel from "./components/RollingNumberWheel";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -2306,18 +2307,19 @@ function App() {
                         data-testid={`hunt-suspect-${n}`}
                       >{n} ✕</button>
                     ))}
-                    {/* Weave-in resonator input */}
+                    {/* Weave-in resonator wheel */}
                     <div className="flex items-center gap-1">
-                      <input
-                        type="number"
-                        min="1"
-                        max={mx}
-                        value={huntSuspectInput}
-                        onChange={(e) => setHuntSuspectInput(e.target.value)}
-                        placeholder="+♪"
-                        className="w-12 px-1.5 py-0.5 text-[10px] rounded bg-slate-800 border border-amber-600/40 text-amber-300 focus:outline-none focus:border-amber-400"
-                        data-testid={`hunt-suspect-input-${hb.id}`}
-                      />
+                      <div data-testid={`hunt-suspect-input-${hb.id}`}>
+                        <RollingNumberWheel
+                          value={parseInt(huntSuspectInput) || 0}
+                          onChange={(n) => setHuntSuspectInput(n === 0 ? "" : String(n))}
+                          min={0}
+                          max={mx}
+                          formatValue={(v) => v === 0 ? '+♪' : String(v).padStart(2, '0')}
+                          width={50}
+                          testId={`hunt-suspect-wheel-${hb.id}`}
+                        />
+                      </div>
                       <button
                         onClick={() => {
                           const n = parseInt(huntSuspectInput);
@@ -3059,14 +3061,18 @@ function App() {
               </div>
               <div>
                 <label className="text-xs text-slate-400 mb-1 block">Birthday</label>
-                <input
-                  type="text"
-                  value={birthday}
-                  onChange={(e) => setBirthday(e.target.value)}
-                  placeholder="DD/MM/YYYY"
-                  className="w-full px-4 py-2 rounded-xl bg-slate-800/50 border border-slate-600 text-white placeholder-slate-500 focus:border-amber-500/50 focus:outline-none text-sm"
-                  data-testid="birthday-input"
-                />
+                <div data-testid="birthday-input">
+                  <RollingDateWheel
+                    value={(() => {
+                      if (!birthday) return undefined;
+                      return birthday.replace(/\//g, '.');
+                    })()}
+                    onChange={(ddmmyyyy) => setBirthday(ddmmyyyy.replace(/\./g, '/'))}
+                    minYear={1925}
+                    maxYear={new Date().getFullYear()}
+                    testId="birthday-wheel"
+                  />
+                </div>
               </div>
               <div>
                 <label className="text-xs text-slate-400 mb-1 block">Full Name (optional)</label>
@@ -3126,27 +3132,27 @@ function App() {
               </p>
               
               <div className={`grid gap-2 mb-3 ${lotteryMode === 'swiss' ? 'grid-cols-6' : 'grid-cols-5'}`}>
-                {Array.from({ length: maxPositions }, (_, idx) => `p${idx + 1}`).map((pos, idx) => (
-                  <div key={pos} className="text-center">
-                    <label className="text-xs text-slate-500 block mb-1">P{idx + 1}</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max={maxNum}
-                      value={lockedPositions[pos] || ""}
-                      onChange={(e) => handleLockChange(pos, e.target.value)}
-                      placeholder="—"
-                      disabled={lockedPositions[pos] === "" && getLockedCount() >= maxLocks}
-                      className={`w-full px-1 py-2 rounded-lg text-center text-sm font-bold
-                        ${lockedPositions[pos] 
-                          ? lotteryMode === 'swiss' ? 'bg-amber-500/20 border-amber-500/50 text-amber-400' : 'bg-blue-500/20 border-blue-500/50 text-blue-400'
-                          : 'bg-slate-800/50 border-slate-600 text-white placeholder-slate-600'}
-                        ${lockedPositions[pos] === "" && getLockedCount() >= maxLocks ? 'opacity-50 cursor-not-allowed' : ''}
-                        border focus:outline-none`}
-                      data-testid={`lock-${pos}`}
-                    />
-                  </div>
-                ))}
+                {Array.from({ length: maxPositions }, (_, idx) => `p${idx + 1}`).map((pos, idx) => {
+                  const cur = lockedPositions[pos];
+                  const numVal = (cur === "" || cur == null) ? 0 : parseInt(cur, 10);
+                  const cellDisabled = (cur === "" || cur == null) && getLockedCount() >= maxLocks;
+                  return (
+                    <div key={pos} className="text-center flex flex-col items-center">
+                      <label className="text-xs text-slate-500 block mb-1">P{idx + 1}</label>
+                      <div className={cellDisabled ? 'opacity-50 pointer-events-none' : ''} data-testid={`lock-${pos}`}>
+                        <RollingNumberWheel
+                          value={numVal}
+                          onChange={(n) => handleLockChange(pos, n === 0 ? "" : String(n))}
+                          min={0}
+                          max={maxNum}
+                          formatValue={(v) => v === 0 ? '—' : String(v).padStart(2, '0')}
+                          width={56}
+                          testId={`lock-${pos}-wheel`}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
               
               {getLockedCount() > 0 && (
@@ -4087,14 +4093,14 @@ function App() {
                 {/* Inputs */}
                 <div className="flex flex-col sm:flex-row gap-2 items-end">
                   <div className="flex-1">
-                    <label className="text-slate-400 text-xs">🎯 Target draw date (dd.mm.yyyy)</label>
-                    <input
-                      type="text"
-                      value={cosmicVoicesTarget}
-                      onChange={(e) => setCosmicVoicesTarget(e.target.value)}
-                      className="w-full mt-1 px-2 py-1 rounded bg-slate-800/60 border border-slate-700 text-slate-200 font-mono text-sm"
-                      data-testid="cosmic-voices-target-date"
-                    />
+                    <label className="text-slate-400 text-xs">🎯 Target draw date</label>
+                    <div className="mt-1">
+                      <RollingDateWheel
+                        value={cosmicVoicesTarget}
+                        onChange={setCosmicVoicesTarget}
+                        testId="cosmic-voices-target-date"
+                      />
+                    </div>
                   </div>
                   <div className="flex-1">
                     <label className="text-slate-400 text-xs">📌 DJ-pin mains (comma-sep, optional)</label>
@@ -4598,13 +4604,19 @@ function App() {
             </div>
             <div className="flex flex-wrap gap-2 items-end mb-3">
               <div>
-                <label className="text-[10px] text-slate-400 block mb-1">Target date (YYYY-MM-DD)</label>
-                <input
-                  type="text"
-                  value={swissBrainTarget}
-                  onChange={(e) => setSwissBrainTarget(e.target.value)}
-                  className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 w-32 font-mono"
-                  data-testid="swiss-brain-date-input"
+                <label className="text-[10px] text-slate-400 block mb-1">Target date</label>
+                <RollingDateWheel
+                  value={(() => {
+                    // Adapter: swissBrainTarget is YYYY-MM-DD; wheel uses dd.mm.yyyy
+                    if (!swissBrainTarget) return undefined;
+                    const m = swissBrainTarget.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+                    return m ? `${m[3]}.${m[2]}.${m[1]}` : swissBrainTarget;
+                  })()}
+                  onChange={(ddmmyyyy) => {
+                    const m = ddmmyyyy.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+                    setSwissBrainTarget(m ? `${m[3]}-${m[2]}-${m[1]}` : ddmmyyyy);
+                  }}
+                  testId="swiss-brain-date-input"
                 />
               </div>
               <div>
@@ -4777,14 +4789,14 @@ function App() {
                 {/* Inputs */}
                 <div className="flex flex-col sm:flex-row gap-2 items-end">
                   <div className="flex-1">
-                    <label className="text-slate-400 text-xs">🎯 Target draw date (dd.mm.yyyy)</label>
-                    <input
-                      type="text"
-                      value={ghostTargetDate}
-                      onChange={(e) => setGhostTargetDate(e.target.value)}
-                      className="w-full mt-1 px-2 py-1 rounded bg-slate-800/60 border border-slate-700 text-slate-200 font-mono text-sm"
-                      data-testid="ghost-target-date"
-                    />
+                    <label className="text-slate-400 text-xs">🎯 Target draw date</label>
+                    <div className="mt-1">
+                      <RollingDateWheel
+                        value={ghostTargetDate}
+                        onChange={setGhostTargetDate}
+                        testId="ghost-target-date"
+                      />
+                    </div>
                   </div>
                   <button
                     onClick={fetchGhostLedger}
@@ -4940,27 +4952,26 @@ function App() {
                 {/* Inputs */}
                 <div className="flex flex-col sm:flex-row gap-2 items-end">
                   <div className="flex-1">
-                    <label className="text-xs text-slate-400">🎯 Target date (dd.mm.yyyy)</label>
-                    <input
-                      type="text"
-                      value={storyComposerTarget}
-                      onChange={(e) => setStoryComposerTarget(e.target.value)}
-                      placeholder="13.05.2026"
-                      className="w-full px-3 py-2 rounded bg-slate-900/60 border border-slate-700 text-slate-100 text-sm font-mono"
-                      data-testid="story-composer-target"
-                    />
+                    <label className="text-xs text-slate-400">🎯 Target date</label>
+                    <div className="mt-1">
+                      <RollingDateWheel
+                        value={storyComposerTarget}
+                        onChange={setStoryComposerTarget}
+                        testId="story-composer-target"
+                      />
+                    </div>
                   </div>
                   <div className="w-24">
                     <label className="text-xs text-slate-400">Count</label>
-                    <input
-                      type="number"
-                      min={3}
-                      max={15}
-                      value={storyComposerCount}
-                      onChange={(e) => setStoryComposerCount(parseInt(e.target.value) || 10)}
-                      className="w-full px-3 py-2 rounded bg-slate-900/60 border border-slate-700 text-slate-100 text-sm font-mono"
-                      data-testid="story-composer-count"
-                    />
+                    <div className="mt-1">
+                      <RollingNumberWheel
+                        value={storyComposerCount}
+                        onChange={setStoryComposerCount}
+                        min={3}
+                        max={15}
+                        testId="story-composer-count"
+                      />
+                    </div>
                   </div>
                   <button
                     onClick={fetchStoryComposer}
@@ -5130,27 +5141,26 @@ function App() {
                 {/* Inputs */}
                 <div className="flex flex-col sm:flex-row gap-2 items-end">
                   <div className="flex-1">
-                    <label className="text-xs text-slate-400">🎯 Target date (dd.mm.yyyy)</label>
-                    <input
-                      type="text"
-                      value={ghostEngineTarget}
-                      onChange={(e) => setGhostEngineTarget(e.target.value)}
-                      placeholder="13.05.2026"
-                      className="w-full px-3 py-2 rounded bg-slate-900/60 border border-slate-700 text-slate-100 text-sm font-mono"
-                      data-testid="ghost-engine-target-date"
-                    />
+                    <label className="text-xs text-slate-400">🎯 Target date</label>
+                    <div className="mt-1">
+                      <RollingDateWheel
+                        value={ghostEngineTarget}
+                        onChange={setGhostEngineTarget}
+                        testId="ghost-engine-target-date"
+                      />
+                    </div>
                   </div>
                   <div className="w-28">
                     <label className="text-xs text-slate-400">Lookback</label>
-                    <input
-                      type="number"
-                      min={4}
-                      max={30}
-                      value={ghostEngineLookback}
-                      onChange={(e) => setGhostEngineLookback(parseInt(e.target.value) || 10)}
-                      className="w-full px-3 py-2 rounded bg-slate-900/60 border border-slate-700 text-slate-100 text-sm font-mono"
-                      data-testid="ghost-engine-lookback"
-                    />
+                    <div className="mt-1">
+                      <RollingNumberWheel
+                        value={ghostEngineLookback}
+                        onChange={setGhostEngineLookback}
+                        min={4}
+                        max={30}
+                        testId="ghost-engine-lookback"
+                      />
+                    </div>
                   </div>
                   <button
                     onClick={() => fetchGhostEngine()}
@@ -5362,14 +5372,14 @@ function App() {
                 {/* Inputs */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                   <div>
-                    <label className="text-slate-400">🎯 Target date (dd.mm.yyyy)</label>
-                    <input
-                      type="text"
-                      value={brainTargetDate}
-                      onChange={(e) => setBrainTargetDate(e.target.value)}
-                      className="w-full mt-1 px-2 py-1 rounded bg-slate-800/60 border border-slate-700 text-slate-200 font-mono"
-                      data-testid="brain-target-date"
-                    />
+                    <label className="text-slate-400">🎯 Target date</label>
+                    <div className="mt-1">
+                      <RollingDateWheel
+                        value={brainTargetDate}
+                        onChange={setBrainTargetDate}
+                        testId="brain-target-date"
+                      />
+                    </div>
                   </div>
                   <div>
                     <label className="text-slate-400">🌌 Seed mains (comma-sep)</label>

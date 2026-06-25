@@ -1,7 +1,32 @@
 # Lucky Jack — Swiss Lotto + EuroMillions Pattern Analyzer (PRD)
 
 
+## 🎰 SESSION 47 (09.06.2026) — ALL KEYBOARD NUMBER INPUTS → ROLLING WHEELS ✅
+- **User ask**: "Fix all places where a user can put numbers to rolling numbers so user don't need using keyboard"
+- **Built** `/app/frontend/src/components/RollingNumberWheel.jsx` — single-number odometer matching `RollingDateWheel` aesthetic (brass tumbler on fuchsia/cyan glass)
+  - Props: `value`, `onChange`, `min`, `max`, `label`, `width`, `formatValue`, `allowZero`, `testId`
+  - Touch-drag + mouse-wheel + keyboard scroll
+  - Supports custom `formatValue` (e.g. `0 → '—'` for "unlocked")
+- **Replaced 10 keyboard inputs across `App.js`**:
+  | # | Location | Before | After |
+  |---|---|---|---|
+  | 1 | Birthday (Personalize) | `<input type="text" DD/MM/YYYY>` | `<RollingDateWheel>` adapter |
+  | 2 | Lock Positions grid (6 cells P1-P6) | `<input type="number">` × 6 | `<RollingNumberWheel>` × 6 with `0 → '—'` |
+  | 3 | Hunt Suspect weave-in `+♪` | `<input type="number">` | `<RollingNumberWheel>` with `0 → '+♪'` |
+  | 4 | Cosmic Voices target date | `<input type="text">` | `<RollingDateWheel>` |
+  | 5 | Swiss Brain target date (YYYY-MM-DD ↔ dd.mm.yyyy adapter) | `<input type="text">` | `<RollingDateWheel>` |
+  | 6 | Ghost Ledger target date | `<input type="text">` | `<RollingDateWheel>` |
+  | 7 | Story Composer target date | `<input type="text">` | `<RollingDateWheel>` |
+  | 8 | Story Composer count (3-15) | `<input type="number">` | `<RollingNumberWheel>` |
+  | 9 | Ghost Engine target date | `<input type="text">` | `<RollingDateWheel>` |
+  | 10 | Ghost Engine lookback (4-30) | `<input type="number">` | `<RollingNumberWheel>` |
+  | 11 | Cosmic Brain target date | `<input type="text">` | `<RollingDateWheel>` |
+- **Kept as text** (multi-number CSV pickers — different UX pattern, deferred): `djSuspectsInput`, `cosmicVoicesPins`, `swissBrainEnvelopes`, `brainSeedMains`, `brainSeedStars`, `brainPinMains`. Promo code stays text too.
+- **Verification**: `grep -nE 'type="number"|placeholder="DD/MM/YYYY"|placeholder="dd\.mm\.yyyy"|placeholder="13\.05\.2026"' App.js` → **0 matches**. Frontend compiled clean. Smoke screenshot OK.
+
+
 ## 🚀 SESSION 46.3 (09.06.2026) — asyncio.to_thread + PARAMETRIZED CACHE ✅ THE REAL FIX
+
 - **Root cause** (Emergent Support reproduced + traced): `/api/master-predictor` ran ~125 seconds of synchronous CPU compute **inside** an async route handler. A single call pinned its worker for 125s. With `--workers 2` + page-load firing Swiss+Euro simultaneously, both workers got pinned → **every other endpoint** (heartbeat, dashboard, last-draw, login) queued behind → 524 timeouts. Preview never showed it because one request at a time.
 - **Fix #1 — Off the event loop** (Support's THE real fix):
   - Swiss `/api/master-predictor`: wrapped the 2652-line heavy compute body into a nested sync `_heavy_compute()` and call it via `await asyncio.to_thread(_heavy_compute)`. The async route now releases the event loop while the threadpool runs the math.
