@@ -1008,9 +1008,14 @@ async def compose_stories(
     if mode == "swiss":
         stories = _inject_p1_9_swiss(stories, palette, signals, count)
 
-    # 🪞 P3<10 CAP (DJ Canon, 09.06.2026) — max 2 of 10 tickets may have P3<10.
-    # When over, lift the offending P3 via the One Law circle (Canon 32).
-    stories = _enforce_p3_low_cap(stories, mode, count)
+    # 🪞 P3<10 CAP (DJ Canon 33, 09.06.2026 PM) — universal distribution guard
+    # Caps: P1<5 ≤30%, P3<10 ≤15%, P3∈[11-15] ≤20%. Lifts via One Law circle.
+    try:
+        from ticket_distribution_guard import enforce_distribution_caps
+        enforce_distribution_caps(stories, mode, mains_key="mains")
+    except Exception:
+        # Fallback to legacy P3<10 cap if the guard module is missing
+        stories = _enforce_p3_low_cap(stories, mode, count)
 
     # Sort: highest cosmic_score first
     stories.sort(key=lambda s: -s.get("cosmic_score", 0))

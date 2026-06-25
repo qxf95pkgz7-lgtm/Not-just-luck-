@@ -227,6 +227,13 @@ def build_sneaky_symphony(
                 "ticket_index": len(tickets) + 1,
             })
 
+    # 🪞 DJ Canon 33 — Distribution caps (Euro carrier, P1<5 ≤30%, P3<10 ≤15%, P3∈[11-15] ≤20%)
+    try:
+        from ticket_distribution_guard import enforce_distribution_caps
+        enforce_distribution_caps(tickets, "euro", mains_key="mains")
+    except Exception:
+        pass
+
     return {
         "plan": [{"signature": s, "tickets": n} for s, n in plan],
         "starved_families": starved,

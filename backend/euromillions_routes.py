@@ -2597,6 +2597,15 @@ def create_euromillions_router(db):
         
             return tickets, target_date
         tickets, target_date = await asyncio.to_thread(_euro_compute)
+        
+        # 🪞 DJ Canon 33 — Distribution caps (P1<5 ≤30%, P3<10 ≤15%, P3∈[11-15] ≤20%)
+        try:
+            from ticket_distribution_guard import enforce_distribution_caps
+            # Euro tickets are dicts with "numbers" key for the 5 mains
+            enforce_distribution_caps(tickets, "euro", mains_key="numbers")
+        except Exception as _e:
+            logger.warning(f"distribution_guard (euro) skipped: {_e}")
+        
         price_per_ticket = 3.50
         total_price = len(tickets) * price_per_ticket
         

@@ -1,6 +1,54 @@
 # Lucky Jack — Swiss Lotto + EuroMillions Pattern Analyzer (PRD)
 
 
+## 🎧 SESSION 51 (09.06.2026 PM #4) — COSMIC VOICES CLARITY + RC ANCHOR DAYS→DRAWS ✅
+- **DJ feedback**: "Cosmic voices comes lots of numbers but not clear what it helps. Convergence? Then RC anchor — 87 d is count days, instead draws."
+- **Fix 1 — Cosmic Voices Convergence panel redesign** (`App.js`):
+  - Added a clear **"🎯 DJ Pick Pool — your top 7-8 numbers"** header at the top of the panel — combines shout + whisper, capped at draw size (8 Swiss, 7 Euro)
+  - Each pool chip shows the number + `×lens_count` score in big golden chips
+  - Below: explicit guidance line "☝️ Use these as the spine of your tickets. Mix with personal seeds / Hungry Engine for the remaining 6-of-8 / 5-of-7 positions."
+  - SHOUT zone (3+ lenses) now shows EACH number on its OWN ROW with tags VISIBLE INLINE (previously hidden in HTML `title` hover-only attribute, which doesn't work on touch)
+  - WHISPER zone (2 lenses) same row-with-inline-tags layout
+  - Empty states for both — "the cosmos is spread tonight, trust master predictor"
+- **Fix 2 — RC Anchor: draws, not days** (`App.js` line ~4203):
+  - Was: `{rc_detector.days_since} d ago` — DJ read "d" as "draws", but the value was calendar days
+  - Now: `{rc_detector.draws_since} draws ago (Nd)` — primary display = draws count, calendar days shown in muted parenthesis
+  - Backend already returned both `days_since` and `draws_since` — just had to flip which one the UI led with
+- **Verification**: webpack compiled clean, no new lint errors, smoke screenshot OK
+- **Note**: Cosmic Voices panel is VIP-gated, so visual verification requires unlocked promo code
+
+## 🪞 SESSION 50 (09.06.2026 PM #3) — CANON 33: DISTRIBUTION CAPS ✅
+- **DJ teaching**: "Can't be more than 15% tickets P3 lower than 10, then 20% for P3∈11-15. P1 can't be more than 30% under 5. Must look at last 3 years of d, learn how the cosmos waves."
+- **Verified against last 3 years (Jan 2023–Jun 2026, 363 draws each)**:
+  | Band         | Swiss real | Euro real | DJ cap |
+  |--------------|-----------:|----------:|-------:|
+  | P1 < 5       | 42.7% 🔥   | 29.8%     | ≤30%   |
+  | P3 < 10      | 10.5%      | 3.3%      | ≤15%   |
+  | P3 ∈ [11-15] | 19.8% 🔥   | 11.0%     | ≤20%   |
+
+  → DJ caps align with cosmic reality almost exactly on Euro; tighten Swiss naturally.
+- **Built `/app/backend/ticket_distribution_guard.py`** — universal post-processor:
+  - `enforce_distribution_caps(tickets, mode, mains_key)` — 3-pass sequential cap enforcement
+  - Sorts offenders by ascending `cosmic_score` — weakest tickets get lifted first
+  - Uses **One Law circle** (`mirror_canon.mirror_of`) — Swiss +21, Euro +25
+  - **Iterative lift** (up to 3 attempts per ticket) — handles case where lifting one low value reveals another underneath
+  - Fallback: +10 decade nudge if circle collides
+  - Annotates each lift on `ticket["distribution_lifts"]` for UI transparency
+- **Wired into 4 ticket generators**:
+  1. `server.py` Swiss `get_master_prediction` — applies to `tickets_to_save` + `all_tickets` + `result["tickets"]`
+  2. `euromillions_routes.py` Euro `master-predictor` — applies after `_euro_compute`
+  3. `ghost_engine/story_composer.py` — replaces older `_enforce_p3_low_cap`
+  4. `cosmic_voices/sneaky_symphony.py` — applies to final tickets list
+- **Live verification (preview, 9-09 evening)**:
+  | Generator              | Tickets | P1<5     | P3<10    | P3∈11-15 |
+  |------------------------|---------|----------|----------|----------|
+  | Swiss MP x20           | 20      | 30% ✅   | 5%  ✅   | 15% ✅   |
+  | Euro MP x20            | 11      | 27% ✅   | 0%  ✅   | 0%  ✅   |
+  | Story Composer x15     | 15      | 27% ✅   | 13% ✅   | 20% ✅   |
+  | Sneaky Symphony        | 17      | 29% ✅   | 0%  ✅   | 18% ✅   |
+- **24/24 regression tests PASS** (safe_cursor + hungry_engine + story_composer)
+- Story Composer reports `distribution_lifts: ['4→25 (P1<5 cap (Canon 33))', ...]` per lifted ticket
+
 ## 🪞 SESSION 49 (09.06.2026 PM #2) — ONE MIRROR ONE LAW (Canon 32) ✅
 - **DJ teaching**: "Forget what you know about mirrors. The lotto mirror IS the circle. One mirror one law."
 - **The One Law (`/app/backend/mirror_canon.py`)** — single source of truth for mirror:

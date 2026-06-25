@@ -3632,6 +3632,21 @@ async def get_master_prediction(
     
         return result, tickets_to_save, lucky_prediction, top_6, all_tickets, avg_score
     result, tickets_to_save, lucky_prediction, top_6, all_tickets, avg_score = await asyncio.to_thread(_heavy_compute)
+    
+    # 🪞 DJ Canon 33 — Distribution caps (P1<5 ≤30%, P3<10 ≤15%, P3∈[11-15] ≤20%)
+    try:
+        from ticket_distribution_guard import enforce_distribution_caps
+        enforce_distribution_caps(tickets_to_save, "swiss", mains_key="numbers")
+        if isinstance(all_tickets, list):
+            enforce_distribution_caps(all_tickets, "swiss", mains_key="numbers")
+        # Mirror lifted mains back into result["all_tickets"] / ["tickets"] if used
+        if isinstance(result, dict):
+            for key in ("all_tickets", "tickets"):
+                if key in result and isinstance(result[key], list):
+                    enforce_distribution_caps(result[key], "swiss", mains_key="numbers")
+    except Exception as _e:
+        logger.warning(f"distribution_guard (swiss) skipped: {_e}")
+    
     for ticket in tickets_to_save:
         # Get top reasons from ticket details
         top_reasons = []

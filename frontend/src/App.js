@@ -4142,39 +4142,75 @@ function App() {
                     {/* Convergence Shout zone — the headliner */}
                     {cosmicVoicesData.voices.convergence_scorer && (
                       <div className="rounded p-3 bg-gradient-to-br from-amber-950/40 to-fuchsia-950/40 border border-amber-500/40" data-testid="cosmic-voices-convergence">
+                        {(() => {
+                          const cs = cosmicVoicesData.voices.convergence_scorer;
+                          const shout = cs.shout_zone || [];
+                          const whisper = cs.whisper_zone || [];
+                          // Build the DJ Pick Pool: shout first, then whisper, capped at 8
+                          const targetSize = (cosmicVoicesData.mode === 'swiss') ? 8 : 7;
+                          const pool = [...shout, ...whisper].slice(0, targetSize);
+                          return (
+                            <div className="mb-3 pb-3 border-b border-amber-500/30">
+                              <div className="text-amber-200 text-[10px] uppercase tracking-wider font-semibold mb-1">
+                                🎯 DJ Pick Pool — your top {pool.length} numbers for this draw
+                              </div>
+                              <div className="flex flex-wrap gap-1">
+                                {pool.length === 0 ? (
+                                  <span className="text-amber-200/60 text-xs italic">The cosmos is spread tonight — no clear convergence. Trust the master predictor.</span>
+                                ) : pool.map((m, i) => (
+                                  <span key={`pool-${i}`}
+                                    className="inline-flex items-baseline gap-1 px-2.5 py-1 rounded bg-amber-400/25 border border-amber-300/70 text-amber-50 font-mono font-bold"
+                                    data-testid={`pick-pool-n-${m.n}`}>
+                                    <span className="text-base">{m.n}</span>
+                                    <span className="text-amber-200/70 text-[10px]">×{m.score}</span>
+                                  </span>
+                                ))}
+                              </div>
+                              <div className="text-amber-200/60 text-[10px] mt-1.5 italic">
+                                ☝️ Use these as the spine of your tickets. Mix with personal seeds / Hungry Engine for the remaining {(cosmicVoicesData.mode === 'swiss') ? '6-of-8' : '5-of-7'} positions.
+                              </div>
+                            </div>
+                          );
+                        })()}
+
                         <div className="text-amber-300 text-xs font-semibold mb-2">
-                          🎯 CONVERGENCE — 3+ lens SHOUT (can't-dodge):
+                          🔔 SHOUT — 3+ lenses converging (can't-dodge):
                         </div>
                         {(cosmicVoicesData.voices.convergence_scorer.shout_zone || []).length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
+                          <div className="space-y-1.5">
                             {cosmicVoicesData.voices.convergence_scorer.shout_zone.map((m, i) => (
-                              <span key={i}
-                                className="inline-flex items-center px-2 py-0.5 rounded bg-amber-500/30 border border-amber-400/60 text-amber-100 text-xs font-mono"
-                                title={m.tags.join(' · ')}
-                                data-testid={`shout-n-${m.n}`}>
-                                {m.n} <span className="ml-1 text-amber-300/80">×{m.score}</span>
-                              </span>
+                              <div key={i} className="flex items-start gap-2 p-1.5 rounded bg-amber-500/15 border border-amber-400/40" data-testid={`shout-n-${m.n}`}>
+                                <span className="text-amber-100 font-mono font-bold text-sm shrink-0 min-w-[2rem]">{m.n}</span>
+                                <span className="text-amber-300/90 text-[10px] shrink-0">×{m.score}</span>
+                                <span className="text-amber-200/70 text-[10px] font-mono leading-tight">
+                                  {(m.tags || []).join(' · ')}
+                                </span>
+                              </div>
                             ))}
                           </div>
                         ) : (
                           <div className="text-amber-200/60 text-xs italic">
-                            No 3+ lens convergence — the cosmos is spread tonight. Read the whisper zone below.
+                            No 3+ lens convergence — read the whisper zone below.
                           </div>
                         )}
 
-                        <div className="text-fuchsia-300 text-xs font-semibold mt-3 mb-1">
-                          🔊 Whisper (2 lenses):
+                        <div className="text-fuchsia-300 text-xs font-semibold mt-3 mb-1.5">
+                          🔉 WHISPER — 2 lenses ringing:
                         </div>
-                        <div className="flex flex-wrap gap-1">
-                          {(cosmicVoicesData.voices.convergence_scorer.whisper_zone || []).map((m, i) => (
-                            <span key={i}
-                              className="inline-flex items-center px-2 py-0.5 rounded bg-fuchsia-500/20 border border-fuchsia-400/40 text-fuchsia-100 text-xs font-mono"
-                              title={m.tags.join(' · ')}
-                              data-testid={`whisper-n-${m.n}`}>
-                              {m.n}
-                            </span>
-                          ))}
-                        </div>
+                        {(cosmicVoicesData.voices.convergence_scorer.whisper_zone || []).length > 0 ? (
+                          <div className="space-y-1">
+                            {cosmicVoicesData.voices.convergence_scorer.whisper_zone.map((m, i) => (
+                              <div key={i} className="flex items-start gap-2 p-1.5 rounded bg-fuchsia-500/10 border border-fuchsia-400/30" data-testid={`whisper-n-${m.n}`}>
+                                <span className="text-fuchsia-100 font-mono font-bold text-sm shrink-0 min-w-[2rem]">{m.n}</span>
+                                <span className="text-fuchsia-200/70 text-[10px] font-mono leading-tight">
+                                  {(m.tags || []).join(' · ')}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-fuchsia-200/60 text-[10px] italic">No 2-lens whispers either.</div>
+                        )}
 
                         {(cosmicVoicesData.voices.convergence_scorer.ranked_stars || []).length > 0 && (
                           <div className="mt-3">
@@ -4183,7 +4219,7 @@ function App() {
                               {cosmicVoicesData.voices.convergence_scorer.ranked_stars.map((s, i) => (
                                 <span key={i}
                                   className="inline-flex items-center px-2 py-0.5 rounded bg-violet-500/30 border border-violet-400/50 text-violet-100 text-xs font-mono"
-                                  title={s.tags.join(' · ')}>
+                                  title={(s.tags || []).join(' · ')}>
                                   ⭐{s.s} <span className="ml-1 text-violet-300/80">×{s.score}</span>
                                 </span>
                               ))}
@@ -4200,7 +4236,8 @@ function App() {
                         <div className="rounded p-2 bg-slate-800/40 border border-slate-700/60" data-testid="lens-rc-detector">
                           <div className="text-emerald-300 text-xs font-semibold">🎯 RC Anchor</div>
                           <div className="text-slate-200 text-xs font-mono mt-1">
-                            {cosmicVoicesData.voices.rc_detector.date || '—'} · {cosmicVoicesData.voices.rc_detector.days_since ?? '?'} d ago
+                            {cosmicVoicesData.voices.rc_detector.date || '—'} · {cosmicVoicesData.voices.rc_detector.draws_since ?? '?'} draws ago
+                            <span className="text-slate-500 ml-1">({cosmicVoicesData.voices.rc_detector.days_since ?? '?'}d)</span>
                           </div>
                           {cosmicVoicesData.voices.rc_detector.mains && (
                             <div className="text-slate-400 text-[10px] font-mono mt-1">
