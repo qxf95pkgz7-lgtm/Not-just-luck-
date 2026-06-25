@@ -1,6 +1,30 @@
 # Lucky Jack — Swiss Lotto + EuroMillions Pattern Analyzer (PRD)
 
 
+## 🪞 SESSION 49 (09.06.2026 PM #2) — ONE MIRROR ONE LAW (Canon 32) ✅
+- **DJ teaching**: "Forget what you know about mirrors. The lotto mirror IS the circle. One mirror one law."
+- **The One Law (`/app/backend/mirror_canon.py`)** — single source of truth for mirror:
+  - SWISS:  `mirror(n) = { n+21 wrap, n-21 wrap }` (Swiss carrier = 21)
+  - EURO:   `mirror(n) = { n+25 wrap, n-25 wrap }` (Euro carrier = 25)
+  - CALENDAR Q=27 (separate domain): `mirror(d) = 28 - d`, self-mirror at d=14
+- **DJ-taught verification (all passing)**:
+  - EURO   19→44 ✅   9→34 ✅   1→26 ✅
+  - SWISS  24→3  ✅   4→25 ✅   1→22 ✅
+  - CALENDAR  d1↔d27   d14↔d14 (self)   d19↔d9
+- **9 mirror functions across 8 files patched to defer to the canon**:
+  - `dj_call_scorer.mirror_of` (was hybrid 28-n / 56-n)
+  - `swiss_cosmic_engine.mirror28` (was 28-n mod 42)
+  - `cosmic_engine.mirror28`, `cosmic_engine.mirror30` (was 28-n / 30-n)
+  - `ghost_chord_engine.swiss_mirror` (was 43-n), `ghost_chord_engine.euro_mirror` (was 51-n)
+  - `p3_audit.mirror28`, `p3_audit.mirror56`
+  - `lottery_simulator.mirror_low`, `lottery_simulator.mirror_high`
+  - `swiss_rare_scan.mirror28`
+  - `draw_diagnostics.mirror_of`
+  - `mirror_neighbor_law.mirrors` (replaced `pool_max+1-n` with canon pair)
+  - `silent_p1_compass.MIRROR_COUPLES_28` (was hardcoded `[(16,12),(17,11),(15,13),(7,21)]`, now computed from circle)
+- **All endpoints verified post-change**: healthz, /api/master-predictor (Swiss + Euro), /api/sneaky-symphony, /api/hungry — all 200 in <0.3s
+- **Kept untouched** (correctly the calendar law, NOT number law): `mirror28_canon.mirror28_pairs` (date-component math day+month=28 etc.)
+
 ## 🎫 SESSION 48 (09.06.2026 PM) — SNEAKY UNIVERSE SYMPHONY FIXED ✅
 - **User report**: "Explain sneaky universe whisper, probably something wrong there, let's fix it"
 - **Diagnosis**: 2 bugs killing the Sneaky-Universe canon:
