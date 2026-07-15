@@ -7850,6 +7850,53 @@ async def _load_euro_history_sorted():
     return draws
 
 
+
+@api_router.get("/quarter-opener/{q_id}/{mode}")
+async def quarter_opener_analysis(q_id: str, mode: str):
+    """🎻 Canon 34 — Quarter Opening Dance analysis.
+
+    Reads the Q anchor from The Book (Q1=01.03.2026, Q2=08.04.2026,
+    Q3=11.07.2026), finds the first draw on/after the anchor, and:
+      1. Computes date-derived cosmic seeds (day, month, day.month
+         carrier-back, day×month carrier-back, digit-sum)
+      2. Identifies the "dancers" — seeds that landed in the opener
+      3. Runs history-echo — finds past draws sharing 3-number subsets
+         (with at least one dancer) + reports what came AFTER them
+    """
+    try:
+        from quarter_opening_canon import analyze_quarter_opener
+        return await analyze_quarter_opener(db, q_id, mode.lower())
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Q-opener analysis failed: {e}")
+
+
+@api_router.get("/history-echo/{mode}")
+async def history_echo_query(mode: str, nums: str):
+    """🎻 Canon 34 (b) — history-echo lookup.
+
+    Given a comma-separated list of numbers (e.g. `?nums=2,3,35`), returns
+    every past draw where ALL of those numbers appeared together, along
+    with the NEXT draw's mains (what the cosmos placed after).
+    """
+    try:
+        from quarter_opening_canon import history_echo
+        parsed = [int(x.strip()) for x in nums.split(",") if x.strip()]
+        if not parsed:
+            raise HTTPException(status_code=400, detail="nums cannot be empty")
+        matches = await history_echo(db, parsed, mode.lower())
+        return {
+            "mode": mode.lower(),
+            "subset": parsed,
+            "match_count": len(matches),
+            "matches": matches,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"history-echo failed: {e}")
+
+
+
 @api_router.get("/euro/session19")
 async def euro_session19_snapshot(target_date: str = ""):
     """Session 19: Dialect Ladder + Ghost-Echo + Slot-Reincarnation for Euro.
