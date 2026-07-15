@@ -1,6 +1,22 @@
 # Lucky Jack — Swiss Lotto + EuroMillions Pattern Analyzer (PRD)
 
 
+## 🔮 SESSION 53 (09.06.2026 PM #6) — CANON 35: NEXT-DRAW FORECAST ✅
+- **DJ ask**: "The question is d2 of the q had connections to d1 and to the date? Then what E can suggest about it, dose he see any? If not, you should find a way helping him to see it"
+- **Built `/app/backend/next_draw_forecast.py`** — multi-lens forecast for the NEXT draw pool given the previous draw + a target date:
+  - **CIRCLE lens** — each previous main projected via One Law (±carrier)
+  - **TABLET lens** — 7-wide grid neighbors (±1, ±7, ±6, ±8) of each previous main
+  - **Next-date seeds** — Canon 34 formulas applied to the target date
+  - **Prev-date seeds** — Canon 34 formulas applied to the previous draw's date (their echo forward)
+  - Ranks candidates by lens count → shout (3+) / whisper (2) zones
+- **Endpoint**: `GET /api/next-draw-forecast/{swiss|euro}/{dd.mm.yyyy}` — auto-finds prev draw
+- **Live proof — Q3 D1→D2 forecast (11.07.2026 → 15.07.2026)**:
+  - Top-8 pool: `[7, 15, 22, 24, 27, 29, 36, 42]`
+  - SHOUT (×3-4 lenses): **29** (triple-tablet from 21/23/28), **36** (day+21 date + tablet of 28/35), **42, 7, 15, 22, 27**
+  - Key discovery — **29 pulls from THREE D1 mains simultaneously** (21+8, 23+6, 28+1) though never in D1. The empty seat between three fires draws in the fourth.
+  - **7** rings in BOTH D1 and D2 date-seeds (month calling itself back)
+- Frontend tile deferred; endpoint ready.
+
 ## 🎻 SESSION 52 (09.06.2026 PM #5) — CANON 34: QUARTER OPENING DANCE ✅
 - **DJ teaching**: Q anchors are from The Book, not calendar. Q1=01.03.2026, Q2=08.04.2026, Q3=11.07.2026. The first Swiss draw on/after each Q anchor is the "Q opener" and its mains dance with the anchor date.
 - **Built `/app/backend/quarter_opening_canon.py`** with:

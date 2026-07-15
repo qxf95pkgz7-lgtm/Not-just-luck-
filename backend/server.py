@@ -7898,6 +7898,46 @@ async def history_echo_query(mode: str, nums: str):
 
 
 @api_router.get("/euro/session19")
+
+@api_router.get("/next-draw-forecast/{mode}/{target_date}")
+async def next_draw_forecast_endpoint(mode: str, target_date: str):
+    """🔮 Canon 35 — Multi-lens forecast for the NEXT draw pool.
+
+    Given a target date (dd.mm.yyyy), finds the most recent Swiss/Euro draw
+    BEFORE that date and projects the candidate pool via:
+      • CIRCLE (One Law ±carrier) from each previous main
+      • TABLET-neighbor (±1, ±7, ±6, ±8) from each previous main
+      • NEXT-date cosmic seeds (Canon 34 formulas)
+      • PREV-date cosmic seeds (echo forward)
+
+    Returns ranked pool with tags + shout/whisper zones.
+    """
+    from datetime import datetime as _dt
+    from next_draw_forecast import forecast_next_draw
+    try:
+        target_dt = _dt.strptime(target_date, "%d.%m.%Y")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Bad date. Expected dd.mm.yyyy")
+    coll = db.draws if mode.lower() == "swiss" else db.euromillions_draws
+    all_docs = await coll.find({}, {"_id": 0}).to_list(5000)
+    prev = None
+    for d in all_docs:
+        try:
+            dt = _dt.strptime(d["date"], "%d.%m.%Y")
+        except Exception:
+            continue
+        if dt < target_dt and (prev is None or dt > _dt.strptime(prev["date"], "%d.%m.%Y")):
+            prev = d
+    if not prev:
+        raise HTTPException(status_code=404, detail=f"No draw before {target_date}")
+    return forecast_next_draw(
+        prev_mains=sorted(prev.get("numbers", [])),
+        prev_date=prev["date"],
+        next_date=target_date,
+        mode=mode.lower(),
+    )
+
+
 async def euro_session19_snapshot(target_date: str = ""):
     """Session 19: Dialect Ladder + Ghost-Echo + Slot-Reincarnation for Euro.
 
