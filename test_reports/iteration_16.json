@@ -1,0 +1,39 @@
+{
+  "verdict": "fixed",
+  "user_reported_bug": "Should i deploy? I can't see it in the preview \u2014 the Kombo option (historical position check tool) is missing from the UI",
+  "summary": "No relevant testing skill found. Verified the preview URL from REACT_APP_BACKEND_URL end-to-end: after unlocking VIP with promo code 93928 and opening Multiple Tickets, the Kombo \u2014 Check History panel is visible, expands, switches locked/free modes, calls the correct backend APIs, returns positive historical match counts, clears correctly, shows the virgin badge after generation, and renders 6 Swiss / 5 Euro wheels. No deploy is needed for preview.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/tests/kombo_preview_verification.py",
+    "/root/.emergent/automation_output/20260716_112749/console_20260716_112749.log"
+  ],
+  "action_items": [
+    "Optional UX note: the Kombo panel is not mounted immediately after VIP unlock while the Multiple Tickets section is collapsed; users must open Multiple Tickets to see the fuchsia Kombo toggle. Consider surfacing the Kombo toggle outside the collapsed section if the DJ expects it to be immediately visible."
+  ],
+  "critical_code_review_comments": [
+    "Code review confirmed /api/kombo/virgin/{mode}, /api/kombo/position/{mode}, and frontend data-testid selectors are present. Backend direct checks returned /api/kombo/position/swiss?p1=13 match_count=29 and /api/history-echo/swiss?nums=14 match_count=231.",
+    "Non-blocking console noise observed during synthetic wheel events: 'Unable to preventDefault inside passive event listener invocation'; it did not block user-visible Kombo behavior."
+  ],
+  "updated_files": [
+    "/app/tests/kombo_preview_verification.py",
+    "/app/test_reports/bug_verification_16.json",
+    "/app/test_reports/iteration_16.json"
+  ],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "100%"
+  },
+  "seed_data_creation": "No seed data created. Used existing historical draw data and one VIP promo-code redemption for a fresh localStorage visitor id.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Use preview URL https://rolling-lottery-math.preview.emergentagent.com. Fresh session: localStorage.clear(), unlock VIP via promo 93928, open Multiple Tickets, then Kombo panel is inside that expanded section above Generate. Verified locked p1=13 => 29 matches, free nums=14 => 231 matches, virgin badge after Generate, Euro shows 5 wheels/no P6.",
+  "rca_of_the_issue": "The Kombo code is present and working in preview. The likely user confusion is that the panel is gated by VIP and located inside the collapsible Multiple Tickets section; it is not visible before VIP unlock or while that section is collapsed."
+}
