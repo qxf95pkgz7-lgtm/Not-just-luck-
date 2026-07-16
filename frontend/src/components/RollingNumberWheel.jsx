@@ -134,6 +134,7 @@ export default function RollingNumberWheel({
   testId = 'rolling-number',
   allowZero = false,
   formatValue,
+  twoDigit = false,
 }) {
   // Normalize incoming value
   const lo = allowZero ? Math.min(0, min) : min;
@@ -148,6 +149,64 @@ export default function RollingNumberWheel({
     if (n !== value) onChange(n);
   }, [n]);
 
+  // Two-digit mode: render TENS + UNITS wheels side by side.
+  // User rolls each digit independently — much faster than scrolling
+  // through 1..50.
+  if (twoDigit) {
+    const tensMax = Math.min(9, Math.floor(max / 10));
+    const tens = Math.max(0, Math.floor(n / 10));
+    const units = Math.max(0, n % 10);
+
+    const combine = (t, u) => {
+      let combined = t * 10 + u;
+      if (combined > max) combined = max;
+      if (combined < 0) combined = 0;
+      if (!allowZero && combined < min && combined !== 0) combined = min;
+      return combined;
+    };
+
+    return (
+      <div data-testid={testId} className="inline-flex flex-col items-center p-2 rounded-lg"
+        style={{
+          background: 'linear-gradient(180deg, rgba(15,23,42,0.6), rgba(15,23,42,0.85))',
+          border: '1px solid rgba(217,70,239,0.25)',
+        }}
+      >
+        {label && (
+          <span className="text-[9px] uppercase tracking-wider text-fuchsia-300/70 mb-1 font-semibold">
+            {label}
+          </span>
+        )}
+        <div className="flex gap-1 items-center">
+          <Wheel
+            value={tens}
+            min={0}
+            max={tensMax}
+            format={(v) => String(v)}
+            onChange={(t) => setN(combine(t, units))}
+            width={34}
+            testId={`${testId}-tens`}
+          />
+          <Wheel
+            value={units}
+            min={0}
+            max={9}
+            format={(v) => String(v)}
+            onChange={(u) => setN(combine(tens, u))}
+            width={34}
+            testId={`${testId}-units`}
+          />
+        </div>
+        {formatValue && n === 0 && (
+          <span className="text-[9px] text-fuchsia-300/60 mt-0.5 font-mono">
+            {formatValue(0)}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  // Single-wheel mode (default)
   // Auto-size wheel width based on max digit count
   const digits = String(max).length;
   const w = width || (digits >= 3 ? 86 : 72);

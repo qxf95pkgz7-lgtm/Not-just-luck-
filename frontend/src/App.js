@@ -3552,8 +3552,9 @@ function App() {
                                 min={0}
                                 max={maxNum}
                                 label={label}
+                                allowZero={true}
+                                twoDigit={true}
                                 formatValue={(v) => v === 0 ? '—' : String(v).padStart(2, '0')}
-                                width={60}
                                 testId={`kombo-position-${key}-wheel`}
                               />
                             </div>
@@ -3587,8 +3588,9 @@ function App() {
                                 min={0}
                                 max={12}
                                 label={null}
+                                allowZero={true}
+                                twoDigit={true}
                                 formatValue={(v) => v === 0 ? '—' : String(v).padStart(2, '0')}
-                                width={60}
                                 testId="kombo-star1-wheel"
                               />
                             </div>
@@ -3600,8 +3602,9 @@ function App() {
                                 min={0}
                                 max={12}
                                 label={null}
+                                allowZero={true}
+                                twoDigit={true}
                                 formatValue={(v) => v === 0 ? '—' : String(v).padStart(2, '0')}
-                                width={60}
                                 testId="kombo-star2-wheel"
                               />
                             </div>
