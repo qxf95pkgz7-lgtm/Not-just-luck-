@@ -823,6 +823,8 @@ function App() {
   const [virginLoading, setVirginLoading] = useState(false);
   // 🎯 Kombo — Position Match state (2 modes: locked vs free)
   const [positionInputs, setPositionInputs] = useState({ p1: 0, p2: 0, p3: 0, p4: 0, p5: 0, p6: 0 });
+  const [positionLucky, setPositionLucky] = useState(0);       // 🍀 Swiss lucky (1-6)
+  const [positionStars, setPositionStars] = useState({ s1: 0, s2: 0 }); // ⭐ Euro stars (1-12)
   const [positionResults, setPositionResults] = useState(null);
   const [positionLoading, setPositionLoading] = useState(false);
   const [showKomboPosition, setShowKomboPosition] = useState(false);
@@ -1134,24 +1136,53 @@ function App() {
   // 🎯 Kombo — user-triggered position finder (2 modes: locked / free)
   const runPositionMatch = async () => {
     const filled = Object.entries(positionInputs).filter(([k, v]) => v && v > 0);
-    if (filled.length === 0) {
-      setPositionResults({ error: 'Set at least one number (P1..P6) before searching.' });
+    const luckyFilled = positionLucky && positionLucky > 0;
+    const starsFilled = (positionStars.s1 && positionStars.s1 > 0) || (positionStars.s2 && positionStars.s2 > 0);
+    if (filled.length === 0 && !luckyFilled && !starsFilled) {
+      setPositionResults({ error: 'Set at least one number, lucky, or star before searching.' });
       return;
     }
     setPositionLoading(true);
     try {
       let res;
       if (komboMode === 'locked') {
-        // Position-Locked: exact position match (P1=X, P3=Y)
+        // Position-Locked: exact position match (P1=X, P3=Y) + optional lucky/stars
         const params = new URLSearchParams();
         filled.forEach(([k, v]) => params.append(k, String(v)));
+        if (lotteryMode === 'swiss' && luckyFilled) params.append('lucky', String(positionLucky));
+        if (lotteryMode === 'euro' && positionStars.s1 > 0) params.append('s1', String(positionStars.s1));
+        if (lotteryMode === 'euro' && positionStars.s2 > 0) params.append('s2', String(positionStars.s2));
         res = await axios.get(`${API}/kombo/position/${lotteryMode}?${params.toString()}`, { timeout: 20000 });
         setPositionResults({ ...res.data, mode: 'locked' });
       } else {
-        // Position-Free: numbers can appear anywhere in the draw
+        // Position-Free: numbers can appear anywhere in the draw (mains via history-echo)
+        // If lucky/stars are set alongside, filter after fetch
         const nums = filled.map(([, v]) => v).sort((a, b) => a - b).join(',');
-        res = await axios.get(`${API}/history-echo/${lotteryMode}?nums=${nums}`, { timeout: 20000 });
-        setPositionResults({ ...res.data, mode: 'free' });
+        if (nums) {
+          res = await axios.get(`${API}/history-echo/${lotteryMode}?nums=${nums}`, { timeout: 20000 });
+          let matches = res.data.matches || [];
+          // Post-filter by lucky/stars if user set them
+          if (lotteryMode === 'swiss' && luckyFilled) {
+            matches = matches.filter(m => m.lucky_number === positionLucky);
+          }
+          if (lotteryMode === 'euro' && (positionStars.s1 || positionStars.s2)) {
+            matches = matches.filter(m => {
+              const s = m.stars || [];
+              if (positionStars.s1 && !s.includes(positionStars.s1)) return false;
+              if (positionStars.s2 && !s.includes(positionStars.s2)) return false;
+              return true;
+            });
+          }
+          setPositionResults({ ...res.data, matches, match_count: matches.length, mode: 'free' });
+        } else {
+          // Only lucky/stars set — use kombo/position endpoint with just those filters
+          const params = new URLSearchParams();
+          if (lotteryMode === 'swiss' && luckyFilled) params.append('lucky', String(positionLucky));
+          if (lotteryMode === 'euro' && positionStars.s1 > 0) params.append('s1', String(positionStars.s1));
+          if (lotteryMode === 'euro' && positionStars.s2 > 0) params.append('s2', String(positionStars.s2));
+          res = await axios.get(`${API}/kombo/position/${lotteryMode}?${params.toString()}`, { timeout: 20000 });
+          setPositionResults({ ...res.data, mode: 'free' });
+        }
       }
     } catch (err) {
       setPositionResults({ error: err?.response?.data?.detail || err.message });
@@ -3514,22 +3545,68 @@ function App() {
                           const key = `p${idx + 1}`;
                           const label = komboMode === 'locked' ? `P${idx + 1}` : `N${idx + 1}`;
                           return (
-                            <div key={key} className="text-center flex flex-col items-center">
-                              <label className="text-[10px] text-fuchsia-300/80 block mb-1 font-mono">{label}</label>
-                              <div data-testid={`kombo-position-${key}`}>
-                                <RollingNumberWheel
-                                  value={positionInputs[key] || 0}
-                                  onChange={(n) => setPositionInputs({ ...positionInputs, [key]: n })}
-                                  min={0}
-                                  max={maxNum}
-                                  formatValue={(v) => v === 0 ? '—' : String(v).padStart(2, '0')}
-                                  width={54}
-                                  testId={`kombo-position-${key}-wheel`}
-                                />
-                              </div>
+                            <div key={key} className="flex justify-center" data-testid={`kombo-position-${key}`}>
+                              <RollingNumberWheel
+                                value={positionInputs[key] || 0}
+                                onChange={(n) => setPositionInputs({ ...positionInputs, [key]: n })}
+                                min={0}
+                                max={maxNum}
+                                label={label}
+                                formatValue={(v) => v === 0 ? '—' : String(v).padStart(2, '0')}
+                                width={60}
+                                testId={`kombo-position-${key}-wheel`}
+                              />
                             </div>
                           );
                         })}
+                      </div>
+
+                      {/* 🍀 Lucky / ⭐ Stars section */}
+                      <div className="flex justify-center gap-3 items-center pt-1 border-t border-fuchsia-500/20">
+                        {lotteryMode === 'swiss' ? (
+                          <div className="flex flex-col items-center" data-testid="kombo-lucky-wrap">
+                            <div className="text-[10px] text-amber-300/80 font-mono mb-0.5">🍀 LUCKY</div>
+                            <RollingNumberWheel
+                              value={positionLucky || 0}
+                              onChange={setPositionLucky}
+                              min={0}
+                              max={6}
+                              label={null}
+                              formatValue={(v) => v === 0 ? '—' : String(v)}
+                              width={60}
+                              testId="kombo-lucky-wheel"
+                            />
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex flex-col items-center" data-testid="kombo-star1-wrap">
+                              <div className="text-[10px] text-violet-300/80 font-mono mb-0.5">⭐ STAR 1</div>
+                              <RollingNumberWheel
+                                value={positionStars.s1 || 0}
+                                onChange={(n) => setPositionStars({ ...positionStars, s1: n })}
+                                min={0}
+                                max={12}
+                                label={null}
+                                formatValue={(v) => v === 0 ? '—' : String(v).padStart(2, '0')}
+                                width={60}
+                                testId="kombo-star1-wheel"
+                              />
+                            </div>
+                            <div className="flex flex-col items-center" data-testid="kombo-star2-wrap">
+                              <div className="text-[10px] text-violet-300/80 font-mono mb-0.5">⭐ STAR 2</div>
+                              <RollingNumberWheel
+                                value={positionStars.s2 || 0}
+                                onChange={(n) => setPositionStars({ ...positionStars, s2: n })}
+                                min={0}
+                                max={12}
+                                label={null}
+                                formatValue={(v) => v === 0 ? '—' : String(v).padStart(2, '0')}
+                                width={60}
+                                testId="kombo-star2-wheel"
+                              />
+                            </div>
+                          </>
+                        )}
                       </div>
                       <div className="flex gap-2 items-center">
                         <button
@@ -3541,7 +3618,7 @@ function App() {
                           {positionLoading ? '🔎 Searching…' : '🎯 Check history'}
                         </button>
                         <button
-                          onClick={() => { setPositionInputs({ p1: 0, p2: 0, p3: 0, p4: 0, p5: 0, p6: 0 }); setPositionResults(null); }}
+                          onClick={() => { setPositionInputs({ p1: 0, p2: 0, p3: 0, p4: 0, p5: 0, p6: 0 }); setPositionLucky(0); setPositionStars({ s1: 0, s2: 0 }); setPositionResults(null); }}
                           className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-slate-300 text-xs font-mono hover:bg-slate-700"
                           data-testid="kombo-position-clear-btn"
                         >

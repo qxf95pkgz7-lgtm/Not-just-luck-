@@ -7928,20 +7928,25 @@ async def kombo_position_match(
     p4: Optional[int] = None,
     p5: Optional[int] = None,
     p6: Optional[int] = None,
+    lucky: Optional[int] = None,
+    s1: Optional[int] = None,
+    s2: Optional[int] = None,
 ):
-    """🎯 Kombo #2 — POSITION MATCH FINDER.
+    """🎯 Kombo #2 — POSITION MATCH FINDER (with 🍀 lucky + ⭐ stars).
 
     Given position-specific values (any subset of P1..P6 for Swiss or
-    P1..P5 for Euro), return every historical draw whose sorted mains
-    match those positions. Requires at least 1 position set.
+    P1..P5 for Euro), plus optional lucky (Swiss) or stars (Euro),
+    return every historical draw matching those positions/bonuses.
     """
     try:
         from kombo_tracker import position_match
         raw = {1: p1, 2: p2, 3: p3, 4: p4, 5: p5, 6: p6}
         positions = {k: v for k, v in raw.items() if v is not None and v != 0}
-        if not positions:
-            raise HTTPException(status_code=400, detail="At least one position (p1..p6) must be provided")
-        result = await position_match(db, mode, positions)
+        stars = [x for x in [s1, s2] if x is not None and x != 0] or None
+        lucky_v = lucky if lucky and lucky != 0 else None
+        if not positions and lucky_v is None and not stars:
+            raise HTTPException(status_code=400, detail="At least one position, lucky, or star must be provided")
+        result = await position_match(db, mode, positions, lucky=lucky_v, stars=stars)
         return result
     except HTTPException:
         raise

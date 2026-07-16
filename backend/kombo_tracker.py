@@ -83,6 +83,8 @@ async def position_match(
     db: AsyncIOMotorDatabase,
     mode: str,
     positions: Dict[int, int],
+    lucky: Optional[int] = None,
+    stars: Optional[List[int]] = None,
 ) -> Dict[str, Any]:
     """Kombo #2 — find historical draws matching position-specific values.
 
@@ -91,25 +93,15 @@ async def position_match(
 
     Position is defined by sorted-ascending mains (P1 = smallest).
 
-    Args:
-        positions: dict of {pos_index (1-based): value}. At least 1 entry.
-                   pos_index must be in [1, expected_size] for the mode.
-
-    Returns:
-        {
-            "mode": "swiss"|"euro",
-            "positions": {"P1": val, ...},   # normalized human-readable
-            "match_count": int,
-            "matches": [
-                {"date": "dd.mm.yyyy", "numbers": [...], "lucky_number": ..., ...}
-            ]
-        }
+    Optional filters:
+      - lucky: Swiss lucky_number (1-6) — draws must match this lucky value
+      - stars: Euro stars — draws must contain ALL specified star values in the stars pair
     """
     coll = _collection_for(mode)
     size = _expected_size(mode)
 
-    if not positions:
-        raise ValueError("At least one position must be specified")
+    if not positions and lucky is None and not stars:
+        raise ValueError("At least one position/lucky/star must be specified")
 
     for p in positions.keys():
         if p < 1 or p > size:
@@ -120,12 +112,23 @@ async def position_match(
     # Since `numbers` is stored sorted, position P_k = numbers[k-1] (0-indexed).
     # We can construct a Mongo query using dot-notation on numbers.<index>.
     query: Dict[str, Any] = {}
-    normalized: Dict[str, int] = {}
+    normalized: Dict[str, Any] = {}
     for p, v in positions.items():
         p_idx = int(p) - 1
         val = int(v)
         query[f"numbers.{p_idx}"] = val
         normalized[f"P{p}"] = val
+
+    if lucky is not None and mode.lower() == "swiss":
+        query["lucky_number"] = int(lucky)
+        normalized["lucky"] = int(lucky)
+
+    if stars and mode.lower() == "euro":
+        # Match ALL specified stars appearing in the stars array
+        star_vals = [int(s) for s in stars if s]
+        if star_vals:
+            query["stars"] = {"$all": star_vals}
+            normalized["stars"] = star_vals
 
     projection = {"_id": 0, "date": 1, "numbers": 1}
     if mode.lower() == "swiss":
