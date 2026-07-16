@@ -7896,6 +7896,60 @@ async def history_echo_query(mode: str, nums: str):
         raise HTTPException(status_code=500, detail=f"history-echo failed: {e}")
 
 
+# ═══════════════════════════════════════════════════════════════════
+# 🎫 KOMBO TRACKER — Two DJ-canonized history tools (restored)
+# ═══════════════════════════════════════════════════════════════════
+
+@api_router.get("/kombo/virgin/{mode}")
+async def kombo_virgin_check(mode: str, nums: str):
+    """🎫 Kombo #1 — VIRGIN CHECK.
+
+    Given the mains of a generated ticket (comma-separated, 5 for Euro or
+    6 for Swiss), return whether this exact combination has EVER played
+    historically. Returns match dates + full draws when not virgin.
+    """
+    try:
+        from kombo_tracker import virgin_check
+        parsed = [int(x.strip()) for x in nums.split(",") if x.strip()]
+        result = await virgin_check(db, mode, parsed)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"kombo-virgin failed: {e}")
+
+
+@api_router.get("/kombo/position/{mode}")
+async def kombo_position_match(
+    mode: str,
+    p1: Optional[int] = None,
+    p2: Optional[int] = None,
+    p3: Optional[int] = None,
+    p4: Optional[int] = None,
+    p5: Optional[int] = None,
+    p6: Optional[int] = None,
+):
+    """🎯 Kombo #2 — POSITION MATCH FINDER.
+
+    Given position-specific values (any subset of P1..P6 for Swiss or
+    P1..P5 for Euro), return every historical draw whose sorted mains
+    match those positions. Requires at least 1 position set.
+    """
+    try:
+        from kombo_tracker import position_match
+        raw = {1: p1, 2: p2, 3: p3, 4: p4, 5: p5, 6: p6}
+        positions = {k: v for k, v in raw.items() if v is not None and v != 0}
+        if not positions:
+            raise HTTPException(status_code=400, detail="At least one position (p1..p6) must be provided")
+        result = await position_match(db, mode, positions)
+        return result
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"kombo-position failed: {e}")
+
 
 @api_router.get("/euro/session19")
 

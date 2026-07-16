@@ -818,6 +818,14 @@ function App() {
   const [syncResult, setSyncResult] = useState(null);
   
   // Hit Tracker State
+  // 🎫 Kombo #1 — Virgin Check state (auto-fires when prediction lands)
+  const [virginData, setVirginData] = useState(null);        // { is_virgin, play_count, matches, nums }
+  const [virginLoading, setVirginLoading] = useState(false);
+  // 🎯 Kombo #2 — Position Match state
+  const [positionInputs, setPositionInputs] = useState({ p1: 0, p2: 0, p3: 0, p4: 0, p5: 0, p6: 0 });
+  const [positionResults, setPositionResults] = useState(null);   // { match_count, matches, positions }
+  const [positionLoading, setPositionLoading] = useState(false);
+  const [showKomboPosition, setShowKomboPosition] = useState(false);
   const [showHitTracker, setShowHitTracker] = useState(false);
   const [lastDraw, setLastDraw] = useState(null);
   const [generationHistory, setGenerationHistory] = useState([]);
@@ -1076,9 +1084,59 @@ function App() {
     }
   };
   
+  // 🎫 Kombo #1 — auto-check the displayed prediction against history
+  useEffect(() => {
+    const mains = prediction?.main_prediction;
+    const expectedSize = lotteryMode === 'swiss' ? 6 : 5;
+    if (!Array.isArray(mains) || mains.length !== expectedSize) {
+      setVirginData(null);
+      return;
+    }
+    let cancelled = false;
+    const runVirgin = async () => {
+      setVirginLoading(true);
+      try {
+        const nums = mains.slice().sort((a, b) => a - b).join(',');
+        const res = await axios.get(`${API}/kombo/virgin/${lotteryMode}?nums=${nums}`, { timeout: 15000 });
+        if (!cancelled) setVirginData(res.data);
+      } catch (err) {
+        if (!cancelled) setVirginData({ error: err?.response?.data?.detail || err.message });
+      } finally {
+        if (!cancelled) setVirginLoading(false);
+      }
+    };
+    runVirgin();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line
+  }, [prediction?.main_prediction, lotteryMode]);
+
+  // 🎯 Kombo #2 — user-triggered position finder
+  const runPositionMatch = async () => {
+    const params = new URLSearchParams();
+    Object.entries(positionInputs).forEach(([k, v]) => {
+      if (v && v > 0) params.append(k, String(v));
+    });
+    if (params.toString() === '') {
+      setPositionResults({ error: 'Set at least one position (P1..P6) before searching.' });
+      return;
+    }
+    setPositionLoading(true);
+    try {
+      const res = await axios.get(`${API}/kombo/position/${lotteryMode}?${params.toString()}`, { timeout: 20000 });
+      setPositionResults(res.data);
+    } catch (err) {
+      setPositionResults({ error: err?.response?.data?.detail || err.message });
+    } finally {
+      setPositionLoading(false);
+    }
+  };
+
   // Load hit tracker data when section is opened (also re-loads when toggle flips)
   useEffect(() => {
     if (showHitTracker) {
+      fetchLastDraw();
+      fetchGenerationHistory();
+      fetchHitStats();
       fetchLastDraw();
       fetchGenerationHistory();
       fetchHitStats();
@@ -2855,6 +2913,47 @@ function App() {
               Your Lucky Numbers
             </h2>
           </div>
+
+          {/* 🎫 KOMBO #1 — VIRGIN CHECK (auto-fires on every generation) */}
+          {prediction && (virginData || virginLoading) && (
+            <div className="mb-4 flex justify-center" data-testid="kombo-virgin-panel">
+              {virginLoading ? (
+                <div className="px-4 py-2 rounded-full bg-slate-800/60 border border-slate-700 text-slate-400 text-xs font-mono flex items-center gap-2">
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                  🎫 Kombo checking history...
+                </div>
+              ) : virginData?.error ? (
+                <div className="px-4 py-2 rounded-full bg-rose-900/40 border border-rose-500/40 text-rose-300 text-xs font-mono" data-testid="kombo-virgin-error">
+                  ⚠️ Kombo check failed: {virginData.error}
+                </div>
+              ) : virginData?.is_virgin ? (
+                <div className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-950/60 to-green-950/60 border-2 border-emerald-400/60 shadow-lg shadow-emerald-500/20" data-testid="kombo-virgin-badge">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">🌸</span>
+                    <div className="flex flex-col">
+                      <span className="text-emerald-300 font-bold text-sm tracking-wide">VIRGIN COMBO</span>
+                      <span className="text-emerald-200/70 text-[10px] font-mono">first time in the cosmos — never drawn before</span>
+                    </div>
+                  </div>
+                </div>
+              ) : virginData?.play_count > 0 ? (
+                <div className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-950/60 to-orange-950/60 border-2 border-amber-400/60 shadow-lg shadow-amber-500/20" data-testid="kombo-virgin-played">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{virginData.play_count === 1 ? '🎯' : '🔥'}</span>
+                    <div className="flex flex-col">
+                      <span className="text-amber-300 font-bold text-sm tracking-wide">
+                        PLAYED {virginData.play_count} TIME{virginData.play_count > 1 ? 'S' : ''}
+                      </span>
+                      <span className="text-amber-200/70 text-[10px] font-mono" data-testid="kombo-virgin-dates">
+                        {virginData.matches.slice(0, 5).map(m => m.date).join(' · ')}
+                        {virginData.matches.length > 5 ? ` · +${virginData.matches.length - 5} more` : ''}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          )}
           
           {/* Ball Machine + Wheels */}
           <div className="flex items-start justify-center">
@@ -3339,8 +3438,115 @@ function App() {
                   ))}
                 </div>
               )}
-              
-              <button 
+
+              {/* 🎯 KOMBO #2 — POSITION MATCH FINDER (VIP-gated) */}
+              {isUnlimited && (
+                <div className="mt-4 rounded-xl bg-gradient-to-br from-fuchsia-950/40 to-purple-950/40 border border-fuchsia-500/40 p-3" data-testid="kombo-position-panel">
+                  <button
+                    onClick={() => setShowKomboPosition(!showKomboPosition)}
+                    className="w-full flex items-center justify-between text-left"
+                    data-testid="kombo-position-toggle"
+                  >
+                    <div>
+                      <div className="text-fuchsia-300 font-bold text-sm">🎯 Kombo — Position Match Finder</div>
+                      <div className="text-fuchsia-200/60 text-[10px] font-mono">check history by exact positions (P1..P{lotteryMode === 'swiss' ? 6 : 5})</div>
+                    </div>
+                    {showKomboPosition ? <ChevronUp className="w-4 h-4 text-fuchsia-300" /> : <ChevronDown className="w-4 h-4 text-fuchsia-300" />}
+                  </button>
+
+                  {showKomboPosition && (
+                    <div className="mt-3 space-y-3">
+                      <div className="text-slate-300 text-[11px] italic">
+                        Set at least ONE position value (leave others as — to skip). Kombo returns every past draw where sorted mains hit those exact positions.
+                      </div>
+                      <div className={`grid gap-2 ${lotteryMode === 'swiss' ? 'grid-cols-6' : 'grid-cols-5'}`}>
+                        {Array.from({ length: lotteryMode === 'swiss' ? 6 : 5 }, (_, idx) => {
+                          const key = `p${idx + 1}`;
+                          return (
+                            <div key={key} className="text-center flex flex-col items-center">
+                              <label className="text-[10px] text-fuchsia-300/80 block mb-1 font-mono">P{idx + 1}</label>
+                              <div data-testid={`kombo-position-${key}`}>
+                                <RollingNumberWheel
+                                  value={positionInputs[key] || 0}
+                                  onChange={(n) => setPositionInputs({ ...positionInputs, [key]: n })}
+                                  min={0}
+                                  max={maxNum}
+                                  formatValue={(v) => v === 0 ? '—' : String(v).padStart(2, '0')}
+                                  width={54}
+                                  testId={`kombo-position-${key}-wheel`}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <button
+                          onClick={runPositionMatch}
+                          disabled={positionLoading}
+                          className="flex-1 py-2 rounded-lg bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white font-bold text-sm disabled:opacity-50 shadow shadow-fuchsia-500/30"
+                          data-testid="kombo-position-run-btn"
+                        >
+                          {positionLoading ? '🔎 Searching…' : '🎯 Find in history'}
+                        </button>
+                        <button
+                          onClick={() => { setPositionInputs({ p1: 0, p2: 0, p3: 0, p4: 0, p5: 0, p6: 0 }); setPositionResults(null); }}
+                          className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-slate-300 text-xs font-mono hover:bg-slate-700"
+                          data-testid="kombo-position-clear-btn"
+                        >
+                          Clear
+                        </button>
+                      </div>
+
+                      {/* Results */}
+                      {positionResults?.error && (
+                        <div className="text-rose-300 text-xs font-mono" data-testid="kombo-position-error">
+                          ⚠️ {positionResults.error}
+                        </div>
+                      )}
+                      {positionResults && !positionResults.error && (
+                        <div data-testid="kombo-position-results">
+                          <div className="text-fuchsia-200 text-xs font-mono mb-2">
+                            {positionResults.match_count === 0
+                              ? '🌸 No historical draws matched — this position set is virgin territory.'
+                              : `🎯 Found ${positionResults.match_count} historical match${positionResults.match_count === 1 ? '' : 'es'}:`}
+                          </div>
+                          {positionResults.matches && positionResults.matches.length > 0 && (
+                            <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
+                              {positionResults.matches.slice(0, 100).map((m, i) => (
+                                <div key={i} className="flex items-center gap-2 p-1.5 rounded bg-slate-900/60 border border-fuchsia-500/20 text-xs" data-testid={`kombo-position-match-${i}`}>
+                                  <span className="text-fuchsia-300 font-mono w-20">{m.date}</span>
+                                  <span className="text-slate-200 font-mono flex-1">
+                                    {(m.numbers || []).map(n => String(n).padStart(2, '0')).join(' · ')}
+                                  </span>
+                                  {lotteryMode === 'swiss' && (
+                                    <span className="text-amber-400 font-mono text-[10px]">
+                                      🍀{m.lucky_number} R{m.replay_number}
+                                    </span>
+                                  )}
+                                  {lotteryMode === 'euro' && m.stars && (
+                                    <span className="text-violet-300 font-mono text-[10px]">
+                                      ⭐{m.stars.join(',')}
+                                    </span>
+                                  )}
+                                </div>
+                              ))}
+                              {positionResults.matches.length > 100 && (
+                                <div className="text-slate-500 text-[10px] italic text-center py-1">
+                                  +{positionResults.matches.length - 100} more (showing latest 100)
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+
+              <button
                 onClick={fetchPrediction}
                 disabled={loading}
                 className={`mt-4 w-full py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300 shadow-lg disabled:opacity-50 ${

@@ -1,6 +1,30 @@
 # Lucky Jack — Swiss Lotto + EuroMillions Pattern Analyzer (PRD)
 
 
+## 🎫 SESSION 54 (16.07.2026) — KOMBO TRACKER RESTORED ✅
+- **DJ report** (post Jul-15 deploy): *"Kombo option disappeared from UI"* — TWO panels missing:
+  1. **Virgin Check** — between "Your Lucky Numbers" header and Money/Dreaming Mode buttons; auto-checks whether the generated ticket's exact combo has ever played historically
+  2. **Position Match Finder** — under multi-tickets, before Bonus Numbers; user enters values at specific positions (e.g., P3=21, P5=47) and gets every historical draw matching
+- **Investigation**: searched ALL git history (kombo/combo/Combo Tracker/virgin/position_match/checkHistory/never_drawn + 20 more spellings). ZERO hits. The panels were never in `master` branch — likely wiped in an earlier undocumented refactor.
+- **Verdict**: rebuild fresh (rollback would cost Hungry Engine, Canon 31-35, wheels, async fix).
+- **Shipped**:
+  - `/app/backend/kombo_tracker.py` (NEW) — `virgin_check()` + `position_match()` primitives
+  - Two endpoints wired in `server.py`:
+    - `GET /api/kombo/virgin/{mode}?nums=A,B,C,D,E[,F]` — exact-set match against `draws` / `euromillions_draws`
+    - `GET /api/kombo/position/{mode}?p1=X&p2=Y&...` — position-specific match (dot-notation on sorted `numbers` array)
+  - `App.js` state + `useEffect` auto-fire on prediction change + `runPositionMatch()` handler
+  - Kombo #1 UI (badge between "Your Lucky Numbers" and mode buttons): 🌸 VIRGIN (emerald), 🎯 PLAYED N TIMES (amber, shows dates)
+  - Kombo #2 UI (fuchsia panel under multi-tickets): P1..P6 rolling wheels, "Find in history" button, result list with date + full draw + 🍀/⭐
+  - VIP-gated Kombo #2 (uses `isUnlimited`)
+- **Live verification**:
+  - Virgin `[13,17,19,26,29,40]` Swiss → played 1× on 28.03.2026 ✓
+  - Virgin `[1,2,3,4,5,6]` Swiss → virgin ✓
+  - Position P1=13 (Swiss) → 29 historical matches ✓
+  - Position empty → 400 error "At least one position must be provided" ✓
+  - Virgin wrong-size → 400 error "swiss needs exactly 6 mains, got 3" ✓
+- **Data-testids**: `kombo-virgin-panel`, `kombo-virgin-badge`, `kombo-virgin-played`, `kombo-virgin-dates`, `kombo-virgin-error`, `kombo-position-panel`, `kombo-position-toggle`, `kombo-position-{p1..p6}`, `kombo-position-run-btn`, `kombo-position-clear-btn`, `kombo-position-results`, `kombo-position-match-{i}`
+
+
 ## 🔮 SESSION 53 (09.06.2026 PM #6) — CANON 35: NEXT-DRAW FORECAST ✅
 - **DJ ask**: "The question is d2 of the q had connections to d1 and to the date? Then what E can suggest about it, dose he see any? If not, you should find a way helping him to see it"
 - **Built `/app/backend/next_draw_forecast.py`** — multi-lens forecast for the NEXT draw pool given the previous draw + a target date:
