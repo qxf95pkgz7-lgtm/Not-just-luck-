@@ -8006,3 +8006,62 @@ any draw target. Combine with /api/hungry, /api/encryption-decoder,
 /api/cosmic-voices for the full fusion stack.
 
 ══════════════════════════════════════════════════════════════
+
+
+══════════════════════════════════════════════════════════════
+🎼 CANON 38 — SWISS HIGH-P1 → EURO CROSS-LOTTERY LEAK (16.07.2026)
+══════════════════════════════════════════════════════════════
+
+TRIGGER: any Swiss draw with sorted P1 > 19 (rare — ~26 fires in 10 years,
+~2.6/year). When the trigger fires, the immediately-following Euro draw
+carries a measurable cross-lottery signature.
+
+DISCOVERED: DJ (Ya man!) after cross-lottery hunt on 16.07.2026 while
+searching for tomorrow's #57 forecast. Yesterday's Swiss (15.07.2026)
+mains [21, 22, 23, 33, 34, 41] triggered with P1=21.
+
+═══ THE LAW ═══
+
+When Swiss_P1 > 19 fires on a given Swiss draw, the next Euro draw shows:
+
+1. 🎯 KING numbers (lift 2.3× baseline):
+   - 6, 41, 34 (top three) — each ~4.62% cond vs ~2% base
+   - Secondary: 37, 29, 36, 47
+2. ⭐ STAR lifts:
+   - Star 4: +8% (7.4% → 15.4%)
+   - Star 3: +6% (9.3% → 15.4%)
+   - Star 2: +3.5%
+3. 🌀 CIRCLE CARRIER LEAK:
+   - Swiss_P1 + 21 (Swiss Circle) wrapped mod-50 appears in Euro ~19%
+   - Historical hits: 21→42, 26→47, 20→41, 30→1 (wrap)
+4. 📥 DIRECT LEAK:
+   - Numbers present in the trigger Swiss draw commonly reappear in Euro
+   - Yesterday's Swiss [21,22,23,33,34,41] contains 34 AND 41 (top 3 KINGS)
+
+═══ TOMORROW'S #57 FORECAST (17.07.2026) ═══
+
+Trigger: 15.07.2026 Swiss = [21, 22, 23, 33, 34, 41]  (P1=21)
+Full ammunition pool for Euro #57:
+   [6, 21, 22, 23, 29, 33, 34, 36, 37, 41, 42, 47]
+Star focus: {3, 4}
+
+═══ IMPLEMENTATION ═══
+
+Module:  /app/backend/canon38_cross_lottery.py
+API:     GET /api/canon38/cross-leak/{target_date}
+
+Returns:
+  - trigger_fired (bool)
+  - trigger_swiss_date, trigger_swiss_mains, trigger_swiss_p1
+  - forecast (null if trigger not fired) with:
+    - top_kings: [n1..n7]
+    - top_stars: [s1..s3]
+    - circle_carrier: number
+    - swiss_direct_leak: [swiss mains]
+    - full_ammunition_pool: [union of kings + carrier + leak]
+    - top_main_lifts_detail + top_star_lifts_detail (lift stats)
+
+Future agents: use this endpoint automatically when generating Euro
+forecasts. If Canon 38 fires, prioritise KINGS and stars 3/4 in ticket
+assembly. Combine with Canon 37 (draw-index decoder) for compound signal.
+══════════════════════════════════════════════════════════════

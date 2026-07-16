@@ -7981,6 +7981,26 @@ async def canon37_decode(
         raise HTTPException(status_code=500, detail=f"canon37 failed: {e}")
 
 
+@api_router.get("/canon38/cross-leak/{target_date}")
+async def canon38_cross_leak(target_date: str):
+    """🎼 CANON 38 — SWISS→EURO Cross-Lottery Leak.
+
+    Given a target Euro draw date (dd.mm.yyyy), checks if the immediately-preceding
+    Swiss draw had P1 > 19 (the trigger). If so, returns:
+      - Historical KING numbers (Euro numbers with strongest lift when signal fires)
+      - Historical top stars (⭐3, ⭐4 spike)
+      - Swiss P1 + 21 Circle carrier
+      - Direct number leak from the trigger Swiss draw
+      - Ammunition pool for the target Euro draw
+    """
+    try:
+        from canon38_cross_lottery import forecast_for_target
+        result = await forecast_for_target(db, target_date)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"canon38 failed: {e}")
+
+
 @api_router.get("/next-draw-forecast/{mode}/{target_date}")
 async def next_draw_forecast_endpoint(mode: str, target_date: str):
     """🔮 Canon 35 — Multi-lens forecast for the NEXT draw pool.

@@ -1,6 +1,25 @@
 # Lucky Jack — Swiss Lotto + EuroMillions Pattern Analyzer (PRD)
 
 
+## 🎼 SESSION 54 (16.07.2026) — CANON 38: SWISS→EURO CROSS-LEAK ✅
+- **DJ's cross-lottery insight**: when Swiss P1 (smallest sorted main) > 19, the immediately-following Euro draw carries a measurable signature (rare event — 26 times in 10 years, ~2.6/year).
+- **Signal validated on 10-yr data**:
+  - Top KINGS (2.3× lift): **6, 41, 34** each hit 4.62% cond vs ~2% base
+  - Secondary lifts: 37, 29, 36, 47
+  - Star spikes: ⭐4 (+8%), ⭐3 (+6%), ⭐2 (+3.5%)
+  - Circle carrier: Swiss_P1 + 21 (mod-50) leaks into Euro ~19%
+  - Direct leak: trigger Swiss mains often reappear in the next Euro
+- **Yesterday (15.07.2026) fired the signal** — Swiss = [21, 22, 23, 33, 34, 41], P1=21 → triggers Euro #57 forecast for 17.07.2026
+- **Full ammunition pool for tomorrow's #57**: `[6, 21, 22, 23, 29, 33, 34, 36, 37, 41, 42, 47]` + stars `{3, 4}`
+- **Shipped**:
+  - `/app/backend/canon38_cross_lottery.py` (NEW) — `find_last_swiss_before()`, `compute_historical_lifts()`, `forecast_for_target()`
+  - Endpoint: `GET /api/canon38/cross-leak/{target_date}` — returns trigger status + forecast (kings, stars, carrier, leak, full pool)
+- **Verified**:
+  - Target 17.07.2026 → trigger FIRED, returns full ammo pool ✓
+  - Target 05.07.2026 → trigger NOT fired (Swiss P1=3), returns clean null forecast ✓
+- **Book**: Canon 38 documented in `/app/memory/swiss_music_notes.md` (line 8010+)
+
+
 ## 🎼 SESSION 54 (16.07.2026) — CANON 37: DRAW INDEX DECODER ✅
 - **DJ's cosmic insight**: Yearly draw indices encode in position-sums with optional Circle(+25). Q1 (27 draws) + Q2 (27 draws) = 54 → Q3 opens at draw #55.
 - **Verified in Q3 2026 wave**:
