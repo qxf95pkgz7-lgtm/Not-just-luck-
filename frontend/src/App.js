@@ -827,6 +827,12 @@ function App() {
   const [positionLoading, setPositionLoading] = useState(false);
   const [showKomboPosition, setShowKomboPosition] = useState(false);
   const [komboMode, setKomboMode] = useState('locked'); // 'locked' = position-specific, 'free' = anywhere in draw
+  // 🎼 Canon 37 — Draw Index Decoder state
+  const [showCanon37, setShowCanon37] = useState(false);
+  const [canon37Target, setCanon37Target] = useState(57);
+  const [canon37Year, setCanon37Year] = useState(2026);
+  const [canon37Data, setCanon37Data] = useState(null);
+  const [canon37Loading, setCanon37Loading] = useState(false);
   const [showHitTracker, setShowHitTracker] = useState(false);
   const [lastDraw, setLastDraw] = useState(null);
   const [generationHistory, setGenerationHistory] = useState([]);
@@ -1110,6 +1116,20 @@ function App() {
     return () => { cancelled = true; };
     // eslint-disable-next-line
   }, [prediction?.main_prediction, lotteryMode]);
+
+  // 🎼 Canon 37 — Draw Index Decoder fetch
+  const runCanon37 = async () => {
+    setCanon37Loading(true);
+    setCanon37Data(null);
+    try {
+      const res = await axios.get(`${API}/canon37/decode/${lotteryMode}/${canon37Year}/${canon37Target}`, { timeout: 25000 });
+      setCanon37Data(res.data);
+    } catch (err) {
+      setCanon37Data({ error: err?.response?.data?.detail || err.message });
+    } finally {
+      setCanon37Loading(false);
+    }
+  };
 
   // 🎯 Kombo — user-triggered position finder (2 modes: locked / free)
   const runPositionMatch = async () => {
@@ -3571,6 +3591,173 @@ function App() {
                                 </div>
                               )}
                             </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 🎼 CANON 37 — DRAW INDEX DECODER (RC0-anchored, VIP) */}
+              {isUnlimited && (
+                <div className="mt-4 rounded-xl bg-gradient-to-br from-indigo-950/40 via-violet-950/40 to-purple-950/40 border border-indigo-400/40 p-3" data-testid="canon37-panel">
+                  <button
+                    onClick={() => setShowCanon37(!showCanon37)}
+                    className="w-full flex items-center justify-between text-left"
+                    data-testid="canon37-toggle"
+                  >
+                    <div>
+                      <div className="text-indigo-300 font-bold text-sm">🎼 Canon 37 — Draw Index Decoder</div>
+                      <div className="text-indigo-200/60 text-[10px] font-mono">RC0-anchored 1P/2P/3P encoding · past decode or future forecast</div>
+                    </div>
+                    {showCanon37 ? <ChevronUp className="w-4 h-4 text-indigo-300" /> : <ChevronDown className="w-4 h-4 text-indigo-300" />}
+                  </button>
+
+                  {showCanon37 && (
+                    <div className="mt-3 space-y-3">
+                      <div className="text-slate-300 text-[11px] italic">
+                        Set the target draw index (yearly count, e.g. 57 = the 57th {lotteryMode === 'euro' ? 'Euro' : 'Swiss'} draw of the year). If it already played, Canon 37 decodes the encoding. If it's future, it forecasts from RC0's cosmic pool.
+                      </div>
+                      <div className="flex items-end gap-3 justify-center">
+                        <div className="text-center">
+                          <label className="text-[10px] text-indigo-300/80 block mb-1 font-mono">YEAR</label>
+                          <div data-testid="canon37-year-wheel">
+                            <RollingNumberWheel
+                              value={canon37Year}
+                              onChange={setCanon37Year}
+                              min={2013}
+                              max={2030}
+                              formatValue={(v) => String(v)}
+                              width={70}
+                            />
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <label className="text-[10px] text-indigo-300/80 block mb-1 font-mono">DRAW #</label>
+                          <div data-testid="canon37-target-wheel">
+                            <RollingNumberWheel
+                              value={canon37Target}
+                              onChange={setCanon37Target}
+                              min={1}
+                              max={110}
+                              formatValue={(v) => String(v).padStart(3, '0')}
+                              width={70}
+                            />
+                          </div>
+                        </div>
+                        <button
+                          onClick={runCanon37}
+                          disabled={canon37Loading}
+                          className="py-2 px-4 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-600 text-white font-bold text-sm disabled:opacity-50 shadow shadow-indigo-500/30 self-center"
+                          data-testid="canon37-run-btn"
+                        >
+                          {canon37Loading ? '🔎…' : '🎼 Decode'}
+                        </button>
+                      </div>
+
+                      {canon37Data?.error && (
+                        <div className="text-rose-300 text-xs font-mono" data-testid="canon37-error">
+                          ⚠️ {canon37Data.error}
+                        </div>
+                      )}
+
+                      {canon37Data && !canon37Data.error && (
+                        <div data-testid="canon37-results" className="space-y-2 text-xs">
+                          {/* RC0 header */}
+                          <div className="p-2 rounded bg-slate-900/60 border border-indigo-400/30">
+                            <div className="text-indigo-300 font-mono text-[10px]">🌱 RC0 anchor: {canon37Data.rc0_date}</div>
+                            <div className="text-slate-200 font-mono text-xs">{(canon37Data.rc0_mains || []).map(n => String(n).padStart(2, '0')).join(' · ')}</div>
+                          </div>
+
+                          {/* PAST — show mains + encodings + RC0 overlap */}
+                          {canon37Data.status === 'past' && (
+                            <>
+                              <div className="p-2 rounded bg-emerald-900/30 border border-emerald-400/40">
+                                <div className="text-emerald-300 font-mono text-[10px]">🎫 Draw #{canon37Data.target_index} — {canon37Data.date}</div>
+                                <div className="text-emerald-100 font-mono text-sm">
+                                  {canon37Data.mains.map(n => String(n).padStart(2, '0')).join(' · ')}
+                                  {canon37Data.stars && canon37Data.stars.length > 0 && (
+                                    <span className="ml-2 text-violet-300 text-[10px]">⭐ {canon37Data.stars.join(', ')}</span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {['1P', '2P', '3P'].map(kind => {
+                                const list = canon37Data.encodings?.[kind] || [];
+                                if (list.length === 0) return null;
+                                return (
+                                  <div key={kind} className="p-2 rounded bg-slate-900/60 border border-indigo-400/20" data-testid={`canon37-enc-${kind}`}>
+                                    <div className="text-indigo-300 font-mono text-[10px] mb-1">🎯 {kind} encodings ({list.length}):</div>
+                                    <div className="space-y-0.5">
+                                      {list.slice(0, 6).map((f, i) => (
+                                        <div key={i} className="text-slate-200 font-mono text-[11px]">• {f}</div>
+                                      ))}
+                                      {list.length > 6 && <div className="text-slate-500 text-[10px] italic">+{list.length - 6} more</div>}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+
+                              <div className="p-2 rounded bg-slate-900/60 border border-indigo-400/20">
+                                <div className="text-indigo-300 font-mono text-[10px]">🌱 RC0 pool overlap: {canon37Data.rc0_overlap_count}/{canon37Data.mains.length}</div>
+                                <div className="text-slate-200 font-mono text-[11px]">
+                                  {(canon37Data.rc0_overlap || []).map(n => `${String(n).padStart(2, '0')} (${(canon37Data.rc0_overlap_sources?.[n] || []).join('/')})`).join('  ')}
+                                </div>
+                              </div>
+                            </>
+                          )}
+
+                          {/* FUTURE — show pool + top pairs/triples + suggested ticket */}
+                          {canon37Data.status === 'future' && (
+                            <>
+                              <div className="p-2 rounded bg-amber-900/30 border border-amber-400/40">
+                                <div className="text-amber-300 font-mono text-[10px]">🔮 FUTURE DRAW — Forecasting from RC0</div>
+                                <div className="text-amber-100 font-mono text-[11px]">{canon37Data.note}</div>
+                              </div>
+
+                              <div className="p-2 rounded bg-slate-900/60 border border-indigo-400/20">
+                                <div className="text-indigo-300 font-mono text-[10px] mb-1">🌱 RC0 cosmic pool ({canon37Data.forecast?.pool_size} numbers):</div>
+                                <div className="text-slate-200 font-mono text-[10px] leading-relaxed">
+                                  {(canon37Data.forecast?.pool || []).map(n => String(n).padStart(2, '0')).join(' · ')}
+                                </div>
+                              </div>
+
+                              {canon37Data.forecast?.pair_direct?.length > 0 && (
+                                <div className="p-2 rounded bg-slate-900/60 border border-indigo-400/20" data-testid="canon37-pairs">
+                                  <div className="text-indigo-300 font-mono text-[10px] mb-1">🎯 Top DIRECT pairs (sum = {canon37Data.target_index}):</div>
+                                  <div className="space-y-0.5">
+                                    {canon37Data.forecast.pair_direct.slice(0, 6).map((p, i) => (
+                                      <div key={i} className="text-slate-200 font-mono text-[11px]">
+                                        • <span className="text-emerald-300">{String(p.a).padStart(2, '0')} + {String(p.b).padStart(2, '0')}</span> = {canon37Data.target_index}  <span className="text-slate-500">[purity {p.purity}]</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {canon37Data.forecast?.triple_direct?.length > 0 && (
+                                <div className="p-2 rounded bg-slate-900/60 border border-indigo-400/20" data-testid="canon37-triples">
+                                  <div className="text-indigo-300 font-mono text-[10px] mb-1">🎯 Top DIRECT triples (sum = {canon37Data.target_index}):</div>
+                                  <div className="space-y-0.5">
+                                    {canon37Data.forecast.triple_direct.slice(0, 5).map((t, i) => (
+                                      <div key={i} className="text-slate-200 font-mono text-[11px]">
+                                        • <span className="text-fuchsia-300">{String(t.a).padStart(2, '0')} + {String(t.b).padStart(2, '0')} + {String(t.c).padStart(2, '0')}</span>  <span className="text-slate-500">[purity {t.purity}]</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {canon37Data.suggested_ticket && (
+                                <div className="p-2 rounded bg-gradient-to-r from-indigo-800/30 to-violet-800/30 border-2 border-indigo-400/60" data-testid="canon37-suggested">
+                                  <div className="text-indigo-300 font-mono text-[10px] mb-1">🎫 SUGGESTED TICKET:</div>
+                                  <div className="text-indigo-100 font-mono text-base font-bold tracking-wide">
+                                    {canon37Data.suggested_ticket.map(n => String(n).padStart(2, '0')).join(' · ')}
+                                  </div>
+                                </div>
+                              )}
+                            </>
                           )}
                         </div>
                       )}

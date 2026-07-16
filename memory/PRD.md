@@ -1,6 +1,28 @@
 # Lucky Jack — Swiss Lotto + EuroMillions Pattern Analyzer (PRD)
 
 
+## 🎼 SESSION 54 (16.07.2026) — CANON 37: DRAW INDEX DECODER ✅
+- **DJ's cosmic insight**: Yearly draw indices encode in position-sums with optional Circle(+25). Q1 (27 draws) + Q2 (27 draws) = 54 → Q3 opens at draw #55.
+- **Verified in Q3 2026 wave**:
+  - #55 (10.07.2026): C(P1)(27) + P3(28) = 55 ✓
+  - #56 (14.07.2026): P2(19) + P3(37) = 56 ✓
+  - #57 (17.07.2026 tomorrow): forecasting via RC0 pool
+- **Verified in 2024 precedent**: #57 mains [2,32,35,36,39] → C(P2)(7) + C(P4)(11) + P5(39) = 57 ✓ (3P triple encoding)
+- **Cross-year signal**: RC0 (24.03.2026 = Euro draw #24) cosmic pool anchors 71% of Q2 2026 draws' numbers on average (3.56/5 per draw)
+- **Q2 encoding distribution** (27 draws): 15% 1P · 30% 2P · 30% 3P · 37% no-hit
+- **Shipped**:
+  - `/app/backend/canon37_decoder.py` (NEW) — `find_encodings()`, `rc0_cosmic_pool()`, `rank_future_candidates()`, `suggest_ticket()`, `decode_target()`
+  - Endpoint: `GET /api/canon37/decode/{mode}/{year}/{target_index}` (past → shows encodings + RC0 overlap; future → shows pool + ranked pairs/triples + suggested ticket)
+  - Frontend UI tile: indigo/violet gradient panel below Kombo, with year + draw# rolling wheels + "🎼 Decode" button
+  - Result renders: RC0 header, past draw encoding breakdown OR future forecast with top pairs/triples + auto-suggested ticket
+- **RC0 pool carriers**: Direct RC0, Circle(+25), +32 (draws-ago), -32 (mirror), +13 (half-circle), 50-complement, Circle+32 stack, Flip-Wrap-Circle chain
+- **Tomorrow's #57 forecast (from Canon 37 endpoint)**:
+  - Top DIRECT pair: 21 + 36 = 57 (purity=4)
+  - Top DIRECT triple: 2 + 21 + 34 (purity=6)
+  - Suggested ticket: [21, 24, 25, 34, 36]
+- **Data-testids**: `canon37-panel`, `canon37-toggle`, `canon37-year-wheel`, `canon37-target-wheel`, `canon37-run-btn`, `canon37-results`, `canon37-enc-1P|2P|3P`, `canon37-pairs`, `canon37-triples`, `canon37-suggested`, `canon37-error`
+
+
 ## 🎫 SESSION 54 (16.07.2026) — KOMBO TRACKER RESTORED ✅
 - **DJ report** (post Jul-15 deploy): *"Kombo option disappeared from UI"* — TWO panels missing:
   1. **Virgin Check** — between "Your Lucky Numbers" header and Money/Dreaming Mode buttons; auto-checks whether the generated ticket's exact combo has ever played historically

@@ -7951,7 +7951,35 @@ async def kombo_position_match(
         raise HTTPException(status_code=500, detail=f"kombo-position failed: {e}")
 
 
-@api_router.get("/euro/session19")
+@api_router.get("/canon37/decode/{mode}/{year}/{target_index}")
+async def canon37_decode(
+    mode: str,
+    year: int,
+    target_index: int,
+    rc0_date: Optional[str] = None,
+):
+    """🎼 CANON 37 — Draw Index Decoder & Forecaster.
+
+    Given a mode (swiss/euro), year (e.g. 2026), and target draw index within
+    that year (e.g. 57 for the 57th Euro draw of 2026), returns:
+      - if past: actual mains + all 1P/2P/3P encodings + RC0 pool overlap
+      - if future: RC0 cosmic pool + candidate pair/triple formulas + suggested ticket
+
+    Optional `rc0_date` overrides the default RC0 anchor (24.03.2026 for Euro).
+    """
+    try:
+        from canon37_decoder import decode_target
+        if mode not in ("euro", "swiss"):
+            raise HTTPException(status_code=400, detail="mode must be 'euro' or 'swiss'")
+        if target_index < 1 or target_index > 200:
+            raise HTTPException(status_code=400, detail="target_index must be 1..200")
+        result = await decode_target(db, mode, target_index, year, rc0_date)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"canon37 failed: {e}")
+
 
 @api_router.get("/next-draw-forecast/{mode}/{target_date}")
 async def next_draw_forecast_endpoint(mode: str, target_date: str):
