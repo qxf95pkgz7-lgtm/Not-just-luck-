@@ -3643,21 +3643,43 @@ function App() {
                             <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
                               {positionResults.matches.slice(0, 100).map((m, i) => {
                                 const nums = m.numbers || m.mains || [];
+                                const nextNums = m.next_numbers || m.next_mains || [];
+                                const nextDate = m.next_date;
                                 return (
-                                  <div key={i} className="flex items-center gap-2 p-1.5 rounded bg-slate-900/60 border border-fuchsia-500/20 text-xs" data-testid={`kombo-position-match-${i}`}>
-                                    <span className="text-fuchsia-300 font-mono w-20">{m.date}</span>
-                                    <span className="text-slate-200 font-mono flex-1">
-                                      {nums.map(n => String(n).padStart(2, '0')).join(' · ')}
-                                    </span>
-                                    {lotteryMode === 'swiss' && m.lucky_number !== undefined && (
-                                      <span className="text-amber-400 font-mono text-[10px]">
-                                        🍀{m.lucky_number} R{m.replay_number}
+                                  <div key={i} className="rounded bg-slate-900/60 border border-fuchsia-500/20 p-1.5 text-xs" data-testid={`kombo-position-match-${i}`}>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-fuchsia-300 font-mono w-20 shrink-0">{m.date}</span>
+                                      <span className="text-slate-200 font-mono flex-1">
+                                        {nums.map(n => String(n).padStart(2, '0')).join(' · ')}
                                       </span>
-                                    )}
-                                    {lotteryMode === 'euro' && m.stars && (
-                                      <span className="text-violet-300 font-mono text-[10px]">
-                                        ⭐{m.stars.join(',')}
-                                      </span>
+                                      {lotteryMode === 'swiss' && m.lucky_number !== undefined && (
+                                        <span className="text-amber-400 font-mono text-[10px]">
+                                          🍀{m.lucky_number} R{m.replay_number}
+                                        </span>
+                                      )}
+                                      {lotteryMode === 'euro' && m.stars && (
+                                        <span className="text-violet-300 font-mono text-[10px]">
+                                          ⭐{m.stars.join(',')}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {nextDate && nextNums.length > 0 && (
+                                      <div className="flex items-center gap-2 mt-1 pl-2 border-l-2 border-cyan-400/40" data-testid={`kombo-position-next-${i}`}>
+                                        <span className="text-cyan-300/70 text-[10px] font-mono w-20 shrink-0">↳ {nextDate}</span>
+                                        <span className="text-cyan-200 font-mono flex-1 text-[11px]">
+                                          {nextNums.map(n => String(n).padStart(2, '0')).join(' · ')}
+                                        </span>
+                                        {lotteryMode === 'swiss' && m.next_lucky_number !== undefined && (
+                                          <span className="text-cyan-400/70 font-mono text-[10px]">
+                                            🍀{m.next_lucky_number} R{m.next_replay_number}
+                                          </span>
+                                        )}
+                                        {lotteryMode === 'euro' && m.next_stars && (
+                                          <span className="text-cyan-400/70 font-mono text-[10px]">
+                                            ⭐{m.next_stars.join(',')}
+                                          </span>
+                                        )}
+                                      </div>
                                     )}
                                   </div>
                                 );

@@ -150,6 +150,25 @@ async def position_match(
 
     raw_matches.sort(key=_sort_key, reverse=True)
 
+    # Enrich each match with the NEXT draw that followed it (so DJ can see what
+    # happened after this historical combo played). Only enrich the first 200
+    # matches to keep this snappy.
+    if raw_matches:
+        all_docs = await db[coll].find({}, projection).batch_size(500).to_list(length=5000)
+        all_docs.sort(key=_sort_key)  # ascending by date
+        date_index = {d["date"]: i for i, d in enumerate(all_docs)}
+        for m in raw_matches[:200]:
+            idx = date_index.get(m["date"])
+            if idx is not None and idx + 1 < len(all_docs):
+                nxt = all_docs[idx + 1]
+                m["next_date"] = nxt.get("date")
+                m["next_numbers"] = nxt.get("numbers")
+                if mode.lower() == "swiss":
+                    m["next_lucky_number"] = nxt.get("lucky_number")
+                    m["next_replay_number"] = nxt.get("replay_number")
+                else:
+                    m["next_stars"] = nxt.get("stars")
+
     return {
         "mode": mode.lower(),
         "positions": normalized,
