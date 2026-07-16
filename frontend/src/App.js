@@ -821,11 +821,12 @@ function App() {
   // 🎫 Kombo #1 — Virgin Check state (auto-fires when prediction lands)
   const [virginData, setVirginData] = useState(null);        // { is_virgin, play_count, matches, nums }
   const [virginLoading, setVirginLoading] = useState(false);
-  // 🎯 Kombo #2 — Position Match state
+  // 🎯 Kombo — Position Match state (2 modes: locked vs free)
   const [positionInputs, setPositionInputs] = useState({ p1: 0, p2: 0, p3: 0, p4: 0, p5: 0, p6: 0 });
-  const [positionResults, setPositionResults] = useState(null);   // { match_count, matches, positions }
+  const [positionResults, setPositionResults] = useState(null);
   const [positionLoading, setPositionLoading] = useState(false);
   const [showKomboPosition, setShowKomboPosition] = useState(false);
+  const [komboMode, setKomboMode] = useState('locked'); // 'locked' = position-specific, 'free' = anywhere in draw
   const [showHitTracker, setShowHitTracker] = useState(false);
   const [lastDraw, setLastDraw] = useState(null);
   const [generationHistory, setGenerationHistory] = useState([]);
@@ -1110,20 +1111,28 @@ function App() {
     // eslint-disable-next-line
   }, [prediction?.main_prediction, lotteryMode]);
 
-  // 🎯 Kombo #2 — user-triggered position finder
+  // 🎯 Kombo — user-triggered position finder (2 modes: locked / free)
   const runPositionMatch = async () => {
-    const params = new URLSearchParams();
-    Object.entries(positionInputs).forEach(([k, v]) => {
-      if (v && v > 0) params.append(k, String(v));
-    });
-    if (params.toString() === '') {
-      setPositionResults({ error: 'Set at least one position (P1..P6) before searching.' });
+    const filled = Object.entries(positionInputs).filter(([k, v]) => v && v > 0);
+    if (filled.length === 0) {
+      setPositionResults({ error: 'Set at least one number (P1..P6) before searching.' });
       return;
     }
     setPositionLoading(true);
     try {
-      const res = await axios.get(`${API}/kombo/position/${lotteryMode}?${params.toString()}`, { timeout: 20000 });
-      setPositionResults(res.data);
+      let res;
+      if (komboMode === 'locked') {
+        // Position-Locked: exact position match (P1=X, P3=Y)
+        const params = new URLSearchParams();
+        filled.forEach(([k, v]) => params.append(k, String(v)));
+        res = await axios.get(`${API}/kombo/position/${lotteryMode}?${params.toString()}`, { timeout: 20000 });
+        setPositionResults({ ...res.data, mode: 'locked' });
+      } else {
+        // Position-Free: numbers can appear anywhere in the draw
+        const nums = filled.map(([, v]) => v).sort((a, b) => a - b).join(',');
+        res = await axios.get(`${API}/history-echo/${lotteryMode}?nums=${nums}`, { timeout: 20000 });
+        setPositionResults({ ...res.data, mode: 'free' });
+      }
     } catch (err) {
       setPositionResults({ error: err?.response?.data?.detail || err.message });
     } finally {
@@ -3439,7 +3448,7 @@ function App() {
                 </div>
               )}
 
-              {/* 🎯 KOMBO #2 — POSITION MATCH FINDER (VIP-gated) */}
+              {/* 🎫 KOMBO — POSITION MATCH FINDER (2 modes: locked / free) */}
               {isUnlimited && (
                 <div className="mt-4 rounded-xl bg-gradient-to-br from-fuchsia-950/40 to-purple-950/40 border border-fuchsia-500/40 p-3" data-testid="kombo-position-panel">
                   <button
@@ -3448,23 +3457,45 @@ function App() {
                     data-testid="kombo-position-toggle"
                   >
                     <div>
-                      <div className="text-fuchsia-300 font-bold text-sm">🎯 Kombo — Position Match Finder</div>
-                      <div className="text-fuchsia-200/60 text-[10px] font-mono">check history by exact positions (P1..P{lotteryMode === 'swiss' ? 6 : 5})</div>
+                      <div className="text-fuchsia-300 font-bold text-sm">🎫 Kombo — Check History</div>
+                      <div className="text-fuchsia-200/60 text-[10px] font-mono">two modes: 🔒 locked positions · 🔓 free positions</div>
                     </div>
                     {showKomboPosition ? <ChevronUp className="w-4 h-4 text-fuchsia-300" /> : <ChevronDown className="w-4 h-4 text-fuchsia-300" />}
                   </button>
 
                   {showKomboPosition && (
                     <div className="mt-3 space-y-3">
-                      <div className="text-slate-300 text-[11px] italic">
-                        Set at least ONE position value (leave others as — to skip). Kombo returns every past draw where sorted mains hit those exact positions.
+                      {/* Mode toggle */}
+                      <div className="flex gap-1 p-1 rounded-lg bg-slate-900/70 border border-fuchsia-500/20" data-testid="kombo-mode-toggle">
+                        <button
+                          onClick={() => { setKomboMode('locked'); setPositionResults(null); }}
+                          className={`flex-1 py-2 px-3 rounded-md text-xs font-bold transition-all ${komboMode === 'locked' ? 'bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white shadow' : 'text-fuchsia-300/70 hover:text-fuchsia-200'}`}
+                          data-testid="kombo-mode-locked"
+                        >
+                          🔒 Position-Locked
+                        </button>
+                        <button
+                          onClick={() => { setKomboMode('free'); setPositionResults(null); }}
+                          className={`flex-1 py-2 px-3 rounded-md text-xs font-bold transition-all ${komboMode === 'free' ? 'bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white shadow' : 'text-fuchsia-300/70 hover:text-fuchsia-200'}`}
+                          data-testid="kombo-mode-free"
+                        >
+                          🔓 Position-Free
+                        </button>
                       </div>
+
+                      <div className="text-slate-300 text-[11px] italic">
+                        {komboMode === 'locked'
+                          ? 'Set numbers at exact positions (P1..P). Kombo returns every past draw where sorted mains hit those positions exactly.'
+                          : 'Enter numbers anywhere (position doesn\'t matter). Kombo returns every past draw where ALL those numbers appeared together.'}
+                      </div>
+
                       <div className={`grid gap-2 ${lotteryMode === 'swiss' ? 'grid-cols-6' : 'grid-cols-5'}`}>
                         {Array.from({ length: lotteryMode === 'swiss' ? 6 : 5 }, (_, idx) => {
                           const key = `p${idx + 1}`;
+                          const label = komboMode === 'locked' ? `P${idx + 1}` : `N${idx + 1}`;
                           return (
                             <div key={key} className="text-center flex flex-col items-center">
-                              <label className="text-[10px] text-fuchsia-300/80 block mb-1 font-mono">P{idx + 1}</label>
+                              <label className="text-[10px] text-fuchsia-300/80 block mb-1 font-mono">{label}</label>
                               <div data-testid={`kombo-position-${key}`}>
                                 <RollingNumberWheel
                                   value={positionInputs[key] || 0}
@@ -3487,7 +3518,7 @@ function App() {
                           className="flex-1 py-2 rounded-lg bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white font-bold text-sm disabled:opacity-50 shadow shadow-fuchsia-500/30"
                           data-testid="kombo-position-run-btn"
                         >
-                          {positionLoading ? '🔎 Searching…' : '🎯 Find in history'}
+                          {positionLoading ? '🔎 Searching…' : '🎯 Check history'}
                         </button>
                         <button
                           onClick={() => { setPositionInputs({ p1: 0, p2: 0, p3: 0, p4: 0, p5: 0, p6: 0 }); setPositionResults(null); }}
@@ -3508,29 +3539,32 @@ function App() {
                         <div data-testid="kombo-position-results">
                           <div className="text-fuchsia-200 text-xs font-mono mb-2">
                             {positionResults.match_count === 0
-                              ? '🌸 No historical draws matched — this position set is virgin territory.'
-                              : `🎯 Found ${positionResults.match_count} historical match${positionResults.match_count === 1 ? '' : 'es'}:`}
+                              ? '🌸 No historical draws matched — virgin territory.'
+                              : `🎯 Found ${positionResults.match_count} historical match${positionResults.match_count === 1 ? '' : 'es'} (${komboMode === 'locked' ? 'positions locked' : 'anywhere in draw'}):`}
                           </div>
                           {positionResults.matches && positionResults.matches.length > 0 && (
                             <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
-                              {positionResults.matches.slice(0, 100).map((m, i) => (
-                                <div key={i} className="flex items-center gap-2 p-1.5 rounded bg-slate-900/60 border border-fuchsia-500/20 text-xs" data-testid={`kombo-position-match-${i}`}>
-                                  <span className="text-fuchsia-300 font-mono w-20">{m.date}</span>
-                                  <span className="text-slate-200 font-mono flex-1">
-                                    {(m.numbers || []).map(n => String(n).padStart(2, '0')).join(' · ')}
-                                  </span>
-                                  {lotteryMode === 'swiss' && (
-                                    <span className="text-amber-400 font-mono text-[10px]">
-                                      🍀{m.lucky_number} R{m.replay_number}
+                              {positionResults.matches.slice(0, 100).map((m, i) => {
+                                const nums = m.numbers || m.mains || [];
+                                return (
+                                  <div key={i} className="flex items-center gap-2 p-1.5 rounded bg-slate-900/60 border border-fuchsia-500/20 text-xs" data-testid={`kombo-position-match-${i}`}>
+                                    <span className="text-fuchsia-300 font-mono w-20">{m.date}</span>
+                                    <span className="text-slate-200 font-mono flex-1">
+                                      {nums.map(n => String(n).padStart(2, '0')).join(' · ')}
                                     </span>
-                                  )}
-                                  {lotteryMode === 'euro' && m.stars && (
-                                    <span className="text-violet-300 font-mono text-[10px]">
-                                      ⭐{m.stars.join(',')}
-                                    </span>
-                                  )}
-                                </div>
-                              ))}
+                                    {lotteryMode === 'swiss' && m.lucky_number !== undefined && (
+                                      <span className="text-amber-400 font-mono text-[10px]">
+                                        🍀{m.lucky_number} R{m.replay_number}
+                                      </span>
+                                    )}
+                                    {lotteryMode === 'euro' && m.stars && (
+                                      <span className="text-violet-300 font-mono text-[10px]">
+                                        ⭐{m.stars.join(',')}
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })}
                               {positionResults.matches.length > 100 && (
                                 <div className="text-slate-500 text-[10px] italic text-center py-1">
                                   +{positionResults.matches.length - 100} more (showing latest 100)
