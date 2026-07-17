@@ -135,6 +135,7 @@ export default function RollingNumberWheel({
   allowZero = false,
   formatValue,
   twoDigit = false,
+  threeDigit = false,
 }) {
   // Normalize incoming value
   const lo = allowZero ? Math.min(0, min) : min;
@@ -150,15 +151,19 @@ export default function RollingNumberWheel({
   }, [n]);
 
   // Two-digit mode: render TENS + UNITS wheels side by side.
+  // Three-digit mode: HUNDREDS + TENS + UNITS.
   // User rolls each digit independently — much faster than scrolling
-  // through 1..50.
-  if (twoDigit) {
-    const tensMax = Math.min(9, Math.floor(max / 10));
-    const tens = Math.max(0, Math.floor(n / 10));
+  // through 1..N.
+  if (twoDigit || threeDigit) {
+    const useThree = threeDigit;
+    const hundredsMax = useThree ? Math.min(9, Math.floor(max / 100)) : 0;
+    const tensMax = useThree ? 9 : Math.min(9, Math.floor(max / 10));
+    const hundreds = useThree ? Math.max(0, Math.floor(n / 100)) : 0;
+    const tens = Math.max(0, Math.floor((n % 100) / 10));
     const units = Math.max(0, n % 10);
 
-    const combine = (t, u) => {
-      let combined = t * 10 + u;
+    const combine = (h, t, u) => {
+      let combined = h * 100 + t * 10 + u;
       if (combined > max) combined = max;
       if (combined < 0) combined = 0;
       if (!allowZero && combined < min && combined !== 0) combined = min;
@@ -178,12 +183,23 @@ export default function RollingNumberWheel({
           </span>
         )}
         <div className="flex gap-1 items-center">
+          {useThree && (
+            <Wheel
+              value={hundreds}
+              min={0}
+              max={hundredsMax}
+              format={(v) => String(v)}
+              onChange={(h) => setN(combine(h, tens, units))}
+              width={34}
+              testId={`${testId}-hundreds`}
+            />
+          )}
           <Wheel
             value={tens}
             min={0}
             max={tensMax}
             format={(v) => String(v)}
-            onChange={(t) => setN(combine(t, units))}
+            onChange={(t) => setN(combine(hundreds, t, units))}
             width={34}
             testId={`${testId}-tens`}
           />
@@ -192,7 +208,7 @@ export default function RollingNumberWheel({
             min={0}
             max={9}
             format={(v) => String(v)}
-            onChange={(u) => setN(combine(tens, u))}
+            onChange={(u) => setN(combine(hundreds, tens, u))}
             width={34}
             testId={`${testId}-units`}
           />

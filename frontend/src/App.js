@@ -3744,8 +3744,8 @@ function App() {
                               onChange={setCanon37Target}
                               min={1}
                               max={110}
+                              threeDigit={true}
                               formatValue={(v) => String(v).padStart(3, '0')}
-                              width={70}
                             />
                           </div>
                         </div>
@@ -5536,6 +5536,7 @@ function App() {
                         onChange={setStoryComposerCount}
                         min={3}
                         max={15}
+                        twoDigit={true}
                         testId="story-composer-count"
                       />
                     </div>
