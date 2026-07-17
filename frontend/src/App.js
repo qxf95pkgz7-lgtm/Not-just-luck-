@@ -3304,8 +3304,9 @@ function App() {
                           onChange={(n) => handleLockChange(pos, n === 0 ? "" : String(n))}
                           min={0}
                           max={maxNum}
+                          allowZero={true}
+                          twoDigit={true}
                           formatValue={(v) => v === 0 ? '—' : String(v).padStart(2, '0')}
-                          width={56}
                           testId={`lock-${pos}-wheel`}
                         />
                       </div>
@@ -5724,6 +5725,7 @@ function App() {
                         onChange={setGhostEngineLookback}
                         min={4}
                         max={30}
+                        twoDigit={true}
                         testId="ghost-engine-lookback"
                       />
                     </div>
