@@ -1,6 +1,25 @@
 # Lucky Jack — Swiss Lotto + EuroMillions Pattern Analyzer (PRD)
 
 
+## 🎯 SESSION 54 (16.07.2026) — HIT TRACKER EURO-AWARE FIX (P0) ✅
+- **DJ's report**: Euro Hit Tracker mis-scoring ticket #19 on 14.07.2026 (should show 3 correct numbers)
+- **Root cause found**: `HitTracker` class in `/app/backend/hit_tracker.py` was 100% Swiss-only:
+  - Line 18: `self.draws_collection = db.draws` (Swiss collection only, ignored Euro)
+  - Line 87: `serials = await attach_serials(self.db, "swiss", ...)` (hardcoded "swiss")
+  - Line 133: `actual_lucky = actual_draw.get("lucky_number", ...)` (Swiss lucky, no Euro stars)
+  - No star-matching logic anywhere → Euro tickets scored 0 stars always
+  - Ticket `numbers` field not int-coerced → string/int mismatches silently produced 0 hits
+- **Fix shipped**:
+  - Added `swiss_draws` + `euro_draws` collection references + `_draws_for_mode()` helper
+  - `get_draw_by_date(date, mode)` now mode-aware
+  - `calculate_hits` auto-detects mode from `gen["mode"]` OR ticket shape (has `stars` = euro)
+  - Euro branch: matches `ticket.stars` against `actual_draw.stars`, tracks `star_hits`
+  - Ticket numbers coerced via `int(x)` before set intersection (defensive)
+  - `save_generation` accepts `mode` param and stores it on the doc; serials use correct mode
+  - Cleaned duplicate `recalculate_all_hits` block that was corrupting the module
+- **Note**: The Hit Tracker UI endpoint (`/api/hit-tracker/tickets`) at server.py:6047+ was ALREADY Euro-aware (reads `euromillions_generations`, matches stars). The `HitTracker` class was the broken piece — used by `save_generation` + `calculate_hits`. Existing Euro data will be properly scored on next `calculate_hits` call after deploy.
+
+
 ## 🎼 SESSION 54 (16.07.2026) — CANON 38: SWISS→EURO CROSS-LEAK ✅
 - **DJ's cross-lottery insight**: when Swiss P1 (smallest sorted main) > 19, the immediately-following Euro draw carries a measurable signature (rare event — 26 times in 10 years, ~2.6/year).
 - **Signal validated on 10-yr data**:

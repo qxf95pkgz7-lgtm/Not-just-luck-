@@ -10,12 +10,19 @@ from bson import ObjectId
 
 
 class HitTracker:
-    """Track story generator predictions vs actual draws"""
-    
+    """Track story generator predictions vs actual draws (Swiss + Euro)"""
+
     def __init__(self, db):
         self.db = db
         self.generations_collection = db.generations
+        # Multi-mode: expose both draw collections and pick per-generation
+        self.swiss_draws = db.draws
+        self.euro_draws = db.euromillions_draws
+        # Backwards-compat alias
         self.draws_collection = db.draws
+
+    def _draws_for_mode(self, mode: str):
+        return self.euro_draws if (mode or "").lower() == "euro" else self.swiss_draws
     
     async def save_generation(
         self,
@@ -25,13 +32,15 @@ class HitTracker:
         visitor_id: str = "",
         has_locked: bool = False,
         locked_positions: Optional[Dict] = None,
+        mode: str = "swiss",
     ) -> str:
-        """Save a generation for later hit tracking"""
+        """Save a generation for later hit tracking (Swiss + Euro)."""
 
         generation = {
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "target_date": target_date,
             "generation_type": generation_type,
+            "mode": mode,
             "tickets": tickets,
             "hits_calculated": False,
             "hit_results": None,
@@ -84,7 +93,7 @@ class HitTracker:
         try:
             from serials import attach_serials
             serials = await attach_serials(
-                self.db, "swiss", target_date, generation["tickets"],
+                self.db, mode, target_date, generation["tickets"],
             )
             generation["serials"] = serials
             # Propagate serials back to caller's source list (same length)
